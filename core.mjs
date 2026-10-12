@@ -1,6 +1,10 @@
 /* Linecraft geometry and command engine. Original implementation; no external dependencies. */
 import {validateEllipse,ellipsePoint,ellipseBoundsPoints,validateSpline,makeClampedKnots,splinePoint,splineBezierSegments,splineBoundsPoints,sampleCurve,boundaryPolygon,boundaryContains,hatchGeometry,filletLines,chamferLines} from './advanced-geometry.mjs';
 import {parseLength,parseAngle,formatLength,formatAngle,formatArea,UNIT_PRESETS,UNIT_SETTINGS_DEFAULTS,normalizeUnitSettings,dxfUnitFormat} from './units.mjs';
+import {PAPER_SIZES,LINETYPES,modelUnitMillimeters,normalizePaper,normalizeLayouts,normalizePaperViewport,normalizePaperView,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible} from './paper-space.mjs';
+import {presetUCS,normalizeUCS,ucsFromThreePoints,constructionPlane,planeToWorld,worldToPlane,intersectPlaneRay,planeCamera,spatialCurvePoint,spatialAngleOnArc,spatialCurveBounds,validateSpatialCurve,sampleSpatialCurve,spatialCurveOCS} from './drawing-plane.mjs';
+export {PAPER_SIZES,LINETYPES,modelUnitMillimeters,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible,presetUCS,normalizeUCS,ucsFromThreePoints,constructionPlane,planeToWorld,worldToPlane,intersectPlaneRay,planeCamera};
+export {spatialCurvePoint,spatialCurveBounds,validateSpatialCurve,sampleSpatialCurve};
 export {parseLength,parseAngle,formatLength,formatAngle,formatArea,UNIT_PRESETS,dxfUnitFormat};
 export {ellipsePoint,splinePoint,splineBezierSegments,sampleCurve,hatchGeometry,filletLines,chamferLines};
 export const ADVANCED_COMMANDS=Object.freeze(['HATCH','DIMANGULAR','BLOCK','INSERT','ARRAYRECT','FILLET','CHAMFER','ELLIPSE','SPLINE','STRETCH','PEDIT']);
@@ -13,7 +17,7 @@ const finite = value => typeof value === 'number' && Number.isFinite(value);
 const samePoint = (a, b) => a.x === b.x && a.y === b.y;
 const TRANSFORMS = new Set(['MOVE', 'COPY', 'ROTATE', 'SCALE', 'MIRROR','ROTATE3D']);
 const SELECT_COMMANDS = new Set([...TRANSFORMS, 'ERASE', 'COPYCLIP', 'COPYBASE', 'CUTCLIP', 'TRIM', 'EXTEND', 'BREAK', 'JOIN', 'EXPLODE','TEXTEDIT','EXTRUDE','ARRAYRECT','PEDIT','BLOCK']);
-const TYPES3D=new Set(['MESH','POLY3D']),DRAW3D=new Set(['BOX','CYLINDER','SPHERE','3DPOLY']);
+const TYPES3D=new Set(['MESH','POLY3D','CIRCLE3D','ARC3D']),SPATIAL_CURVES=new Set(['CIRCLE3D','ARC3D']),DRAW3D=new Set(['BOX','CYLINDER','SPHERE','3DPOLY']);
 const MAX_MESH_VERTICES=100000,MAX_MESH_FACES=200000,MAX_EXTRUSION_VERTICES=4096;
 const REPEATED_EDITS = new Set(['TRIM', 'EXTEND', 'OFFSET']);
 const TEXT_TYPES=new Set(['TEXT','MTEXT']);
@@ -52,7 +56,7 @@ function normalizeSettings(raw={}){
   if(!Number.isInteger(settings.precision)||settings.precision<0||settings.precision>8)throw new Error('Drawing precision must be an integer from 0 through 8.');
   for(const key of ['gridEnabled','snapEnabled','orthoEnabled','gridAdaptive'])if(typeof settings[key]!=='boolean')throw new Error(`${key} must be boolean.`);
   positive(settings.gridSpacing,'Grid spacing');
-  if(!finite(settings.constructionElevation)||settings.constructionPlane!=='XY')throw new Error('Construction plane must be XY with a finite elevation.');
+  if(!finite(settings.constructionElevation)||!['XY','XZ','YZ','custom'].includes(settings.constructionPlane))throw new Error('Construction plane must be XY, XZ, YZ or custom with a finite elevation.');
   if(!Array.isArray(settings.snapModes)||settings.snapModes.some(mode=>!['endpoint','midpoint','center','quadrant'].includes(mode)))throw new Error('Snap modes must be a supported subset.');
   settings.snapModes=[...new Set(settings.snapModes)];return Object.fromEntries(Object.keys(DEFAULT_SETTINGS).map(key=>[key,settings[key]]));
 }
@@ -118,7 +122,8 @@ export function formatDimension(entity,rawDocument={}){
   else if(entity.kind==='angular')measurement=Math.abs(angularDefinition(entity).sweep);
   else measurement=entity.radius*(entity.kind==='diameter'?2:1);
   if(!finite(measurement))throw new Error('Dimension measurement exceeds the supported numeric range.');
-  const numeric=entity.kind==='angular'?formatAngle(measurement,document.settings,{precision:style.angularPrecision??style.precision}):formatLength(measurement,document.settings,{precision:style.precision,fractionPrecision:style.fractionPrecision??document.settings.fractionPrecision}),automatic=`${style.prefix}${entity.kind==='radius'?'R':entity.kind==='diameter'?'Ø':''}${numeric}${style.suffix}`;
+  const settings=entity.layoutId?{...document.settings,units:'mm',linearFormat:'decimal'}:document.settings;
+  const numeric=entity.kind==='angular'?formatAngle(measurement,settings,{precision:style.angularPrecision??style.precision}):formatLength(measurement,settings,{precision:style.precision,fractionPrecision:style.fractionPrecision??settings.fractionPrecision}),automatic=`${style.prefix}${entity.kind==='radius'?'R':entity.kind==='diameter'?'Ø':''}${numeric}${style.suffix}`;
   return{measurement,label:entity.textOverride?entity.textOverride.replaceAll('<>',automatic):automatic};
 }
 function angularDefinition(entity){
@@ -330,7 +335,19 @@ export function extrudeProfile(entity,height){
   for(let i=0;i<n;i++)faces.push([i,(i+1)%n,(i+1)%n+n,i+n]);if(height<0)faces.forEach(face=>face.reverse());
   return{...meshResult(vertices,faces,'EXTRUDE'),layer:entity.layer,...(entity.color?{color:entity.color}:{}),...(entity.lineweight!==undefined?{lineweight:entity.lineweight}:{})};
 }
+export function spatialProfilePlane(entity){
+  if(entity.type!=='POLY3D'||!entity.closed||entity.points.length<3)throw new Error('EXTRUDE spatial profiles must be closed planar POLY3D paths.');
+  const origin=point3(entity.points[0]);let ucs=null;
+  for(let i=1;i<entity.points.length-1&&!ucs;i++)try{ucs=ucsFromThreePoints(origin,entity.points[i],entity.points[i+1]);}catch{}
+  if(!ucs)throw new Error('Spatial profile needs three noncollinear vertices.');
+  let span=0;for(const p of entity.points)span=Math.max(span,Math.hypot(p.x-origin.x,p.y-origin.y,p.z-origin.z));
+  if(!finite(span)||entity.points.some(p=>Math.abs(worldToPlane(p,ucs).z)>Math.max(1,span)*1e-9))throw new Error('EXTRUDE spatial profile must be planar.');
+  triangulatePolygon(entity.points.map(p=>{const q=worldToPlane(p,ucs);return{x:q.x,y:q.y};}));return ucs;
+}
+export function extrudeSpatialProfile(entity,height){const ucs=spatialProfilePlane(entity),local={...entity,type:'PLINE',points:entity.points.map(p=>{const q=worldToPlane(p,ucs);return{x:q.x,y:q.y};}),closed:true},mesh=extrudeProfile(local,height);mesh.vertices=mesh.vertices.map(p=>planeToWorld(p,ucs));validateMesh(mesh);return mesh;}
+export function extrudeCircleProfile(entity,height){const spatial=entity.type==='CIRCLE3D',plane=spatial?{origin:entity.center,xAxis:entity.xAxis,yAxis:entity.yAxis,normal:normalizeUCS({origin:entity.center,xAxis:entity.xAxis,yAxis:entity.yAxis}).zAxis}:constructionPlane(presetUCS('XY',{...entity.center,z:0})),mesh=makeCylinderMesh({x:0,y:0,z:0},entity.radius,height,32);mesh.vertices=mesh.vertices.map(p=>planeToWorld(p,plane));mesh.primitive='EXTRUDE';mesh.layer=entity.layer;if(entity.color)mesh.color=entity.color;if(entity.lineweight!==undefined)mesh.lineweight=entity.lineweight;validateMesh(mesh);return mesh;}
 export function entityEdges(entity,document={}){
+  if(SPATIAL_CURVES.has(entity.type)){const points=sampleSpatialCurve(entity);return points.slice(0,-1).map((p,i)=>[p,points[i+1]]);}
   if(entity.type==='MESH'){const seen=new Set(),edges=[];for(const face of entity.faces)face.forEach((index,i)=>{const next=face[(i+1)%face.length],key=index<next?`${index}:${next}`:`${next}:${index}`;if(!seen.has(key)){seen.add(key);edges.push([entity.vertices[index],entity.vertices[next]]);}});return edges;}
   if(entity.type==='POLY3D')return entity.points.slice(0,entity.closed?undefined:-1).map((p,i)=>[p,entity.points[(i+1)%entity.points.length]]);
   return segments(entity,document);
@@ -340,7 +357,7 @@ export function bounds3D(entities,document={}){
 }
 export function rotateEntity3D(entity,rawBase,axis,degrees){
   if(!TYPES3D.has(entity.type))throw new Error('ROTATE3D supports MESH and POLY3D only.');const base=point3(rawBase);if(!['X','Y','Z'].includes(axis)||!finite(degrees))throw new Error('ROTATE3D requires world axis X/Y/Z and a finite angle.');
-  const[c,s]=angleBasis(degrees),mapping=p=>{const x=p.x-base.x,y=p.y-base.y,z=p.z-base.z;return axis==='X'?{x:p.x,y:base.y+y*c-z*s,z:base.z+y*s+z*c}:axis==='Y'?{x:base.x+x*c+z*s,y:p.y,z:base.z-x*s+z*c}:{x:base.x+x*c-y*s,y:base.y+x*s+y*c,z:p.z};};return mapEntity(entity,mapping);
+  const[c,s]=angleBasis(degrees),mapping=p=>{const x=p.x-base.x,y=p.y-base.y,z=p.z-base.z;return axis==='X'?{x:p.x,y:base.y+y*c-z*s,z:base.z+y*s+z*c}:axis==='Y'?{x:base.x+x*c+z*s,y:p.y,z:base.z-x*s+z*c}:{x:base.x+x*c-y*s,y:base.y+x*s+y*c,z:p.z};};const source=clone(entity);if(SPATIAL_CURVES.has(entity.type)){const direction=p=>axis==='X'?{x:p.x,y:p.y*c-p.z*s,z:p.y*s+p.z*c}:axis==='Y'?{x:p.x*c+p.z*s,y:p.y,z:-p.x*s+p.z*c}:{x:p.x*c-p.y*s,y:p.x*s+p.y*c,z:p.z};source.xAxis=direction(entity.xAxis);source.yAxis=direction(entity.yAxis);}return mapEntity(source,mapping);
 }
 
 export function worldToScreen(p, viewport, width, height) {
@@ -365,6 +382,7 @@ export function pan(viewport, dx, dy) {
 }
 
 export function entityPoints(entity,document={}) {
+  if(SPATIAL_CURVES.has(entity.type))return spatialCurveBounds(entity);
   if(entity.type==='ELLIPSE')return ellipseBoundsPoints(entity);
   if(entity.type==='SPLINE')return splineBoundsPoints(entity);
   if(entity.type==='HATCH')return entityPoints(entity.boundary,document);
@@ -385,6 +403,8 @@ export function entityPoints(entity,document={}) {
 }
 
 export function entityGripPoints(entity,document={}) {
+  if(entity.type==='CIRCLE3D')return[entity.center,...[0,.25,.5,.75].map(t=>spatialCurvePoint(entity,t))];
+  if(entity.type==='ARC3D')return[spatialCurvePoint(entity,0),spatialCurvePoint(entity,.5),spatialCurvePoint(entity,1),entity.center];
   if(entity.type==='ELLIPSE')return[entity.center,ellipsePoint(entity,0),ellipsePoint(entity,.25)];
   if(entity.type==='SPLINE')return entity.controlPoints;
   if(entity.type==='HATCH')return entityGripPoints(entity.boundary,document);
@@ -442,7 +462,8 @@ function validatePolyline(points, closed) {
 
 function mapEntity(entity, mapping, radiusFactor = 1,rawDocument={}) {
   const transformed = clone(entity);
-  if(entity.type==='ELLIPSE'){
+  if(SPATIAL_CURVES.has(entity.type)){transformed.center=point3(mapping(entity.center));transformed.radius*=radiusFactor;validateSpatialCurve(transformed);}
+  else if(entity.type==='ELLIPSE'){
     transformed.center=point(mapping(entity.center));transformed.major=point({x:entity.major.x*radiusFactor,y:entity.major.y*radiusFactor});validateEllipse(transformed);
   }else if(entity.type==='SPLINE'){
     transformed.controlPoints=entity.controlPoints.map(p=>point(mapping(p)));validateSpline(transformed);splineBoundsPoints(transformed).forEach(point);
@@ -576,9 +597,15 @@ export function previewGrip(entity, index, rawPoint,document={}) {
     if(!Number.isInteger(index)||index<0||index>=edited.controlPoints.length)throw new Error('SPLINE control grip index is invalid.');edited.controlPoints[index]=p;validateSpline(edited);splineBoundsPoints(edited).forEach(point);
   }else if(entity.type==='HATCH'){edited.boundary=previewGrip(entity.boundary,index,p,document);validateHatch(edited);}
   else if(entity.type==='INSERT'){if(index!==0)throw new Error('INSERT has one insertion grip.');edited.position=p;validateInsert(edited,document);}
+  else if(SPATIAL_CURVES.has(entity.type)){
+    const plane={origin:entity.center,xAxis:entity.xAxis,yAxis:entity.yAxis,normal:{x:entity.xAxis.y*entity.yAxis.z-entity.xAxis.z*entity.yAxis.y,y:entity.xAxis.z*entity.yAxis.x-entity.xAxis.x*entity.yAxis.z,z:entity.xAxis.x*entity.yAxis.y-entity.xAxis.y*entity.yAxis.x}};
+    if(entity.type==='CIRCLE3D'){if(![0,1,2,3,4].includes(index))throw new Error('Spatial CIRCLE grip index is invalid.');if(index===0)edited.center=p;else{const local=worldToPlane(p,plane);if(Math.abs(local.z)>1e-9*Math.max(1,entity.radius))throw new Error('Radius grip must stay in the circle plane.');edited.radius=Math.hypot(local.x,local.y);}}
+    else{if(![0,1,2,3].includes(index))throw new Error('Spatial ARC grip index is invalid.');if(index===3)edited.center=p;else{const grips=entityGripPoints(entity);grips[index]=p;const local=grips.slice(0,3).map(p=>worldToPlane(p,plane));if(local.some(p=>Math.abs(p.z)>1e-9*Math.max(1,entity.radius)))throw new Error('ARC grips must remain in its plane.');const arc=arcThroughPoints(...local.map(({x,y})=>({x,y})));edited.center=planeToWorld({...arc.center,z:0},plane);edited.radius=arc.radius;edited.startAngle=arc.startAngle;edited.sweepAngle=arc.sweepAngle;}}
+    validateSpatialCurve(edited);
+  }
   else if(TYPES3D.has(entity.type)){
     const key=entity.type==='MESH'?'vertices':'points';if(!Number.isInteger(index)||index<0||index>=edited[key].length)throw new Error('3D grip index is invalid.');edited[key][index]=p;
-    if(entity.type==='MESH'){delete edited.primitive;validateMesh(edited);}else validatePolyline3D(edited.points,edited.closed);
+    if(entity.type==='MESH'){delete edited.primitive;edited.faces=edited.faces.flatMap(face=>face.length===4?[[face[0],face[1],face[2]],[face[0],face[2],face[3]]]:[face]);validateMesh(edited);}else validatePolyline3D(edited.points,edited.closed);
   }else if(TEXT_TYPES.has(entity.type)){
     if(index===0)edited.position=p;
     else if(entity.type==='MTEXT'&&index===1){const[c,s]=angleBasis(entity.rotation);edited.width=(p.x-entity.position.x)*c+(p.y-entity.position.y)*s;}
@@ -640,12 +667,13 @@ function segments(entity,document={}) {
 export function expandedInsertEntities(entity,document={}){
   if(entity.type!=='INSERT')return[clone(entity)];const block=document.blocks?.find(block=>block.name===entity.blockName);if(!block)throw new Error(`Block definition ${entity.blockName} does not exist.`);
   return block.entities.map((child,index)=>{
-    let expanded=translateEntity(rotateEntity(scaleEntity(child,{x:0,y:0},entity.scale,document),{x:0,y:0},entity.rotation,document),entity.position,document);
+    const source=entity.layoutId?{...child,layoutId:entity.layoutId}:child;
+    let expanded=translateEntity(rotateEntity(scaleEntity(source,{x:0,y:0},entity.scale,document),{x:0,y:0},entity.rotation,document),entity.position,document);
     expanded.id=`${entity.id??'insert'}/${index}`;if(child.layer==='0'){expanded.layer=entity.layer;if(child.color===undefined&&entity.color!==undefined)expanded.color=entity.color;if(child.lineweight===undefined&&entity.lineweight!==undefined)expanded.lineweight=entity.lineweight;}return expanded;
   });
 }
 export function expandedEntities(entities,document={}){return entities.flatMap(entity=>entity.type==='INSERT'?expandedInsertEntities(entity,document):[entity]);}
-export function visibleInsertEntities(entity,document={}){return expandedInsertEntities(entity,document).filter(child=>document.layers?.find(layer=>layer.name===child.layer)?.visible!==false);}
+export function visibleInsertEntities(entity,document={}){return expandedInsertEntities(entity,document).filter(child=>isEntityVisible({...child,...(entity.layoutId?{layoutId:entity.layoutId}:{})},document));}
 export function entityDisplayPrimitives(entity,document={}){
   const empty={segments:[],paths:[],fills:[],texts:[]};
   if(entity.type==='INSERT'){const all=visibleInsertEntities(entity,document).map(child=>entityDisplayPrimitives(child,document));return Object.fromEntries(Object.keys(empty).map(key=>[key,all.flatMap(item=>item[key])]));}
@@ -909,6 +937,8 @@ export function entitiesInBox(entities, start, end, crossing = end.x < start.x,d
 
 /** Endpoint/midpoint and circle center/quadrant snaps use a world tolerance. */
 export function snapCandidates(entity,document={}){
+    if(entity.type==='CIRCLE3D')return[{point:entity.center,type:'center'},...[0,.25,.5,.75].map(t=>({point:spatialCurvePoint(entity,t),type:'quadrant'}))];
+    if(entity.type==='ARC3D')return[{point:entity.center,type:'center'},{point:spatialCurvePoint(entity,0),type:'endpoint'},{point:spatialCurvePoint(entity,.5),type:'midpoint'},{point:spatialCurvePoint(entity,1),type:'endpoint'}];
     if(entity.type==='ELLIPSE')return[{point:entity.center,type:'center'},...[0,.25,.5,.75].map(f=>({point:ellipsePoint(entity,f),type:'quadrant'}))];
     if(entity.type==='SPLINE')return[{point:splinePoint(entity,0),type:'endpoint'},{point:splinePoint(entity,1),type:'endpoint'}];
     if(entity.type==='HATCH')return snapCandidates(entity.boundary,document);
@@ -946,7 +976,9 @@ function normalizeLayer(layer) {
   if (!/^#[0-9a-f]{6}$/i.test(color)) throw new Error('Color must be a six-digit hex value.');
   const lineweight = layer.lineweight ?? 0.25;
   if (!finite(lineweight) || lineweight < 0 || lineweight > 10) throw new Error('Lineweight must be between 0 and 10 mm.');
-  return { name: layer.name, color, visible: layer.visible !== false, locked: layer.locked === true, lineweight };
+  for(const key of ['visible','locked','modelVisible','paperVisible','plot'])if(layer[key]!==undefined&&typeof layer[key]!=='boolean')throw new Error(`${key} must be boolean.`);
+  const linetype=layer.linetype===undefined?'continuous':layer.linetype;if(!LINETYPES.includes(linetype))throw new Error('Unsupported layer linetype.');
+  return { name: layer.name, color, visible: layer.visible !== false, locked: layer.locked === true, lineweight,modelVisible:layer.modelVisible??true,paperVisible:layer.paperVisible??true,plot:layer.plot??true,linetype };
 }
 function normalizeHatchBoundary(raw){
   if(!raw||!['RECTANG','PLINE','CIRCLE','ELLIPSE'].includes(raw.type))throw new Error('HATCH supports one closed RECTANG/PLINE, CIRCLE or ELLIPSE boundary.');
@@ -971,7 +1003,7 @@ function validateExpandedResources(document){
     if(!entity||typeof entity!=='object')throw new Error('Unsupported entity type.');
     if(entity.type==='LINE')return 1;if(entity.type==='RECTANG')return 4;
     if(entity.type==='PLINE')return Math.max(1,(entity.points?.length??0)-(entity.closed?0:1));
-    if(['CIRCLE','ELLIPSE'].includes(entity.type))return 128;if(entity.type==='ARC')return 64;
+    if(['CIRCLE','ELLIPSE',...SPATIAL_CURVES].includes(entity.type))return 128;if(entity.type==='ARC')return 64;
     if(entity.type==='SPLINE')return 128+(entity.controlPoints?.length??0);
     if(TEXT_TYPES.has(entity.type))return 1+Math.ceil((entity.text?.length??0)/16);
     if(entity.type==='DIMENSION'){const style=document.dimStyles?.find(item=>item.name===entity.style)??DEFAULT_DIM_STYLE;return(entity.kind==='angular'?128:10)+Math.ceil(((entity.textOverride?.length??0)+(style.prefix?.length??0)+(style.suffix?.length??0)+32)/16);}
@@ -992,6 +1024,10 @@ function normalizeDocument(input = {}) {
   if (new Set(layers.map(layer => layer.name)).size !== layers.length) throw new Error('Duplicate layer names.');
   const currentLayer = input.currentLayer ?? '0';
   if (!layers.some(layer => layer.name === currentLayer)) throw new Error('Current layer does not exist.');
+  const layouts=normalizeLayouts(input.layouts===undefined?[]:input.layouts,layers,normalizeCamera3D);
+  const rawEntities=[...(input.entities??[]),...layouts.flatMap(layout=>layout.entities.map(entity=>{if(entity.layoutId!==undefined&&entity.layoutId!==layout.id)throw new Error('Paper entity ownership does not match its layout.');return{...entity,layoutId:layout.id};}))];
+  if(rawEntities.length>100000)throw new Error('Drawing exceeds the 100000 model/paper entity limit.');
+  layouts.forEach(layout=>{layout.entities=[];});
   const textStyles=(input.textStyles===undefined?[DEFAULT_TEXT_STYLE]:input.textStyles).map(normalizeTextStyle);
   if(!textStyles.some(style=>style.name==='Standard'))textStyles.unshift({...DEFAULT_TEXT_STYLE});
   if(new Set(textStyles.map(style=>style.name)).size!==textStyles.length)throw new Error('Duplicate text style names.');
@@ -1003,7 +1039,7 @@ function normalizeDocument(input = {}) {
   const rawBlocks=input.blocks===undefined?[]:input.blocks;if(!Array.isArray(rawBlocks)||rawBlocks.length>64)throw new Error('Drawing supports up to 64 flat block definitions.');const names=new Set();
   if(!Array.isArray(input.entities??[]))throw new Error('Entities must be an array.');
   for(const block of rawBlocks)if(!block||!Array.isArray(block.entities)||!block.entities.length||block.entities.length>10000||block.entities.some(entity=>!entity||TYPES3D.has(entity.type)||entity.type==='INSERT'))throw new Error('Blocks require 1..10000 flat planar entities; nested INSERT and 3D content are unsupported.');
-  validateExpandedResources({entities:input.entities??[],blocks:rawBlocks,dimStyles});
+  validateExpandedResources({entities:rawEntities,blocks:rawBlocks,dimStyles});
   const blocks=rawBlocks.map(block=>{
     if(!block||!validLayerName(block.name)||names.has(block.name))throw new Error('Block names must be valid and unique.');names.add(block.name);const base=point(block.base);
     if(!Array.isArray(block.entities)||!block.entities.length||block.entities.length>10000||block.entities.some(entity=>!entity||TYPES3D.has(entity.type)||entity.type==='INSERT'))throw new Error('Blocks require 1..10000 flat planar entities; nested INSERT and 3D content are unsupported.');
@@ -1012,15 +1048,17 @@ function normalizeDocument(input = {}) {
   const annotationContext={textStyles,dimStyles,settings,blocks};
   const ids = new Set();
   if (!Array.isArray(input.entities ?? [])) throw new Error('Entities must be an array.');
-  const entities = (input.entities ?? []).map((raw, index) => {
-    if (!raw || !['LINE', 'RECTANG', 'CIRCLE', 'PLINE','ARC','TEXT','MTEXT','DIMENSION','MESH','POLY3D','ELLIPSE','SPLINE','HATCH','INSERT'].includes(raw.type)) throw new Error('Unsupported entity type.');
+  const entities = rawEntities.map((raw, index) => {
+    if (!raw || !['LINE', 'RECTANG', 'CIRCLE', 'PLINE','ARC','TEXT','MTEXT','DIMENSION','MESH','POLY3D','ELLIPSE','SPLINE','HATCH','INSERT',...SPATIAL_CURVES].includes(raw.type)) throw new Error('Unsupported entity type.');
     const id = raw.id ?? `e${index + 1}`;
     if (typeof id !== 'string' || !id || ids.has(id)) throw new Error('Entity IDs must be unique nonempty strings.');
     ids.add(id);
     const layer = raw.layer ?? '0';
     if (!layers.some(item => item.name === layer)) throw new Error(`Entity layer ${layer} does not exist.`);
     const entity = { id, type: raw.type, layer };
-    if(raw.type==='ELLIPSE'){entity.center=point(raw.center);entity.major=point(raw.major);entity.ratio=raw.ratio;validateEllipse(entity);}
+    if(raw.layoutId!==undefined){if(typeof raw.layoutId!=='string'||!layouts.some(layout=>layout.id===raw.layoutId))throw new Error('Paper entity layout does not exist.');if(TYPES3D.has(raw.type))throw new Error('Paper entities must be planar 2D geometry.');entity.layoutId=raw.layoutId;}
+    if(SPATIAL_CURVES.has(raw.type)){entity.center=point3(raw.center);entity.radius=raw.radius;entity.xAxis=point3(raw.xAxis);entity.yAxis=point3(raw.yAxis);if(raw.type==='ARC3D'){entity.startAngle=raw.startAngle;entity.sweepAngle=raw.sweepAngle;}validateSpatialCurve(entity);}
+    else if(raw.type==='ELLIPSE'){entity.center=point(raw.center);entity.major=point(raw.major);entity.ratio=raw.ratio;validateEllipse(entity);}
     else if(raw.type==='SPLINE'){entity.controlPoints=Array.isArray(raw.controlPoints)&&raw.controlPoints.length<=1024?raw.controlPoints.map(point):null;entity.degree=raw.degree;entity.knots=Array.isArray(raw.knots)?[...raw.knots]:null;entity.closed=raw.closed;validateSpline(entity);splineBoundsPoints(entity).forEach(point);}
     else if(raw.type==='HATCH'){entity.boundary=normalizeHatchBoundary(raw.boundary);entity.pattern=raw.pattern;entity.angle=raw.angle;entity.spacing=raw.spacing;entity.origin=point(raw.origin);validateHatch(entity);}
     else if(raw.type==='INSERT'){entity.blockName=raw.blockName;entity.position=point(raw.position);entity.scale=raw.scale;entity.rotation=raw.rotation;validateInsert(entity,annotationContext);}
@@ -1062,6 +1100,7 @@ function normalizeDocument(input = {}) {
       if (!finite(raw.lineweight) || raw.lineweight < 0 || raw.lineweight > 10) throw new Error('Entity lineweight is invalid.');
       entity.lineweight = raw.lineweight;
     }
+    if(raw.linetype!==undefined){if(!LINETYPES.includes(raw.linetype))throw new Error('Entity linetype is invalid.');entity.linetype=raw.linetype;}
     return entity;
   });
   if(entities.reduce((sum,entity)=>sum+(entity.type==='MESH'?entity.vertices.length:entity.type==='POLY3D'?entity.points.length:0),0)>MAX_MESH_VERTICES||entities.reduce((sum,entity)=>sum+(entity.type==='MESH'?entity.faces.length:0),0)>MAX_MESH_FACES)throw new Error('Drawing exceeds the 100000 3D-vertex or 200000 face resource limit.');
@@ -1071,7 +1110,13 @@ function normalizeDocument(input = {}) {
   const viewport = { center: point(rawViewport.center), scale: rawViewport.scale };
   const workspace=input.workspace===undefined?'2d':input.workspace;if(!['2d','3d'].includes(workspace))throw new Error('Workspace must be 2d or 3d.');
   const camera3d=normalizeCamera3D(input.camera3d===undefined?DEFAULT_CAMERA3D:input.camera3d);
-  return { entities, layers, currentLayer, viewport,textStyles,dimStyles,currentTextStyle,currentDimStyle,settings,blocks,workspace,camera3d };
+  const ucs=normalizeUCS(input.ucs===undefined?presetUCS(settings.constructionPlane==='custom'?'XY':settings.constructionPlane):input.ucs);
+  if(settings.constructionPlane==='custom'&&input.ucs===undefined)throw new Error('Custom construction plane requires a saved UCS.');
+  if(settings.constructionPlane!=='custom'){const expected=presetUCS(settings.constructionPlane);for(const key of ['xAxis','yAxis','zAxis'])if(Math.hypot(ucs[key].x-expected[key].x,ucs[key].y-expected[key].y,ucs[key].z-expected[key].z)>1e-10)throw new Error('Named construction plane does not match the saved UCS basis.');}
+  const activeSpace=input.activeSpace===undefined?'model':input.activeSpace,activeLayoutId=input.activeLayoutId??null,activeViewportId=input.activeViewportId??null;
+  if(!['model','paper'].includes(activeSpace)||activeLayoutId!==null&&!layouts.some(layout=>layout.id===activeLayoutId)||activeLayoutId===null&&(activeSpace==='paper'||activeViewportId!==null)||activeSpace==='paper'&&activeViewportId!==null||activeViewportId!==null&&!layouts.find(layout=>layout.id===activeLayoutId)?.viewports.some(view=>view.id===activeViewportId))throw new Error('Active paper/model space or viewport reference is invalid.');
+  const paperViewport=normalizePaperView(input.paperViewport===undefined?{center:{x:210,y:148.5},scale:2}:input.paperViewport);
+  return { entities, layers, currentLayer, viewport,textStyles,dimStyles,currentTextStyle,currentDimStyle,settings,blocks,workspace,camera3d,layouts,activeSpace,activeLayoutId,activeViewportId,paperViewport,ucs };
 }
 
 function normalizeClipboard(input) {
@@ -1119,7 +1164,7 @@ function writeDXF(document) {
   const allocate = () => (next++).toString(16).toUpperCase();
   const tableNames = ['VPORT', 'LTYPE', 'LAYER', 'STYLE', 'VIEW', 'UCS', 'APPID', 'DIMSTYLE', 'BLOCK_RECORD'];
   const tableIds = Object.fromEntries(tableNames.map(name => [name, allocate()]));
-  const activeView = allocate(), lineTypes = ['BYBLOCK', 'BYLAYER', 'CONTINUOUS'].map(name => ({ name, id: allocate() }));
+  const activeView = allocate(), lineTypes = ['BYBLOCK', 'BYLAYER', 'CONTINUOUS',...new Set([...document.layers.map(layer=>layer.linetype),...document.entities.map(entity=>entity.linetype)].filter(type=>type&&type!=='continuous').map(type=>type.toUpperCase()))].map(name => ({ name, id: allocate() }));
   const layerIds = new Map(document.layers.map(layer => [layer.name, allocate()]));
   const textStyleIds=new Map(document.textStyles.map(style=>[style.name,allocate()]));
   const appId=allocate(),exportDimStyles=document.dimStyles.map(style=>({...style})),dimensionPictures=[];
@@ -1131,6 +1176,7 @@ function writeDXF(document) {
       let number=index+1;do{styleName=`LinecraftDimensionScale${number++}`;}while(exportDimStyles.some(style=>style.name===styleName));
       const source=document.dimStyles.find(style=>style.name===entity.style);exportDimStyles.push({...source,name:styleName,scale:source.scale*entity.scale});
     }
+    if(entity.layoutId){const source=exportDimStyles.find(style=>style.name===styleName);let number=index+1;do{styleName=`LinecraftPaperDimension${number++}`;}while(exportDimStyles.some(style=>style.name===styleName));exportDimStyles.push({...source,name:styleName,paper:true});}
     const geometry=annotationPrimitives(entity,document),picture={entity,index,key,name:`*D${dimensionPictures.length+1}`,styleName,record:allocate(),begin:allocate(),end:allocate(),geometry,parts:[]};
     geometry.segments.forEach(([start,end])=>picture.parts.push({type:'LINE',id:allocate(),start,end}));
     geometry.arrows.forEach(points=>picture.parts.push({type:'SOLID',id:allocate(),points}));
@@ -1144,9 +1190,10 @@ function writeDXF(document) {
   const rootDictionary = allocate(), groupDictionary = allocate(), layoutDictionary = allocate(), plotDictionary = allocate();
   const plotStyleDictionary = allocate(), normalPlotStyle = allocate();
   const modelLayout = allocate(), paperLayout = allocate();
+  const sheets=document.layouts.length?document.layouts.map((layout,index)=>({...layout,record:index===0?paperRecord:allocate(),begin:index===0?paperBegin:allocate(),end:index===0?paperEnd:allocate(),layoutHandle:index===0?paperLayout:allocate(),blockName:index===0?'*Paper_Space':`*Paper_Space${index-1}`,overallViewport:allocate(),viewportHandles:layout.viewports.map(()=>allocate())})):[{id:null,name:'Layout1',paper:{widthMm:420,heightMm:297},viewports:[],record:paperRecord,begin:paperBegin,end:paperEnd,layoutHandle:paperLayout,blockName:'*Paper_Space'}];
   const entityIds = document.entities.map(() => allocate());
   const threeDHandles=document.entities.map((entity,index)=>entity.type==='MESH'?entity.faces.map((_,faceIndex)=>faceIndex===0?entityIds[index]:allocate()):entity.type==='POLY3D'?{vertices:entity.points.map(()=>allocate()),end:allocate()}:null);
-  const box = bounds3D(document.entities,document) ?? { minX: 0, minY: 0,minZ:0, maxX: 1, maxY: 1,maxZ:0 };
+  const box = bounds3D(document.entities.filter(entity=>!entity.layoutId),document) ?? { minX: 0, minY: 0,minZ:0, maxX: 1, maxY: 1,maxZ:0 };
   const middle = { x: midpoint(box.minX, box.maxX), y: midpoint(box.minY, box.maxY) };
   const point3 = (code, p) => { pair(code, p.x); pair(code + 10, p.y); pair(code + 20, p.z ?? 0); };
   const beginSection = name => { pair(0, 'SECTION'); pair(2, name); };
@@ -1162,6 +1209,7 @@ function writeDXF(document) {
   const fontFiles={'Arial':'Arial.ttf','Segoe UI':'segoeui.ttf','Consolas':'consola.ttf'};
   const entityHeader=(type,handle,entity,owner=modelRecord)=>{
     pair(0,type);pair(5,handle);pair(330,owner);pair(100,'AcDbEntity');pair(8,entity.layer);if(owner===modelRecord)pair(410,'Model');pair(370,entity.lineweight==null?(owner!==modelRecord&&entity.layer==='0'?-2:-1):lineweight(entity.lineweight));if(entity.color)pair(420,Number.parseInt(entity.color.slice(1),16));
+    const sheet=sheets.find(sheet=>sheet.record===owner);if(sheet){pair(67,1);pair(410,sheet.name);if(document.layers.find(layer=>layer.name===entity.layer)?.paperVisible===false)pair(60,1);}if(entity.linetype)pair(6,entity.linetype.toUpperCase());
     if(userBlocks.some(block=>block.record===owner)&&entity.layer==='0'&&!entity.color)pair(62,0);
   };
   const textRecord=(entity)=>{
@@ -1174,9 +1222,17 @@ function writeDXF(document) {
   pair(9, '$HANDSEED'); pair(5, next.toString(16).toUpperCase());
   pair(9, '$INSBASE'); point3(10, { x: 0, y: 0 });
   pair(9, '$EXTMIN'); point3(10, { x: box.minX, y: box.minY,z:box.minZ }); pair(9, '$EXTMAX'); point3(10, { x: box.maxX, y: box.maxY,z:box.maxZ });
-  pair(9, '$TILEMODE'); pair(70, 1); pair(9, '$INSUNITS'); pair(70,({unitless:0,in:1,ft:2,mm:4,cm:5,m:6})[document.settings.units]);pair(9,'$LUNITS');pair(70,unitFormat.lunits);pair(9,'$LUPREC');pair(70,unitFormat.luprec);pair(9,'$TEXTSTYLE');pair(7,document.currentTextStyle);pair(9,'$DIMSTYLE');pair(2,document.currentDimStyle);if(document.settings.angularFormat!=='decimal-degrees'||document.settings.angularPrecision!==4){pair(9,'$AUNITS');pair(70,unitFormat.aunits);pair(9,'$AUPREC');pair(70,unitFormat.auprec);}pair(9, '$PSTYLEMODE'); pair(290, 1); endSection();
+  pair(9, '$TILEMODE'); pair(70, 1); pair(9, '$INSUNITS'); pair(70,({unitless:0,in:1,ft:2,mm:4,cm:5,m:6})[document.settings.units]);pair(9,'$LUNITS');pair(70,unitFormat.lunits);pair(9,'$LUPREC');pair(70,unitFormat.luprec);pair(9,'$TEXTSTYLE');pair(7,document.currentTextStyle);pair(9,'$DIMSTYLE');pair(2,document.currentDimStyle);if(document.settings.angularFormat!=='decimal-degrees'||document.settings.angularPrecision!==4){pair(9,'$AUNITS');pair(70,unitFormat.aunits);pair(9,'$AUPREC');pair(70,unitFormat.auprec);}
+  // Published HEADER coordinates are WCS. Keep the historic World/zero export
+  // byte sequence while preserving an explicitly positioned/oriented UCS.
+  const worldUCS=presetUCS();
+  if(['origin','xAxis','yAxis'].some(key=>['x','y','z'].some(axis=>document.ucs[key][axis]!==worldUCS[key][axis]))){
+    for(const [name,key]of [['$UCSORG','origin'],['$UCSXDIR','xAxis'],['$UCSYDIR','yAxis']]){pair(9,name);point3(10,document.ucs[key]);}
+  }
+  if(document.settings.constructionElevation!==0){pair(9,'$ELEVATION');pair(40,document.settings.constructionElevation);}
+  pair(9, '$PSTYLEMODE'); pair(290, 1); endSection();
   beginSection('CLASSES');
-  for (const [name, subclass, instances] of [['ACDBDICTIONARYWDFLT', 'AcDbDictionaryWithDefault', 1], ['ACDBPLACEHOLDER', 'AcDbPlaceHolder', 1], ['LAYOUT', 'AcDbLayout', 2]]) {
+  for (const [name, subclass, instances] of [['ACDBDICTIONARYWDFLT', 'AcDbDictionaryWithDefault', 1], ['ACDBPLACEHOLDER', 'AcDbPlaceHolder', 1], ['LAYOUT', 'AcDbLayout', 1+sheets.length]]) {
     pair(0, 'CLASS'); pair(1, name); pair(2, subclass); pair(3, 'ObjectDBX Classes'); pair(90, 0); pair(91, instances); pair(280, 0); pair(281, 0);
   }
   endSection();
@@ -1190,13 +1246,14 @@ function writeDXF(document) {
   pair(42, 50); pair(43, 0); pair(44, 0); pair(50, 0); pair(51, 0); pair(71, 0); pair(72, 1000); pair(73, 1); pair(74, 3); pair(75, 0); pair(76, 0); pair(77, 0); pair(78, 0); pair(0, 'ENDTAB');
   beginTable('LTYPE', lineTypes.length);
   for (const type of lineTypes) {
-    symbol('LTYPE', type.id, 'LTYPE', 'AcDbLinetypeTableRecord', type.name); pair(70, 0); pair(3, type.name === 'CONTINUOUS' ? 'Solid line' : ''); pair(72, 65); pair(73, 0); pair(40, 0);
+    const pattern=({DASHED:[6,-3],HIDDEN:[3,-1.5],CENTER:[8,-2,1,-2]})[type.name]??[];
+    symbol('LTYPE', type.id, 'LTYPE', 'AcDbLinetypeTableRecord', type.name); pair(70, 0); pair(3, type.name === 'CONTINUOUS' ? 'Solid line' : ''); pair(72, 65); pair(73, pattern.length); pair(40, pattern.reduce((sum,value)=>sum+Math.abs(value),0));for(const length of pattern){pair(49,length);pair(74,0);}
   }
   pair(0, 'ENDTAB');
   beginTable('LAYER', document.layers.length);
   for (const layer of document.layers) {
     symbol('LAYER', layerIds.get(layer.name), 'LAYER', 'AcDbLayerTableRecord', layer.name); pair(70, layer.locked ? 4 : 0);
-    pair(62, layer.visible ? 7 : -7); pair(6, 'CONTINUOUS'); pair(420, Number.parseInt(layer.color.slice(1), 16)); pair(290, 1); pair(370, lineweight(layer.lineweight)); pair(390, normalPlotStyle); pair(347, '0');
+    pair(62, layer.visible ? 7 : -7); pair(6, (layer.linetype??'continuous').toUpperCase()); pair(420, Number.parseInt(layer.color.slice(1), 16)); pair(290, layer.plot===false?0:1); pair(370, lineweight(layer.lineweight)); pair(390, normalPlotStyle); pair(347, '0');
   }
   pair(0, 'ENDTAB');
   beginTable('STYLE', document.textStyles.length);
@@ -1206,20 +1263,22 @@ function writeDXF(document) {
   beginTable('APPID', 1); symbol('APPID', appId, 'APPID', 'AcDbRegAppTableRecord', 'ACAD'); pair(70, 0); pair(0, 'ENDTAB');
   beginTable('DIMSTYLE', exportDimStyles.length); pair(100, 'AcDbDimStyleTable'); pair(71, 0);
   for(const style of exportDimStyles){
+    const format=style.paper?dxfUnitFormat({...document.settings,units:'mm',linearFormat:'decimal'}):unitFormat;
     pair(0,'DIMSTYLE');pair(105,dimStyleIds.get(style.name));pair(330,tableIds.DIMSTYLE);pair(100,'AcDbSymbolTableRecord');pair(100,'AcDbDimStyleTableRecord');pair(2,style.name);pair(70,0);pair(3,`${escapeDXFMText(style.prefix)}<>${escapeDXFMText(style.suffix)}`);
-    pair(40,style.scale);pair(41,style.arrowSize);pair(42,style.extensionOffset);pair(44,style.extensionOvershoot);pair(140,style.textHeight);pair(147,style.gap);pair(144,unitFormat.dimlfac);pair(271,document.settings.linearFormat==='architectural'?(style.fractionPrecision??document.settings.fractionPrecision):style.precision);pair(277,unitFormat.dimlunit);pair(278,46);pair(73,0);pair(74,0);pair(77,1);pair(340,textStyleIds.get(style.textStyle));pair(371,-1);pair(372,-1);if(document.settings.linearFormat!=='decimal'){pair(276,2);pair(78,0);}if(document.settings.angularFormat!=='decimal-degrees'||style.angularPrecision!==undefined){const p=style.angularPrecision??style.precision;pair(275,unitFormat.dimaunit);pair(179,document.settings.angularFormat==='dms'?Math.min(8,p+4):p);pair(79,0);}
+    pair(40,style.scale);pair(41,style.arrowSize);pair(42,style.extensionOffset);pair(44,style.extensionOvershoot);pair(140,style.textHeight);pair(147,style.gap);pair(144,format.dimlfac);pair(271,!style.paper&&document.settings.linearFormat==='architectural'?(style.fractionPrecision??document.settings.fractionPrecision):style.precision);pair(277,format.dimlunit);pair(278,46);pair(73,0);pair(74,0);pair(77,1);pair(340,textStyleIds.get(style.textStyle));pair(371,-1);pair(372,-1);if(!style.paper&&document.settings.linearFormat!=='decimal'){pair(276,2);pair(78,0);}if(document.settings.angularFormat!=='decimal-degrees'||style.angularPrecision!==undefined){const p=style.angularPrecision??style.precision;pair(275,format.dimaunit);pair(179,document.settings.angularFormat==='dms'?Math.min(8,p+4):p);pair(79,0);}
   }
   pair(0,'ENDTAB');
-  beginTable('BLOCK_RECORD', 2+dimensionPictures.length+userBlocks.length);
-  for (const [name, id, layout] of [['*Model_Space', modelRecord, modelLayout], ['*Paper_Space', paperRecord, paperLayout]]) {
+  beginTable('BLOCK_RECORD', 1+sheets.length+dimensionPictures.length+userBlocks.length);
+  for (const [name, id, layout] of [['*Model_Space', modelRecord, modelLayout], ...sheets.map(sheet=>[sheet.blockName,sheet.record,sheet.layoutHandle])]) {
     symbol('BLOCK_RECORD', id, 'BLOCK_RECORD', 'AcDbBlockTableRecord', name); pair(340, layout); pair(70, 0); pair(280, 1); pair(281, 0);
   }
   for(const picture of dimensionPictures){symbol('BLOCK_RECORD',picture.record,'BLOCK_RECORD','AcDbBlockTableRecord',picture.name);pair(70,0);pair(280,1);pair(281,0);}
   for(const block of userBlocks){symbol('BLOCK_RECORD',block.record,'BLOCK_RECORD','AcDbBlockTableRecord',block.name);pair(70,0);pair(280,1);pair(281,0);}
   pair(0, 'ENDTAB'); endSection();
   beginSection('BLOCKS');
-  for (const [name, owner, begin, end] of [['*Model_Space', modelRecord, modelBegin, modelEnd], ['*Paper_Space', paperRecord, paperBegin, paperEnd]]) {
+  for (const [name, owner, begin, end] of [['*Model_Space', modelRecord, modelBegin, modelEnd], ...sheets.map(sheet=>[sheet.blockName,sheet.record,sheet.begin,sheet.end])]) {
     pair(0, 'BLOCK'); pair(5, begin); pair(330, owner); pair(100, 'AcDbEntity'); pair(8, '0'); pair(100, 'AcDbBlockBegin'); pair(2, name); pair(70, 0); point3(10, { x: 0, y: 0 }); pair(3, name); pair(1, '');
+    const sheet=sheets.find(sheet=>sheet.record===owner);if(sheet?.id&&sheet!==sheets[0]){document.entities.forEach((entity,index)=>{if(entity.layoutId===sheet.id)writeEntity(entity,index,sheet.record);});sheetViewports(sheet);}
     pair(0, 'ENDBLK'); pair(5, end); pair(330, owner); pair(100, 'AcDbEntity'); pair(8, '0'); pair(100, 'AcDbBlockEnd');
   }
   for(const picture of dimensionPictures){
@@ -1233,6 +1292,7 @@ function writeDXF(document) {
     pair(0,'ENDBLK');pair(5,picture.end);pair(330,picture.record);pair(100,'AcDbEntity');pair(8,'0');pair(100,'AcDbBlockEnd');
   }
   function writeEntity(entity,index,owner=modelRecord,key=`model:${index}`,handle=entityIds[index],resources=threeDHandles[index]){
+    if(SPATIAL_CURVES.has(entity.type)){const ocs=spatialCurveOCS(entity);entityHeader(entity.type==='CIRCLE3D'?'CIRCLE':'ARC',handle,entity,owner);pair(100,'AcDbCircle');point3(10,ocs.center);pair(40,entity.radius);point3(210,ocs.normal);if(entity.type==='ARC3D'){pair(100,'AcDbArc');pair(50,positiveAngle(ocs.angleOffset+entity.startAngle+(entity.sweepAngle<0?entity.sweepAngle:0)));pair(51,positiveAngle(ocs.angleOffset+entity.startAngle+(entity.sweepAngle>0?entity.sweepAngle:0)));}return;}
     if(entity.type==='MESH'){
       entity.faces.forEach((face,faceIndex)=>{entityHeader('3DFACE',resources[faceIndex],entity,owner);pair(100,'AcDbFace');for(let corner=0;corner<4;corner++)point3(10+corner,entity.vertices[face[Math.min(corner,face.length-1)]]);pair(70,0);});return;
     }
@@ -1276,22 +1336,29 @@ function writeDXF(document) {
     block.entities.forEach((entity,index)=>writeEntity(entity,index,block.record,`block:${block.name}:${index}`,block.handles[index],null));
     pair(0,'ENDBLK');pair(5,block.end);pair(330,block.record);pair(100,'AcDbEntity');pair(8,'0');pair(100,'AcDbBlockEnd');
   }
-  endSection();beginSection('ENTITIES');document.entities.forEach((entity,index)=>writeEntity(entity,index));
+  endSection();beginSection('ENTITIES');document.entities.forEach((entity,index)=>{if(!entity.layoutId||entity.layoutId===sheets[0].id)writeEntity(entity,index,entity.layoutId?sheets[0].record:modelRecord);});
+  function viewportRecord(sheet,view,handle,nativeId){
+    entityHeader('VIEWPORT',handle,{layer:view.layer??'0'},sheet.record);pair(100,'AcDbViewport');point3(10,{x:view.frame.x+view.frame.width/2,y:view.frame.y+view.frame.height/2,z:0});pair(40,view.frame.width);pair(41,view.frame.height);pair(68,nativeId);pair(69,nativeId);pair(12,nativeId===1?sheet.paper.widthMm/2:0);pair(22,nativeId===1?sheet.paper.heightMm/2:0);pair(13,0);pair(23,0);pair(14,10);pair(24,10);pair(15,10);pair(25,10);
+    const camera=view.workspace==='3d'?view.camera3d:{yaw:-90,pitch:90,roll:0},rad=Math.PI/180,normal={x:Math.cos(camera.yaw*rad)*Math.cos(camera.pitch*rad),y:Math.sin(camera.yaw*rad)*Math.cos(camera.pitch*rad),z:Math.sin(camera.pitch*rad)};
+    point3(16,normal);point3(17,view.modelCenter);pair(42,50);pair(43,0);pair(44,0);pair(45,nativeId===1?sheet.paper.heightMm:view.frame.height*view.scaleDenominator/modelUnitMillimeters(document.settings));pair(50,0);pair(51,camera.roll);pair(72,100);for(const name of new Set([...view.frozenLayers,...document.layers.filter(layer=>layer.paperVisible===false).map(layer=>layer.name)]))pair(331,layerIds.get(name));pair(90,32768+(view.locked?16384:0));pair(281,view.workspace==='3d'?(view.camera3d.renderMode==='shaded'?3:1):0);pair(71,0);pair(74,0);point3(110,document.ucs.origin);point3(111,document.ucs.xAxis);point3(112,document.ucs.yAxis);pair(79,0);pair(146,document.settings.constructionElevation);
+  }
+  function sheetViewports(sheet){const overall={frame:{x:0,y:0,width:sheet.paper.widthMm,height:sheet.paper.heightMm},modelCenter:{x:0,y:0,z:0},scaleDenominator:1,locked:false,frozenLayers:[],workspace:'2d',layer:'0'};viewportRecord(sheet,overall,sheet.overallViewport,1);sheet.viewports.forEach((view,index)=>viewportRecord(sheet,view,sheet.viewportHandles[index],index+2));}
+  if(sheets[0].id)sheetViewports(sheets[0]);
   endSection(); beginSection('OBJECTS');
   const dictionary = (id, owner, entries = []) => {
     pair(0, 'DICTIONARY'); pair(5, id); pair(330, owner); pair(100, 'AcDbDictionary'); pair(281, 1);
     for (const [name, target] of entries) { pair(3, name); pair(350, target); }
   };
   dictionary(rootDictionary, '0', [['ACAD_GROUP', groupDictionary], ['ACAD_LAYOUT', layoutDictionary], ['ACAD_PLOTSETTINGS', plotDictionary], ['ACAD_PLOTSTYLENAME', plotStyleDictionary]]);
-  dictionary(groupDictionary, rootDictionary); dictionary(layoutDictionary, rootDictionary, [['Model', modelLayout], ['Layout1', paperLayout]]); dictionary(plotDictionary, rootDictionary);
+  dictionary(groupDictionary, rootDictionary); dictionary(layoutDictionary, rootDictionary, [['Model', modelLayout], ...sheets.map(sheet=>[sheet.name,sheet.layoutHandle])]); dictionary(plotDictionary, rootDictionary);
   pair(0, 'ACDBDICTIONARYWDFLT'); pair(5, plotStyleDictionary); pair(330, rootDictionary); pair(100, 'AcDbDictionary'); pair(281, 1); pair(3, 'Normal'); pair(350, normalPlotStyle); pair(100, 'AcDbDictionaryWithDefault'); pair(340, normalPlotStyle);
   pair(0, 'ACDBPLACEHOLDER'); pair(5, normalPlotStyle); pair(330, plotStyleDictionary);
-  for (const [name, id, record, order] of [['Model', modelLayout, modelRecord, 0], ['Layout1', paperLayout, paperRecord, 1]]) {
+  for (const [name, id, record, order,sheet] of [['Model', modelLayout, modelRecord, 0,null], ...sheets.map((sheet,index)=>[sheet.name,sheet.layoutHandle,sheet.record,index+1,sheet])]) {
     pair(0, 'LAYOUT'); pair(5, id); pair(330, layoutDictionary); pair(100, 'AcDbPlotSettings');
     pair(1, ''); pair(2, ''); pair(4, ''); pair(6, '');
-    for (const code of [40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 140, 141]) pair(code, 0);
-    pair(142, 1); pair(143, 1); pair(70, name === 'Model' ? 1024 : 0); pair(72, 1); pair(73, 0); pair(74, 5);
-    pair(100, 'AcDbLayout'); pair(1, name); pair(70, 1); pair(71, order); pair(10, 0); pair(20, 0); pair(11, 420); pair(21, 297);
+    for (const code of [40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 140, 141]) pair(code,sheet?.id&&code===44?sheet.paper.widthMm:sheet?.id&&code===45?sheet.paper.heightMm:0);
+    pair(142, 1); pair(143, 1); pair(70, name === 'Model' ? 1024 : sheet?.viewports.some(view=>view.plotBorder)?1:0); pair(72, 1); pair(73, 0); pair(74, 5);
+    pair(100, 'AcDbLayout'); pair(1, name); pair(70, 1); pair(71, order); pair(10, 0); pair(20, 0); pair(11, sheet?.paper.widthMm??420); pair(21, sheet?.paper.heightMm??297);
     point3(12, { x: 0, y: 0 }); point3(14, name === 'Model' ? { x: box.minX, y: box.minY } : { x: 0, y: 0 }); point3(15, name === 'Model' ? { x: box.maxX, y: box.maxY } : { x: 0, y: 0 });
     pair(146, 0); point3(13, { x: 0, y: 0 }); point3(16, { x: 1, y: 0 }); point3(17, { x: 0, y: 1 }); pair(76, 0); pair(330, record);
   }
@@ -1304,19 +1371,29 @@ export function createEditor(initialState = {}) {
     ...document, command: null, commandPhase: null, commandData: {}, commandSelectionIds: [], commandPoints: [], prompt: 'Command:', selectionIds: [],
     history: [], message: '', revision: 0, clipboardRevision: 0, lastPoint: { x: 0, y: 0 }, canvasSize: { width: 1000, height: 700 },
   };
+  let modelView={viewport:clone(state.viewport),workspace:state.workspace,camera3d:clone(state.camera3d)};
+  const applyActiveView=()=>{const view=state.layouts.find(layout=>layout.id===state.activeLayoutId)?.viewports.find(view=>view.id===state.activeViewportId);if(view){state.workspace=view.workspace;state.camera3d=clone(view.camera3d);}else if(state.activeSpace==='paper')state.workspace='2d';else if(!state.activeLayoutId){state.viewport=clone(modelView.viewport);state.workspace=modelView.workspace;state.camera3d=clone(modelView.camera3d);}};
+  applyActiveView();
   let nextId = 1, transactionBefore = null, transactionIds = [], transformSources = [], copyBatches = [], editingSteps = [], clipboard = null, pendingCut = null;
   const allocatedIds=new Set(document.entities.map(entity=>entity.id));
+  const entityScopes=new Map();
+  const stampScopes=()=>{for(const entity of state.entities)if(entityScopes.has(entity.id)){const layoutId=entityScopes.get(entity.id);if(layoutId)entity.layoutId=layoutId;else delete entity.layoutId;entityScopes.delete(entity.id);}};
   const undoStack = [], redoStack = [];
-  const snapshot = () => clone({ entities: state.entities, layers: state.layers, currentLayer: state.currentLayer,textStyles:state.textStyles,dimStyles:state.dimStyles,currentTextStyle:state.currentTextStyle,currentDimStyle:state.currentDimStyle,settings:state.settings,blocks:state.blocks });
+  const snapshot = () => {stampScopes();return clone({ entities: state.entities, layers: state.layers, currentLayer: state.currentLayer,textStyles:state.textStyles,dimStyles:state.dimStyles,currentTextStyle:state.currentTextStyle,currentDimStyle:state.currentDimStyle,settings:state.settings,blocks:state.blocks,layouts:state.layouts,ucs:state.ucs });};
   const layerOf = entity => state.layers.find(layer => layer.name === entity.layer);
-  const editable = entity => { const layer = layerOf(entity); return layer && layer.visible && !layer.locked; };
+  const activeContext=()=>({space:state.activeLayoutId?'paper':'model',layoutId:state.activeLayoutId,viewportId:state.activeViewportId});
+  const activeOwned=entity=>state.activeSpace==='paper'?entity.layoutId===state.activeLayoutId:!entity.layoutId;
+  const visible=entity=>activeOwned(entity)&&isEntityVisible(entity,state,activeContext());
+  const editable = entity => { const layer = layerOf(entity); return layer && visible(entity) && !layer.locked; };
   const validateSelection = () => { state.selectionIds = state.selectionIds.filter(id => state.entities.some(entity => entity.id === id && editable(entity))); };
   const result = (ok, message, changed = false) => {
+    stampScopes();
     state.message = message;
     if (changed) state.revision++;
     return { ok, message, changed };
   };
-  const restore = data => { Object.assign(state, clone(data));state.entities.forEach(entity=>allocatedIds.add(entity.id));validateSelection(); };
+  const reconcileSpaces=()=>{const priorLayoutId=state.activeLayoutId;if(state.activeLayoutId&&!state.layouts.some(layout=>layout.id===state.activeLayoutId)){state.activeLayoutId=null;state.activeViewportId=null;state.activeSpace='model';}if(state.activeViewportId&&!state.layouts.find(layout=>layout.id===state.activeLayoutId)?.viewports.some(view=>view.id===state.activeViewportId)){state.activeViewportId=null;state.activeSpace=state.activeLayoutId?'paper':'model';}if(state.activeLayoutId||priorLayoutId)applyActiveView();};
+  const restore = data => { Object.assign(state, clone(data));state.entities.forEach(entity=>allocatedIds.add(entity.id));reconcileSpaces();validateSelection(); };
   const record = before => {
     const after = snapshot();
     const beforeJSON=JSON.stringify(before),afterJSON=JSON.stringify(after);if(beforeJSON===afterJSON)return false;
@@ -1332,7 +1409,8 @@ export function createEditor(initialState = {}) {
     idle();
     return result(true, message, changed);
   };
-  const id = () => { let value; do { value = `e${nextId++}`; } while (allocatedIds.has(value));allocatedIds.add(value);return value; };
+  const commandAPI=callback=>{const command=state.command;state.command=null;let response;try{response=callback();}finally{state.command=command;}if(response.ok){transactionBefore=null;idle();}return response;};
+  const id = () => { let value; do { value = `e${nextId++}`; } while (allocatedIds.has(value));allocatedIds.add(value);entityScopes.set(value,state.activeSpace==='paper'?state.activeLayoutId:null);return value; };
   const acceptTransformSelection = () => {
     validateSelection();
     if (!state.selectionIds.length) return result(false, 'No objects selected. Select objects and press Enter.');
@@ -1348,13 +1426,13 @@ export function createEditor(initialState = {}) {
     }
     if(state.command==='BLOCK'){
       if(!state.commandData.blockName||!state.commandPoints.length)throw new Error('BLOCK requires a name and base point first.');if(transformSources.some(entity=>TYPES3D.has(entity.type)||entity.type==='INSERT'))throw new Error('BLOCK supports flat planar geometry; nested references and 3D content are not supported.');
-      const base=state.commandPoints[0],entities=transformSources.map(source=>{const{id:discard,...local}=translateEntity(source,{x:-base.x,y:-base.y},state);return local;}),block={name:state.commandData.blockName,base:{...base},entities};
+      const base=state.commandPoints[0],entities=transformSources.map(source=>{const{id:discard,layoutId:discardOwner,...local}=translateEntity(source,{x:-base.x,y:-base.y},state);return local;}),block={name:state.commandData.blockName,base:{...base},entities};
       const reference={id:id(),type:'INSERT',blockName:block.name,position:{...base},scale:1,rotation:0,layer:state.currentLayer};drawingLayerReady();
       const proposed=normalizeDocument({...snapshot(),blocks:[...state.blocks,block],entities:[...state.entities.filter(entity=>!selected.has(entity.id)),reference],viewport:state.viewport,camera3d:state.camera3d,workspace:state.workspace});state.blocks=proposed.blocks;state.entities=proposed.entities;state.selectionIds=[reference.id];return finish(`Block ${block.name} created and source geometry converted to one INSERT.`);
     }
     if(state.command==='EXTRUDE'){
-      for(const entity of transformSources){if(!['RECTANG','PLINE'].includes(entity.type)||entity.type==='PLINE'&&!entity.closed)throw new Error('EXTRUDE requires closed planar RECTANG or PLINE profiles.');triangulatePolygon(entity.points);}
-      state.commandPhase='height';state.commandData.targetKind='point';state.commandData.heightBase={...transformSources[0].points[0],z:0};state.prompt='EXTRUDE Specify nonzero height (source profiles retained):';return result(true,`${transformSources.length} closed profiles accepted.`);
+      for(const entity of transformSources){if(entity.type==='POLY3D')spatialProfilePlane(entity);else if(entity.type==='CIRCLE3D')validateSpatialCurve(entity);else if(entity.type==='CIRCLE')validateCircle(entity.center,entity.radius);else{if(!['RECTANG','PLINE'].includes(entity.type)||entity.type==='PLINE'&&!entity.closed)throw new Error('EXTRUDE requires closed planar paths or circles.');triangulatePolygon(entity.points);}}
+      const first=transformSources[0];state.commandPhase='height';state.commandData.targetKind='point';state.commandData.heightBase=point3(first.center??first.points[0]);state.commandData.plane=first.type==='POLY3D'?constructionPlane(spatialProfilePlane(first)):first.type==='CIRCLE3D'?constructionPlane(normalizeUCS({origin:first.center,xAxis:first.xAxis,yAxis:first.yAxis})):constructionPlane(presetUCS());state.commandData.heightDirection=clone(state.commandData.plane.normal);state.prompt='EXTRUDE Specify nonzero height (source profiles retained):';return result(true,`${transformSources.length} closed profiles accepted.`);
     }
     if(state.command==='ROTATE3D'){
       if(transformSources.some(entity=>!TYPES3D.has(entity.type)))throw new Error('ROTATE3D requires only MESH or POLY3D objects.');
@@ -1405,7 +1483,7 @@ export function createEditor(initialState = {}) {
     return result(true, `${transformSources.length} objects accepted.`);
   };
   const captureClipboard = rawBase => {
-    const sources = transformSources.length ? transformSources : state.entities.filter(entity => state.selectionIds.includes(entity.id) && editable(entity));
+    const sources = (transformSources.length ? transformSources : state.entities.filter(entity => state.selectionIds.includes(entity.id) && editable(entity))).map(({layoutId,...entity})=>entity);
     if (!sources.length) throw new Error('Select objects to copy to the clipboard.');
     const is3D=sources.some(entity=>TYPES3D.has(entity.type)),box = is3D?bounds3D(sources,state):bounds(sources,state), base = rawBase == null ? { x: box.minX, y: box.minY,...(is3D?{z:box.minZ}:{}) } : is3D?point3(rawBase):point(rawBase);
     const layerNames = new Set(sources.map(entity => entity.layer));
@@ -1424,7 +1502,7 @@ export function createEditor(initialState = {}) {
     const transformed = clipboardGeometry(rawTarget), additions = [];
     for (const source of clipboard.layers) {
       const existing = state.layers.find(layer => layer.name === source.name);
-      if (existing && (!existing.visible || existing.locked)) throw new Error(`Clipboard layer ${source.name} must be visible and unlocked.`);
+      if (existing && (!isEntityVisible({layer:source.name,...(state.activeSpace==='paper'?{layoutId:state.activeLayoutId}:{})},state,activeContext()) || existing.locked)) throw new Error(`Clipboard layer ${source.name} must be visible in the active space and unlocked.`);
       if (!existing) additions.push({ ...source, visible: true, locked: false });
     }
     const neededBlocks=new Set(transformed.filter(entity=>entity.type==='INSERT').map(entity=>entity.blockName)),styleEntities=[...transformed,...clipboard.blocks.filter(block=>neededBlocks.has(block.name)).flatMap(block=>block.entities)];
@@ -1462,7 +1540,7 @@ export function createEditor(initialState = {}) {
     editingSteps.push(before); validateSelection();
     return result(true, `${state.command} edit completed.`, true);
   };
-  const liveBoundaries=()=>state.entities.filter(entity=>state.commandSelectionIds.includes(entity.id)&&layerOf(entity)?.visible);
+  const liveBoundaries=()=>state.entities.filter(entity=>state.commandSelectionIds.includes(entity.id)&&visible(entity));
   const pickEditingTarget = (rawPoint,requestedId) => {
     const p = point(rawPoint), entityId = requestedId??hitTest(state.entities.filter(editable), p, 8 / state.viewport.scale,state);
     const target = state.entities.find(entity => entity.id === entityId);
@@ -1476,12 +1554,19 @@ export function createEditor(initialState = {}) {
     return state.command === 'TRIM' ? replaceLine(target, trimLine(target, liveBoundaries(), p)) : replaceLine(target, [extendLine(target, liveBoundaries(), p)]);
   };
   const startCommand = command => {
+    if(state.activeSpace==='paper'&&DRAW3D.has(command))return result(false,'Activate model space before constructing 3D geometry.');
+    const plane=editor.getConstructionPlane(),spatial=state.activeSpace!=='paper'&&(state.settings.constructionPlane!=='XY'||Object.values(plane.origin).some(n=>n!==0));
+    if(spatial&&['ELLIPSE','SPLINE','HATCH','FILLET','CHAMFER','STRETCH','BLOCK','INSERT','TEXT','MTEXT',...DIM_COMMANDS].includes(command))return result(false,'This command uses World XY geometry; restore UCS World and zero elevation, or use spatial paths and mesh construction.');
     validateSelection();
     state.command = command;
     state.commandPhase = null; state.commandData = {}; state.commandSelectionIds = [];
     state.commandPoints = [];
     transactionBefore = snapshot();
     transactionIds = []; transformSources = []; copyBatches = []; editingSteps = [];
+    if(['LINE','PLINE','RECTANG','CIRCLE','ARC',...DRAW3D].includes(command)){state.commandData.plane=clone(plane);state.commandData.spatial=spatial;if(spatial)state.commandData.threeD=true;}
+    if(command==='LAYOUT'){state.commandPhase='layout-option';state.commandData.targetKind='none';state.prompt='LAYOUT Enter [New/Set/Delete/Rename]:';return result(true,'Manage named paper layouts.');}
+    if(command==='MVIEW'){if(state.activeSpace!=='paper'){idle();return result(false,'Enter paper space before creating a model viewport.');}state.commandPhase='viewport-first';state.commandData.targetKind='point';state.prompt='MVIEW Specify first paper corner (mm):';return result(true,'Create one rectangular scaled model viewport.');}
+    if(command==='UCS'){state.commandPhase='ucs-choice';state.commandData.targetKind='none';state.prompt='UCS Enter [World/XY/XZ/YZ/3point/Face] <World>:';return result(true,'Choose an orthonormal world, three-point or mesh-face construction plane.');}
     if (command === 'COPY') state.commandData = { copyMode: 'multiple', copyCount: 0 };
     if(command==='ELLIPSE'){state.selectionIds=[];state.commandPhase='axis-first';state.commandData.targetKind='point';state.prompt='ELLIPSE Specify first axis endpoint or [Center]:';return result(true,'ELLIPSE started.');}
     if(command==='SPLINE'){state.selectionIds=[];state.commandPhase='control-point';state.commandData.targetKind='point';state.prompt='SPLINE Specify control vertex (open cubic CV method):';return result(true,'SPLINE uses actual cubic control vertices, not fit-point interpolation.');}
@@ -1490,12 +1575,12 @@ export function createEditor(initialState = {}) {
     if(command==='STRETCH'){state.selectionIds=[];state.commandPhase='window-first';state.commandData.targetKind='point';state.prompt='STRETCH Specify first crossing-window corner:';return result(true,'Specify one crossing window to retain outside vertices.');}
     if(command==='BLOCK'||command==='INSERT'){state.commandPhase='name';state.commandData.targetKind='none';state.prompt=`${command} Enter block name:`;return result(true,`${command} uses persistent flat block definitions.`);}
     if(DRAW3D.has(command)){
-      state.selectionIds=[];state.commandData={targetKind:'point',threeD:true};state.commandPhase=command==='BOX'?'first-corner':command==='3DPOLY'?'poly-point':'center';
+      state.selectionIds=[];state.commandData={...state.commandData,targetKind:'point',threeD:true};state.commandPhase=command==='BOX'?'first-corner':command==='3DPOLY'?'poly-point':'center';
       state.prompt=command==='BOX'?'BOX Specify first corner (X,Y,Z):':command==='3DPOLY'?'3DPOLY Specify first point (X,Y,Z):':`${command} Specify center (X,Y,Z):`;return result(true,`${command} started.`);
     }
     if(command==='3DORBITCTR'){state.commandPhase='orbit-center';state.commandData={targetKind:'point',threeD:true};state.prompt='3DORBITCTR Specify orbit center (X,Y,Z):';return result(true,'Specify an explicit 3D orbit target.');}
     if(command==='VPOINT'){state.commandPhase='view-vector';state.commandData={targetKind:'none',threeD:true};state.prompt='VPOINT Specify nonzero XYZ view direction:';return result(true,'Specify an XYZ vector from the target toward the viewer.');}
-    if(command==='PLAN'){state.commandPhase='plan-choice';state.commandData.targetKind='none';state.prompt='PLAN Enter [World] <World>:';return result(true,'World XY plan view is supported.');}
+    if(command==='PLAN'){state.commandPhase='plan-choice';state.commandData.targetKind='none';state.prompt='PLAN Enter [Current/World] <Current>:';return result(true,'View perpendicular to the current UCS or World.');}
     if(command==='TEXT'||command==='MTEXT'){
       const style=state.textStyles.find(style=>style.name===state.currentTextStyle);state.selectionIds=[];
       state.commandData={style:style.name,height:style.defaultHeight,rotation:style.defaultRotation,targetKind:'point'};
@@ -1535,10 +1620,10 @@ export function createEditor(initialState = {}) {
   const updateLinePrompt = () => {
     state.prompt = state.commandPoints.length > 2 ? `${state.command} Specify next point or [Close/Undo]:` : `${state.command} Specify next point or [Undo]:`;
   };
+  const preparedCircle=radius=>{const center=state.commandPoints[0],entity={type:state.commandData.spatial?'CIRCLE3D':'CIRCLE',center:{...center},radius,layer:state.currentLayer,...(state.commandData.spatial?{xAxis:clone(state.commandData.plane.xAxis),yAxis:clone(state.commandData.plane.yAxis)}:{})};if(state.commandData.spatial)validateSpatialCurve(entity);else validateCircle(center,radius);return entity;};
+  const preparedSpatialArc=p=>{const plane=state.commandData.plane,points=[...state.commandPoints,p].map(q=>worldToPlane(q,plane));if(points.some(q=>Math.abs(q.z-points[0].z)>1e-9*Math.max(1,...points.map(q=>Math.hypot(q.x,q.y)))))throw new Error('ARC points must lie in one current-UCS plane.');const arc=arcThroughPoints(...points.map(({x,y})=>({x,y}))),entity={type:'ARC3D',center:planeToWorld({...arc.center,z:points[0].z},plane),radius:arc.radius,xAxis:clone(plane.xAxis),yAxis:clone(plane.yAxis),startAngle:arc.startAngle,sweepAngle:arc.sweepAngle,layer:state.currentLayer};validateSpatialCurve(entity);return entity;};
   const completeCircle = radius => {
-    const center = state.commandPoints[0];
-    validateCircle(center, radius);
-    const entity={ id: id(), type: 'CIRCLE', center: { ...center }, radius, layer: state.currentLayer };check3DResources([entity]);state.entities.push(entity);
+    const entity=preparedCircle(radius);check3DResources([entity]);entity.id=id();state.entities.push(entity);
     return finish('CIRCLE completed.');
   };
   const transformedGeometry = rawValue => {
@@ -1570,21 +1655,29 @@ export function createEditor(initialState = {}) {
     state.selectionIds = [];
     return finish(`${command} completed for ${transformed.length} objects.`);
   };
-  const drawingLayerReady=()=>{const layer=state.layers.find(item=>item.name===state.currentLayer);if(!layer?.visible||layer.locked)throw new Error('The current layer must be visible and unlocked to draw.');};
-  const threeDPointMode=()=>DRAW3D.has(state.command)||['ROTATE3D','3DORBITCTR','VPOINT','COPYBASE'].includes(state.command)||state.command==='EXTRUDE'&&state.commandPhase==='height'||state.commandData.threeD===true||state.command==='PASTECLIP'&&clipboard?.entities.some(entity=>TYPES3D.has(entity.type));
-  const parseInputPoint=(raw,base=state.lastPoint)=>threeDPointMode()?parseCoordinate3D(raw,base,state.settings):parsePoint2D(raw,{x:base.x,y:base.y},state.settings);
+  const drawingLayerReady=()=>{const layer=state.layers.find(item=>item.name===state.currentLayer),probe={layer:state.currentLayer,...(state.activeSpace==='paper'?{layoutId:state.activeLayoutId}:{})};if(!layer||!isEntityVisible(probe,state,activeContext())||layer.locked)throw new Error('The current layer must be visible in the active space and unlocked to draw.');};
+  const threeDPointMode=()=>DRAW3D.has(state.command)||['ROTATE3D','3DORBITCTR','VPOINT','COPYBASE','UCS'].includes(state.command)||state.command==='EXTRUDE'&&state.commandPhase==='height'||state.commandData.threeD===true||state.command==='PASTECLIP'&&clipboard?.entities.some(entity=>TYPES3D.has(entity.type));
+  const parseInputPoint=(raw,base=state.lastPoint)=>{
+    if(!threeDPointMode())return parsePoint2D(raw,{x:base.x,y:base.y},inputSettings());
+    if(typeof raw==='object')return point3(raw);
+    if(['UCS','VPOINT','3DORBITCTR'].includes(state.command))return parseCoordinate3D(raw,base,inputSettings());
+    const plane=state.commandData.plane??editor.getConstructionPlane(),localBase=worldToPlane(point3(base),plane),local=String(raw).includes('<')?{...parsePoint2D(raw,{x:localBase.x,y:localBase.y},inputSettings()),z:0}:parseCoordinate3D(raw,localBase,inputSettings());
+    return planeToWorld(local,plane);
+  };
   const parseCoordinate=parseInputPoint;
-  const lengthScalar=raw=>parseLength(raw,state.settings),angleScalar=raw=>parseAngle(raw,state.settings),scalarInput=raw=>typeof raw==='string'&&!/[<,]/.test(raw);
-  const distancePoint=(raw,options={})=>{const distance=lengthScalar(raw),last=state.commandPoints.at(-1),previous=state.commandPoints.at(-2);if(!last)throw new Error('Specify a coordinate pair before direct distance.');const vector=point(options.direction??(previous?{x:last.x-previous.x,y:last.y-previous.y}:{x:1,y:0})),length=Math.hypot(vector.x,vector.y);if(!finite(length)||length===0)throw new Error('Direct distance needs a finite nonzero direction.');return point({x:last.x+distance*vector.x/length,y:last.y+distance*vector.y/length});};
+  const inputSettings=()=>state.activeSpace==='paper'?{...state.settings,units:'mm',linearFormat:'decimal'}:state.settings;
+  const lengthScalar=raw=>parseLength(raw,inputSettings()),angleScalar=raw=>parseAngle(raw,inputSettings()),scalarInput=raw=>typeof raw==='string'&&!/[<,]/.test(raw);
+  const distancePoint=(raw,options={})=>{const distance=lengthScalar(raw),last=state.commandPoints.at(-1),previous=state.commandPoints.at(-2);if(!last)throw new Error('Specify a coordinate pair before direct distance.');const spatial=state.commandData.spatial,vector=(spatial?point3:point)(options.direction??(previous?{x:last.x-previous.x,y:last.y-previous.y,...(spatial?{z:last.z-previous.z}:{})}:spatial?state.commandData.plane.xAxis:{x:1,y:0})),length=Math.hypot(vector.x,vector.y,...(spatial?[vector.z]:[]));if(!finite(length)||length===0)throw new Error('Direct distance needs a finite nonzero direction.');return(spatial?point3:point)({x:last.x+distance*vector.x/length,y:last.y+distance*vector.y/length,...(spatial?{z:last.z+distance*vector.z/length}:{})});};
   const check3DResources=(entities,replaced=[],blocks=state.blocks)=>{
+    if(state.activeSpace==='paper'&&entities.some(entity=>TYPES3D.has(entity.type)))throw new Error('Paper space accepts planar 2D entities only; activate a model viewport for 3D construction.');
     const all=[...state.entities.filter(entity=>!replaced.includes(entity.id)),...entities];validateExpandedResources({entities:all,blocks,dimStyles:state.dimStyles});if(all.reduce((sum,entity)=>sum+(entity.type==='MESH'?entity.vertices.length:entity.type==='POLY3D'?entity.points.length:0),0)>MAX_MESH_VERTICES||all.reduce((sum,entity)=>sum+(entity.type==='MESH'?entity.faces.length:0),0)>MAX_MESH_FACES)throw new Error('Drawing exceeds the 100000 3D-vertex or 200000 face resource limit.');validateHatchResources({entities:all,blocks});
   };
   const preparedPrimitive=value=>{
-    const command=state.command,base=state.commandPoints[0];
-    if(command==='BOX')return{...makeBoxMesh(base,state.commandPoints[1],value),layer:state.currentLayer};
-    if(command==='CYLINDER')return{...makeCylinderMesh(base,state.commandData.radius,value),layer:state.currentLayer};
+    const command=state.command,base=state.commandPoints[0],plane=state.commandData.plane??editor.getConstructionPlane(),lift=mesh=>{mesh.vertices=mesh.vertices.map(p=>planeToWorld(p,plane));validateMesh(mesh);return{...mesh,layer:state.currentLayer};};
+    if(command==='BOX'){const a=worldToPlane(base,plane),b=worldToPlane(state.commandPoints[1],plane);b.z=a.z;return lift(makeBoxMesh(a,b,value));}
+    if(command==='CYLINDER')return lift(makeCylinderMesh(worldToPlane(base,plane),state.commandData.radius,value));
     if(command==='SPHERE')return{...makeSphereMesh(base,value),layer:state.currentLayer};
-    if(command==='EXTRUDE')return transformSources.map(entity=>extrudeProfile(entity,value));
+    if(command==='EXTRUDE')return transformSources.map(entity=>['CIRCLE','CIRCLE3D'].includes(entity.type)?extrudeCircleProfile(entity,value):entity.type==='POLY3D'?extrudeSpatialProfile(entity,value):extrudeProfile(entity,value));
     throw new Error('No 3D primitive is pending.');
   };
   const completePrimitive=value=>{
@@ -1606,7 +1699,7 @@ export function createEditor(initialState = {}) {
     const extra=prepared.arc??prepared.connector;if(extra&&first.layer!==second.layer){drawingLayerReady();extra.layer=state.currentLayer;delete extra.color;delete extra.lineweight;}return extra;
   };
   const chooseCornerOrHatch=(entityId,rawPick)=>{
-    const source=state.entities.find(entity=>entity.id===entityId),pick=point(rawPick??(source?.type==='LINE'?{x:midpoint(source.start.x,source.end.x),y:midpoint(source.start.y,source.end.y)}:{x:0,y:0}));if(!source||!layerOf(source)?.visible)throw new Error('Pick a visible source object.');
+    const source=state.entities.find(entity=>entity.id===entityId),pick=point(rawPick??(source?.type==='LINE'?{x:midpoint(source.start.x,source.end.x),y:midpoint(source.start.y,source.end.y)}:{x:0,y:0}));if(!source||!visible(source))throw new Error('Pick a visible source object.');
     if(state.command==='HATCH'){
       drawingLayerReady();const boundary=normalizeHatchBoundary(source),origin=boundary.center?{...boundary.center}:{...boundary.points[0]},entity={id:id(),type:'HATCH',boundary,origin,pattern:state.commandData.pattern,angle:state.commandData.angle,spacing:state.commandData.spacing,layer:state.currentLayer};validateHatch(entity);check3DResources([entity]);state.entities.push(entity);return finish('HATCH completed with a captured nonassociative boundary.');
     }
@@ -1617,7 +1710,7 @@ export function createEditor(initialState = {}) {
     if(extra?.type==='ARC')validateArc(extra);if(extra?.type==='LINE'&&samePoint(extra.start,extra.end))throw new Error('CHAMFER connector collapses.');check3DResources([prepared.first,prepared.second,...(extra?[extra]:[])],[prepared.first.id,prepared.second.id]);const replacements=new Map([[prepared.first.id,prepared.first],[prepared.second.id,prepared.second]]);state.entities=state.entities.map(entity=>replacements.get(entity.id)??entity);if(extra){extra.id=id();state.entities.push(extra);}state.selectionIds=[];return finish(`${state.command} trimmed/extended both LINEs${extra?' and added the corner geometry':''}.`);
   };
   const pickCornerOrHatch=p=>{
-    const candidates=state.entities.filter(entity=>state.command==='HATCH'?layerOf(entity)?.visible&&['RECTANG','PLINE','CIRCLE','ELLIPSE'].includes(entity.type):editable(entity)&&entity.type==='LINE'),entityId=hitTest(candidates,p,8/state.viewport.scale,state);if(!entityId)return result(false,'Pick a supported object edge or enter its entity ID.');return chooseCornerOrHatch(entityId,p);
+    const candidates=state.entities.filter(entity=>state.command==='HATCH'?visible(entity)&&['RECTANG','PLINE','CIRCLE','ELLIPSE'].includes(entity.type):editable(entity)&&entity.type==='LINE'),entityId=hitTest(candidates,p,8/state.viewport.scale,state);if(!entityId)return result(false,'Pick a supported object edge or enter its entity ID.');return chooseCornerOrHatch(entityId,p);
   };
   const acceptStretchWindow=(rawStart,rawEnd)=>{
     const start=point(rawStart),end=point(rawEnd),box={minX:Math.min(start.x,end.x),maxX:Math.max(start.x,end.x),minY:Math.min(start.y,end.y),maxY:Math.max(start.y,end.y)};if(box.minX===box.maxX||box.minY===box.maxY)throw new Error('STRETCH crossing window needs nonzero width and height.');
@@ -1726,10 +1819,22 @@ export function createEditor(initialState = {}) {
           else if(['U','UNDO'].includes(token)){const previous=editingSteps.pop();if(!previous)response=result(false,'No PEDIT edit to undo.');else{restore(previous);peditOptionPrompt();response=result(true,'Last PEDIT edit removed.',true);}}
           else response=result(false,'PEDIT supports Open, Close, Join, Reverse, Undo or Enter.');
         }
+        else if(state.command==='LAYOUT'){
+          if(state.commandPhase==='layout-option'){const option=({N:'new',NEW:'new',S:'set',SET:'set',D:'delete',DELETE:'delete',R:'rename',RENAME:'rename'})[token];if(!option)response=result(false,'Choose New, Set, Delete or Rename.');else{state.commandData.layoutOption=option;state.commandPhase='layout-name';state.prompt=`LAYOUT Enter ${option==='new'?'new':'existing'} layout name:`;response=result(true,'Specify a layout name.');}}
+          else if(state.commandPhase==='layout-rename'){response=commandAPI(()=>editor.updateLayout(state.commandData.layoutId,{name:inputText}));}
+          else{const option=state.commandData.layoutOption,layout=state.layouts.find(item=>item.name.toLowerCase()===inputText.toLowerCase());if(option==='new')response=commandAPI(()=>editor.addLayout(inputText));else if(!layout)response=result(false,'Layout does not exist.');else if(option==='rename'){state.commandData.layoutId=layout.id;state.commandPhase='layout-rename';state.prompt='LAYOUT Enter new name:';response=result(true,'Existing layout accepted.');}else response=commandAPI(()=>option==='delete'?editor.deleteLayout(layout.id):editor.setSpace('paper',layout.id));}
+        }
+        else if(state.command==='MVIEW')response=editor.submitPoint(parseInputPoint(inputText));
+        else if(state.command==='UCS'){
+          if(state.commandPhase==='ucs-choice'){if(inputText===''||['W','WORLD','XY','XZ','YZ'].includes(token))response=commandAPI(()=>editor.setUCS(inputText===''||['W','WORLD'].includes(token)?'WORLD':token));else if(['3','3P','3POINT'].includes(token)){state.commandPhase='ucs-origin';state.commandData.targetKind='point';state.prompt='UCS Specify WCS origin (X,Y,Z):';response=result(true,'Specify three noncollinear WCS points.');}else if(['F','FACE'].includes(token)){state.commandPhase='ucs-face';state.commandData.targetKind='object';state.prompt='UCS Choose a MESH entity ID, then its zero-based face index:';response=result(true,'Align to an existing planar mesh face.');}else response=result(false,'UCS supports World, XY, XZ, YZ, 3point or Face.');}
+          else if(state.commandPhase==='ucs-face'){const source=state.entities.find(entity=>entity.id===inputText);if(source?.type!=='MESH'||!visible(source))response=result(false,'Choose a visible model MESH entity ID.');else{state.commandData.faceEntityId=source.id;state.commandPhase='ucs-face-index';state.commandData.targetKind='none';state.prompt=`UCS Enter face index 0..${source.faces.length-1}:`;response=result(true,'Mesh accepted.');}}
+          else if(state.commandPhase==='ucs-face-index'){const index=scalar(inputText,'Face index');response=commandAPI(()=>editor.setUCSFromFace(state.commandData.faceEntityId,index));}
+          else response=editor.submitPoint(parseCoordinate3D(inputText,state.lastPoint,inputSettings()));
+        }
         else if(state.command==='VPOINT')response=editor.submitPoint(parseCoordinate3D(inputText));
         else if(state.command==='PLAN'){
-          if(inputText===''||['W','WORLD'].includes(token)){state.camera3d=normalizeCamera3D({...state.camera3d,yaw:-90,pitch:90,roll:0,mode:'top',projection:'orthographic'});response=finish('World XY plan view.');}
-          else response=result(false,'PLAN supports World only; UCS options are not implemented.');
+          if(inputText===''||['C','CURRENT','W','WORLD'].includes(token)){const world=['W','WORLD'].includes(token),plane=world?constructionPlane(presetUCS()):editor.getConstructionPlane(),camera=normalizeCamera3D({...state.camera3d,...planeCamera(plane),...(world?{yaw:-90,pitch:90,roll:0,mode:'top'}:{})});response=commandAPI(()=>editor.set3DView(camera));}
+          else response=result(false,'PLAN supports Current or World.');
         }
         else if(state.command==='3DORBITCTR')response=editor.submitPoint(parseCoordinate(inputText,state.lastPoint));
         else if(state.command==='3DPOLY'){
@@ -1742,7 +1847,7 @@ export function createEditor(initialState = {}) {
           }else response=editor.submitPoint(parseCoordinate(inputText,state.commandPoints.at(-1)??state.lastPoint));
         }else if(['BOX','CYLINDER','SPHERE'].includes(state.command)||state.command==='EXTRUDE'&&state.commandPhase==='height'){
           if(['radius','height'].includes(state.commandPhase)&&scalarInput(inputText)){
-            const value=lengthScalar(inputText);if(state.commandPhase==='radius'&&state.command==='CYLINDER'){validateCylinderRadius(state.commandPoints[0],value);state.commandData.radius=value;state.commandPhase='height';state.commandData.heightBase={...state.commandPoints[0]};state.prompt='CYLINDER Specify nonzero height:';response=result(true,'Radius accepted.');}
+            const value=lengthScalar(inputText);if(state.commandPhase==='radius'&&state.command==='CYLINDER'){validateCylinderRadius(worldToPlane(state.commandPoints[0],state.commandData.plane),value);state.commandData.radius=value;state.commandPhase='height';state.commandData.heightBase={...state.commandPoints[0]};state.commandData.heightDirection=clone(state.commandData.plane.normal);state.prompt='CYLINDER Specify nonzero height:';response=result(true,'Radius accepted.');}
             else response=completePrimitive(value);
           }else if(inputText==='')response=result(false,'Enter the requested 3D point or numeric value, or Escape to cancel.');
           else response=editor.submitPoint(parseCoordinate(inputText,state.commandPoints.at(-1)??state.lastPoint));
@@ -1770,9 +1875,7 @@ export function createEditor(initialState = {}) {
         }
         else if (state.command === 'ZOOM') {
           if (token === 'E' || token === 'EXTENTS') {
-            const visible = state.entities.filter(entity => layerOf(entity)?.visible);
-            state.viewport = zoomExtents(visible, state.viewport, state.canvasSize.width, state.canvasSize.height,40,state);
-            idle(); response = result(true, 'Zoom extents.', true);
+            response=commandAPI(()=>editor.fitView());
           } else if (inputText === '') { idle(); response = result(true, 'ZOOM canceled.'); }
           else response = result(false, 'ZOOM supports E (Extents).');
         } else if (SELECT_COMMANDS.has(state.command) && state.commandPhase === 'selection') {
@@ -1869,8 +1972,8 @@ export function createEditor(initialState = {}) {
             if (state.commandPoints.length < 3) response = result(false, 'Close requires at least three PLINE vertices.');
             else {
               const polyline = state.entities.find(entity => entity.id === transactionIds[0]);
-              const points = clone(state.commandPoints); if (samePoint(points[0], points.at(-1))) points.pop();
-              validatePolyline(points, true);check3DResources([{...polyline,points,closed:true}],[polyline.id]); polyline.points = points; polyline.closed = true; state.lastPoint = { ...points[0] }; response = finish('PLINE closed.');
+              const points = clone(state.commandPoints); if (state.commandData.spatial?samePoint3(points[0],points.at(-1)):samePoint(points[0], points.at(-1))) points.pop();
+              if(state.commandData.spatial)validatePolyline3D(points,true);else validatePolyline(points, true);check3DResources([{...polyline,points,closed:true}],[polyline.id]); polyline.points = points; polyline.closed = true; state.lastPoint = { ...points[0] }; response = finish('PLINE closed.');
             }
           } else if (state.command === 'PLINE' && ['A', 'ARC', 'W', 'WIDTH', 'H', 'HALFWIDTH'].includes(token)) response = result(false, 'PLINE currently supports straight, zero-width segments.');
           else if (state.command === 'LINE' && ['U', 'UNDO'].includes(token)) {
@@ -1885,13 +1988,17 @@ export function createEditor(initialState = {}) {
             if (state.commandPoints.length < 3) response = result(false, 'Close requires at least two LINE segments.');
             else {
               const a = state.commandPoints.at(-1), b = state.commandPoints[0];
-              if (!samePoint(a, b)) { const entity = { id: id(), type: 'LINE', start: { ...a }, end: { ...b }, layer: state.currentLayer };check3DResources([entity]); state.entities.push(entity); transactionIds.push(entity.id); }
+              if (!(state.commandData.spatial?samePoint3(a,b):samePoint(a,b))) { const entity = state.commandData.spatial?{id:id(),type:'POLY3D',points:[{...a},{...b}],closed:false,layer:state.currentLayer}:{ id: id(), type: 'LINE', start: { ...a }, end: { ...b }, layer: state.currentLayer };check3DResources([entity]); state.entities.push(entity); transactionIds.push(entity.id); }
               state.lastPoint = { ...b }; response = finish('LINE closed.');
             }
           } else if(['LINE','PLINE'].includes(state.command)&&state.commandPoints.length&&scalarInput(inputText))response=editor.submitPoint(distancePoint(inputText,options));
           else response = editor.submitPoint(parseCoordinate(inputText, state.commandPoints.at(-1) ?? state.lastPoint));
         } else if (['L', 'LINE'].includes(token)) response = startCommand('LINE');
         else if(['ELLIPSE','EL','SPLINE','SPL','HATCH','H','FILLET','F','CHAMFER','CHA','ARRAYRECT','AR','STRETCH','S','PEDIT','PE','BLOCK','B','INSERT','I'].includes(token))response=startCommand(({EL:'ELLIPSE',SPL:'SPLINE',H:'HATCH',F:'FILLET',CHA:'CHAMFER',AR:'ARRAYRECT',S:'STRETCH',PE:'PEDIT',B:'BLOCK',I:'INSERT'})[token]??token);
+        else if(['PSPACE','PS'].includes(token)){if(!state.layouts.length){const created=editor.addLayout('Layout1');if(!created.ok)response=created;else response=editor.setSpace('paper',created.layoutId);}else response=editor.setSpace('paper');}
+        else if(['MSPACE','MS'].includes(token))response=editor.setSpace('model');
+        else if(token==='MODEL')response=editor.setSpace('model',null);
+        else if(['MV','MVIEW','LAYOUT','UCS'].includes(token))response=startCommand(token==='MV'?'MVIEW':token);
         else if(DRAW3D.has(token)||['EXTRUDE','ROTATE3D','3DORBITCTR','VPOINT','PLAN'].includes(token))response=startCommand(token);
         else if(['3DORBIT','3DFORBIT'].includes(token))response=result(true,`${token} navigation is available in the 3D workspace orbit controls.`);
         else if (['PL', 'PLINE', 'POLYLINE'].includes(token)) response = startCommand('PLINE');
@@ -1921,8 +2028,7 @@ export function createEditor(initialState = {}) {
         else if (['E', 'ERASE', 'DELETE'].includes(token)) response = startCommand('ERASE');
         else if (['Z', 'ZOOM'].includes(token)) { state.command = 'ZOOM'; state.commandPoints = []; state.prompt = 'ZOOM Enter option [Extents]:'; response = result(true, 'Enter E for extents.'); }
         else if (['Z E', 'ZOOM E', 'ZE', 'EXTENTS'].includes(token)) {
-          state.viewport = zoomExtents(state.entities.filter(entity => layerOf(entity)?.visible), state.viewport, state.canvasSize.width, state.canvasSize.height,40,state);
-          response = result(true, 'Zoom extents.', true);
+          response=editor.fitView();
         } else if (['ALL', 'SELECT ALL'].includes(token)) { editor.select(state.entities.map(entity => entity.id)); response = result(true, `${state.selectionIds.length} objects selected.`); }
         else if (inputText === '') response = result(true, 'Ready.');
         else response = result(false, `Unknown command: ${String(inputText)}. Use a drawing or editing command, U, REDO, or ZOOM.`);
@@ -1934,6 +2040,16 @@ export function createEditor(initialState = {}) {
     submitPoint(raw) {
       try {
         const p = threeDPointMode()?point3(raw):point(raw);
+        if(state.command==='UCS'){
+          if(state.commandPhase==='ucs-choice')return result(false,'Choose a UCS option in the command line.');
+          const points=[...state.commandPoints,p];if(points.length===3){const ucs=ucsFromThreePoints(...points);return commandAPI(()=>editor.setUCS(ucs));}
+          if(points.length===2&&samePoint3(points[0],points[1]))throw new Error('UCS axis point must differ from its origin.');
+          state.commandPoints=points;state.lastPoint={...p};state.commandPhase=points.length===1?'ucs-x-axis':'ucs-y-axis';state.prompt=points.length===1?'UCS Specify WCS point on positive X axis:':'UCS Specify WCS point toward positive Y:';return result(true,'UCS point accepted.');
+        }
+        if(state.command==='MVIEW'){
+          if(state.commandPhase==='viewport-first'){state.commandPoints=[p];state.commandPhase='viewport-second';state.prompt='MVIEW Specify opposite paper corner (mm):';return result(true,'First viewport corner accepted.');}
+          const first=state.commandPoints[0],frame={x:Math.min(first.x,p.x),y:Math.min(first.y,p.y),width:Math.abs(p.x-first.x),height:Math.abs(p.y-first.y)};return commandAPI(()=>editor.addViewport(state.activeLayoutId,frame));
+        }
         if(state.command==='ELLIPSE'){
           drawingLayerReady();if(['axis-first','ellipse-center'].includes(state.commandPhase)){state.commandPoints=[p];state.lastPoint={...p};if(state.commandPhase==='ellipse-center'){state.commandData.center=p;state.commandPhase='major-endpoint';state.prompt='ELLIPSE Specify first-axis endpoint:';}else{state.commandPhase='axis-second';state.prompt='ELLIPSE Specify other endpoint of first axis:';}return result(true,'Ellipse axis origin accepted.');}
           if(['axis-second','major-endpoint'].includes(state.commandPhase)){const first=state.commandPoints[0],center=state.commandPhase==='axis-second'?{x:midpoint(first.x,p.x),y:midpoint(first.y,p.y)}:first,major=state.commandPhase==='axis-second'?{x:p.x/2-first.x/2,y:p.y/2-first.y/2}:{x:p.x-center.x,y:p.y-center.y};point(major);positive(Math.hypot(major.x,major.y),'First-axis length');state.commandData.center=center;state.commandData.major=major;state.commandPoints.push(p);state.commandPhase='minor-distance';state.prompt='ELLIPSE Specify positive distance to other axis:';state.lastPoint={...p};return result(true,'First axis accepted.');}
@@ -1966,19 +2082,19 @@ export function createEditor(initialState = {}) {
             if(!transactionIds.length){path.id=id();state.entities.push(path);transactionIds.push(path.id);}else state.entities=state.entities.map(entity=>entity.id===path.id?path:entity);
             state.commandPoints.push(p);state.lastPoint={...p};updateLinePrompt();return result(true,'3DPOLY segment added.',true);
           }
-          if(['first-corner','center'].includes(state.commandPhase)){state.commandPoints=[p];state.lastPoint={...p};state.commandPhase=state.command==='BOX'?'opposite-corner':'radius';state.prompt=state.command==='BOX'?'BOX Specify opposite corner in the same XY plane:':`${state.command} Specify positive radius:`;return result(true,'3D origin accepted.');}
+          if(['first-corner','center'].includes(state.commandPhase)){state.commandPoints=[p];state.lastPoint={...p};state.commandPhase=state.command==='BOX'?'opposite-corner':'radius';state.prompt=state.command==='BOX'?'BOX Specify opposite corner in the current UCS plane:':`${state.command} Specify positive radius:`;return result(true,'3D origin accepted.');}
           if(state.command==='BOX'&&state.commandPhase==='opposite-corner'){
-            validateBoxBase(state.commandPoints[0],p);state.commandPoints.push(p);state.lastPoint={...p};state.commandData.heightBase={...state.commandPoints[0]};state.commandPhase='height';state.prompt='BOX Specify nonzero height:';return result(true,'Base rectangle accepted.');
+            const a=worldToPlane(state.commandPoints[0],state.commandData.plane),b=worldToPlane(p,state.commandData.plane);if(Math.abs(a.z-b.z)>1e-9*Math.max(1,Math.abs(b.x-a.x),Math.abs(b.y-a.y)))throw new Error('BOX base corners must be in the same UCS plane.');b.z=a.z;validateBoxBase(a,b);state.commandPoints.push(p);state.lastPoint={...p};state.commandData.heightBase={...state.commandPoints[0]};state.commandData.heightDirection=clone(state.commandData.plane.normal);state.commandPhase='height';state.prompt='BOX Specify nonzero height:';return result(true,'Base rectangle accepted.');
           }
           if(state.commandPhase==='radius'){
-            const center=state.commandPoints[0];if(state.command==='CYLINDER'&&p.z!==center.z)throw new Error('Cylinder radius point must be in the center XY plane.');const radius=positive(Math.hypot(p.x-center.x,p.y-center.y,p.z-center.z),'Radius');
+            const center=state.commandPoints[0];if(state.command==='CYLINDER'&&Math.abs(worldToPlane(p,state.commandData.plane).z-worldToPlane(center,state.commandData.plane).z)>1e-9*Math.max(1,Math.hypot(p.x-center.x,p.y-center.y,p.z-center.z)))throw new Error('Cylinder radius point must be in the center UCS plane.');const radius=positive(Math.hypot(p.x-center.x,p.y-center.y,p.z-center.z),'Radius');
             if(state.command==='SPHERE')return completePrimitive(radius);
-            validateCylinderRadius(center,radius);state.commandData.radius=radius;state.commandData.heightBase={...center};state.commandPhase='height';state.prompt='CYLINDER Specify nonzero height:';state.lastPoint={...p};return result(true,'Radius accepted.');
+            validateCylinderRadius(worldToPlane(center,state.commandData.plane),radius);state.commandData.radius=radius;state.commandData.heightBase={...center};state.commandData.heightDirection=clone(state.commandData.plane.normal);state.commandPhase='height';state.prompt='CYLINDER Specify nonzero height:';state.lastPoint={...p};return result(true,'Radius accepted.');
           }
-          if(state.commandPhase==='height')return completePrimitive(p.z-state.commandData.heightBase.z);
+          if(state.commandPhase==='height')return completePrimitive(worldToPlane(p,state.commandData.plane).z-worldToPlane(state.commandData.heightBase,state.commandData.plane).z);
           return result(false,'Enter the requested 3D point or numeric value.');
         }
-        if(state.command==='EXTRUDE'&&state.commandPhase==='height')return completePrimitive((raw.z===undefined?state.settings.constructionElevation:point3(raw).z)-state.commandData.heightBase.z);
+        if(state.command==='EXTRUDE'&&state.commandPhase==='height')return completePrimitive(worldToPlane(p,state.commandData.plane).z-worldToPlane(state.commandData.heightBase,state.commandData.plane).z);
         if(state.command==='TEXT'||state.command==='MTEXT'){
           drawingLayerReady();
           if(['position','first-corner'].includes(state.commandPhase)){state.commandPoints=[p];state.lastPoint={...p};state.commandPhase=state.command==='TEXT'?'height':'second-corner';state.prompt=state.command==='TEXT'?'TEXT Specify height:':'MTEXT Specify opposite corner or [Height]:';return result(true,'Text origin accepted.');}
@@ -1994,7 +2110,7 @@ export function createEditor(initialState = {}) {
             else{const vertex=state.commandPoints[0];if(samePoint(vertex,p))throw new Error('Angular ray point must differ from its vertex.');if(state.commandPhase==='ray-second'){const first=state.commandPoints[1],a=Math.atan2(first.y-vertex.y,first.x-vertex.x),b=Math.atan2(p.y-vertex.y,p.x-vertex.x);if(Math.abs(Math.sin(a-b))<1e-12&&Math.cos(a-b)>0)throw new Error('Angular rays need distinct directions.');}state.commandPoints.push(p);state.commandPhase=state.commandPhase==='ray-first'?'ray-second':'placement';state.prompt=state.commandPhase==='placement'?'DIMANGULAR Specify arc placement to choose minor/reflex sector:':'DIMANGULAR Specify point on second ray:';}state.lastPoint={...p};return result(true,'Angular definition point accepted.');
           }
           if(state.commandPhase==='object'){
-            const circleId=hitTest(state.entities.filter(entity=>entity.type==='CIRCLE'&&layerOf(entity)?.visible),p,8/state.viewport.scale,state),circle=state.entities.find(entity=>entity.id===circleId);
+            const circleId=hitTest(state.entities.filter(entity=>entity.type==='CIRCLE'&&visible(entity)),p,8/state.viewport.scale,state),circle=state.entities.find(entity=>entity.id===circleId);
             if(!circle)return result(false,'Pick a visible CIRCLE circumference.');state.commandData.circle=clone(circle);state.commandPhase='placement';state.commandData.targetKind='point';state.prompt=`${state.command} Specify dimension placement:`;return result(true,'Circle radius captured.');
           }
           if(state.commandPhase==='origin-first'){state.commandPoints=[p];state.lastPoint={...p};state.commandPhase='origin-second';state.prompt=`${state.command} Specify second extension origin:`;return result(true,'First extension origin accepted.');}
@@ -2074,21 +2190,21 @@ export function createEditor(initialState = {}) {
         }
         if (!['LINE', 'PLINE', 'RECTANG', 'CIRCLE','ARC'].includes(state.command)) return result(false, 'Start a drawing command before entering a point.');
         const layer = state.layers.find(item => item.name === state.currentLayer);
-        if (layer.locked || !layer.visible) return result(false, 'The current layer must be visible and unlocked to draw.');
+        if (layer.locked || !isEntityVisible({layer:layer.name,...(state.activeSpace==='paper'?{layoutId:state.activeLayoutId}:{})},state,activeContext())) return result(false, 'The current layer must be visible in the active space and unlocked to draw.');
         if(state.command==='ARC') {
           if(state.commandPoints.length<2){
-            if(state.commandPoints.length&&samePoint(state.commandPoints[0],p))return result(false,'ARC points must differ.');
+            if(state.commandPoints.length&&(state.commandData.spatial?samePoint3(state.commandPoints[0],p):samePoint(state.commandPoints[0],p)))return result(false,'ARC points must differ.');
             state.commandPoints.push(p);state.lastPoint={...p};state.commandPhase=state.commandPoints.length===1?'arc-second':'arc-third';state.prompt=state.commandPoints.length===1?'ARC Specify second point:':'ARC Specify end point:';
             return result(true,'ARC point accepted.');
           }
-          const arc={id:id(),...arcThroughPoints(state.commandPoints[0],state.commandPoints[1],p),layer:state.currentLayer};check3DResources([arc]);state.entities.push(arc);state.lastPoint={...p};return finish('ARC completed.');
+          const arc=state.commandData.spatial?preparedSpatialArc(p):{...arcThroughPoints(state.commandPoints[0],state.commandPoints[1],p),layer:state.currentLayer};check3DResources([arc]);arc.id=id();state.entities.push(arc);state.lastPoint={...p};return finish('ARC completed.');
         }
         if (state.command === 'CIRCLE') {
           if (state.commandPhase === 'center') {
             state.commandPoints = [p]; state.commandData.diameter = false; state.commandPhase = 'radius'; state.lastPoint = { ...p };
             state.prompt = 'CIRCLE Specify radius or [Diameter]:'; return result(true, 'Center accepted.');
           }
-          const center = state.commandPoints[0], distance = Math.hypot(p.x - center.x, p.y - center.y);
+          const center = state.commandPoints[0];if(state.commandData.spatial&&Math.abs(worldToPlane(p,state.commandData.plane).z-worldToPlane(center,state.commandData.plane).z)>1e-9*Math.max(1,Math.hypot(p.x-center.x,p.y-center.y,p.z-center.z)))throw new Error('Circle radius point must remain in the center UCS plane.');const distance = Math.hypot(p.x - center.x, p.y - center.y,...(state.commandData.spatial?[p.z-center.z]:[]));
           state.lastPoint = { ...p }; return completeCircle(state.commandData.diameter ? distance / 2 : distance);
         }
         if (!state.commandPoints.length) {
@@ -2098,21 +2214,22 @@ export function createEditor(initialState = {}) {
         }
         const previous = state.commandPoints.at(-1);
         if (state.command === 'PLINE') {
-          if (samePoint(previous, p)) return result(false, 'Adjacent PLINE vertices must differ.');
-          const vertices = [...clone(state.commandPoints), p]; validatePolyline(vertices, false);
-          check3DResources([{type:'PLINE',points:vertices,closed:false,layer:state.currentLayer}],transactionIds);
+          if (state.commandData.spatial?samePoint3(previous,p):samePoint(previous,p)) return result(false, 'Adjacent PLINE vertices must differ.');
+          const vertices = [...clone(state.commandPoints), p];if(state.commandData.spatial)validatePolyline3D(vertices,false);else validatePolyline(vertices, false);
+          check3DResources([{type:state.commandData.spatial?'POLY3D':'PLINE',points:vertices,closed:false,layer:state.currentLayer}],transactionIds);
           if (!transactionIds.length) {
-            const entity = { id: id(), type: 'PLINE', points: vertices, closed: false, layer: state.currentLayer }; state.entities.push(entity); transactionIds.push(entity.id);
+            const entity = { id: id(), type: state.commandData.spatial?'POLY3D':'PLINE', points: vertices, closed: false, layer: state.currentLayer }; state.entities.push(entity); transactionIds.push(entity.id);
           } else state.entities.find(entity => entity.id === transactionIds[0]).points = vertices;
           state.commandPoints.push(p); state.lastPoint = { ...p }; updateLinePrompt(); return result(true, 'PLINE segment added.', true);
         }
         if (state.command === 'LINE') {
-          if (samePoint(previous, p)) return result(false, 'LINE endpoints must differ.');
-          const entity = { id: id(), type: 'LINE', start: { ...previous }, end: p, layer: state.currentLayer };
+          if (state.commandData.spatial?samePoint3(previous,p):samePoint(previous,p)) return result(false, 'LINE endpoints must differ.');
+          const entity = state.commandData.spatial?{id:id(),type:'POLY3D',points:[{...previous},p],closed:false,layer:state.currentLayer}:{ id: id(), type: 'LINE', start: { ...previous }, end: p, layer: state.currentLayer };
           check3DResources([entity]);
           state.entities.push(entity); transactionIds.push(entity.id); state.commandPoints.push(p); state.lastPoint = { ...p }; updateLinePrompt();
           return result(true, 'LINE segment added.', true);
         }
+        if(state.commandData.spatial){const plane=state.commandData.plane,a=worldToPlane(state.commandPoints[0],plane),b=worldToPlane(p,plane);if(Math.abs(a.z-b.z)>1e-9)throw new Error('RECTANG corners must share the current UCS plane.');if(a.x===b.x||a.y===b.y)throw new Error('RECTANG needs nonzero width and height.');const points=[a,{x:b.x,y:a.y,z:a.z},{x:b.x,y:b.y,z:a.z},{x:a.x,y:b.y,z:a.z}].map(q=>planeToWorld(q,plane)),entity={id:id(),type:'POLY3D',points,closed:true,layer:state.currentLayer};validatePolyline3D(points,true);check3DResources([entity]);state.entities.push(entity);state.lastPoint={...p};return finish('RECTANG completed as an exact spatial closed path.');}
         const first = state.commandPoints[0];
         if (first.x === p.x || first.y === p.y) return result(false, 'RECTANG needs nonzero width and height.');
         const corners = [{ ...first }, { x: p.x, y: first.y }, { ...p }, { x: first.x, y: p.y }];
@@ -2130,18 +2247,20 @@ export function createEditor(initialState = {}) {
     previewCommand(raw) {
       try {
         const p = threeDPointMode()?point3(raw):point(raw);
+        if(state.commandData.spatial&&['LINE','PLINE','RECTANG'].includes(state.command)&&state.commandPoints.length){const first=state.commandPoints[0];if(state.command==='RECTANG'){const plane=state.commandData.plane,a=worldToPlane(first,plane),b=worldToPlane(p,plane),points=[a,{x:b.x,y:a.y,z:a.z},{x:b.x,y:b.y,z:a.z},{x:a.x,y:b.y,z:a.z}].map(q=>planeToWorld(q,plane));return[{type:'POLY3D',points,closed:true,layer:state.currentLayer}];}return[{type:'POLY3D',points:[state.commandPoints.at(-1),p],closed:false,layer:state.currentLayer}];}
         if(state.command==='STRETCH'&&state.commandPhase==='target')return stretchGeometry(p);
         if(state.command==='INSERT'&&state.commandPhase==='position')return[preparedInsert(p)];
         if(state.command==='SPLINE'&&state.commandPoints.length){const controls=[...clone(state.commandPoints),p];if(controls.length>=4){const entity={type:'SPLINE',controlPoints:controls,degree:3,knots:makeClampedKnots(controls.length),closed:false,layer:state.currentLayer};validateSpline(entity);return[entity];}return[{type:'PLINE',points:controls,closed:false,layer:state.currentLayer}];}
         if(state.command==='ELLIPSE'&&state.commandPhase==='minor-distance'){const original=state.commandData.major,length=Math.hypot(original.x,original.y),minor=Math.hypot(p.x-state.commandData.center.x,p.y-state.commandData.center.y),major=minor>length?{x:-original.y/length*minor,y:original.x/length*minor}:{...original},entity={type:'ELLIPSE',center:{...state.commandData.center},major,ratio:Math.min(minor,length)/Math.max(minor,length),layer:state.currentLayer};validateEllipse(entity);return[entity];}
         if(state.command==='3DPOLY'&&state.commandPoints.length)return[{type:'POLY3D',points:[state.commandPoints.at(-1),p],closed:false,layer:state.currentLayer}];
         if(['BOX','CYLINDER','SPHERE','EXTRUDE'].includes(state.command)){
-          if(state.commandPhase==='height'){const value=p.z-state.commandData.heightBase.z,prepared=preparedPrimitive(value);return Array.isArray(prepared)?prepared:[prepared];}
-          if(state.command==='BOX'&&state.commandPhase==='opposite-corner'){const a=state.commandPoints[0];validateBoxBase(a,p);return[{type:'POLY3D',points:[a,{x:p.x,y:a.y,z:a.z},p,{x:a.x,y:p.y,z:a.z}],closed:true,layer:state.currentLayer}];}
-          if(state.commandPhase==='radius'){const c=state.commandPoints[0],radius=Math.hypot(p.x-c.x,p.y-c.y,p.z-c.z);if(state.command==='SPHERE')return[{...makeSphereMesh(c,radius),layer:state.currentLayer}];if(p.z!==c.z)return[];validateCylinderRadius(c,radius);return[{type:'POLY3D',points:Array.from({length:32},(_,i)=>{const[x,y]=angleBasis(i*360/32);return{x:c.x+radius*x,y:c.y+radius*y,z:c.z};}),closed:true,layer:state.currentLayer}];}
+          const plane=state.commandData.plane??editor.getConstructionPlane();
+          if(state.commandPhase==='height'){const value=worldToPlane(p,plane).z-worldToPlane(state.commandData.heightBase,plane).z,prepared=preparedPrimitive(value);return Array.isArray(prepared)?prepared:[prepared];}
+          if(state.command==='BOX'&&state.commandPhase==='opposite-corner'){const a=worldToPlane(state.commandPoints[0],plane),b=worldToPlane(p,plane);if(Math.abs(a.z-b.z)>1e-9)return[];b.z=a.z;validateBoxBase(a,b);return[{type:'POLY3D',points:[a,{x:b.x,y:a.y,z:a.z},b,{x:a.x,y:b.y,z:a.z}].map(q=>planeToWorld(q,plane)),closed:true,layer:state.currentLayer}];}
+          if(state.commandPhase==='radius'){const c=state.commandPoints[0],radius=Math.hypot(p.x-c.x,p.y-c.y,p.z-c.z);if(state.command==='SPHERE')return[{...makeSphereMesh(c,radius),layer:state.currentLayer}];const local=worldToPlane(c,plane);if(Math.abs(worldToPlane(p,plane).z-local.z)>1e-9)return[];validateCylinderRadius(local,radius);return[{type:'POLY3D',points:Array.from({length:32},(_,i)=>{const[x,y]=angleBasis(i*360/32);return planeToWorld({x:local.x+radius*x,y:local.y+radius*y,z:local.z},plane);}),closed:true,layer:state.currentLayer}];}
         }
         if(DIM_COMMANDS.has(state.command)&&state.commandPhase==='placement')return [preparedDimension(p)];
-        if(state.command==='ARC'&&state.commandPhase==='arc-third')return [{...arcThroughPoints(state.commandPoints[0],state.commandPoints[1],p),layer:state.currentLayer}];
+        if(state.command==='ARC'&&state.commandPhase==='arc-third')return [state.commandData.spatial?preparedSpatialArc(p):{...arcThroughPoints(state.commandPoints[0],state.commandPoints[1],p),layer:state.currentLayer}];
         if (state.command === 'PASTECLIP') return clipboardGeometry(p);
         if (state.command === 'OFFSET' && state.commandPhase === 'side') return [offsetEntity(state.commandData.offsetSource, state.commandData.distance, p)];
         if (['TRIM', 'EXTEND'].includes(state.command) && state.commandPhase === 'target') {
@@ -2150,10 +2269,9 @@ export function createEditor(initialState = {}) {
           return state.command === 'TRIM' ? trimLine(target, liveBoundaries(), p) : [extendLine(target, liveBoundaries(), p)];
         }
         if (state.command === 'CIRCLE' && state.commandPhase === 'radius') {
-          const center = state.commandPoints[0], distance = Math.hypot(p.x - center.x, p.y - center.y);
+          const center = state.commandPoints[0], distance = Math.hypot(p.x - center.x, p.y - center.y,...(state.commandData.spatial?[p.z-center.z]:[]));
           const radius = state.commandData.diameter ? distance / 2 : distance;
-          validateCircle(center, radius);
-          return [{ type: 'CIRCLE', center: { ...center }, radius, layer: state.currentLayer }];
+          return [preparedCircle(radius)];
         }
         if (TRANSFORMS.has(state.command) && ['target', 'angle', 'factor', 'mirror-second', 'delete-choice'].includes(state.commandPhase)) {
           if (state.commandPhase === 'angle') {
@@ -2171,8 +2289,9 @@ export function createEditor(initialState = {}) {
     previewScalar(value){
       try{if(['LINE','PLINE'].includes(state.command)&&state.commandPoints.length)return editor.previewCommand(distancePoint(value));const number=typeof value==='number'?scalar(value,'Preview value'):['angle','insert-angle','rotation','hatch-angle'].includes(state.commandPhase)?angleScalar(value):['factor','insert-scale','rows','columns'].includes(state.commandPhase)?scalar(value,'Preview value'):lengthScalar(value);if(state.command==='ELLIPSE'&&state.commandPhase==='minor-distance'){const original=state.commandData.major,length=Math.hypot(original.x,original.y),major=number>length?{x:-original.y/length*number,y:original.x/length*number}:{...original},entity={type:'ELLIPSE',center:{...state.commandData.center},major,ratio:Math.min(number,length)/Math.max(number,length),layer:state.currentLayer};validateEllipse(entity);return[entity];}
       if(state.command==='INSERT'&&['insert-scale','insert-angle'].includes(state.commandPhase))return[preparedInsert(state.commandPoints[0],state.commandPhase==='insert-scale'?number:state.commandData.scale,state.commandPhase==='insert-angle'?number:0)];
+      if(state.command==='CIRCLE'&&state.commandPhase==='radius')return[preparedCircle(state.commandData.diameter?number/2:number)];
       if(['BOX','CYLINDER','SPHERE','EXTRUDE'].includes(state.command)&&['radius','height'].includes(state.commandPhase)){
-        if(state.command==='CYLINDER'&&state.commandPhase==='radius'){const c=state.commandPoints[0];validateCylinderRadius(c,number);return[{type:'POLY3D',points:Array.from({length:32},(_,i)=>{const[x,y]=angleBasis(i*360/32);return{x:c.x+number*x,y:c.y+number*y,z:c.z};}),closed:true,layer:state.currentLayer}];}
+        if(state.command==='CYLINDER'&&state.commandPhase==='radius'){const plane=state.commandData.plane,c=worldToPlane(state.commandPoints[0],plane);validateCylinderRadius(c,number);return[{type:'POLY3D',points:Array.from({length:32},(_,i)=>{const[x,y]=angleBasis(i*360/32);return planeToWorld({x:c.x+number*x,y:c.y+number*y,z:c.z},plane);}),closed:true,layer:state.currentLayer}];}
         const prepared=preparedPrimitive(number);return Array.isArray(prepared)?prepared:[prepared];
       }if(TRANSFORMS.has(state.command)&&['angle','factor'].includes(state.commandPhase))return transformedGeometry(number);return[];}catch{return[];}
     },
@@ -2200,7 +2319,8 @@ export function createEditor(initialState = {}) {
     setStretchWindow(start,end){try{if(state.command!=='STRETCH'||!['window-first','window-second'].includes(state.commandPhase))return result(false,'Start STRETCH before defining its crossing window.');return acceptStretchWindow(start,end);}catch(error){return result(false,error.message);}},
     submitObject(entityId,rawPoint){
       try{
-        const source=state.entities.find(entity=>entity.id===entityId);if(!source||!layerOf(source)?.visible)return result(false,'Object is unavailable or hidden.');
+        const source=state.entities.find(entity=>entity.id===entityId);if(!source||!visible(source))return result(false,'Object is unavailable or hidden.');
+        if(state.command==='UCS'&&state.commandPhase==='ucs-face')return editor.execute(entityId);
         if(SELECT_COMMANDS.has(state.command)&&state.commandPhase==='selection'||state.command==='PEDIT'&&state.commandPhase==='join-selection')return editor.select([entityId],{add:true});
         if(['HATCH','FILLET','CHAMFER'].includes(state.command)&&state.commandData.targetKind==='object')return chooseCornerOrHatch(entityId,rawPoint);
         if(REPEATED_EDITS.has(state.command)&&state.commandData.targetKind==='object')return pickEditingTarget(rawPoint,entityId);
@@ -2209,7 +2329,7 @@ export function createEditor(initialState = {}) {
       }catch(error){return result(false,error.message);}
     },
     previewObject(entityId,rawPoint){
-      try{const source=state.entities.find(entity=>entity.id===entityId);if(!source||!layerOf(source)?.visible)return[];const p=point(rawPoint);
+      try{const source=state.entities.find(entity=>entity.id===entityId);if(!source||!visible(source))return[];const p=point(rawPoint);
         if(state.command==='HATCH'&&state.commandPhase==='boundary'){const boundary=normalizeHatchBoundary(source),entity={type:'HATCH',boundary,origin:boundary.center?{...boundary.center}:{...boundary.points[0]},pattern:state.commandData.pattern,angle:state.commandData.angle,spacing:state.commandData.spacing,layer:state.currentLayer};validateHatch(entity);return[entity];}
         if(['FILLET','CHAMFER'].includes(state.command)&&state.commandPhase==='second-line'&&editable(source)){const first=state.commandData.cornerFirst,live=state.entities.find(entity=>entity.id===first.source.id);if(!live||!editable(live)||JSON.stringify(live)!==JSON.stringify(first.source))return[];const prepared=state.command==='FILLET'?filletLines(first.source,source,first.pick,p,state.commandData.radius):chamferLines(first.source,source,first.pick,p,state.commandData.distance1,state.commandData.distance2),extra=cornerConnector(prepared,first.source,source);return[prepared.first,prepared.second,...(extra?[extra]:[])];}
         if(['TRIM','EXTEND'].includes(state.command)&&state.commandPhase==='target'&&editable(source)&&source.type==='LINE')return state.command==='TRIM'?trimLine(source,liveBoundaries(),p):[extendLine(source,liveBoundaries(),p)];return[];
@@ -2231,8 +2351,9 @@ export function createEditor(initialState = {}) {
       if(state.command)return result(false,'Finish or cancel the active command before changing drawing preferences.');
       try{
         if(!patch||typeof patch!=='object'||Array.isArray(patch))throw new Error('Preference patch must be an object.');
-        const reserved=['textStyles','dimStyles','currentTextStyle','currentDimStyle'],proposal={...snapshot(),viewport:state.viewport,camera3d:state.camera3d,workspace:state.workspace,settings:{...state.settings}};
+        const reserved=['textStyles','dimStyles','currentTextStyle','currentDimStyle','ucs'],proposal={...snapshot(),viewport:state.viewport,camera3d:state.camera3d,workspace:state.workspace,activeSpace:state.activeSpace,activeLayoutId:state.activeLayoutId,activeViewportId:state.activeViewportId,paperViewport:state.paperViewport,settings:{...state.settings}};
         for(const[key,value]of Object.entries(patch)){if(reserved.includes(key))proposal[key]=value;else if(Object.hasOwn(DEFAULT_SETTINGS,key))proposal.settings[key]=value;else if(key==='settings'){if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('Settings patch must be an object.');proposal.settings={...proposal.settings,...value};}else throw new Error(`Unsupported drawing preference: ${key}.`);}
+        if(proposal.settings.constructionPlane!==state.settings.constructionPlane&&proposal.settings.constructionPlane!=='custom')proposal.ucs=presetUCS(proposal.settings.constructionPlane,state.ucs.origin);
         const normalized=normalizeDocument(proposal),before=snapshot();Object.assign(state,normalized);const changed=record(before);return result(true,'Drawing preferences updated.',changed);
       }catch(error){return result(false,error.message);}
     },
@@ -2240,9 +2361,11 @@ export function createEditor(initialState = {}) {
       try{
         const allowed=['gridEnabled','snapEnabled','orthoEnabled','snapModes','gridAdaptive','gridSpacing','constructionElevation','constructionPlane'];
         if(!patch||typeof patch!=='object'||Array.isArray(patch)||Object.keys(patch).some(key=>!allowed.includes(key)))throw new Error('Quick drafting settings accept only grid/snap/ortho fields.');
-        const normalized=normalizeSettings({...state.settings,...patch}),changed=JSON.stringify(normalized)!==JSON.stringify(state.settings);state.settings=normalized;
-        const update=data=>{if(data?.settings)for(const key of Object.keys(patch))data.settings[key]=clone(normalized[key]);};
+        if(state.command&&state.command!=='3DPOLY'&&(patch.constructionPlane!==undefined||patch.constructionElevation!==undefined))throw new Error('Finish or cancel this command before changing its construction plane.');
+        const normalized=normalizeSettings({...state.settings,...patch}),changed=JSON.stringify(normalized)!==JSON.stringify(state.settings);if(patch.constructionPlane!==undefined){if(patch.constructionPlane==='custom'&&state.settings.constructionPlane!=='custom')throw new Error('Define a custom UCS before selecting its plane.');if(patch.constructionPlane!=='custom')state.ucs=presetUCS(patch.constructionPlane,state.ucs.origin);}state.settings=normalized;
+        const update=data=>{if(data?.settings)for(const key of Object.keys(patch))data.settings[key]=clone(normalized[key]);if(data&&patch.constructionPlane!==undefined)data.ucs=clone(state.ucs);};
         update(transactionBefore);editingSteps.forEach(update);for(const entry of [...undoStack,...redoStack]){update(entry.before);update(entry.after);}
+        if(state.command==='3DPOLY'&&(patch.constructionPlane!==undefined||patch.constructionElevation!==undefined))state.commandData.plane=editor.getConstructionPlane();
         return result(true,'Drafting controls updated.',changed);
       }catch(error){return result(false,error.message);}
     },
@@ -2332,9 +2455,9 @@ export function createEditor(initialState = {}) {
       if (state.command) return result(false, 'Finish or cancel the active command before changing the radius.');
       try {
         const entity = state.entities.find(item => item.id === entityId);
-        if (!entity || entity.type !== 'CIRCLE') return result(false, 'Choose a circle to change its radius.');
+        if (!entity || !['CIRCLE','CIRCLE3D'].includes(entity.type)) return result(false, 'Choose a circle to change its radius.');
         if (!editable(entity)) return result(false, 'Object is unavailable or its layer is locked.');
-        validateCircle(entity.center, radius);
+        if(entity.type==='CIRCLE3D')validateSpatialCurve({...entity,radius});else validateCircle(entity.center, radius);
         const before = snapshot(); entity.radius = radius;
         const changed = record(before); return result(true, 'Circle radius updated.', changed);
       } catch (error) { return result(false, error.message); }
@@ -2370,12 +2493,12 @@ export function createEditor(initialState = {}) {
       try {
         const index = state.layers.findIndex(layer => layer.name === name);
         if (index < 0) return result(false, 'Layer does not exist.');
-        if(!properties||typeof properties!=='object'||Array.isArray(properties)||Object.keys(properties).some(key=>!['name','color','visible','locked','lineweight'].includes(key)))return result(false,'Unsupported layer property.');
+        if(!properties||typeof properties!=='object'||Array.isArray(properties)||Object.keys(properties).some(key=>!['name','color','visible','locked','lineweight','modelVisible','paperVisible','linetype','plot'].includes(key)))return result(false,'Unsupported layer property.');
         const nextName=Object.hasOwn(properties,'name')?properties.name:name;
         if(nextName!==name&&(name==='0'||state.layers.some(layer=>layer.name===nextName)))return result(false,name==='0'?'Layer 0 cannot be renamed.':'Target layer name already exists.');
         const layer = normalizeLayer({ ...state.layers[index], ...properties, name:nextName });
         const before = snapshot(); state.layers[index] = layer;
-        if(nextName!==name){for(const entity of state.entities)if(entity.layer===name)entity.layer=nextName;for(const block of state.blocks)for(const entity of block.entities)if(entity.layer===name)entity.layer=nextName;if(state.currentLayer===name)state.currentLayer=nextName;}
+        if(nextName!==name){for(const entity of state.entities)if(entity.layer===name)entity.layer=nextName;for(const block of state.blocks)for(const entity of block.entities)if(entity.layer===name)entity.layer=nextName;for(const layout of state.layouts)for(const view of layout.viewports){if(view.layer===name)view.layer=nextName;view.frozenLayers=view.frozenLayers.map(layer=>layer===name?nextName:layer);}if(state.currentLayer===name)state.currentLayer=nextName;}
         const changed = record(before); validateSelection();
         return result(true, `Layer ${nextName} updated.`, changed);
       } catch (error) { return result(false, error.message); }
@@ -2385,6 +2508,7 @@ export function createEditor(initialState = {}) {
       if (state.command) return result(false, 'Finish or cancel the active command before deleting a layer.');
       if (name === '0' || name === state.currentLayer) return result(false, 'Layer 0 and the current layer cannot be deleted.');
       if (state.entities.some(entity => entity.layer === name)||state.blocks.some(block=>block.entities.some(entity=>entity.layer===name))) return result(false, 'Layer contains objects in the drawing or a block definition.');
+      if(state.layouts.some(layout=>layout.viewports.some(view=>view.layer===name||view.frozenLayers.includes(name))))return result(false,'Layer is referenced by a viewport border or freeze setting.');
       if (!state.layers.some(layer => layer.name === name)) return result(false, 'Layer does not exist.');
       const before = snapshot(); state.layers = state.layers.filter(layer => layer.name !== name); record(before);
       return result(true, `Layer ${name} deleted.`, true);
@@ -2393,29 +2517,79 @@ export function createEditor(initialState = {}) {
       if (state.command) return result(false, 'Finish or cancel the active command before switching layers.');
       const layer = state.layers.find(item => item.name === name);
       if (!layer) return result(false, 'Layer does not exist.');
-      if (!layer.visible || layer.locked) return result(false, 'Current layer must be visible and unlocked.');
+      if (!isEntityVisible({layer:name,...(state.activeSpace==='paper'?{layoutId:state.activeLayoutId}:{})},state,activeContext()) || layer.locked) return result(false, 'Current layer must be visible in the active space and unlocked.');
       const before = snapshot(); state.currentLayer = name; const changed = record(before);
       return result(true, `Current layer: ${name}.`, changed);
     },
     setViewSize(width, height) {
       if (finite(width) && width > 0 && finite(height) && height > 0) state.canvasSize = { width, height };
     },
-    setWorkspace(mode){if(!['2d','3d'].includes(mode))return result(false,'Workspace must be 2d or 3d.');state.workspace=mode;return result(true,`${mode.toUpperCase()} workspace active.`);},
-    set3DView(patch){try{if(!patch||typeof patch!=='object'||Array.isArray(patch)||Object.keys(patch).some(key=>!Object.hasOwn(DEFAULT_CAMERA3D,key)))throw new Error('Unsupported 3D view property.');state.camera3d=normalizeCamera3D({...state.camera3d,...patch});return result(true,'3D view updated.');}catch(error){return result(false,error.message);}},
-    serialize() { return JSON.stringify({ format: 'Linecraft/1', ...snapshot(), viewport: clone(state.viewport),workspace:state.workspace,camera3d:clone(state.camera3d) }, null, 2); },
+    getActiveEntities(){stampScopes();return state.entities.filter(activeOwned);},
+    getModelEntities(){stampScopes();return state.entities.filter(entity=>!entity.layoutId);},
+    getPaperEntities(layoutId=state.activeLayoutId){stampScopes();return state.entities.filter(entity=>entity.layoutId===layoutId);},
+    getActiveViewport(){return state.layouts.find(layout=>layout.id===state.activeLayoutId)?.viewports.find(view=>view.id===state.activeViewportId)??null;},
+    getDrawingSettings(){return{...inputSettings()};},
+    setPaperView(patch){try{state.paperViewport=normalizePaperView({...state.paperViewport,...patch});return result(true,'Paper view updated.');}catch(error){return result(false,error.message);}},
+    setSpace(space,layoutId=state.activeLayoutId,viewportId){
+      if(state.command)return result(false,'Finish or cancel the active command before switching spaces.');
+      try{
+        if(!['model','paper'].includes(space))throw new Error('Space must be model or paper.');
+        if(space==='paper'&&layoutId==null)layoutId=state.layouts[0]?.id;
+        const layout=layoutId==null?null:state.layouts.find(item=>item.id===layoutId);if(layoutId!=null&&!layout)throw new Error('Layout does not exist.');
+        if(space==='paper'&&!layout)throw new Error('Create a layout before entering paper space.');
+        let view=null;if(space==='model'&&layout){view=layout.viewports.find(item=>item.id===(viewportId??state.activeViewportId))??(viewportId===undefined?layout.viewports[0]:null);if(!view)throw new Error('Choose an existing model viewport.');}
+        if(!state.activeLayoutId)modelView={viewport:clone(state.viewport),workspace:state.workspace,camera3d:clone(state.camera3d)};
+        state.activeSpace=space;state.activeLayoutId=layout?.id??null;state.activeViewportId=view?.id??null;state.selectionIds=[];applyActiveView();
+        return result(true,layout?`${layout.name}: ${space==='paper'?'paper space':`model viewport ${view.id}`}.`:'Model space.');
+      }catch(error){return result(false,error.message);}
+    },
+    addLayout(name,paper={size:'A3',orientation:'landscape'}){
+      if(state.command)return result(false,'Finish or cancel the active command before creating a layout.');
+      try{let n=1;while(state.layouts.some(layout=>layout.id===`layout${n}`))n++;const layoutId=`layout${n}`,proposal=normalizeLayouts([...state.layouts,{id:layoutId,name,paper,entities:[],viewports:[]}],state.layers,normalizeCamera3D),before=snapshot();state.layouts=proposal;return{...result(true,`Layout ${name} created.`,record(before)),layoutId,layout:clone(proposal.at(-1))};}catch(error){return result(false,error.message);}
+    },
+    updateLayout(layoutId,patch){
+      if(state.command)return result(false,'Finish or cancel the active command before editing a layout.');
+      try{const source=state.layouts.find(layout=>layout.id===layoutId);if(!source)throw new Error('Layout does not exist.');if(!patch||Object.keys(patch).some(key=>!['name','paper'].includes(key)))throw new Error('Layout accepts name and paper properties.');let paper=source.paper;if(patch.paper){paper={...source.paper,...patch.paper};if(paper.size!=='Custom'&&(patch.paper.size!==undefined||patch.paper.orientation!==undefined)){delete paper.widthMm;delete paper.heightMm;}}const proposed=normalizeLayouts(state.layouts.map(layout=>layout.id===layoutId?{...layout,...patch,paper}:layout),state.layers,normalizeCamera3D),before=snapshot();state.layouts=proposed;return result(true,'Layout updated.',record(before));}catch(error){return result(false,error.message);}
+    },
+    deleteLayout(layoutId){if(state.command)return result(false,'Finish or cancel the active command before deleting a layout.');if(!state.layouts.some(layout=>layout.id===layoutId))return result(false,'Layout does not exist.');const before=snapshot();state.layouts=state.layouts.filter(layout=>layout.id!==layoutId);state.entities=state.entities.filter(entity=>entity.layoutId!==layoutId);reconcileSpaces();validateSelection();return result(true,'Layout and its paper geometry deleted.',record(before));},
+    addViewport(layoutId,frame,options={}){
+      if(state.command)return result(false,'Finish or cancel the active command before creating a viewport.');
+      try{const layout=state.layouts.find(item=>item.id===layoutId);if(!layout)throw new Error('Layout does not exist.');let n=1;while(state.layouts.some(item=>item.viewports.some(view=>view.id===`vp${n}`)))n++;const viewport=normalizePaperViewport({...options,id:`vp${n}`,frame},layout.paper,state.layers,normalizeCamera3D);if(layout.viewports.length>=16)throw new Error('Each layout supports at most 16 viewports.');const before=snapshot();layout.viewports.push(viewport);return{...result(true,'Model viewport created.',record(before)),viewportId:viewport.id,viewport:clone(viewport)};}catch(error){return result(false,error.message);}
+    },
+    updateViewport(layoutId,viewportId,patch,{navigation=false}={}){
+      if(state.command)return result(false,'Finish or cancel the active command before editing a viewport.');
+      try{const layout=state.layouts.find(item=>item.id===layoutId),index=layout?.viewports.findIndex(view=>view.id===viewportId);if(index==null||index<0)throw new Error('Viewport does not exist.');const source=layout.viewports[index];if(!patch||Object.keys(patch).some(key=>!['frame','modelCenter','scaleDenominator','locked','frozenLayers','workspace','camera3d','plotBorder','layer'].includes(key)))throw new Error('Unsupported viewport property.');if(source.locked&&navigation)throw new Error('Viewport is locked; unlock it before panning or zooming its model view.');const camera3d=patch.camera3d?{...source.camera3d,...patch.camera3d}:source.camera3d,modelCenter=patch.modelCenter??patch.camera3d?.target??source.modelCenter,viewport=normalizePaperViewport({...source,...patch,camera3d,modelCenter},layout.paper,state.layers,normalizeCamera3D),before=snapshot();layout.viewports[index]=viewport;if(state.activeViewportId===viewportId){state.camera3d=clone(viewport.camera3d);state.workspace=viewport.workspace;}return result(true,'Viewport updated.',record(before));}catch(error){return result(false,error.message);}
+    },
+    deleteViewport(layoutId,viewportId){if(state.command)return result(false,'Finish or cancel the active command before deleting a viewport.');const layout=state.layouts.find(item=>item.id===layoutId);if(!layout?.viewports.some(view=>view.id===viewportId))return result(false,'Viewport does not exist.');const before=snapshot();layout.viewports=layout.viewports.filter(view=>view.id!==viewportId);reconcileSpaces();validateSelection();return result(true,'Viewport deleted.',record(before));},
+    freezeViewportLayer(layoutId,viewportId,name,frozen=true){if(typeof frozen!=='boolean')return result(false,'Freeze must be boolean.');const view=state.layouts.find(layout=>layout.id===layoutId)?.viewports.find(view=>view.id===viewportId);if(!view||!state.layers.some(layer=>layer.name===name))return result(false,'Viewport or layer does not exist.');return editor.updateViewport(layoutId,viewportId,{frozenLayers:frozen?[...new Set([...view.frozenLayers,name])]:view.frozenLayers.filter(layer=>layer!==name)});},
+    getConstructionPlane(){return state.activeSpace==='paper'?constructionPlane(presetUCS(),0):constructionPlane(state.ucs,state.settings.constructionElevation);},
+    submitFace(entityId,faceIndex){if(state.command!=='UCS'||!['ucs-face','ucs-face-index'].includes(state.commandPhase))return result(false,'Start UCS Face before submitting a mesh face.');return commandAPI(()=>editor.setUCSFromFace(entityId,faceIndex));},
+    setUCS(value){if(state.command)return result(false,'Finish or cancel the active command before changing UCS.');try{if(state.activeSpace==='paper')throw new Error('Paper space uses its sheet XY plane.');const name=typeof value==='string'?value.toUpperCase():null,ucs=name?presetUCS(name==='WORLD'?'XY':name):normalizeUCS(value),before=snapshot();state.ucs=ucs;state.settings.constructionPlane=name==='WORLD'?'XY':name??'custom';state.settings.constructionElevation=0;return result(true,'UCS updated.',record(before));}catch(error){return result(false,error.message);}},
+    setUCSFromFace(entityId,faceIndex){try{const source=state.entities.find(entity=>entity.id===entityId);if(!source||source.type!=='MESH'||!visible(source)||!Number.isInteger(faceIndex)||!source.faces[faceIndex])throw new Error('Choose a visible planar mesh face.');const vertices=source.faces[faceIndex].map(index=>source.vertices[index]);const ucs=ucsFromThreePoints(vertices[0],vertices[1],vertices[2]);if(vertices.some(vertex=>Math.abs(worldToPlane(vertex,ucs).z)>1e-9*Math.max(1,...vertices.map(p=>Math.hypot(p.x-vertices[0].x,p.y-vertices[0].y,p.z-vertices[0].z)))))throw new Error('Face must be planar.');return editor.setUCS(ucs);}catch(error){return result(false,error.message);}},
+    moveMeshVertices(entityId,indices,delta){if(state.command)return result(false,'Finish or cancel the active command before editing mesh subobjects.');try{const source=state.entities.find(entity=>entity.id===entityId);if(source?.type!=='MESH'||!editable(source)||!Array.isArray(indices)||!indices.length||new Set(indices).size!==indices.length||indices.some(index=>!Number.isInteger(index)||index<0||index>=source.vertices.length))throw new Error('Choose distinct editable mesh vertices.');delta=point3(delta);const changed=clone(source),chosen=new Set(indices);changed.vertices=changed.vertices.map((p,index)=>chosen.has(index)?point3({x:p.x+delta.x,y:p.y+delta.y,z:p.z+delta.z}):p);changed.faces=changed.faces.flatMap(face=>face.length===4?[[face[0],face[1],face[2]],[face[0],face[2],face[3]]]:[face]);validateMesh(changed);check3DResources([changed],[entityId]);const before=snapshot();state.entities=state.entities.map(entity=>entity.id===entityId?changed:entity);return result(true,'Mesh subobject vertices moved.',record(before));}catch(error){return result(false,error.message);}},
+    fitView(){try{
+      if(state.activeSpace==='paper'||editor.getActiveViewport()?.locked){const paper=state.layouts.find(layout=>layout.id===state.activeLayoutId).paper;return editor.setPaperView({center:{x:paper.widthMm/2,y:paper.heightMm/2},scale:Math.min((state.canvasSize.width-80)/paper.widthMm,(state.canvasSize.height-80)/paper.heightMm)});}
+      const view=editor.getActiveViewport();if(view){const entities=editor.getModelEntities().filter(entity=>isEntityVisible(entity,state,activeContext())),box=bounds3D(entities,state);if(!box)return result(false,'No visible model geometry to fit.');const points=[];for(const x of [box.minX,box.maxX])for(const y of [box.minY,box.maxY])for(const z of [box.minZ,box.maxZ])points.push({x,y,z});const atOne={...view,scaleDenominator:1},projected=points.map(p=>viewportModelToPaper(p,atOne,state.settings));const lowX=Math.min(...projected.map(p=>p.x)),highX=Math.max(...projected.map(p=>p.x)),lowY=Math.min(...projected.map(p=>p.y)),highY=Math.max(...projected.map(p=>p.y)),modelCenter=viewportPaperToModel({x:midpoint(lowX,highX),y:midpoint(lowY,highY)},atOne,state.settings),scaleDenominator=Math.max(1e-6,Math.min(1e9,Math.max((highX-lowX)/(view.frame.width*.9),(highY-lowY)/(view.frame.height*.9))||view.scaleDenominator));return editor.updateViewport(state.activeLayoutId,view.id,{modelCenter,scaleDenominator},{navigation:true});}
+      state.viewport=zoomExtents(state.entities.filter(visible),state.viewport,state.canvasSize.width,state.canvasSize.height,40,state);return result(true,'Zoom extents.',true);
+    }catch(error){return result(false,error.message);}},
+    setWorkspace(mode){if(!['2d','3d'].includes(mode))return result(false,'Workspace must be 2d or 3d.');if(state.activeSpace==='paper'&&mode==='3d')return result(false,'Paper geometry uses 2D sheet coordinates; choose a model viewport for 3D.');if(state.activeViewportId)return editor.updateViewport(state.activeLayoutId,state.activeViewportId,{workspace:mode});state.workspace=mode;return result(true,`${mode.toUpperCase()} workspace active.`);},
+    set3DView(patch){try{if(!patch||typeof patch!=='object'||Array.isArray(patch)||Object.keys(patch).some(key=>!Object.hasOwn(DEFAULT_CAMERA3D,key)))throw new Error('Unsupported 3D view property.');const camera3d=normalizeCamera3D({...state.camera3d,...patch});if(state.activeViewportId)return editor.updateViewport(state.activeLayoutId,state.activeViewportId,{camera3d,modelCenter:camera3d.target},{navigation:true});state.camera3d=camera3d;return result(true,'3D view updated.');}catch(error){return result(false,error.message);}},
+    getModelView(){return clone(state.activeLayoutId?modelView:{viewport:state.viewport,workspace:state.workspace,camera3d:state.camera3d});},
+    serialize() { const data=snapshot(),view=editor.getModelView();data.layouts=data.layouts.map(layout=>({...layout,entities:data.entities.filter(entity=>entity.layoutId===layout.id).map(({layoutId,...entity})=>entity)}));data.entities=data.entities.filter(entity=>!entity.layoutId);return JSON.stringify({ format: 'Linecraft/1', ...data, ...view,activeSpace:state.activeSpace,activeLayoutId:state.activeLayoutId,activeViewportId:state.activeViewportId,paperViewport:clone(state.paperViewport) }, null, 2); },
     importJSON(source) {
       if (state.command) return result(false, 'Finish or cancel the active command before importing.');
       try {
         const imported = normalizeDocument(typeof source === 'string' ? JSON.parse(source) : source);
         imported.entities.forEach(entity=>allocatedIds.add(entity.id));
         const before = snapshot(); Object.assign(state, imported); state.selectionIds = []; state.lastPoint = { x: 0, y: 0 };
+        modelView={viewport:clone(imported.viewport),workspace:imported.workspace,camera3d:clone(imported.camera3d)};applyActiveView();
         const changed = record(before); return result(true, `Loaded ${state.entities.length} objects.`, changed);
       } catch (error) { return result(false, `Import rejected: ${error.message}`); }
     },
     exportDXF() {
       return writeDXF(state);
     },
-    getExportWarnings(){const warnings=[...dxfUnitFormat(state.settings).warnings];if(state.settings.angularFormat==='dms'&&state.dimStyles.some(style=>(style.angularPrecision??style.precision)>4)&&!warnings.some(warning=>warning.includes('four decimal places')))warnings.push('Native DXF DMS dimension precision is limited to four decimal places of seconds; original labels retain the selected precision as explicit text.');return warnings;},
+    getExportWarnings(){const warnings=[...dxfUnitFormat(state.settings).warnings];if(state.settings.angularFormat==='dms'&&state.dimStyles.some(style=>(style.angularPrecision??style.precision)>4)&&!warnings.some(warning=>warning.includes('four decimal places')))warnings.push('Native DXF DMS dimension precision is limited to four decimal places of seconds; original labels retain the selected precision as explicit text.');if(state.layers.some(layer=>layer.modelVisible===false))warnings.push('DXF preserves global layer visibility; independent Model-tab visibility is retained in Linecraft and PDF.');if(state.layouts.some(layout=>layout.viewports.some(view=>view.plotBorder)&&layout.viewports.some(view=>!view.plotBorder)))warnings.push('DXF maps mixed viewport-border plotting choices to one layout border flag; Linecraft and PDF retain each viewport choice.');return warnings;},
     get canUndo() {
       if(state.command==='SPLINE')return state.commandPoints.length>0;
       if(state.command==='PEDIT')return editingSteps.length>0;

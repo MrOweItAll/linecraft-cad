@@ -1,9 +1,13 @@
-# Public reproducible checks
+# Public synthetic tests
 
-Run `npm test` at the repository root. It executes the public synthetic suites sequentially, fails on a failing stage and fingerprints the source before/after execution. Generated results and temporary inputs are ignored by Git.
+Run `npm ci --no-audit --no-fund`, then `npm test` from the repository root. The 19-stage pure gate covers synthetic engine regression, independent physical unit/mesh/conic/cubic/paper/plane/camera mathematics, bounded DXF decoding, and mocked native trust/clipboard/PDF/file contracts with real validation and temporary files.
 
-The copied engine suite excludes six cases that require private native application evidence. The DXF importer suite excludes three native/historical-fixture cases. All remaining case bodies are retained. The independent mesh DXF helper contains only the original group-code reader. Production runtime modules and assets are byte-identical to the installed source revision.
+`npm run test:desktop` adds four stages: fixed reader resource identity, actual hidden unit UI, actual hidden layout/UCS UI and real production Chromium PDF output. Native choices are deterministic owned paths. GUI suites reject visible windows/show events and guard OS clipboard access. The PDF producer retains unequal sheet sizes and reports source/PDF hashes; no physical printer is used.
 
-IPC suites mock Electron dialogs, clipboard and PDF host objects while running actual validation and owned file operations. They do not prove real desktop clipboard interoperability or native AutoCAD command equivalence. `npm run test:converter` verifies the actual bundled reader version and complete resource identities on Windows. `npm run test:units-desktop` exercises actual hidden Electron renderer controls with isolated chooser paths; it requires local pinned Electron and Playwright.
+`npm run unpacked` runs all 23 source stages, builds the application, runs the two suites against that executable and verifies packaged converter/license/source identities (27 stages). `npm run build` adds NSIS compilation from the tested application (28 stages). It does not install or upgrade the user's application during development.
 
-Native drawings, native reader JSON, recorded reference corpora, screenshots, installation/registry data and historical test results are excluded from the public tree.
+Focused commands include `npm run test:core`, `test:units-math`, `test:layouts-math`, `test:layouts-security`, `test:units-desktop`, `test:layouts-desktop` and `test:paper-pdf`.
+
+Results, screenshots, generated PDFs/drawings, isolated profiles and logs are ignored and remain outside committed source. Version-named drivers continue as regressions. Counts overlap and are not independent feature totals.
+
+Native drawing fixtures, private corpora, observations and internal release results are absent. Mathematical fixtures and synthetic DXF records are original code/data. Public adaptations and runtime identity are disclosed in `PUBLIC-SOURCE.json`; these tests do not claim to reproduce private native observations.

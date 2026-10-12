@@ -73,9 +73,9 @@ async function loadCore() {
   if (app.isPackaged) corePromise ??= import(coreURL);
   else {
     const helpers=[];
-    for(const name of ['advanced-geometry.mjs','units.mjs']){const helper=await fs.stat(path.join(APP_ROOT,name));helpers.push(`${name}:${helper.mtimeMs}:${helper.size}`);}
+    for(const name of ['advanced-geometry.mjs','units.mjs','paper-space.mjs','drawing-plane.mjs']){const helper=await fs.stat(path.join(APP_ROOT,name));helpers.push(`${name}:${helper.mtimeMs}:${helper.size}`);}
     const helperVersion=helpers.join('|');
-    if(developmentModelHelperVersion!==null&&developmentModelHelperVersion!==helperVersion)throw Error('A modeling or units helper changed. Restart launch-dev.cmd to refresh native validation; the drawing checkpoint is preserved.');
+    if(developmentModelHelperVersion!==null&&developmentModelHelperVersion!==helperVersion)throw Error('A modeling, paper, plane or units helper changed. Restart launch-dev.cmd to refresh native validation; the drawing checkpoint is preserved.');
     developmentModelHelperVersion=helperVersion;
     const status = await fs.stat(corePath), version = `${status.mtimeMs}:${status.size}`;
     if (developmentCoreVersion !== version) {
@@ -88,7 +88,7 @@ async function loadCore() {
 
 async function guardDevelopmentStaticGraph(){
   if(app.isPackaged)return;
-  const parts=[];for(const name of ['core.mjs','units.mjs','advanced-geometry.mjs','3d-view.mjs']){const status=await fs.stat(path.join(APP_ROOT,name));parts.push(`${name}:${status.mtimeMs}:${status.size}`);}
+  const parts=[];for(const name of ['core.mjs','units.mjs','advanced-geometry.mjs','3d-view.mjs','paper-space.mjs','drawing-plane.mjs']){const status=await fs.stat(path.join(APP_ROOT,name));parts.push(`${name}:${status.mtimeMs}:${status.size}`);}
   const version=parts.join('|');if(developmentStaticGraphVersion!==null&&developmentStaticGraphVersion!==version)throw Error('An imported DWG/PDF modeling dependency changed. Restart launch-dev.cmd to refresh its native module graph; the drawing checkpoint is preserved.');developmentStaticGraphVersion=version;
 }
 
@@ -98,7 +98,7 @@ async function loadPlotService(){
   if(app.isPackaged)plotPromise??=import(moduleURL);
   else{
     const status=await fs.stat(modulePath),version=`${status.mtimeMs}:${status.size}`,dependencies=[];
-    for(const name of ['core.mjs','units.mjs','advanced-geometry.mjs','3d-view.mjs']){const item=await fs.stat(path.join(APP_ROOT,name));dependencies.push(`${name}:${item.mtimeMs}:${item.size}`);}
+    for(const name of ['core.mjs','units.mjs','advanced-geometry.mjs','3d-view.mjs','paper-space.mjs','drawing-plane.mjs']){const item=await fs.stat(path.join(APP_ROOT,name));dependencies.push(`${name}:${item.mtimeMs}:${item.size}`);}
     const dependencyVersion=dependencies.join('|');if(developmentPlotDependencies!==null&&developmentPlotDependencies!==dependencyVersion)throw Error('A PDF modeling dependency changed. Restart launch-dev.cmd before plotting to refresh its native module graph; the drawing checkpoint is preserved.');
     developmentPlotDependencies=dependencyVersion;
     if(developmentPlotVersion!==version){plotPromise=import(`${moduleURL}?development=${encodeURIComponent(version)}`);developmentPlotVersion=version;}

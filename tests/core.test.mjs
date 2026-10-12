@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import * as core from '../core.mjs';
 import {makeClampedKnots,splineBoundsPoints,boundaryContains} from '../advanced-geometry.mjs';
 
-// Synthetic mathematical fixtures. Native application evidence is excluded from this public suite.
+// Original synthetic mathematical inputs; private native evidence is excluded.
 const accepted = (editor, commands) => {
   for (const command of commands) { const response = editor.execute(command); assert.equal(response.ok, true, `${String(command)}: ${response.message}`); }
 };
@@ -582,7 +582,7 @@ test('CIRCLE JSON import rejects invalid radius atomically and DXF exports nativ
   const dxf = e.exportDXF(); assert.match(dxf, /0\r\nCIRCLE\r\n/); assert.match(dxf, /100\r\nAcDbCircle\r\n10\r\n12\.5\r\n20\r\n-4\r\n30\r\n0\r\n40\r\n3\.25\r\n/);
 });
 
-test('LT script geometry reference: circle radius recovery, diameter, Last MOVE and COPY', () => {
+test('synthetic sequence: circle radius recovery, diameter, Last MOVE and COPY', () => {
   const e = core.createEditor(); submit(e, ['C', '150,25']);
   assert.equal(e.execute('-5').ok, false); assert.equal(e.state.commandPhase, 'radius'); assert.equal(e.state.entities.length, 0);
   const outcomes = submit(e, ['25', 'CIRCLE', '220,25', 'D', '20', 'MOVE', 'L', '', '0,0', '@10,5', 'COPY', 'L', '', '0,0', '@30,0']);
@@ -639,7 +639,7 @@ test('COPY mode default acceptance and removal of all copies leave no empty tran
   e.undo(); assert.equal(e.state.entities.length, 0);
 });
 
-test('interactive LT COPY reference: every relative destination uses the original base', () => {
+test('synthetic repeated COPY sequence: every relative destination uses the original base', () => {
   const e = core.createEditor(); submit(e, ['CIRCLE', '260,30', '10', 'CO', 'L', '', '0,0', '@20,0', '@40,0', '']);
   assert.equal(e.state.command, null); assert.equal(e.state.entities.length, 3);
   [[260,30],[280,30],[300,30]].forEach((p,index) => { point(e.state.entities[index].center, p); assert.equal(e.state.entities[index].radius, 10); });
@@ -651,6 +651,12 @@ test('repeated COPY relative Cartesian and polar destinations keep a nonzero bas
   submit(e, ['COPY', '10,5', '@20,0', '@40,0', '@10<90', '']);
   [[0,0],[20,0],[40,0],[0,10]].forEach((p,index) => point(e.state.entities[index].start, p));
 });
+
+
+
+
+
+
 
 test('typed radius property retains exact scalar precision at a large center and supports Undo/Redo', () => {
   const e = core.createEditor(); submit(e, ['CIRCLE', '1000000000000,1000000000000', '10']);
@@ -1095,7 +1101,9 @@ test('OFFSET rectangle exact edge picks and overflowed side projections reject w
   assert.throws(()=>core.offsetEntity(huge,1e306,{x:-1e308,y:-1e308}),/numeric range/);
 });
 
-test('native COPYBASE grammar accepts base first, then prompted selection; pickfirst still asks for base',()=>{
+
+
+test('COPYBASE base-first grammar accepts base first, then prompted selection; pickfirst still asks for base',()=>{
   const e=core.createEditor({entities:fixtureEntities()});accepted(e,['COPYBASE']);assert.equal(e.state.commandPhase,'base');accepted(e,['10,20']);assert.equal(e.state.commandPhase,'selection');accepted(e,['L','']);point(e.getClipboard().base,[10,20]);assert.equal(e.getClipboard().entities[0].type,'RECTANG');
   e.select(['a']);accepted(e,['COPYBASE']);assert.equal(e.state.commandPhase,'base');accepted(e,['30,40']);assert.equal(e.state.command,null);point(e.getClipboard().base,[30,40]);assert.equal(e.getClipboard().entities[0].type,'LINE');
 });
@@ -1149,6 +1157,8 @@ test('circle intersections retain tangencies under floating-point roundoff and r
     assert.equal(core.lineIntersections(inside,[circle]).length,2,`real secant at ${degrees} degrees`);
   }
 });
+
+
 
 test('legacy drawings gain independent annotation/style/settings defaults and round-trip without changing existing geometry',()=>{
   const e=core.createEditor({entities:fixtureEntities()});assert.equal(e.state.currentTextStyle,'Standard');assert.equal(e.state.textStyles[0].fontFamily,'Arial');assert.equal(e.state.settings.units,'unitless');assert.equal(e.state.settings.gridAdaptive,true);assert.deepEqual(e.state.entities,fixtureEntities());assert.deepEqual(core.createEditor(JSON.parse(e.serialize())).state.entities,e.state.entities);
@@ -1268,13 +1278,15 @@ test('dimension arrows that collapse below world-coordinate resolution never sel
   assert.equal(core.hitTest(e.state.entities,{x:0,y:500},.1,e.state),null);assert.deepEqual(core.entitiesInBox(e.state.entities,{x:1,y:501},{x:-1,y:499},true,e.state),[]);
 });
 
+
+
 test('explicit null annotation preferences and overrides reject atomically instead of silently defaulting',()=>{
   const e=core.createEditor();accepted(e,['DIMLINEAR','0,0','10,0','5,5']);const before=e.serialize();
   for(const patch of [{settings:null},{textStyles:null},{dimStyles:null},{currentTextStyle:null},{currentDimStyle:null}]){assert.equal(e.importJSON({...JSON.parse(before),...patch}).ok,false);assert.equal(e.serialize(),before);assert.equal(e.updateDrawingSettings(patch).ok,false);assert.equal(e.serialize(),before);}
   assert.equal(e.setDimensionProperties(e.state.entities[0].id,{textOverride:null}).ok,false);assert.equal(e.serialize(),before);
 });
 
-test('MTEXT literal percent, Unicode-looking slash, braces and carets use native-proven control separators',()=>{
+test('MTEXT literal percent, Unicode-looking slash, braces and carets use literal control separators',()=>{
   const e=core.createEditor();accepted(e,['MTEXT','0,100','H','5','200,0']);
   const content=String.raw`50% | %%d | \P | {braces} | ^J | ^M | \U+1234`;
   assert.equal(e.submitText(content).ok,true);const saved=e.serialize(),dxf=e.exportDXF();
@@ -1418,7 +1430,7 @@ test('3D camera/workspace persist separately from geometry Undo and quick constr
 });
 
 test('3D camera and construction preferences reject malformed values atomically; typed orbit center accepts XYZ without geometry history',()=>{
-  const e=core.createEditor(),before=e.serialize();for(const patch of [{target:{x:0,y:0,z:null}},{scale:1e-320},{distance:1e-320},{pitch:91},{projection:'fisheye'},{autoTarget:null},{fov:180}]){assert.equal(e.set3DView(patch).ok,false);assert.equal(e.serialize(),before);}assert.equal(e.updateDrawingSettings({constructionPlane:'YZ'}).ok,false);assert.equal(e.serialize(),before);
+  const e=core.createEditor(),before=e.serialize();for(const patch of [{target:{x:0,y:0,z:null}},{scale:1e-320},{distance:1e-320},{pitch:91},{projection:'fisheye'},{autoTarget:null},{fov:180}]){assert.equal(e.set3DView(patch).ok,false);assert.equal(e.serialize(),before);}assert.equal(e.updateDrawingSettings({constructionPlane:'ZZ'}).ok,false);assert.equal(e.serialize(),before);
   const viewTarget=structuredClone(e.state.camera3d.target);accepted(e,['3DORBITCTR','10,20,30']);assert.deepEqual(e.state.camera3d.orbitCenter,{x:10,y:20,z:30});assert.deepEqual(e.state.camera3d.target,viewTarget);assert.equal(e.state.camera3d.autoTarget,false);assert.equal(e.canUndo,false);
 });
 
@@ -1761,3 +1773,129 @@ test('dimension clipboard keeps canonical values and style precision without ado
 test('unit conversions avoid spurious intermediate overflow while rejecting truly unrepresentable results',()=>{
   assert.equal(core.parseLength('1e308m',{units:'m'}),1e308);assert.equal(core.parseLength('1e308mm',{units:'m'}),1e305);assert.ok(Number.isFinite(core.parseLength('1e308ft',{units:'m'})));assert.throws(()=>core.parseLength('1e308m',{units:'in'}),/finite numeric range/);assert.notEqual(core.formatAngle(1e308,{angularFormat:'radians'}),'out of range');assert.equal(core.formatAngle(1e308,{angularFormat:'decimal-minutes'}),'out of range');assert.equal(core.formatAngle(1e308,{angularFormat:'decimal-seconds'}),'out of range');
 });
+
+// Paper/UCS engine checks are independent definitions and command/history
+// invariants. Native interface observations are recorded separately.
+const paperFixture=()=>{const e=core.createEditor({settings:{units:'in'}});line(e,'0,0','1200,0');const result=e.addLayout('Sheet',{size:'A3',orientation:'landscape'});assert.equal(result.ok,true);const view=e.addViewport(result.layoutId,{x:10,y:10,width:200,height:120},{scaleDenominator:100,modelCenter:{x:600,y:0}});assert.equal(view.ok,true);return{e,layoutId:result.layoutId,viewportId:view.viewportId};};
+test('legacy models gain safe paper/visibility/UCS defaults without moving any accepted geometry',()=>{
+  const source={entities:fixtureEntities()},e=core.createEditor(source);assert.deepEqual(coordinates(e.getModelEntities()),coordinates(source.entities));assert.deepEqual(e.state.layouts,[]);assert.equal(e.state.activeSpace,'model');assert.equal(e.state.activeLayoutId,null);assert.equal(e.state.layers[0].linetype,'continuous');assert.equal(e.state.layers[0].modelVisible,true);assert.equal(e.state.layers[0].paperVisible,true);assert.deepEqual(e.state.ucs,core.presetUCS());
+});
+test('named A0-A5 and Letter/Tabloid paper dimensions are exact for both orientations',()=>{
+  for(const[size,paper]of Object.entries(core.PAPER_SIZES))for(const orientation of ['portrait','landscape']){const e=core.createEditor(),r=e.addLayout('Drawing',{size,orientation});assert.equal(r.ok,true);const actual=e.state.layouts[0].paper;assert.equal(actual.widthMm,orientation==='portrait'?paper.widthMm:paper.heightMm);assert.equal(actual.heightMm,orientation==='portrait'?paper.heightMm:paper.widthMm);}
+  const e=core.createEditor();assert.equal(e.addLayout('Model').ok,false);assert.equal(e.addLayout('Sheet').ok,true);const before=e.serialize();assert.equal(e.addLayout('sheet').ok,false);assert.equal(e.serialize(),before);
+});
+test('LAYOUT New/Rename/Delete command flows each create one real Undo entry',()=>{
+  const e=core.createEditor();accepted(e,['LAYOUT','NEW','Plan']);assert.equal(e.state.layouts.length,1);accepted(e,['U']);assert.equal(e.state.layouts.length,0);accepted(e,['REDO','LAYOUT','RENAME','Plan','Plan A']);assert.equal(e.state.layouts[0].name,'Plan A');accepted(e,['U']);assert.equal(e.state.layouts[0].name,'Plan');accepted(e,['LAYOUT','DELETE','Plan']);assert.equal(e.state.layouts.length,0);accepted(e,['U']);assert.equal(e.state.layouts[0].name,'Plan');
+});
+test('PSPACE/MVIEW/MSPACE create and activate a real scaled viewport with recoverable invalid corners',()=>{
+  const e=core.createEditor();accepted(e,['PSPACE']);assert.equal(e.state.activeSpace,'paper');assert.equal(e.state.layouts.length,1);accepted(e,['MVIEW','10,10']);const before=e.serialize();assert.equal(e.execute('500,400').ok,false);assert.equal(e.serialize(),before);assert.equal(e.state.commandPhase,'viewport-second');accepted(e,['210,130']);assert.equal(e.state.layouts[0].viewports.length,1);accepted(e,['MSPACE']);assert.equal(e.state.activeSpace,'model');assert.equal(e.state.activeViewportId,e.state.layouts[0].viewports[0].id);accepted(e,['PSPACE']);assert.equal(e.state.activeViewportId,null);accepted(e,['MODEL']);assert.equal(e.state.activeLayoutId,null);
+});
+test('paper LINE scalar units use millimeters while model geometry and assigned inches remain unchanged',()=>{
+  const{e,layoutId}=paperFixture(),model=structuredClone(e.getModelEntities());assert.equal(e.setSpace('paper',layoutId).ok,true);accepted(e,['LINE','0,0','12",0','']);assert.ok(Math.abs(e.getPaperEntities()[0].end.x-304.8)<1e-10);assert.deepEqual(e.getModelEntities(),model);assert.equal(e.state.settings.units,'in');assert.equal(e.getDrawingSettings().units,'mm');const saved=JSON.parse(e.serialize());assert.equal(saved.entities.length,1);assert.equal(saved.layouts[0].entities.length,1);assert.equal(saved.layouts[0].entities[0].layoutId,undefined);
+});
+test('selection, Last, All, Erase and Undo operate only in the active model or paper owner scope',()=>{
+  const{e,layoutId}=paperFixture(),modelId=e.getModelEntities()[0].id;e.setSpace('paper',layoutId);accepted(e,['LINE','0,0','20,0','']);const paperId=e.getPaperEntities()[0].id;e.select([modelId]);assert.deepEqual(e.state.selectionIds,[]);accepted(e,['ERASE','ALL','']);assert.equal(e.getPaperEntities().length,0);assert.equal(e.getModelEntities().length,1);accepted(e,['U']);assert.equal(e.getPaperEntities()[0].id,paperId);e.setSpace('model',null);e.select([paperId]);assert.deepEqual(e.state.selectionIds,[]);accepted(e,['ERASE','L','']);assert.equal(e.getModelEntities().length,0);assert.equal(e.getPaperEntities(layoutId).length,1);
+});
+test('paper geometry Save/Open and import with reused prior IDs preserve owner scope exactly',()=>{
+  const{e,layoutId}=paperFixture();e.setSpace('paper',layoutId);accepted(e,['REC','10,20','30,40']);const saved=e.serialize(),reopened=core.createEditor(JSON.parse(saved));assert.equal(reopened.getModelEntities().length,1);assert.equal(reopened.getPaperEntities().length,1);assert.equal(reopened.state.activeSpace,'paper');assert.deepEqual(JSON.parse(reopened.serialize()),JSON.parse(saved));const target=core.createEditor();line(target);assert.equal(target.importJSON(saved).ok,true);assert.equal(target.getModelEntities().length,1);assert.equal(target.getPaperEntities().length,1);
+});
+test('viewport physical 1:100 projection converts inch model values to sheet millimeters exactly',()=>{
+  const{e}=paperFixture(),view=e.state.layouts[0].viewports[0],a=core.viewportModelToPaper({x:0,y:0},view,e.state.settings),b=core.viewportModelToPaper({x:1200,y:0},view,e.state.settings);assert.ok(Math.abs(b.x-a.x-304.8)<1e-10);assert.equal(a.y,b.y);const world=core.viewportPaperToModel(b,view,e.state.settings);assert.ok(Math.abs(world.x-1200)<1e-10);assert.equal(world.y,0);assert.equal(world.z,0);assert.throws(()=>core.modelUnitMillimeters({units:'constructor'}));
+});
+test('orthographic front/iso viewports project real XYZ while perspective snapshots reject atomically',()=>{
+  const{e,layoutId,viewportId}=paperFixture();assert.equal(e.updateViewport(layoutId,viewportId,{workspace:'3d',camera3d:{yaw:-90,pitch:0,roll:0},modelCenter:{x:0,y:0,z:0}}).ok,true);const view=e.state.layouts[0].viewports[0],a=core.viewportModelToPaper({x:0,y:0,z:0},view,e.state.settings),b=core.viewportModelToPaper({x:0,y:0,z:100},view,e.state.settings);assert.equal(b.x,a.x);assert.ok(Math.abs(b.y-a.y-25.4)<1e-10);const before=e.serialize();assert.equal(e.updateViewport(layoutId,viewportId,{camera3d:{projection:'perspective'}}).ok,false);assert.equal(e.serialize(),before);
+});
+test('viewport lock blocks view navigation without blocking an explicit scale property or model editing',()=>{
+  const{e,layoutId,viewportId}=paperFixture();assert.equal(e.updateViewport(layoutId,viewportId,{locked:true}).ok,true);const before=e.serialize();assert.equal(e.updateViewport(layoutId,viewportId,{scaleDenominator:20},{navigation:true}).ok,false);assert.equal(e.serialize(),before);assert.equal(e.updateViewport(layoutId,viewportId,{scaleDenominator:50}).ok,true);e.setSpace('model',layoutId,viewportId);accepted(e,['LINE','0,20','10,20','']);assert.equal(e.getModelEntities().length,2);const modelView=structuredClone(e.getActiveViewport());assert.equal(e.fitView().ok,true);assert.deepEqual(e.getActiveViewport(),modelView);assert.equal(e.state.activeSpace,'model');assert.deepEqual(e.state.paperViewport.center,{x:210,y:148.5});
+});
+test('viewport freeze is local to one viewport and layers retain independent model/paper visibility',()=>{
+  const{e,layoutId,viewportId}=paperFixture(),source=e.getModelEntities()[0],second=e.addViewport(layoutId,{x:220,y:10,width:180,height:120});assert.equal(second.ok,true);assert.equal(e.freezeViewportLayer(layoutId,viewportId,'0',true).ok,true);assert.equal(core.isEntityVisible(source,e.state,{space:'paper',layoutId,viewportId}),false);assert.equal(core.isEntityVisible(source,e.state,{space:'paper',layoutId,viewportId:second.viewportId}),true);assert.equal(core.isEntityVisible(source,e.state,{space:'model',layoutId:null,viewportId:null}),true);e.updateLayer('0',{modelVisible:false,paperVisible:true});assert.equal(core.isEntityVisible(source,e.state,{space:'model',layoutId:null,viewportId:null}),false);assert.equal(core.isEntityVisible(source,e.state,{space:'paper',layoutId,viewportId:second.viewportId}),true);e.updateLayer('0',{visible:false});assert.equal(core.isEntityVisible(source,e.state,{space:'paper',layoutId,viewportId:second.viewportId}),false);
+});
+test('layer rename and deletion account for viewport borders, freeze references and paper-owned objects',()=>{
+  const{e,layoutId,viewportId}=paperFixture();e.addLayer('Drawing',{linetype:'dashed'});e.updateViewport(layoutId,viewportId,{layer:'Drawing',frozenLayers:['Drawing']});const before=e.serialize();assert.equal(e.deleteLayer('Drawing').ok,false);assert.equal(e.serialize(),before);assert.equal(e.renameLayer('Drawing','Walls').ok,true);assert.equal(e.state.layouts[0].viewports[0].layer,'Walls');assert.deepEqual(e.state.layouts[0].viewports[0].frozenLayers,['Walls']);accepted(e,['U']);assert.equal(e.state.layouts[0].viewports[0].layer,'Drawing');
+});
+test('deleting an active layout removes only its paper geometry and Undo restores all owned definitions',()=>{
+  const{e,layoutId}=paperFixture();e.setSpace('paper',layoutId);accepted(e,['LINE','0,0','10,0','']);const source=structuredClone(e.state.entities);assert.equal(e.deleteLayout(layoutId).ok,true);assert.equal(e.state.activeLayoutId,null);assert.equal(e.getModelEntities().length,1);accepted(e,['U']);assert.equal(e.state.layouts.length,1);assert.deepEqual(e.state.entities,source);e.setSpace('paper',layoutId);assert.equal(e.getPaperEntities().length,1);
+});
+test('paper clipboard is portable geometry without stale layout ownership and paste adopts destination scope',()=>{
+  const{e,layoutId}=paperFixture();e.setSpace('paper',layoutId);accepted(e,['LINE','0,0','10,0','']);e.select([e.getPaperEntities()[0].id]);assert.equal(e.copySelection({x:0,y:0}).ok,true);const clip=e.getClipboard();assert.equal(clip.entities[0].layoutId,undefined);e.setSpace('model',null);accepted(e,['PASTECLIP','0,20']);assert.equal(e.getModelEntities().length,2);assert.equal(e.getPaperEntities(layoutId).length,1);assert.equal(e.getModelEntities().at(-1).layoutId,undefined);
+});
+test('malformed nested paper metadata and globally duplicate model/paper IDs reject without changing any history',()=>{
+  const{e}=paperFixture(),saved=e.serialize();for(const mutate of [d=>d.layouts[0].paper.orientation=null,d=>d.layouts[0].viewports[0].scaleDenominator=0,d=>d.layouts[0].viewports[0].camera3d=null,d=>d.layouts[0].viewports[0].frozenLayers=['missing'],d=>d.layouts[0].entities=[{...d.entities[0]}],d=>d.layouts[0].viewports=null,d=>d.ucs.origin.z=null]){const data=JSON.parse(saved);mutate(data);assert.equal(e.importJSON(data).ok,false);assert.equal(e.serialize(),saved);}
+});
+test('UCS three-point command is orthonormal, rejects collinear recovery and groups one preference Undo',()=>{
+  const e=core.createEditor();accepted(e,['UCS','3POINT','10,20,30','20,20,30']);const before=e.serialize();assert.equal(e.execute('30,20,30').ok,false);assert.equal(e.serialize(),before);assert.equal(e.state.commandPhase,'ucs-y-axis');accepted(e,['10,20,40']);assert.equal(e.state.settings.constructionPlane,'custom');assert.deepEqual(e.state.ucs.xAxis,{x:1,y:0,z:0});assert.deepEqual(e.state.ucs.yAxis,{x:0,y:0,z:1});accepted(e,['U']);assert.equal(e.state.settings.constructionPlane,'XY');accepted(e,['REDO']);assert.equal(e.state.ucs.origin.z,30);
+});
+test('UCS XZ and YZ coordinate input creates exact WCS paths with local Undo and grouped global history',()=>{
+  const e=core.createEditor();accepted(e,['UCS','XZ','LINE','0,0','0,10','@10,0','U','@5,0','']);assert.deepEqual(e.state.entities[0].points,[{x:0,y:0,z:0},{x:0,y:0,z:10}]);assert.deepEqual(e.state.entities[1].points,[{x:0,y:0,z:10},{x:5,y:0,z:10}]);accepted(e,['U']);assert.equal(e.state.entities.length,0);accepted(e,['REDO','UCS','YZ','PLINE','0,0','10,0','10,20','C']);assert.equal(e.state.entities.at(-1).closed,true);assert.deepEqual(e.state.entities.at(-1).points,[{x:0,y:0,z:0},{x:0,y:10,z:0},{x:0,y:10,z:20}]);
+});
+test('oriented RECTANG preview matches its actual spatial path and closed extrusion follows its normal',()=>{
+  const e=core.createEditor();accepted(e,['UCS','XZ','REC','0,0']);const preview=e.previewCommand({x:10,y:0,z:20})[0];accepted(e,['10,20']);assert.deepEqual(preview.points,e.state.entities[0].points);const profile=structuredClone(e.state.entities[0]);accepted(e,['EXTRUDE','L','','5']);const mesh=e.state.entities[1];closedOrientedMesh(mesh);assert.deepEqual(e.state.entities[0],profile);assert.equal(Math.min(...mesh.vertices.map(p=>p.y)),-5);assert.equal(Math.max(...mesh.vertices.map(p=>p.z)),20);assert.ok(Math.abs(signedMeshVolume(mesh)-1000)<1e-8);accepted(e,['U']);assert.equal(e.state.entities.length,1);
+});
+test('oriented BOX/CYLINDER scalar preview and commit agree while wrong-plane base points recover',()=>{
+  const e=core.createEditor();accepted(e,['UCS','YZ','BOX','0,0']);const before=e.serialize();assert.equal(e.execute('10,20,5').ok,false);assert.equal(e.serialize(),before);accepted(e,['10,20']);const preview=e.previewScalar(5)[0];accepted(e,['5']);assert.deepEqual(e.state.entities[0].vertices,preview.vertices);assert.ok(Math.abs(signedMeshVolume(e.state.entities[0])-1000)<1e-8);accepted(e,['CYLINDER','20,20','3']);const circle=e.previewScalar(4)[0];accepted(e,['4']);assert.deepEqual(e.state.entities[1].vertices,circle.vertices);closedOrientedMesh(e.state.entities[1]);assert.equal(Math.min(...circle.vertices.map(p=>p.x)),0);assert.equal(Math.max(...circle.vertices.map(p=>p.x)),4);
+});
+test('spatial path direct distance preserves actual WCS direction and current plane elevation',()=>{
+  const e=core.createEditor();accepted(e,['UCS','XZ']);assert.equal(e.updateDraftingSettings({constructionElevation:3}).ok,true);accepted(e,['LINE','0,0']);assert.equal(e.execute('10',{direction:{x:0,y:0,z:1}}).ok,true);accepted(e,['5','']);assert.deepEqual(e.state.entities[0].points,[{x:0,y:-3,z:0},{x:0,y:-3,z:10}]);assert.deepEqual(e.state.entities[1].points,[{x:0,y:-3,z:10},{x:0,y:-3,z:15}]);
+});
+test('PLAN Current points normal to a saved custom UCS while PLAN World leaves geometry intact',()=>{
+  const e=core.createEditor();accepted(e,['UCS','XZ','BOX','0,0','10,20','5']);const geometry=structuredClone(e.state.entities);accepted(e,['PLAN','']);assert.equal(e.state.camera3d.yaw,-90);assert.equal(e.state.camera3d.pitch,0);assert.ok(Math.abs(e.state.camera3d.roll)<1e-9);accepted(e,['PLAN','W']);assert.equal(e.state.camera3d.mode,'top');assert.deepEqual(e.state.entities,geometry);
+});
+test('mesh face UCS alignment and multi-vertex edge edits preserve exact source data and one Undo entry',()=>{
+  const e=core.createEditor();accepted(e,['BOX','0,0','10,20','30']);const source=structuredClone(e.state.entities[0]);assert.equal(e.setUCSFromFace(source.id,2).ok,true);assert.deepEqual(e.state.entities[0],source);const before=e.serialize();assert.equal(e.setUCSFromFace(source.id,999).ok,false);assert.equal(e.serialize(),before);assert.equal(e.moveMeshVertices(source.id,[0,1],{x:0,y:0,z:2}).ok,true);assert.equal(e.state.entities[0].vertices[0].z,2);assert.equal(e.state.entities[0].vertices[1].z,2);assert.equal(e.state.entities[0].vertices[2].z,0);accepted(e,['U']);assert.deepEqual(e.state.entities[0],source);
+});
+test('construction-plane schema rejects reflection/nonunit axes and changing the plane cannot corrupt an active primitive',()=>{
+  const e=core.createEditor(),before=e.serialize();for(const ucs of [{...core.presetUCS(),zAxis:{x:0,y:0,z:-1}},{...core.presetUCS(),xAxis:{x:2,y:0,z:0}},{...core.presetUCS(),origin:{x:0,y:0,z:null}}]){assert.equal(e.setUCS(ucs).ok,false);assert.equal(e.serialize(),before);}accepted(e,['BOX','0,0']);const active=e.serialize();assert.equal(e.updateDraftingSettings({constructionPlane:'XZ'}).ok,false);assert.equal(e.serialize(),active);accepted(e,['ESC']);assert.equal(e.updateDraftingSettings({constructionPlane:'XZ'}).ok,true);
+});
+test('CIRCLE and ARC on XZ store true analytic spatial definitions with exact canonical grips and snaps',()=>{
+  const e=core.createEditor();accepted(e,['UCS','XZ','CIRCLE','10,20','5','ARC','0,0','5,5','10,0']);const circle=e.state.entities[0],arc=e.state.entities[1];assert.equal(circle.type,'CIRCLE3D');assert.equal(circle.radius,5);assert.deepEqual(circle.center,{x:10,y:0,z:20});assert.deepEqual(core.spatialCurvePoint(circle,.25),{x:10,y:0,z:25});assert.equal(arc.type,'ARC3D');assert.equal(arc.radius,5);assert.deepEqual(arc.center,{x:5,y:0,z:0});assert.equal(arc.sweepAngle,-180);assert.deepEqual(core.entityGripPoints(arc)[1],{x:5,y:0,z:5});assert.deepEqual(core.snapCandidates(circle).map(p=>p.type),['center','quadrant','quadrant','quadrant','quadrant']);assert.deepEqual(core.snapCandidates(arc).map(p=>p.type),['center','endpoint','midpoint','endpoint']);
+});
+test('spatial circle radius recovery, Diameter, exact scalar property and preview retain analytic bases',()=>{
+  const e=core.createEditor();accepted(e,['UCS','YZ','CIRCLE','10,20']);const before=e.serialize();assert.equal(e.execute('-1').ok,false);assert.equal(e.serialize(),before);accepted(e,['D']);const preview=e.previewScalar(8)[0];accepted(e,['8']);const circle=e.state.entities[0];assert.equal(circle.radius,4);assert.deepEqual(circle.center,preview.center);assert.deepEqual(circle.xAxis,preview.xAxis);assert.equal(e.setCircleRadius(circle.id,.1).ok,true);assert.equal(circle.radius,.1);accepted(e,['U']);assert.equal(e.state.entities[0].radius,4);
+});
+test('spatial curve radius points and ARC third points reject off-plane data without losing recovery',()=>{
+  const e=core.createEditor();accepted(e,['UCS','XZ','CIRCLE','0,0']);const before=e.serialize();assert.equal(e.execute('5,0,1').ok,false);assert.equal(e.serialize(),before);accepted(e,['5,0','ARC','0,0','5,5']);const current=e.serialize();assert.equal(e.execute('10,0,2').ok,false);assert.equal(e.serialize(),current);accepted(e,['10,0']);assert.equal(e.state.entities.length,2);
+});
+test('spatial curve transforms and clipboard preserve the exact XYZ circle rather than tessellated proxies',()=>{
+  const e=core.createEditor();accepted(e,['UCS','XZ','CIRCLE','10,20','5']);const c=e.state.entities[0],rotated=core.rotateEntity3D(c,{x:0,y:0,z:0},'X',90);assert.deepEqual(rotated.center,{x:10,y:-20,z:0});assert.deepEqual(rotated.yAxis,{x:0,y:-1,z:0});assert.equal(rotated.radius,5);const scaled=core.scaleEntity(rotated,{x:0,y:0,z:0},2);assert.equal(scaled.radius,10);e.select([c.id]);assert.equal(e.copySelection({x:0,y:0,z:0}).ok,true);const target=core.createEditor();assert.equal(target.setClipboard(e.getClipboard()).ok,true);accepted(target,['PASTECLIP','0,0,10']);const pasted=target.state.entities[0];assert.equal(pasted.type,'CIRCLE3D');assert.deepEqual(pasted.center,{x:10,y:0,z:30});assert.deepEqual(pasted.xAxis,c.xAxis);assert.equal(core.createEditor(JSON.parse(target.serialize())).state.entities[0].radius,5);
+});
+test('spatial circle and arc grips match preview/commit and reject out-of-plane or collapsed curves atomically',()=>{
+  const e=core.createEditor();accepted(e,['UCS','XZ','CIRCLE','0,0','5','ARC','0,0','5,5','10,0']);const source=e.state.entities[0],preview=core.previewGrip(source,2,{x:0,y:0,z:7});assert.equal(e.moveGrip(source.id,2,{x:0,y:0,z:7}).ok,true);assert.equal(e.state.entities[0].radius,preview.radius);const before=e.serialize();assert.equal(e.moveGrip(source.id,1,{x:0,y:1,z:0}).ok,false);assert.equal(e.serialize(),before);const arc=e.state.entities[1];assert.equal(e.moveGrip(arc.id,3,{x:5,y:4,z:0}).ok,true);assert.equal(e.state.entities[1].center.y,4);assert.equal(e.state.entities[1].sweepAngle,arc.sweepAngle);
+});
+test('both World XY and spatial analytic circles extrude to closed 32-sided meshes without replacing source geometry',()=>{
+  for(const plane of ['XY','XZ']){const e=core.createEditor();accepted(e,['UCS',plane,'CIRCLE','0,0','5']);const source=structuredClone(e.state.entities[0]);accepted(e,['EXTRUDE','L','','7']);const mesh=e.state.entities[1];closedOrientedMesh(mesh);assert.equal(mesh.vertices.length,66);assert.equal(mesh.faces.length,96);assert.deepEqual(e.state.entities[0],source);const expected=32/2*Math.sin(2*Math.PI/32)*25*7;assert.ok(Math.abs(signedMeshVolume(mesh)-expected)<1e-8);assert.ok(signedMeshVolume(mesh)/(Math.PI*25*7)>.99);accepted(e,['U']);assert.deepEqual(e.state.entities,[source]);}
+});
+test('spatial curve import rejects malformed orthonormal bases, null numeric fields and paper ownership atomically',()=>{
+  const e=core.createEditor();accepted(e,['UCS','XZ','CIRCLE','0,0','5']);const saved=e.serialize();for(const mutate of [d=>d.entities[0].radius=null,d=>d.entities[0].yAxis={x:1,y:0,z:0},d=>d.entities[0].center.z=null,d=>d.entities[0].xAxis.x=2]){const d=JSON.parse(saved);mutate(d);assert.equal(e.importJSON(d).ok,false);assert.equal(e.serialize(),saved);}const fixture=paperFixture();fixture.e.setSpace('paper',fixture.layoutId);assert.equal(fixture.e.setClipboard({format:'LinecraftClipboard/1',base:{x:0,y:0,z:0},entities:[{...e.state.entities[0],id:undefined}]}).ok,true);const before=fixture.e.serialize();assert.equal(fixture.e.execute('PASTECLIP').ok,true);assert.equal(fixture.e.execute('0,0,0').ok,false);assert.equal(fixture.e.serialize(),before);
+});
+test('paper DXF stores inactive-sheet geometry inside its owned block and retains all dimensions/scales/frozen pointers',()=>{
+  const e=core.createEditor({settings:{units:'mm'}});line(e,'0,0','1000,0');const a=e.addLayout('A4',{size:'A4',orientation:'portrait'}),b=e.addLayout('A3',{size:'A3',orientation:'landscape'});e.addLayer('Hidden',{linetype:'hidden',plot:false});e.addViewport(a.layoutId,{x:10,y:10,width:190,height:250},{scaleDenominator:50,locked:true,frozenLayers:['Hidden']});e.addViewport(b.layoutId,{x:10,y:10,width:400,height:270},{scaleDenominator:100});e.setSpace('paper',b.layoutId);accepted(e,['TEXT','20,20','4','0','Paper text']);const dxf=e.exportDXF(),blockSection=dxf.slice(dxf.indexOf('2\r\nBLOCKS\r\n'),dxf.indexOf('2\r\nENTITIES\r\n')),entitiesSection=dxf.slice(dxf.indexOf('2\r\nENTITIES\r\n'),dxf.indexOf('2\r\nOBJECTS\r\n'));assert.ok(blockSection.includes('Paper text'));assert.equal(entitiesSection.includes('Paper text'),false);assert.ok(dxf.includes('44\r\n210\r\n45\r\n297\r\n'));assert.ok(dxf.includes('44\r\n420\r\n45\r\n297\r\n'));assert.ok(dxf.includes('45\r\n12500\r\n'));assert.ok(dxf.includes('90\r\n49152\r\n'));assert.ok(dxf.includes('331\r\n'));assert.ok(dxf.includes('6\r\nHIDDEN\r\n'));assert.ok(dxf.includes('290\r\n0\r\n'));assert.ok(blockSection.includes('410\r\nA3\r\n'));assert.ok(entitiesSection.includes('410\r\nA4\r\n'));
+});
+test('spatial curve DXF emits original analytic CIRCLE/ARC extrusion normals rather than fake3Dfaces',()=>{
+  const e=core.createEditor();accepted(e,['UCS','XZ','CIRCLE','10,20','5','ARC','0,0','5,5','10,0']);const dxf=e.exportDXF(),entities=dxf.slice(dxf.indexOf('2\r\nENTITIES\r\n'),dxf.indexOf('2\r\nOBJECTS\r\n'));assert.ok(entities.includes('0\r\nCIRCLE\r\n'));assert.ok(entities.includes('0\r\nARC\r\n'));assert.ok(entities.includes('210\r\n0\r\n220\r\n-1\r\n230\r\n0\r\n'));assert.equal(entities.includes('3DFACE'),false);assert.equal(entities.includes('POLYLINE'),false);assert.ok(entities.includes('40\r\n5\r\n'));
+});
+test('model navigation is preserved separately from sheet viewport cameras through switches and Save/Open',()=>{
+  const{e,layoutId,viewportId}=paperFixture();e.setWorkspace('3d');e.set3DView({yaw:123,pitch:22,target:{x:1,y:2,z:3}});const model=e.getModelView();e.updateViewport(layoutId,viewportId,{workspace:'3d',camera3d:{yaw:-90,pitch:0,roll:0},modelCenter:{x:10,y:20,z:30}});e.setSpace('model',layoutId,viewportId);assert.equal(e.state.camera3d.yaw,-90);assert.deepEqual(e.getModelView(),model);const saved=e.serialize(),reopened=core.createEditor(JSON.parse(saved));assert.equal(reopened.state.camera3d.yaw,-90);assert.deepEqual(reopened.getModelView(),model);reopened.setSpace('model',null);assert.deepEqual(reopened.state.camera3d,model.camera3d);assert.equal(reopened.state.workspace,'3d');e.setSpace('paper',layoutId);assert.equal(e.state.workspace,'2d');e.setSpace('model',null);assert.deepEqual(e.state.camera3d,model.camera3d);
+});
+test('UCS Face typed and exact picked-face API each align a real planar mesh face in one recoverable transaction',()=>{
+  const e=core.createEditor();accepted(e,['BOX','0,0','10,20','30','UCS','FACE','e1']);const before=e.serialize();assert.equal(e.execute('999').ok,false);assert.equal(e.serialize(),before);assert.equal(e.state.commandPhase,'ucs-face-index');accepted(e,['2']);assert.equal(e.state.settings.constructionPlane,'custom');assert.deepEqual(e.state.ucs.origin,e.state.entities[0].vertices[e.state.entities[0].faces[2][0]]);accepted(e,['U']);assert.deepEqual(e.state.ucs,core.presetUCS());accepted(e,['UCS','F']);assert.equal(e.submitFace('e1',0).ok,true);assert.equal(e.state.command,null);assert.equal(e.state.settings.constructionPlane,'custom');accepted(e,['U']);assert.deepEqual(e.state.ucs,core.presetUCS());
+});
+test('paper dimension definition labels and exported native style stay decimal millimeters under model architectural inches',()=>{
+  const{e,layoutId}=paperFixture();e.updateDrawingSettings(core.UNIT_PRESETS.architectural);e.setSpace('paper',layoutId);accepted(e,['DIMLINEAR','0,0','100,0','50,10']);const dim=e.getPaperEntities()[0];assert.equal(core.formatDimension(dim,e.state).label,'100.00');const rows=e.exportDXF().trimEnd().split(/\r?\n/),styles=[];let record=null;for(let i=0;i<rows.length;i+=2){const code=Number(rows[i]),value=rows[i+1];if(code===0){record=value==='DIMSTYLE'?{}:null;if(record)styles.push(record);}else if(record&&[2,144,277].includes(code))record[code]=value;}const modelStyle=styles.find(style=>style[2]==='Standard'),paperStyle=styles.find(style=>style[2].startsWith('LinecraftPaperDimension'));assert.equal(modelStyle[277],'4');assert.equal(paperStyle[277],'2');assert.equal(paperStyle[144],'1');assert.equal(dim.p2.x,100);assert.equal(e.state.settings.units,'in');assert.equal(e.state.dimStyles.length,1);
+});
+test('paper BLOCK definitions are owner-neutral while inserted children inherit sheet millimeter labels and scope',()=>{
+  const{e,layoutId}=paperFixture();e.updateDrawingSettings(core.UNIT_PRESETS.architectural);e.setSpace('paper',layoutId);accepted(e,['DIMLINEAR','0,0','100,0','50,10']);const sourceId=e.getPaperEntities()[0].id;accepted(e,['BLOCK','PaperTitle','0,0',sourceId,'']);assert.equal(e.state.blocks[0].entities[0].layoutId,undefined);assert.equal(e.getPaperEntities()[0].type,'INSERT');const children=core.expandedInsertEntities(e.getPaperEntities()[0],e.state);assert.equal(children[0].layoutId,layoutId);assert.equal(core.formatDimension(children[0],e.state).label,'100.00');const reopened=core.createEditor(JSON.parse(e.serialize()));assert.equal(reopened.getPaperEntities()[0].type,'INSERT');assert.equal(reopened.state.blocks[0].entities[0].layoutId,undefined);accepted(e,['U']);assert.equal(e.getPaperEntities()[0].type,'DIMENSION');assert.equal(core.formatDimension(e.getPaperEntities()[0],e.state).label,'100.00');
+});
+
+const xyzArray=p=>[p.x,p.y,p.z??0];
+
+
+test('conditional DXF UCS and elevation headers preserve WCS basis and independent local elevation without mutating geometry',()=>{
+  const e=core.createEditor();accepted(e,['UCS','3POINT','100,200,300','200,200,300','100,200,400']);e.updateDraftingSettings({constructionElevation:12});accepted(e,['CIRCLE','50,50','10']);
+  const saved=e.serialize(),rows=e.exportDXF().split(/\r?\n/),headers={};let name=null;
+  for(let i=0;i<rows.length;i+=2){const code=Number(rows[i]),value=rows[i+1];if(code===0&&value==='ENDSEC')break;if(code===9){name=value;headers[name]=[];}else if(name)headers[name].push([code,value]);}
+  assert.deepEqual(headers.$UCSORG,[[10,'100'],[20,'200'],[30,'300']]);assert.deepEqual(headers.$UCSXDIR,[[10,'1'],[20,'0'],[30,'0']]);assert.deepEqual(headers.$UCSYDIR,[[10,'0'],[20,'0'],[30,'1']]);assert.deepEqual(headers.$ELEVATION,[[40,'12']]);assert.equal(e.serialize(),saved);
+  assert.deepEqual(e.state.entities[0].center,{x:150,y:188,z:350});
+  const elevationOnly=core.createEditor();elevationOnly.updateDraftingSettings({constructionElevation:-2});const dxf=elevationOnly.exportDXF();assert.ok(dxf.includes('9\r\n$ELEVATION\r\n40\r\n-2\r\n'));assert.equal(dxf.includes('$UCSORG'),false);
+});
+

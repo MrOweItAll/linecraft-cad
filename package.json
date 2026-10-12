@@ -1,6 +1,6 @@
 {
   "name": "linecraft-cad",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Independent offline 2D drafting and polygonal 3D modeling for Windows",
   "author": "Linecraft contributors",
   "license": "MIT",
@@ -11,7 +11,12 @@
     "test": "node desktop/dev-tools.cjs test",
     "test:core": "node tests/run-tests.mjs",
     "test:units-math": "node --test tests/units-independent.test.mjs",
+    "test:layouts-math": "node --test tests/layouts-independent.test.mjs",
+    "test:layouts-security": "node tests/layouts-security.test.cjs",
     "test:units-desktop": "node desktop/dev-tools.cjs test-units",
+    "test:layouts-desktop": "node desktop/dev-tools.cjs test-layouts",
+    "test:paper-pdf": "node desktop/dev-tools.cjs test-pdf",
+    "test:desktop": "node desktop/dev-tools.cjs desktop",
     "test:converter": "node tests/converter-identity.cjs",
     "unpacked": "node desktop/dev-tools.cjs unpacked",
     "build": "node desktop/dev-tools.cjs build"
@@ -46,7 +51,9 @@
       "advanced-geometry.mjs",
       "plot-document.mjs",
       "desktop/plot-files.cjs",
-      "units.mjs"
+      "units.mjs",
+      "paper-space.mjs",
+      "drawing-plane.mjs"
     ],
     "win": {
       "target": "nsis",

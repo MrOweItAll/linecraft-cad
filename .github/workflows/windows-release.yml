@@ -1,0 +1,63 @@
+name: Windows release
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+permissions:
+  contents: write
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build-and-publish:
+    runs-on: windows-2025
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Verify release tag matches source
+        run: |
+          $version = node -p "require('./package.json').version"
+          if ($env:GITHUB_REF_NAME -ne "v$version") { throw 'Release tag does not match package version.' }
+      - name: Install pinned dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Test source, test unpacked application, compile NSIS
+        run: npm run build
+      - name: Create checksum and release notes
+        run: |
+          $version = node -p "require('./package.json').version"
+          $installer = Join-Path Windows-Release "Linecraft-CAD-$version-Setup.exe"
+          if (!(Test-Path -LiteralPath $installer)) { throw 'Tested installer is missing.' }
+          $checksum = (Get-FileHash -LiteralPath $installer -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$checksum  $(Split-Path -Leaf $installer)" | Set-Content -LiteralPath Windows-Release/SHA256SUMS.txt -Encoding utf8NoBOM
+          @"
+          Linecraft CAD $version for Windows x64.
+
+          Built from this tag after the public synthetic source and hidden desktop gates, including paper layouts, viewport scales, UCS construction and mixed-paper vector PDF output. The unsigned installer includes the pinned standalone Electron runtime. GNU LibreDWG and libiconv retain their separate licenses and matching source archives.
+
+          The automatic source ZIP is available below. Checksums are in SHA256SUMS.txt. Native CAD fixtures and internal observations are intentionally not included in the public suite.
+          "@ | Set-Content -LiteralPath Windows-Release/release-notes.md -Encoding utf8NoBOM
+      - name: Publish tested installer and checksum
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          $version = node -p "require('./package.json').version"
+          $installer = Join-Path Windows-Release "Linecraft-CAD-$version-Setup.exe"
+          gh release create $env:GITHUB_REF_NAME $installer Windows-Release/SHA256SUMS.txt --verify-tag --title "Linecraft CAD $version for Windows" --notes-file Windows-Release/release-notes.md
+          if ($LASTEXITCODE -ne 0) { throw 'Release publication failed.' }
+      - name: Preserve CI gate reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-gate-reports
+          path: |
+            work/public-*-results.json
+            tests/*-results.json
+          if-no-files-found: ignore

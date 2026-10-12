@@ -22,11 +22,12 @@ let localGeometryClipboard=null, clipboardCutPending=false, clipboardWritePromis
 let annotationEditor=null, settingsDraft=null;
 let plotMode='plot',plotModule=null,plotPreviewRevision=0,plotSubmitting=false,lastPlotOptions=null;
 let orbitMode=null, orbitPivot=null, pointerScalar=null, pointerUnavailable=null, gripPropertyIndices=new Map(),cubeDrag=null,cubeClickSuppressed=false;
+let selectedViewportId=null,pageSetupLayoutId=null,renderContext=null,subobjectMode='whole',selectedSubobject=null,overlapCycle=null,viewportNavigationDraft=null;
 const commandCatalog=[
-  {name:'LINE',aliases:['L'],group:'Draw',icon:'line',summary:'Draw connected individual line segments.',options:'Successive points or direct lengths after the first point · Undo (U) · Close (C) · Enter to finish',limits:'Straight 2D segments. A direct length follows the eligible pointer direction; without one it follows the previous segment or +X.',example:'L → 0,0 → @100,0 → @0,60 → Enter'},
+  {name:'LINE',aliases:['L'],group:'Draw',icon:'line',summary:'Draw connected individual line segments.',options:'Successive points or direct lengths after the first point · Undo (U) · Close (C) · Enter to finish',limits:'Straight planar or spatial paths on the active UCS plane. A direct length follows the eligible pointer direction; without one it follows the previous segment or the UCS X axis.',example:'L → 0,0 → @100,0 → @0,60 → Enter'},
   {name:'PLINE',aliases:['PL'],group:'Draw',icon:'polyline',summary:'Draw one polyline with straight segments.',options:'Successive vertices or direct lengths after the first point · Undo (U) · Close (C) · Enter to finish',limits:'Arc segments, width and bulges are unavailable. Direct lengths use the pointer direction, previous segment, or +X.',example:'PL → 0,0 → 80,0 → 80,40 → C'},
   {name:'ARC',aliases:['A'],group:'Draw',icon:'arc',summary:'Draw a circular arc through three points.',options:'Start point · Point on the arc · End point',limits:'Three-point construction only. Center, angle, direction, length and tangent construction modes are unavailable.',example:'A → 0,0 → 50,50 → 100,0'},
-  {name:'RECTANG',aliases:['REC'],group:'Draw',icon:'rectangle',summary:'Draw a rectangle from opposite corners.',options:'Two opposite corners',limits:'Chamfer, fillet, elevation, thickness and dimensions options are unavailable. Rotate afterward to orient it.',example:'REC → 0,0 → 100,60'},
+  {name:'RECTANG',aliases:['REC'],group:'Draw',icon:'rectangle',summary:'Draw a rectangle from opposite corners.',options:'Two opposite corners',limits:'Opposite corners define a rectangle in the active UCS plane. Non-world planes are stored as exact spatial paths. Chamfer, fillet and thickness construction options are unavailable.',example:'REC → 0,0 → 100,60'},
   {name:'CIRCLE',aliases:['C'],group:'Draw',icon:'circle',summary:'Draw a circle from a center and size.',options:'Center + radius · Diameter (D)',limits:'2P, 3P and tangent constructions are unavailable.',example:'C → 50,30 → D → 20'},
   ...[
     {name:'ELLIPSE',aliases:['EL'],group:'Draw',icon:'ellipse',summary:'Draw a full analytic ellipse from two axes.',options:'Two first-axis endpoints, or Center (C) + first-axis endpoint · Other-axis distance or point',limits:'Full planar ellipse only. Elliptical arcs, isocircles and rotation-based axis construction are unavailable. Either axis may be the longer one.',example:'EL → 0,0 → 40,0 → 10'},
@@ -42,16 +43,24 @@ const commandCatalog=[
     {name:'PEDIT',aliases:['PE'],group:'Modify',icon:'pedit',summary:'Convert and edit one straight polyline path.',options:'Select LINE / PLINE / RECTANG · Convert LINE · Open / Close / Join / Reverse / local Undo · Enter to finish',limits:'Straight segments only. Join requires exact connected endpoints; widths, bulges, fit/spline conversion and tolerance joining are unavailable. Rectangle edits convert it to PLINE.',example:'PE → select line → Enter → Yes → Join → select connected paths → Enter → Enter'},
   ].filter(command=>geometry.ADVANCED_COMMANDS?.includes(command.name)),
   {name:'BOX',aliases:[],group:'Model',icon:'box',summary:'Create a faceted box with exact XYZ vertices.',options:'First corner X,Y,Z · Opposite XY corner · Signed nonzero height',limits:'Polygon mesh geometry; native ACIS solid options and Boolean operations are unavailable.',example:'BOX → 0,0,0 → 40,30,0 → 20'},
-  {name:'CYLINDER',aliases:[],group:'Model',icon:'cylinder',summary:'Create a faceted cylinder with a vertical axis.',options:'Center X,Y,Z · Positive radius · Signed nonzero height',limits:'A 32-sided polygon mesh. Alternate axis, ellipse and native solid construction options are unavailable.',example:'CYLINDER → 60,0,0 → 10 → 30'},
+  {name:'CYLINDER',aliases:[],group:'Model',icon:'cylinder',summary:'Create a faceted cylinder along the active plane normal.',options:'Center X,Y,Z · Positive radius · Signed nonzero height',limits:'A 32-sided polygon mesh along the UCS plane normal. Elliptical cylinders and native solid construction options are unavailable.',example:'CYLINDER → 60,0,0 → 10 → 30'},
   {name:'SPHERE',aliases:[],group:'Model',icon:'sphere',summary:'Create a faceted sphere around an exact center.',options:'Center X,Y,Z · Positive radius',limits:'A polygon mesh with 16 latitude and 32 longitude divisions. Native analytic solid/B-rep geometry is unavailable.',example:'SPHERE → 100,0,20 → 15'},
-  {name:'EXTRUDE',aliases:[],group:'Model',icon:'extrude',summary:'Extrude a closed planar profile into a mesh.',options:'Select closed RECTANG / straight PLINE · Enter · Signed height',limits:'Extrusion follows world Z and retains source profiles. Taper, path and native solid association are unavailable.',example:'Select rectangle → EXTRUDE → 25'},
-  {name:'3DPOLY',aliases:[],group:'Model',icon:'polyline',summary:'Draw connected vertices in full XYZ space.',options:'X,Y,Z or @offset · Successive points · U · C · Enter',limits:'Straight 3D segments only. Pointer points lie on the labeled XY plane or a snapped vertex; typed XYZ is authoritative.',example:'3DPOLY → 0,0,0 → 40,0,20 → 40,40,40 → Enter'},
+  {name:'EXTRUDE',aliases:[],group:'Model',icon:'extrude',summary:'Extrude a closed planar profile into a mesh.',options:'Select closed RECTANG / PLINE / planar POLY3D / circle · Enter · Signed height',limits:'Extrusion follows the profile normal and retains source profiles. Circle extrusion is a 32-sided mesh. Taper, path and native solid association are unavailable.',example:'Select rectangle → EXTRUDE → 25'},
+  {name:'3DPOLY',aliases:[],group:'Model',icon:'polyline',summary:'Draw connected vertices in full XYZ space.',options:'X,Y,Z or @offset · Successive points · U · C · Enter',limits:'Straight 3D segments only. Pointer points lie on the labeled active plane or a snapped feature; typed UCS XYZ is authoritative.',example:'3DPOLY → 0,0,0 → 40,0,20 → 40,40,40 → Enter'},
   {name:'ROTATE3D',aliases:[],group:'Model',icon:'rotate',summary:'Rotate selected meshes or 3D paths around a world axis.',options:'Selection · X / Y / Z axis · Base X,Y,Z · Signed angle',limits:'World-axis rotation only. Arbitrary two-point axes and native gizmos are unavailable.',example:'Select box → ROTATE3D → Z → 0,0,0 → 45'},
   {name:'3DORBIT',aliases:[],group:'Model',icon:'orbit',summary:'Orbit the camera while retaining world Z as up.',options:'Left drag in Orbit mode · Shift + middle drag transient orbit · Enter / Esc exits',limits:'Auto Target uses selected or visible geometry; disabling it acquires a click target. Navigation changes view only.',example:'3DORBIT → drag left/right or up/down → Esc'},
   {name:'3DFORBIT',aliases:[],group:'Model',icon:'orbit',summary:'Orbit freely with an original arcball, including roll.',options:'Drag inside arcball for free rotation · Outside for roll · Ctrl + Shift + middle drag',limits:'Changes the camera rather than object coordinates. Object editing resumes after leaving orbit mode.',example:'3DFORBIT → drag around the arcball → Esc'},
   {name:'3DORBITCTR',aliases:[],group:'Model',icon:'orbit',summary:'Specify the center used for orbiting.',options:'Center X,Y,Z · Constrained orbit around that stationary point',limits:'The rotation pivot is separate from the camera look-at point. An off-screen center retains the default orbit center.',example:'3DORBITCTR → 20,15,10 → drag → Esc'},
   {name:'VPOINT',aliases:[],group:'Model',icon:'orbit',summary:'Set a 3D view from an exact direction vector.',options:'Nonzero X,Y,Z viewing vector',limits:'World direction vectors only; native compass dialogs and spherical entry are unavailable.',example:'VPOINT → 1,-1,1'},
-  {name:'PLAN',aliases:[],group:'Model',icon:'fit',summary:'Return the view to the world XY plane.',options:'World (W) or Enter',limits:'World plan only; other UCS coordinate systems are unavailable.',example:'PLAN → W'},
+  {name:'PLAN',aliases:[],group:'Model',icon:'fit',summary:'Align the view to the current UCS or World XY plane.',options:'Current UCS (Enter) / World (W)',limits:'Changes view direction only; the UCS origin and axes remain unchanged.',example:'PLAN → Enter'},
+  {name:'LAYOUT',aliases:[],group:'Settings',icon:'rectangle',summary:'Create and manage named paper layouts.',options:'New / Set / Delete / Rename · Paper layout tabs',limits:'Page size is assigned separately in Page setup. Paper objects use millimeters and model geometry remains in its model units.',example:'LAYOUT → New → Sheet 1'},
+  {name:'PAGESETUP',aliases:[],group:'Settings',icon:'settings',summary:'Assign paper size and orientation to a layout.',options:'Preset paper sizes · Portrait / Landscape · Layout name',limits:'One validated edit with Undo. Existing viewport frames retain their paper coordinates; a smaller page cannot clip them.',example:'PAGESETUP → A3 landscape → Apply'},
+  {name:'LAYER',aliases:['LA'],group:'Settings',icon:'settings',summary:'Manage drawing layers and per-viewport visibility.',options:'On / Lock / Color / Lineweight / Linetype / Model / Paper / Plot / VP Freeze',limits:'Paper visibility governs both paper annotations and model content projected through sheet viewports. VP Freeze applies to the selected viewport.',example:'LA → edit a layer cell'},
+  {name:'MVIEW',aliases:['MV'],group:'Navigate',icon:'rectangle',summary:'Create a rectangular model viewport on paper.',options:'Two opposite paper corners · Properties frame / scale / view / lock',limits:'Rectangular orthographic viewports only. Frames and ratios do not rescale model objects.',example:'MVIEW → 10,10 → 200,140'},
+  {name:'MSPACE',aliases:['MS'],group:'Navigate',icon:'select',summary:'Edit model geometry through a paper viewport.',options:'Double-click inside a viewport or enter MSPACE',limits:'A locked viewport keeps its view and ratio; wheel and middle drag navigate the sheet while model space stays active.',example:'Double-click inside a viewport'},
+  {name:'PSPACE',aliases:['PS'],group:'Navigate',icon:'select',summary:'Return to editing paper annotations and viewport frames.',options:'Double-click outside an active viewport or enter PSPACE',limits:'Paper coordinates use millimeters independently of the model units.',example:'PSPACE'},
+  {name:'MODEL',aliases:[],group:'Navigate',icon:'select',summary:'Return to the standalone model drawing.',options:'Model tab or MODEL',limits:'Preserves paper layouts and saved viewport views.',example:'MODEL'},
+  {name:'UCS',aliases:[],group:'Model',icon:'orbit',summary:'Choose the coordinate system used for construction.',options:'World / XY / XZ / YZ · 3point in world coordinates · Planar mesh face',limits:'Typed spatial coordinates use this UCS; pointer acquisition stays in the labeled construction plane. View presets and PLAN do not change the UCS.',example:'UCS → 3 → 0,0,0 → 1,0,0 → 0,0,1'},
   {name:'TEXT',aliases:['DT'],group:'Annotate',icon:'text',summary:'Place one line of drawing text.',options:'Insertion point · Height · Rotation · Text content',limits:'One line per object, up to 2048 encoded exchange bytes. Height follows the installed font’s capital height; widths use an original metric approximation. Native justification and fields are unavailable.',example:'TEXT → 0,0 → 5 → 0 → Entrance'},
   {name:'MTEXT',aliases:['T','MT'],group:'Annotate',icon:'mtext',summary:'Place wrapped multiline drawing text.',options:'Two opposite text-box corners · Height (H) · Multiline content editor',limits:'Top-left insertion and a positive width; up to 65536 plain-text characters with original word wrapping. Overlong words wrap by character. Rich formatting and native inline codes are unavailable.',example:'MTEXT → 0,50 → 80,10 → enter multiline text'},
   {name:'TEXTEDIT',aliases:['ED'],group:'Annotate',icon:'text',summary:'Edit the content of one text object.',options:'Select TEXT or MTEXT · Enter · Edit and apply',limits:'One text object at a time. Properties controls also edit height, rotation, style and multiline width.',example:'TEXTEDIT → select text → Enter → apply edited content'},
@@ -81,7 +90,7 @@ const commandCatalog=[
   {name:'CUTCLIP',aliases:[],group:'Clipboard',icon:'delete',shortcut:'Ctrl+X',summary:'Copy geometry, then remove it after a successful clipboard write.',options:'Select objects · Enter',limits:'A failed clipboard write retains the source geometry. Undo restores a completed cut.',example:'Select objects → CUTCLIP'},
   {name:'COPYBASE',aliases:[],group:'Clipboard',icon:'clipboard',shortcut:'Ctrl+Shift+C',summary:'Copy geometry with a specific placement base.',options:'Base point · Select objects · Enter; preselected objects are retained',limits:'The clipboard base is fixed for subsequent paste placement.',example:'COPYBASE → 0,0 → select objects → Enter'},
   {name:'PASTECLIP',aliases:[],group:'Clipboard',icon:'clipboard',shortcut:'Ctrl+V',summary:'Place geometry from the drawing clipboard.',options:'Destination point · Placement preview',limits:'Native paste reads recognized Linecraft geometry only. Browser mode keeps an internal drawing clipboard.',example:'PASTECLIP → 100,40'},
-  {name:'PLOT',aliases:[],group:'Output',icon:'plot',summary:'Produce a vector PDF sheet from the current drawing.',options:'A4 / A3 / Letter / Tabloid · Portrait / landscape · Extents fit or exact 1:n · Margins · Color / grayscale / monochrome · Lineweights',limits:'Desktop PDF output of model extents; 3D views use projected wireframe. Exact scale needs drawing units and an orthographic view. Physical printer jobs, paper-space layouts and native plot-style tables are unavailable.',example:'PLOT → choose paper and scale → Save PDF'},
+  {name:'PLOT',aliases:[],group:'Output',icon:'plot',summary:'Produce a vector PDF sheet from the current drawing.',options:'A4 / A3 / Letter / Tabloid · Portrait / landscape · Extents fit or exact 1:n · Margins · Color / grayscale / monochrome · Lineweights',limits:'Desktop vector PDF output of model extents or physical paper layouts with saved viewport scales. 3D views use projected wireframe. Physical printer jobs and native plot-style tables are unavailable.',example:'PLOT → choose paper and scale → Save PDF'},
   {name:'PUBLISH',aliases:[],group:'Output',icon:'publish',summary:'Publish saved Linecraft drawings as one PDF with separate sheets.',options:'Same sheet setup as PLOT · Native picker for up to 20 saved Linecraft drawings · One combined PDF',limits:'The current drawing preview illustrates the setup; chosen files provide the published sheets. Source files and the current drawing remain unchanged. Sheet-set databases and batch DWG/DXF publishing are unavailable.',example:'PUBLISH → choose sheet settings → choose saved drawings → save PDF'},
   {name:'UNDO',aliases:['U'],group:'Navigate',icon:'undo',shortcut:'Ctrl+Z',summary:'Undo the previous completed edit.',options:'Undo the latest edit or the active command’s supported local step',limits:'A finished multi-destination COPY is one undo group.',example:'U'},
   {name:'REDO',aliases:[],group:'Navigate',icon:'redo',shortcut:'Ctrl+Y',summary:'Restore the last undone completed edit.',options:'Redo latest undone edit',limits:'A new edit clears redo history.',example:'REDO'},
@@ -110,47 +119,66 @@ const format = (n, places=4) => {
   return value.toFixed(places).replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1');
 };
 const state = () => editor.state;
-const lengthFormat=(value,prefs=state().settings)=>Number.isFinite(value)?geometry.formatLength?geometry.formatLength(value,prefs):format(value):'Out of range';
-const angleFormat=(value,prefs=state().settings)=>Number.isFinite(value)?geometry.formatAngle?geometry.formatAngle(value,prefs):`${format(value,2)}°`:'Out of range';
-const areaFormat=(value,prefs=state().settings)=>Number.isFinite(value)?geometry.formatArea?geometry.formatArea(value,prefs):format(value):'Out of range';
+const activeEntities=()=>editor.getActiveEntities?editor.getActiveEntities():state().entities;
+const modelEntities=()=>editor.getModelEntities?editor.getModelEntities():state().entities;
+const currentLayout=()=>state().layouts?.find(layout=>layout.id===state().activeLayoutId)||null;
+const currentViewport=()=>viewportNavigationDraft?.id===state().activeViewportId?viewportNavigationDraft:currentLayout()?.viewports.find(viewport=>viewport.id===state().activeViewportId)||null;
+const selectedViewport=()=>currentLayout()?.viewports.find(viewport=>viewport.id===(selectedViewportId||state().activeViewportId))||null;
+const paperSpace=()=>state().activeSpace==='paper';
+const drawingContext=()=>{const context=renderContext?{...state(),activeSpace:renderContext.space,activeLayoutId:renderContext.layoutId,activeViewportId:renderContext.viewportId}:state();return context.activeSpace==='paper'?{...context,settings:{...context.settings,units:'mm',linearFormat:'decimal'}}:context;};
+const displaySettings=()=>paperSpace()?{...state().settings,units:'mm',linearFormat:'decimal'}:state().settings;
+const lengthFormat=(value,prefs=displaySettings())=>Number.isFinite(value)?geometry.formatLength?geometry.formatLength(value,prefs):format(value):'Out of range';
+const angleFormat=(value,prefs=displaySettings())=>Number.isFinite(value)?geometry.formatAngle?geometry.formatAngle(value,prefs):`${format(value,2)}°`:'Out of range';
+const areaFormat=(value,prefs=displaySettings())=>Number.isFinite(value)?geometry.formatArea?geometry.formatArea(value,prefs):format(value):'Out of range';
 const layerFor = entity => state().layers.find(layer => layer.name === entity.layer) || state().layers[0];
-const visibleEntities = () => state().entities.filter(entity => layerFor(entity)?.visible !== false);
+const visibleEntities = () => (renderContext?.entities||activeEntities()).filter(entity => geometry.isEntityVisible?geometry.isEntityVisible(entity,drawingContext()):layerFor(entity)?.visible !== false);
 const selectableEntities = () => visibleEntities().filter(entity => !layerFor(entity)?.locked);
 const pointsOf = entity => {
-  if(geometry.entityGripPoints)return geometry.entityGripPoints(entity,state());
+  if(geometry.entityGripPoints)return geometry.entityGripPoints(entity,drawingContext());
   if(entity.type==='LINE')return [entity.start,entity.end];
   if(entity.type==='CIRCLE'){const {center:c,radius:r}=entity;return[c,{x:c.x+r,y:c.y},{x:c.x,y:c.y+r},{x:c.x-r,y:c.y},{x:c.x,y:c.y-r}];}
   return entity.points || [];
 };
-const modelWorkspace=()=>state().workspace==='3d';
-const camera3D=()=>state().camera3d||view3d.defaultCamera();
-const toScreen = point => modelWorkspace()?view3d.projectPoint(point,camera3D(),width,height):worldToScreen(point, state().viewport, width, height);
-const toWorld = point => modelWorkspace()?view3d.intersectConstructionPlane(view3d.screenRay(point,camera3D(),width,height),state().settings?.constructionElevation??0):screenToWorld(point, state().viewport, width, height);
-const is3DEntity=entity=>entity.type==='MESH'||entity.type==='POLY3D';
+const paperView=()=>state().paperViewport||{center:{x:210,y:148.5},scale:2};
+const paperToScreen=point=>worldToScreen(point,paperView(),width,height);
+const screenToPaper=point=>screenToWorld(point,paperView(),width,height);
+const renderingViewport=()=>renderContext?renderContext.viewport||null:currentViewport();
+const modelWorkspace=()=>renderContext?renderContext.viewport?.workspace==='3d':currentViewport()?currentViewport().workspace==='3d':!paperSpace()&&state().workspace==='3d';
+const activePlane=()=>editor.getConstructionPlane?editor.getConstructionPlane():{origin:{x:0,y:0,z:state().settings?.constructionElevation??0},xAxis:{x:1,y:0,z:0},yAxis:{x:0,y:1,z:0},normal:{x:0,y:0,z:1}};
+function camera3D(){const viewport=renderingViewport();if(!viewport)return state().camera3d||view3d.defaultCamera();const camera={...viewport.camera3d,target:{...viewport.modelCenter},scale:paperView().scale*geometry.modelUnitMillimeters(state().settings)/viewport.scaleDenominator,projection:'orthographic'},center=paperToScreen({x:viewport.frame.x+viewport.frame.width/2,y:viewport.frame.y+viewport.frame.height/2}),axes=view3d.cameraBasis(camera),dx=(width/2-center.x)/camera.scale,dy=(center.y-height/2)/camera.scale;camera.target={x:camera.target.x+axes.right.x*dx+axes.up.x*dy,y:camera.target.y+axes.right.y*dx+axes.up.y*dy,z:(camera.target.z||0)+axes.right.z*dx+axes.up.z*dy};return camera;}
+const toScreen = point => {const viewport=renderingViewport();if(viewport&&geometry.viewportModelToPaper){try{const projected=geometry.viewportModelToPaper(point,viewport,state().settings);return{...paperToScreen(projected),depth:projected.depth,clipped:false};}catch{return{x:NaN,y:NaN,depth:NaN,clipped:true};}}return paperSpace()&&!renderContext?paperToScreen(point):modelWorkspace()?view3d.projectPoint(point,camera3D(),width,height):worldToScreen(point,renderContext?.space==='paper'?paperView():state().viewport,width,height);};
+const toWorld = point => {if(paperSpace())return screenToPaper(point);if(modelWorkspace()){const ray=view3d.screenRay(point,camera3D(),width,height);return geometry.intersectPlaneRay?geometry.intersectPlaneRay(ray,activePlane()):view3d.intersectConstructionPlane(ray,state().settings?.constructionElevation??0);}const viewport=currentViewport();return viewport&&geometry.viewportPaperToModel?geometry.viewportPaperToModel(screenToPaper(point),viewport,state().settings):screenToWorld(point,state().viewport,width,height);};
+const viewScale=()=>renderingViewport()?paperView().scale*geometry.modelUnitMillimeters(state().settings)/renderingViewport().scaleDenominator:paperSpace()||renderContext?.space==='paper'?paperView().scale:state().viewport.scale;
+function inkFor(entity,color){const ink=color||entity.color||layerFor(entity)?.color||'#dce5e9';if(!currentLayout()||color)return ink;const rgb=/^#[a-f\d]{6}$/i.test(ink)?[1,3,5].map(index=>parseInt(ink.slice(index,index+2),16)):null;return rgb&&rgb.every(value=>value>190)?'#263742':ink;}
+const is3DEntity=entity=>['MESH','POLY3D'].includes(entity.type);
+const spatialCurve=entity=>['CIRCLE3D','ARC3D'].includes(entity.type);
+const modalIds=['annotation-dialog','settings-dialog','plot-dialog','page-setup-dialog','viewport-scale-dialog','layer-manager-dialog'];
+const editorDialogOpen=()=>modalIds.some(id=>$(id).open);
 const selectingObjects=()=>['selection','join-selection'].includes(state().commandPhase);
-const displayInsertChildren=entity=>geometry.visibleInsertEntities?geometry.visibleInsertEntities(entity,state()):geometry.expandedInsertEntities(entity,state()).filter(child=>layerFor(child)?.visible!==false);
+const displayInsertChildren=entity=>geometry.visibleInsertEntities?geometry.visibleInsertEntities(entity,drawingContext()):geometry.expandedInsertEntities(entity,drawingContext()).filter(child=>layerFor(child)?.visible!==false);
 function curveDisplayPoints(entity){
-  const center=entity.center||entity.controlPoints?.[0]||{x:0,y:0},screen=toScreen(center),scale=modelWorkspace()?(camera3D().projection==='perspective'?view3d.focalPixels(camera3D(),height)/screen.viewDistance:camera3D().scale):state().viewport.scale;
+  const center=entity.center||entity.controlPoints?.[0]||{x:0,y:0},screen=toScreen(center),scale=modelWorkspace()?(camera3D().projection==='perspective'?view3d.focalPixels(camera3D(),height)/screen.viewDistance:camera3D().scale):viewScale();
   const size=entity.type==='ELLIPSE'?Math.hypot(entity.major.x,entity.major.y):entity.type==='SPLINE'?Math.max(...entity.controlPoints.map(point=>Math.hypot(point.x-center.x,point.y-center.y))):entity.radius;
   const fullCount=Math.max(32,Math.min(4096,Math.ceil(Math.sqrt(Math.abs(size*scale)*20))||32));
+  if(spatialCurve(entity))return geometry.sampleSpatialCurve(entity,Math.max(8,Math.ceil((entity.type==='ARC3D'?Math.abs(entity.sweepAngle)/360:1)*fullCount)));
   if(['ELLIPSE','SPLINE'].includes(entity.type))return geometry.sampleCurve(entity,Math.max(entity.type==='SPLINE'?128:32,fullCount));
   const sweep=entity.type==='CIRCLE'?360:entity.sweepAngle,start=entity.type==='CIRCLE'?0:entity.startAngle,count=Math.max(8,Math.ceil(Math.abs(sweep)/360*fullCount));return Array.from({length:count+1},(_,index)=>{const angle=(start+sweep*index/count)*Math.PI/180;return{x:entity.center.x+entity.radius*Math.cos(angle),y:entity.center.y+entity.radius*Math.sin(angle),z:0};});
 }
 function projectionEdges(entity){
-  if(['CIRCLE','ARC','ELLIPSE','SPLINE'].includes(entity.type)){
+  if(['CIRCLE','ARC','CIRCLE3D','ARC3D','ELLIPSE','SPLINE'].includes(entity.type)){
     const points=curveDisplayPoints(entity);return points.slice(1).map((p,index)=>[points[index],p]);
   }
   if(entity.type==='INSERT'&&geometry.expandedInsertEntities)return displayInsertChildren(entity).flatMap(projectionEdges);
-  if(entity.type==='HATCH'&&geometry.entityDisplayPrimitives){const primitive=geometry.entityDisplayPrimitives(entity,state()),edges=[...(primitive.segments||[])];for(const path of primitive.paths||[]){const points=Array.isArray(path)?path:path.points;if(!points?.length)continue;for(let i=1;i<points.length;i++)edges.push([points[i-1],points[i]]);if(path.closed)edges.push([points.at(-1),points[0]]);}if(entity.pattern==='solid'&&['CIRCLE','ELLIPSE'].includes(entity.boundary.type))edges.push(...projectionEdges(entity.boundary));return edges;}
+  if(entity.type==='HATCH'&&geometry.entityDisplayPrimitives){const primitive=geometry.entityDisplayPrimitives(entity,drawingContext()),edges=[...(primitive.segments||[])];for(const path of primitive.paths||[]){const points=Array.isArray(path)?path:path.points;if(!points?.length)continue;for(let i=1;i<points.length;i++)edges.push([points[i-1],points[i]]);if(path.closed)edges.push([points.at(-1),points[0]]);}if(entity.pattern==='solid'&&['CIRCLE','ELLIPSE'].includes(entity.boundary.type))edges.push(...projectionEdges(entity.boundary));return edges;}
   return geometry.entityEdges?geometry.entityEdges(entity,state()):entity.type==='LINE'?[[entity.start,entity.end]]:[];
 }
-function projectionFills(entity){if(entity.type==='MESH'||!geometry.entityDisplayPrimitives)return[];if(entity.type==='INSERT')return displayInsertChildren(entity).flatMap(projectionFills);if(entity.type==='HATCH'&&entity.pattern==='solid'&&['CIRCLE','ELLIPSE'].includes(entity.boundary.type))return[curveDisplayPoints(entity.boundary)];const primitive=geometry.entityDisplayPrimitives(entity,state());return(primitive.fills||[]).map(fill=>Array.isArray(fill)?fill:fill.points).filter(points=>points?.length>=3);}
-function modelPoints(entities=visibleEntities()){return entities.flatMap(entity=>{if(entity.type==='INSERT')return modelPoints(displayInsertChildren(entity));const points=[...geometry.entityPoints(entity,state())];if(entity.type==='HATCH')points.push(...modelPoints([entity.boundary]));else if(['CIRCLE','ELLIPSE'].includes(entity.type)){const major=entity.type==='CIRCLE'?{x:entity.radius,y:0}:entity.major,ratio=entity.type==='CIRCLE'?1:entity.ratio;points.push(...view3d.planarCurveExtrema(entity.center,major,ratio,camera3D()));if(camera3D().projection==='perspective')points.push(...curveDisplayPoints(entity));}else if(entity.type==='SPLINE'){points.push(...geometry.splineBezierSegments(entity).flat(),...geometry.sampleCurve(entity,Math.min(4096,Math.max(256,entity.controlPoints.length*8))));}else if(entity.type==='ARC')points.push(...curveDisplayPoints(entity));return points;});}
+function projectionFills(entity){if(entity.type==='MESH'||!geometry.entityDisplayPrimitives)return[];if(entity.type==='INSERT')return displayInsertChildren(entity).flatMap(projectionFills);if(entity.type==='HATCH'&&entity.pattern==='solid'&&['CIRCLE','ELLIPSE'].includes(entity.boundary.type))return[curveDisplayPoints(entity.boundary)];const primitive=geometry.entityDisplayPrimitives(entity,drawingContext());return(primitive.fills||[]).map(fill=>Array.isArray(fill)?fill:fill.points).filter(points=>points?.length>=3);}
+function modelPoints(entities=visibleEntities()){return entities.flatMap(entity=>{if(entity.type==='INSERT')return modelPoints(displayInsertChildren(entity));const points=[...geometry.entityPoints(entity,drawingContext())];if(entity.type==='HATCH')points.push(...modelPoints([entity.boundary]));else if(['CIRCLE','ELLIPSE'].includes(entity.type)){const major=entity.type==='CIRCLE'?{x:entity.radius,y:0}:entity.major,ratio=entity.type==='CIRCLE'?1:entity.ratio;points.push(...view3d.planarCurveExtrema(entity.center,major,ratio,camera3D()));if(camera3D().projection==='perspective')points.push(...curveDisplayPoints(entity));}else if(entity.type==='SPLINE'){points.push(...geometry.splineBezierSegments(entity).flat(),...geometry.sampleCurve(entity,Math.min(4096,Math.max(256,entity.controlPoints.length*8))));}else if(entity.type==='ARC'||spatialCurve(entity))points.push(...curveDisplayPoints(entity));return points;});}
 function projectedPick(screen,entities=selectableEntities()){return view3d.pickProjected(entities,screen,camera3D(),width,height,8,projectionEdges,projectionFills);}
-function setCamera(camera){const result=editor.set3DView(camera);if(result.ok===false)addLog(result.message,'error');return result;}
+function setCamera(camera,{rawViewport=false}={}){const viewport=currentViewport();if(viewport&&!rawViewport){const center=paperToScreen({x:viewport.frame.x+viewport.frame.width/2,y:viewport.frame.y+viewport.frame.height/2}),axes=view3d.cameraBasis(camera),scale=viewScale(),dx=(width/2-center.x)/scale,dy=(center.y-height/2)/scale;camera={...camera,target:{x:camera.target.x-axes.right.x*dx-axes.up.x*dy,y:camera.target.y-axes.right.y*dx-axes.up.y*dy,z:(camera.target.z||0)-axes.right.z*dx-axes.up.z*dy}};}const result=editor.set3DView(camera);if(result.ok===false)addLog(result.message,'error');return result;}
 function setWorkspace(mode){editor.setWorkspace(mode);orbitMode=null;orbitPivot=null;panTool=false;drag=null;pointer=null;snap=null;pointerScalar=null;pointerUnavailable=null;update();resized();}
 function sceneForOrbit(){const entities=visibleEntities();return (orbitMode||drag?.mode==='orbit')&&camera3D().autoTarget&&state().selectionIds.length?entities.filter(entity=>state().selectionIds.includes(entity.id)):entities;}
-function visibleInView(entity){let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;for(const point of geometry.entityPoints(entity,state())){const p=view3d.projectPoint(point,camera3D(),width,height);if(p.clipped||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);}return maxX>=0&&minX<=width&&maxY>=0&&minY<=height;}
+function visibleInView(entity){let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;for(const point of geometry.entityPoints(entity,drawingContext())){const p=view3d.projectPoint(point,camera3D(),width,height);if(p.clipped||!Number.isFinite(p.x)||!Number.isFinite(p.y))continue;minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minY=Math.min(minY,p.y);maxY=Math.max(maxY,p.y);}return maxX>=0&&minX<=width&&maxY>=0&&minY<=height;}
 function startOrbit(mode,screen=null,{explicit=false}={}){
   if(!modelWorkspace())editor.setWorkspace('3d');orbitMode=mode;panTool=false;closePalettes();hideCompletion();
   if(explicit&&camera3D().orbitCenter)orbitPivot={...camera3D().orbitCenter};
@@ -161,7 +189,7 @@ function startOrbit(mode,screen=null,{explicit=false}={}){
 function projectedSnap(screen){
   const modes=state().settings?.snapModes||[],meshes=visibleEntities().filter(e=>e.type==='MESH');let winner=null;
   for(const entity of visibleEntities().filter(e=>e.id!==drag?.entityId)){
-    const candidates=geometry.snapCandidates?geometry.snapCandidates(entity,state()):entity.type==='CIRCLE'||entity.type==='ARC'?[{point:entity.center,type:'center'},...(entity.type==='CIRCLE'?geometry.entityPoints(entity,state()).map(point=>({point,type:'quadrant'})):[{point:geometry.arcPoint(entity,0),type:'endpoint'},{point:geometry.arcPoint(entity,1),type:'endpoint'},{point:geometry.arcPoint(entity,.5),type:'midpoint'}])]:pointsOf(entity).map(point=>({point,type:'endpoint'}));
+    const candidates=geometry.snapCandidates?geometry.snapCandidates(entity,state()):entity.type==='CIRCLE'||entity.type==='ARC'?[{point:entity.center,type:'center'},...(entity.type==='CIRCLE'?geometry.entityPoints(entity,drawingContext()).map(point=>({point,type:'quadrant'})):[{point:geometry.arcPoint(entity,0),type:'endpoint'},{point:geometry.arcPoint(entity,1),type:'endpoint'},{point:geometry.arcPoint(entity,.5),type:'midpoint'}])]:pointsOf(entity).map(point=>({point,type:'endpoint'}));
     if(!geometry.snapCandidates&&!['TEXT','MTEXT','DIMENSION','CIRCLE','ARC'].includes(entity.type))for(const[a,b]of projectionEdges(entity))candidates.push({point:{x:a.x+(b.x-a.x)/2,y:a.y+(b.y-a.y)/2,z:(a.z??0)+((b.z??0)-(a.z??0))/2},type:'midpoint'});
     for(const candidate of candidates){if(!modes.includes(candidate.type))continue;const p=toScreen(candidate.point),distance=Math.hypot(p.x-screen.x,p.y-screen.y);if(p.clipped||distance>10||camera3D().renderMode==='shaded'&&view3d.pointOccluded(candidate.point,meshes,camera3D(),width,height))continue;if(!winner||distance<winner.distance-1e-6||Math.abs(distance-winner.distance)<1e-6&&candidate.type==='endpoint')winner={...candidate,point:{...candidate.point,z:candidate.point.z??0},distance,entityId:entity.id};}
   }return winner;
@@ -174,10 +202,10 @@ function canonicalContent(value) {
   return value;
 }
 function documentFingerprint() {
-  const value=editor.state;
-  return contentFingerprint(value);
+  return contentFingerprint(editorDocument());
 }
-function contentFingerprint(value){return JSON.stringify(canonicalContent({entities:value.entities,layers:value.layers,currentLayer:value.currentLayer,settings:value.settings,textStyles:value.textStyles,dimStyles:value.dimStyles,currentTextStyle:value.currentTextStyle,currentDimStyle:value.currentDimStyle,blocks:value.blocks||[]}));}
+function editorDocument(source=editor){const value=source.serialize();return typeof value==='string'?JSON.parse(value):value;}
+function contentFingerprint(value){return JSON.stringify(canonicalContent({entities:value.entities,layers:value.layers,currentLayer:value.currentLayer,settings:value.settings,textStyles:value.textStyles,dimStyles:value.dimStyles,currentTextStyle:value.currentTextStyle,currentDimStyle:value.currentDimStyle,blocks:value.blocks||[],layouts:value.layouts||[],ucs:value.ucs}));}
 function isDirty() {return importedAwaitingSave||documentFingerprint() !== savedFingerprint;}
 function serializedDrawing() {
   const value=editor.serialize();return typeof value==='string'?value:JSON.stringify(value,null,2);
@@ -198,7 +226,7 @@ if(developmentMode){
       const recovered=JSON.parse(checkpoint.text),baseline=JSON.parse(checkpoint.savedFingerprint);
       const legacyDrafting={gridEnabled:checkpoint.gridEnabled!==false,snapEnabled:checkpoint.snapEnabled!==false,orthoEnabled:checkpoint.orthoEnabled===true};
       if(!recovered.settings)recovered.settings=legacyDrafting;if(!baseline.settings)baseline.settings=legacyDrafting;
-      editor=createEditor(recovered);documentName=checkpoint.name||'Untitled drawing';savedFingerprint=contentFingerprint(createEditor(baseline).state);
+      editor=createEditor(recovered);documentName=checkpoint.name||'Untitled drawing';savedFingerprint=contentFingerprint(editorDocument(createEditor(baseline)));
       importedAwaitingSave=checkpoint.importedAwaitingSave===true;
       gridEnabled=editor.state.settings?.gridEnabled??checkpoint.gridEnabled!==false;snapEnabled=editor.state.settings?.snapEnabled??checkpoint.snapEnabled!==false;orthoEnabled=editor.state.settings?.orthoEnabled??checkpoint.orthoEnabled===true;
       developmentState.restored=true;developmentState.checkpointTime=checkpoint.time;
@@ -330,7 +358,8 @@ function showReference(category='All') {
   closePalettes();hideCompletion();referenceCategory=category;$('reference-search-input').value='';renderReference();
   if(!$('reference-dialog').open)$('reference-dialog').showModal();$('reference-dialog').scrollTop=0;$('reference-search-input').focus();
 }
-function plotOptionsFromFields(){return{paper:$('plot-paper').value,orientation:$('plot-orientation').value,scaleMode:$('plot-mode').value,ratio:$('plot-scale').valueAsNumber,margin:$('plot-margin').valueAsNumber,colorMode:$('plot-color').value,lineweights:$('plot-lineweights').checked};}
+function plotOptionsFromFields(){return{space:$('plot-space').value,layoutId:$('plot-space').value==='layout'?$('plot-layout-id').value||null:null,paper:$('plot-paper').value,orientation:$('plot-orientation').value,scaleMode:$('plot-mode').value,ratio:$('plot-scale').valueAsNumber,margin:$('plot-margin').valueAsNumber,colorMode:$('plot-color').value,lineweights:$('plot-lineweights').checked};}
+function refreshPlotSpace(){const space=$('plot-space').value,layout=space==='layout'?state().layouts?.find(item=>item.id===$('plot-layout-id').value):space==='current'?currentLayout():null;$('plot-layout-choice').hidden=space!=='layout';for(const id of ['plot-paper','plot-orientation','plot-mode','plot-scale','plot-margin'])$(id).disabled=Boolean(layout);$('plot-space-hint').textContent=layout?`${layout.name}: ${layout.paper.size}, ${layout.paper.widthMm} × ${layout.paper.heightMm} mm. Page setup and each saved viewport scale define this sheet.`:space==='layout'?'Choose a paper layout to plot.':'Model extents use the paper, fit or exact scale, and margin settings below.';}
 async function refreshPlotPreview(){
   const revision=++plotPreviewRevision;$('plot-scale').disabled=$('plot-mode').value!=='scale';$('plot-error').textContent='';$('plot-submit').disabled=true;
   try{
@@ -341,7 +370,7 @@ async function refreshPlotPreview(){
     if(svg.localName!=='svg'||svg.querySelector('parsererror,script,foreignObject'))throw Error('The sheet preview could not be generated.');
     for(const text of svg.querySelectorAll('text[data-cap-height]'))text.setAttribute('font-size',String(fontSizeForHeight(1,text.getAttribute('font-family'))));
     $('plot-preview').replaceChildren(document.importNode(svg,true));
-    const report=result.report,scale=report.scaleMode==='scale'?`Exact scale 1:${report.ratio}`:'Drawing extents fitted to sheet';
+    const report=result.report,scale=report.space==='layout'?`Paper layout at 1:1 · ${report.sheets?.[0]?.viewports?.map(viewport=>`1:${viewport.scaleDenominator}`).join(' / ')||'no viewports'}`:report.scaleMode==='scale'?`Exact scale 1:${report.ratio}`:'Drawing extents fitted to sheet';
     $('plot-summary').textContent=`${report.paper} · ${report.orientation}\n${scale}${plotMode==='publish'?'\nPreview shows the current drawing; chosen files become separate sheets.':''}${report.clipped?'\nGeometry extends beyond the printable sheet.':''}${report.warnings?.length?'\n'+report.warnings.join('\n'):''}`;
     $('plot-submit').disabled=plotSubmitting||!(plotMode==='publish'?desktop?.publishPDF:desktop?.plotPDF);
     if(!desktop)$('plot-error').textContent='PDF output requires the Linecraft desktop application. The sheet preview is available here.';
@@ -352,6 +381,7 @@ async function showPlot(mode='plot'){
   closePalettes();hideCompletion();if(state().command)editor.cancel();orbitMode=null;orbitPivot=null;plotMode=mode;
   try{plotModule??=await import('./plot-document.mjs');}catch(error){addLog(error.message||'The PDF output module could not be loaded.','error');return false;}
   const options=lastPlotOptions||plotModule.DEFAULT_PLOT_OPTIONS;
+  $('plot-space').value=options.space||'current';fillOptions('plot-layout-id',(state().layouts||[]).map(layout=>layout.id),options.layoutId||currentLayout()?.id||state().layouts?.[0]?.id||'');for(const option of $('plot-layout-id').options)option.textContent=state().layouts.find(layout=>layout.id===option.value).name;refreshPlotSpace();
   $('plot-paper').value=options.paper;$('plot-orientation').value=options.orientation;$('plot-mode').value=options.scaleMode;$('plot-scale').value=options.ratio;$('plot-margin').value=options.margin;$('plot-color').value=options.colorMode;$('plot-lineweights').checked=options.lineweights;
   $('plot-title').textContent=mode==='publish'?'Publish drawings':'Plot drawing';$('plot-submit').textContent=mode==='publish'?'Choose drawings & save PDF':'Save PDF';$('plot-intro').textContent=mode==='publish'?'Choose up to 20 saved Linecraft drawings and publish one PDF with a sheet for each. The preview illustrates the current drawing; chosen files provide the published sheets. Source drawings remain unchanged.':'Set up a sheet and preview the current drawing. The source drawing remains unchanged.';
   $('plot-dialog').showModal();update();await refreshPlotPreview();return true;
@@ -423,7 +453,7 @@ function createDraftStyle(kind){
   fillOptions(`setting-${kind}-style`,list.map(style=>style.name),name);displayTextStyleFields();displayDimStyleFields();$(`new-${kind}-style-name`).value='';$('settings-error').textContent='';
 }
 function openAnnotationEditor(entityId=null){
-  const entity=entityId?state().entities.find(item=>item.id===entityId):null;
+  const entity=entityId?activeEntities().find(item=>item.id===entityId):null;
   if(entityId&&!entity)return;
   const type=entity?.type||(state().command==='MTEXT'?'MTEXT':state().commandData?.textEntity?.type||'TEXT');
   annotationEditor={entityId,type,command:state().command};$('annotation-error').textContent='';$('annotation-dialog-title').textContent=type==='MTEXT'?'Edit multiline text':'Edit drawing text';$('annotation-content').value=entity?.text||state().commandData?.textEntity?.text||'';
@@ -490,16 +520,22 @@ function runCommand(raw, {recall=true}={}) {
   panTool = false;
   hideCompletion();closePalettes();
   const command=state().command||commandName(text);
-  if(!state().command&&['BOX','CYLINDER','SPHERE','EXTRUDE','3DPOLY','ROTATE3D','3DORBIT','3DFORBIT','3DORBITCTR','VPOINT','PLAN'].includes(command))editor.setWorkspace('3d');
+  if(!state().command&&paperSpace()&&selectedViewportId&&['ERASE','E'].includes(command))return eraseCurrentSelection();
+  if(!state().command&&!['LAYOUT','PAGESETUP','LAYER','LA','MVIEW','MSPACE','MS','PSPACE','PS','MODEL','ZOOM','Z','UNDO','U','REDO'].includes(command))selectedViewportId=null;
+  if(!state().command&&selectedSubobject&&['ERASE','E','MOVE','M','COPY','CO','CP','SCALE','SC','ROTATE','RO','ROTATE3D','COPYCLIP','CUTCLIP','COPYBASE','MIRROR','MI'].includes(command)){const result={ok:false,message:'Choose Whole object for this command. Mesh subobjects are edited with their highlighted grip or Properties.'};resultLog(result);return result;}
+  if(!state().command&&['UCS','BOX','CYLINDER','SPHERE','EXTRUDE','3DPOLY','ROTATE3D','3DORBIT','3DFORBIT','3DORBITCTR','VPOINT','PLAN'].includes(command))editor.setWorkspace('3d');
   if(!state().command&&['3DORBIT','3DFORBIT'].includes(command)){startOrbit(command==='3DFORBIT'?'free':'constrained');return {ok:true,message:'Orbit view active.'};}
   if(orbitMode){orbitMode=null;orbitPivot=null;if(!text){update();return {ok:true,message:'Orbit view ended.'};}}
   if(!state().command&&command==='HELP'){showReference();return {ok:true};}
   if(!state().command&&['STYLE','DIMSTYLE','UNITS'].includes(command)){showSettings();return {ok:true};}
   if(!state().command&&['PLOT','PUBLISH'].includes(command))return showPlot(command==='PUBLISH'?'publish':'plot');
+  if(!state().command&&['LAYER','LA'].includes(command)){showLayerManager();return{ok:true};}
+  if(!state().command&&command==='PAGESETUP'){showPageSetup(!currentLayout());return{ok:true};}
   if(!state().command&&command==='PASTECLIP')return preparePaste();
-  const anchor=state().commandPoints?.at(-1),direction=pointer&&anchor&&['LINE','PLINE'].includes(state().command)?{x:pointer.x-anchor.x,y:pointer.y-anchor.y}:null;
-  const inputOptions=direction&&Number.isFinite(direction.x)&&Number.isFinite(direction.y)&&(direction.x!==0||direction.y!==0)?{direction}:{};
+  const anchor=state().commandPoints?.at(-1),direction=pointer&&anchor&&['LINE','PLINE'].includes(state().command)?{x:pointer.x-anchor.x,y:pointer.y-anchor.y,z:(pointer.z||0)-(anchor.z||0)}:null;
+  const inputOptions=direction&&Object.values(direction).every(Number.isFinite)&&Object.values(direction).some(value=>value!==0)?{direction}:{};
   const previousCamera=camera3D(),result=resultLog(state().commandPhase==='text'&&editor.submitText?editor.submitText(String(raw??'')):editor.execute(text,inputOptions));trackClipboard(command,result);
+  if(command==='MVIEW'&&result.ok&&!state().command){selectedViewportId=result.viewportId||currentLayout()?.viewports.at(-1)?.id||null;update();}
   if(command==='3DORBITCTR'&&result.ok&&!state().command){const p=toScreen(camera3D().orbitCenter);if(!finiteScreenPoint(p)||p.x<0||p.x>width||p.y<0||p.y>height){setCamera({...camera3D(),orbitCenter:previousCamera.orbitCenter,autoTarget:previousCamera.autoTarget});addLog('Center outside the view; the previous orbit center was retained.');startOrbit('constrained');}else startOrbit('constrained',null,{explicit:true});}
   if(modelWorkspace()&&result.ok&&!state().command&&(command==='ZOOM'||/^Z(?:OOM)?\s+E(?:XTENTS)?$/i.test(text)))fit();return result;
 }
@@ -509,13 +545,14 @@ function cancel() {
   panTool = false; orbitMode=null;orbitPivot=null;drag = null; snap = null;pointerScalar=null;hideCompletion();closePalettes();
   const active = state().command;
   editor.cancel();
-  if (!active&&!wasOrbit) editor.clearSelection();
+  if (!active&&!wasOrbit){editor.clearSelection();selectedViewportId=null;selectedSubobject=null;overlapCycle=null;subobjectMode='whole';}viewportNavigationDraft=null;
   input.value = '';
   addLog(active ? '*Cancel*' : 'Command:', 'notice');
   update();
 }
 function fit() {
   if(documentActionBusy)return;
+  if(currentLayout()){if(currentViewport()){fitModelViewport(currentViewport());}else fitPaper();update();return;}
   if(modelWorkspace())setCamera(view3d.fitCamera(modelPoints(sceneForOrbit()),camera3D(),width,height,64));else state().viewport = zoomExtents(visibleEntities(), state().viewport, width, height, 64,state());
   addLog('View fitted to visible drawing geometry.');
   updateModelControls();draw(); updateStatus();scheduleDevelopmentCheckpoint();
@@ -555,6 +592,7 @@ function replaceDrawing(fresh,name,{imported=false}={}) {
   if(localGeometryClipboard&&editor.setClipboard)editor.setClipboard(localGeometryClipboard);
   savedFingerprint=documentFingerprint();importedAwaitingSave=imported;panTool=false;orbitMode=null;orbitPivot=null;drag=null;pointer=null;rawPointer=null;snap=null;pointerUnavailable=null;pointerScalar=null;input.value='';
   if(imported){if(modelWorkspace())setCamera(view3d.fitCamera(modelPoints(),camera3D(),width,height,64));else state().viewport=zoomExtents(visibleEntities(),state().viewport,width,height,64,state());}
+  selectedViewportId=null;selectedSubobject=null;subobjectMode='whole';overlapCycle=null;viewportNavigationDraft=null;for(const id of ['page-setup-dialog','viewport-scale-dialog','layer-manager-dialog'])if($(id).open)$(id).close();
   if($('layer-dialog').open)$('layer-dialog').close();
   if($('help-dialog').open)$('help-dialog').close();
   if($('reference-dialog').open)$('reference-dialog').close();hideCompletion();closePalettes();
@@ -568,7 +606,7 @@ function showImportReport(info){
   if(warnings.length){const list=document.createElement('ul');for(const warning of warnings){const message=typeof warning==='string'?warning:typeof warning?.message==='string'?warning.message+(Number.isFinite(warning.count)&&warning.count>0?` (${warning.count} occurrence${warning.count===1?'':'s'})`:''):'An import warning was reported.';const row=document.createElement('li');row.textContent=message;list.append(row);addLog(message);}box.append(list);}
   if(skipped.length||warnings.length)$('import-dialog').showModal();else toast('Drawing imported. Save it as a Linecraft file.');
 }
-function setDocumentBusy(busy){documentActionBusy=busy;$('application').classList.toggle('application-busy',busy);for(const element of document.querySelectorAll('.workspace,.command-panel,.statusbar,.document-bar'))element.inert=busy;$('settings-button').disabled=busy;}
+function setDocumentBusy(busy){documentActionBusy=busy;$('application').classList.toggle('application-busy',busy);for(const element of document.querySelectorAll('.workspace,.command-panel,.statusbar,.document-bar,.layout-tabbar'))element.inert=busy;$('settings-button').disabled=busy;}
 async function newDrawing() {
   if(!await canDiscard())return false;
   if(desktop)await desktop.resetDocumentPath();
@@ -594,16 +632,17 @@ async function exportDrawing() {
 async function runAction(action) {
   if(documentActionBusy){if(action==='dev-reload')pendingDevelopmentReload=true;return false;}
   if(orbitMode&&['undo','redo','cut','paste','copy-base'].includes(action)){toast('Leave Orbit before editing objects.');return false;}
-  if(['undo','redo'].includes(action)&&($('annotation-dialog').open||$('settings-dialog').open||$('plot-dialog').open)&&!textEditing())return false;
+  if(['undo','redo'].includes(action)&&editorDialogOpen()&&!textEditing())return false;
   if(['undo','redo'].includes(action)&&textEditing()&&!(document.activeElement===input&&!input.value))return desktop?.editText?desktop.editText(action):document.execCommand(action);
-  if(action==='dev-reload'&&($('annotation-dialog').open||$('settings-dialog').open||$('plot-dialog').open)){pendingDevelopmentReload=true;return false;}
-  if(['new','open','close','save','save-as','export-dxf','plot','publish'].includes(action)&&($('annotation-dialog').open||$('settings-dialog').open||$('plot-dialog').open)){toast('Apply or cancel the open editor before using drawing file actions.');return false;}
+  if(action==='dev-reload'&&editorDialogOpen()){pendingDevelopmentReload=true;return false;}
+  if(['new','open','close','save','save-as','export-dxf','plot','publish'].includes(action)&&editorDialogOpen()){toast('Apply or cancel the open editor before using drawing file actions.');return false;}
   if(action==='plot'||action==='publish')return showPlot(action);
   const documentAction=['new','open','save','save-as','export-dxf','close','dev-reload'].includes(action);
   if(documentAction&&documentActionBusy){if(action==='dev-reload')pendingDevelopmentReload=true;return false;}
   if(documentAction)setDocumentBusy(true);
   try {
     if(['copy','cut','paste','copy-base'].includes(action)){
+      if(selectedSubobject&&!textEditing()&&action!=='paste'){toast('Choose Whole object before copying or cutting a mesh.');return false;}
       if(textEditing()&&action!=='copy-base'){
         if(desktop?.editText)return await desktop.editText(action);
         return document.execCommand(action);
@@ -614,8 +653,8 @@ async function runAction(action) {
     if(action==='open')return await openDrawing();
     if(action==='save'||action==='save-as')return await save(action==='save-as');
     if(action==='export-dxf')return await exportDrawing();
-    if(action==='undo')return resultLog(editor.undo());
-    if(action==='redo')return resultLog(editor.redo());
+    if(action==='undo'){selectedSubobject=null;return resultLog(editor.undo());}
+    if(action==='redo'){selectedSubobject=null;return resultLog(editor.redo());}
     if(action==='fit'){fit();syncDesktop();return true;}
     if(action==='about'){showHelp();return true;}
     if(action==='dev-reload')return reloadDevelopmentDrawing();
@@ -659,13 +698,13 @@ function drawGrid() {
   }
 }
 function drawGrid3D(){
-  if(!gridEnabled)return;const camera=camera3D(),elevation=state().settings.constructionElevation,scale=view3d.pixelScale(camera,height),ideal=38/scale,power=10**Math.floor(Math.log10(ideal));let step=state().settings.gridAdaptive===false?state().settings.gridSpacing:[1,2,5,10].map(v=>v*power).find(v=>v>=ideal);
-  if(!Number.isFinite(step)||step<=0)return;const corners=[{x:0,y:0},{x:width,y:0},{x:width,y:height},{x:0,y:height}].map(p=>view3d.intersectConstructionPlane(view3d.screenRay(p,camera,width,height),elevation)).filter(Boolean);if(corners.length<2)return;
-  const bounds=view3d.bounds3D(corners),range=Math.max(bounds.max.x-bounds.min.x,bounds.max.y-bounds.min.y);while(Number.isFinite(range)&&range/step>150)step*=10;if(!Number.isFinite(step))return;
-  const line=(a,b,color)=>{const p=toScreen(a),q=toScreen(b);if(!finiteScreenPoint(p)||!finiteScreenPoint(q)||p.clipped||q.clipped)return;ctx.strokeStyle=color;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.stroke();};
+  if(!gridEnabled)return;const camera=camera3D(),plane=activePlane(),scale=view3d.pixelScale(camera,height),ideal=38/scale,power=10**Math.floor(Math.log10(ideal));let step=state().settings.gridAdaptive===false?state().settings.gridSpacing:[1,2,5,10].map(v=>v*power).find(v=>v>=ideal);
+  if(!Number.isFinite(step)||step<=0)return;const corners=[{x:0,y:0},{x:width,y:0},{x:width,y:height},{x:0,y:height}].map(point=>geometry.intersectPlaneRay(view3d.screenRay(point,camera,width,height),plane)).filter(Boolean).map(point=>geometry.worldToPlane(point,plane));if(corners.length<2)return;
+  const bounds=view3d.bounds3D(corners),range=Math.max(bounds.max.x-bounds.min.x,bounds.max.y-bounds.min.y);while(Number.isFinite(range)&&range/step>150)step*=10;if(!Number.isFinite(step)||!Number.isFinite(range))return;
+  const line=(a,b,color)=>{const p=toScreen(geometry.planeToWorld({...a,z:0},plane)),q=toScreen(geometry.planeToWorld({...b,z:0},plane));if(!finiteScreenPoint(p)||!finiteScreenPoint(q)||p.clipped||q.clipped)return;ctx.strokeStyle=color;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.stroke();};
   const startX=Math.floor(bounds.min.x/step)*step,startY=Math.floor(bounds.min.y/step)*step;
-  for(let i=0;i<160;i++){const x=startX+i*step;if(x>bounds.max.x)break;line({x,y:bounds.min.y,z:elevation},{x,y:bounds.max.y,z:elevation},i%5===0?'#1b303d':'#162733');}
-  for(let i=0;i<160;i++){const y=startY+i*step;if(y>bounds.max.y)break;line({x:bounds.min.x,y,z:elevation},{x:bounds.max.x,y,z:elevation},i%5===0?'#1b303d':'#162733');}
+  for(let i=0;i<160;i++){const x=startX+i*step;if(x>bounds.max.x)break;line({x,y:bounds.min.y},{x,y:bounds.max.y},i%5===0?'#1b303d':'#162733');}
+  for(let i=0;i<160;i++){const y=startY+i*step;if(y>bounds.max.y)break;line({x:bounds.min.x,y},{x:bounds.max.x,y},i%5===0?'#1b303d':'#162733');}
 }
 function renderViewCube(){
   const svg=$('view-cube');svg.toggleAttribute('hidden',!modelWorkspace());if(!modelWorkspace())return;const ns='http://www.w3.org/2000/svg',camera={...camera3D(),target:{x:0,y:0,z:0},scale:23,projection:'orthographic'},vertices=[{x:-1,y:-1,z:-1},{x:1,y:-1,z:-1},{x:1,y:1,z:-1},{x:-1,y:1,z:-1},{x:-1,y:-1,z:1},{x:1,y:-1,z:1},{x:1,y:1,z:1},{x:-1,y:1,z:1}],faces=[['top',[4,5,6,7],{x:0,y:0,z:1}],['bottom',[0,3,2,1],{x:0,y:0,z:-1}],['front',[0,1,5,4],{x:0,y:-1,z:0}],['back',[3,7,6,2],{x:0,y:1,z:0}],['right',[1,2,6,5],{x:1,y:0,z:0}],['left',[0,4,7,3],{x:-1,y:0,z:0}]],normal=view3d.cameraBasis(camera).normal;svg.replaceChildren();
@@ -673,29 +712,30 @@ function renderViewCube(){
   for(const face of shown){const group=document.createElementNS(ns,'g');group.dataset.cubeView=face.name;group.setAttribute('role','button');group.setAttribute('tabindex','0');group.setAttribute('aria-label',`View ${face.name}`);const polygon=document.createElementNS(ns,'polygon');polygon.setAttribute('points',face.points.map(p=>`${p.x},${p.y}`).join(' '));const label=document.createElementNS(ns,'text');label.setAttribute('x',face.points.reduce((s,p)=>s+p.x,0)/4);label.setAttribute('y',face.points.reduce((s,p)=>s+p.y,0)/4);label.textContent=face.name.toUpperCase();group.append(polygon,label);svg.append(group);}
   const indexes=new Set(shown.flatMap(f=>f.indices));for(const index of indexes){const vertex=vertices[index],p=view3d.projectPoint(vertex,camera,90,90),button=document.createElementNS(ns,'circle');button.setAttribute('cx',p.x);button.setAttribute('cy',p.y);button.setAttribute('r','2.5');button.dataset.cubeYaw=Math.atan2(vertex.y,vertex.x)*180/Math.PI;button.dataset.cubePitch=Math.atan2(vertex.z,Math.hypot(vertex.x,vertex.y))*180/Math.PI;button.setAttribute('role','button');button.setAttribute('tabindex','0');button.setAttribute('aria-label',`Isometric corner ${index+1}`);svg.append(button);}
 }
+function planeLabel(){const name=state().settings?.constructionPlane||'XY',plane=activePlane(),normal=plane.normal;return `${name==='custom'?'Custom UCS':`World ${name}`} · offset ${lengthFormat(state().settings?.constructionElevation??0)} · normal ${format(normal.x,3)}, ${format(normal.y,3)}, ${format(normal.z,3)}`;}
 function updateModelControls(){
-  const enabled=modelWorkspace(),camera=camera3D();$('model-controls').hidden=!enabled;$('workspace-mode').value=enabled?'3d':'2d';canvas.closest('.drawing-area').classList.toggle('model-workspace',enabled);$('view3d-preset').value=camera.mode==='neiso'?'iso':camera.mode;$('view3d-projection').value=camera.projection;$('render3d-mode').value=camera.renderMode;$('orbit-auto-target').checked=camera.autoTarget;displayQuantityField('construction-elevation',state().settings?.constructionElevation??0,'length');$('orbit-tool').classList.toggle('active',Boolean(orbitMode));
-  canvas.setAttribute('aria-label',enabled?'3D drawing canvas. Pointer points use the labeled XY construction plane; type XYZ for exact spatial coordinates.':'2D drawing canvas. Use the command line for exact coordinates.');document.querySelector('.document-caption').textContent=enabled?'3D model':'2D drafting';
-  $('view-name').textContent=enabled?camera.mode.toUpperCase():'TOP';$('view-style').textContent=enabled?`${camera.projection==='perspective'?'PERSPECTIVE':'ORTHOGRAPHIC'} ${camera.renderMode==='shaded'?'SHADED':'WIREFRAME'}`:'2D WIREFRAME';$('construction-plane-label').textContent=pointerUnavailable||`Pointer: XY plane at Z ${lengthFormat(drag?.mode==='grip'?pointsOf(state().entities.find(e=>e.id===drag.entityId))[drag.index].z??0:state().settings?.constructionElevation??0)}`;renderViewCube();
+  const enabled=modelWorkspace(),camera=camera3D(),viewport=currentViewport();$('model-controls').hidden=!enabled;$('workspace-mode').value=enabled?'3d':'2d';$('workspace-mode').disabled=paperSpace();canvas.closest('.drawing-area').classList.toggle('model-workspace',enabled);$('view3d-preset').value=camera.mode==='neiso'?'iso':camera.mode;$('view3d-projection').value=camera.projection;$('view3d-projection').disabled=Boolean(viewport);$('render3d-mode').value=camera.renderMode;$('orbit-auto-target').checked=camera.autoTarget;displayQuantityField('construction-elevation',state().settings?.constructionElevation??0,'length');$('orbit-tool').classList.toggle('active',Boolean(orbitMode));$('construction-plane').value=state().settings?.constructionPlane==='custom'?'CUSTOM':state().settings?.constructionPlane||'XY';$('selection-mode').value=subobjectMode;$('ucs-badge').textContent=`UCS: ${state().settings?.constructionPlane==='custom'?'Custom':state().settings?.constructionPlane||'XY'}`;$('ucs-badge').title=planeLabel();
+  canvas.setAttribute('aria-label',paperSpace()?'Paper drawing canvas. Coordinates and annotations use millimeters. Double-click a viewport to edit its model.':enabled?'3D drawing canvas. Pointer points use the labeled active UCS plane; typed UCS XYZ gives exact spatial coordinates.':'2D drawing canvas. Use the command line for exact coordinates.');document.querySelector('.document-caption').textContent=paperSpace()?'Paper layout':viewport?'Model through viewport':enabled?'3D model':'2D drafting';
+  $('view-name').textContent=enabled?camera.mode.toUpperCase():paperSpace()?'PAPER':'TOP';$('view-style').textContent=enabled?`${camera.projection==='perspective'?'PERSPECTIVE':'ORTHOGRAPHIC'} ${camera.renderMode==='shaded'?'SHADED':'WIREFRAME'}`:'2D WIREFRAME';$('construction-plane-label').textContent=pointerUnavailable||`Pointer: ${planeLabel()}`;renderViewCube();
 }
 function shadeInk(color,factor){const value=/^#[\da-f]{6}$/i.test(color)?color:'#dce5e9';return `rgb(${[1,3,5].map(index=>Math.round(parseInt(value.slice(index,index+2),16)*factor)).join(',')})`;}
-function commandPreviewEntities(){if(orbitMode||drag?.mode==='orbit')return[];if(pointerScalar!==null&&state().commandPhase==='height')return editor.previewScalar(pointerScalar);if(modelWorkspace()&&rawPointer&&state().commandData?.targetKind==='object'&&editor.previewObject){const picked=projectedPick(rawPointer,visibleEntities());return picked?editor.previewObject(picked.entityId,picked.point):[];}return pointer?editor.previewCommand(pointer):[];}
+function commandPreviewEntities(){if(renderContext&&!renderContext.includeEdits||orbitMode||drag?.mode==='orbit')return[];if(pointerScalar!==null&&state().commandPhase==='height')return editor.previewScalar(pointerScalar);if(modelWorkspace()&&rawPointer&&state().commandData?.targetKind==='object'&&editor.previewObject){const picked=projectedPick(rawPointer,visibleEntities());return picked?editor.previewObject(picked.entityId,picked.point):[];}return pointer?editor.previewCommand(pointer):[];}
 function drawModel(){
-  const entities=sceneForOrbit(),preview=gripPreview(),items=[],camera=camera3D(),light={x:.3,y:-.4,z:.8660254037844386};
-  const addEntity=(entity,ghost=false)=>{const selected=state().selectionIds.includes(entity.id),ink=ghost?'#eab47b':selected?'#79b9ff':entity.color||layerFor(entity)?.color||'#dce5e9',opacity=ghost ? .55 : preview?.id===entity.id ? .3 : 1;
+  const entities=sceneForOrbit(),preview=renderContext&&!renderContext.includeEdits?null:gripPreview(),items=[],camera=camera3D(),light={x:.3,y:-.4,z:.8660254037844386};
+  const addEntity=(entity,ghost=false)=>{const selected=state().selectionIds.includes(entity.id),ink=ghost?'#eab47b':selected?'#79b9ff':inkFor(entity),opacity=ghost ? .55 : preview?.id===entity.id ? .3 : 1;
     if(entity.type==='MESH'&&camera.renderMode==='shaded'){for(const triangle of view3d.meshTriangles(entity)){const points=triangle.points.map(toScreen);if(points.some(p=>p.clipped||!finiteScreenPoint(p)))continue;const normal=view3d.triangleNormal(...triangle.points),intensity=normal?Math.abs(view3d.dot3(normal,light)):.5;items.push({depth:points.reduce((s,p)=>s+p.depth,0)/3,draw:()=>{ctx.save();ctx.globalAlpha=opacity;ctx.beginPath();ctx.moveTo(points[0].x,points[0].y);points.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));ctx.closePath();ctx.fillStyle=shadeInk(ink,.18+intensity*.34);ctx.fill();ctx.strokeStyle=shadeInk(ink,.36+intensity*.3);ctx.lineWidth=ghost?1.5:.7;ctx.setLineDash(ghost?[4,3]:[]);ctx.stroke();ctx.restore();}});}}
-    else if(entity.type==='MESH'){const points=entity.vertices.map(toScreen).filter(finiteScreenPoint);items.push({depth:points.reduce((s,p)=>s+p.depth,0)/Math.max(1,points.length),draw:()=>{for(const[a,b]of projectionEdges(entity))strokeEntity({type:'LINE',start:a,end:b,layer:entity.layer},{color:ink,opacity,dash:ghost?[4,3]:[]});}});}
-    else{const points=geometry.entityPoints(entity,state()).map(toScreen).filter(finiteScreenPoint);items.push({depth:points.reduce((s,p)=>s+p.depth,0)/Math.max(1,points.length),draw:()=>strokeEntity(entity,{color:ink,opacity,dash:ghost?[4,3]:[]})});}
+    else if(entity.type==='MESH'){const points=entity.vertices.map(toScreen).filter(finiteScreenPoint);items.push({depth:points.reduce((s,p)=>s+p.depth,0)/Math.max(1,points.length),draw:()=>{for(const[a,b]of projectionEdges(entity))strokeEntity({type:'LINE',start:a,end:b,layer:entity.layer,lineweight:entity.lineweight,linetype:entity.linetype},{color:ink,opacity,dash:ghost?[4,3]:[]});}});}
+    else{const points=geometry.entityPoints(entity,drawingContext()).map(toScreen).filter(finiteScreenPoint);items.push({depth:points.reduce((s,p)=>s+p.depth,0)/Math.max(1,points.length),draw:()=>strokeEntity(entity,{color:ink,opacity,dash:ghost?[4,3]:[]})});}
   };
   entities.forEach(e=>addEntity(e));if(preview)addEntity(preview,true);
   let commandPreview=[];try{commandPreview=commandPreviewEntities();}catch{}commandPreview.forEach(e=>addEntity(e,true));
-  if(!orbitMode&&drag?.mode!=='orbit'){
+  if((!renderContext||renderContext.includeEdits)&&!orbitMode&&drag?.mode!=='orbit'){
     if(pointer&&state().command==='3DPOLY'&&state().commandPoints?.length)addEntity({type:'POLY3D',points:[...state().commandPoints,pointer],closed:false,layer:state().currentLayer},true);
     if(pointer&&state().command==='LINE'&&state().commandPoints?.length)addEntity({type:'LINE',start:state().commandPoints.at(-1),end:pointer,layer:state().currentLayer},true);
-    if(pointer&&state().command==='RECTANG'&&state().commandPoints?.length){const a=state().commandPoints[0];addEntity({type:'RECTANG',points:[a,{x:pointer.x,y:a.y},pointer,{x:a.x,y:pointer.y}],layer:state().currentLayer},true);}
+    if(pointer&&state().command==='RECTANG'&&!state().commandData?.spatial&&state().commandPoints?.length){const a=state().commandPoints[0];addEntity({type:'RECTANG',points:[a,{x:pointer.x,y:a.y},pointer,{x:a.x,y:pointer.y}],layer:state().currentLayer},true);}
   }
   items.sort((a,b)=>a.depth-b.depth).forEach(item=>item.draw());
-  const meshes=entities.filter(e=>e.type==='MESH');if(!orbitMode&&drag?.mode!=='orbit')for(const entity of entities.filter(e=>state().selectionIds.includes(e.id))){for(const[index,point]of pointsOf(entity).entries()){const p=toScreen(point);if(p.clipped||!finiteScreenPoint(p)||p.x< -8||p.x>width+8||p.y< -8||p.y>height+8||camera.renderMode==='shaded'&&view3d.pointOccluded(point,meshes,camera,width,height))continue;ctx.fillStyle=gripPropertyIndices.get(entity.id)===index?'#eab47b':'#5d9be6';ctx.strokeStyle='#a9d2ff';ctx.lineWidth=1;ctx.fillRect(p.x-3.5,p.y-3.5,7,7);ctx.strokeRect(p.x-3.5,p.y-3.5,7,7);}}
+  const meshes=entities.filter(e=>e.type==='MESH');if((!renderContext||renderContext.includeEdits)&&!orbitMode&&drag?.mode!=='orbit')for(const entity of entities.filter(e=>state().selectionIds.includes(e.id)&&(!selectedSubobject||e.id!==selectedSubobject.entityId||selectedSubobject.kind==='vertex'))){for(const[index,point]of pointsOf(entity).entries()){if(selectedSubobject?.entityId===entity.id&&index!==selectedSubobject.index)continue;const p=toScreen(point);if(p.clipped||!finiteScreenPoint(p)||p.x< -8||p.x>width+8||p.y< -8||p.y>height+8||camera.renderMode==='shaded'&&view3d.pointOccluded(point,meshes,camera,width,height))continue;ctx.fillStyle=gripPropertyIndices.get(entity.id)===index?'#eab47b':'#5d9be6';ctx.strokeStyle='#a9d2ff';ctx.lineWidth=1;ctx.fillRect(p.x-3.5,p.y-3.5,7,7);ctx.strokeRect(p.x-3.5,p.y-3.5,7,7);}}
   const basis=view3d.cameraBasis(camera),origin={x:32,y:height-49};for(const[name,axis,color]of [['X',{x:1,y:0,z:0},'#b98262'],['Y',{x:0,y:1,z:0},'#80b088'],['Z',{x:0,y:0,z:1},'#6f9fd0']]){const end={x:origin.x+view3d.dot3(axis,basis.right)*29,y:origin.y-view3d.dot3(axis,basis.up)*29};ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(origin.x,origin.y);ctx.lineTo(end.x,end.y);ctx.stroke();ctx.fillStyle=color;ctx.font='10px Segoe UI';ctx.fillText(name,end.x+3,end.y-3);}
   if((orbitMode||drag?.mode==='orbit')&&orbitPivot){const p=toScreen(orbitPivot);if(finiteScreenPoint(p)){ctx.fillStyle='#141f26';ctx.strokeStyle='#90b7ba';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(p.x,p.y,5,0,Math.PI*2);ctx.fill();ctx.stroke();}}
   if(orbitMode==='free'||drag?.mode==='orbit'&&drag.free){const radius=Math.min(width,height)*.35;ctx.strokeStyle='#80b19b80';ctx.lineWidth=1;ctx.beginPath();ctx.arc(width/2,height/2,radius,0,Math.PI*2);ctx.stroke();for(const[x,y]of [[width/2-radius,height/2],[width/2+radius,height/2],[width/2,height/2-radius],[width/2,height/2+radius]]){ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.stroke();}}
@@ -709,15 +749,15 @@ function fontSizeForHeight(height,fontFamily){
 }
 function drawAnnotation(entity,{color,opacity=1,grips=false,dash=[]}={}){
   if(!geometry.annotationPrimitives)return;
-  let primitive;try{primitive=geometry.annotationPrimitives(entity,state());}catch{return;}
-  const ink=color||entity.color||layerFor(entity)?.color||'#dce5e9';
-  ctx.save();ctx.globalAlpha=opacity;ctx.strokeStyle=ink;ctx.fillStyle=ink;ctx.lineWidth=1.2;ctx.setLineDash(dash);
+  let primitive;try{primitive=geometry.annotationPrimitives(entity,drawingContext());}catch{return;}
+  const ink=inkFor(entity,color);
+  ctx.save();ctx.globalAlpha=opacity;ctx.strokeStyle=ink;ctx.fillStyle=ink;ctx.lineWidth=1.2;ctx.setLineDash(entityDash(entity,dash));
   if(entity.type==='DIMENSION'){
     for(const [a,b]of primitive.segments){const start=toScreen(a),end=toScreen(b);if(!finiteScreenPoint(start)||!finiteScreenPoint(end))continue;ctx.beginPath();ctx.moveTo(start.x,start.y);ctx.lineTo(end.x,end.y);ctx.stroke();}
     ctx.setLineDash([]);for(const triangle of primitive.arrows){const screen=triangle.map(toScreen);if(!screen.every(finiteScreenPoint))continue;ctx.beginPath();ctx.moveTo(screen[0].x,screen[0].y);screen.slice(1).forEach(point=>ctx.lineTo(point.x,point.y));ctx.closePath();ctx.fill();}
   }
   for(const line of primitive.texts){
-    const origin=toScreen(line.position),scale=modelWorkspace()?(camera3D().projection==='perspective'?view3d.focalPixels(camera3D(),height)/origin.viewDistance:camera3D().scale):state().viewport.scale,fontSize=fontSizeForHeight(line.height*scale,line.fontFamily),targetWidth=line.width*scale;
+    const origin=toScreen(line.position),scale=modelWorkspace()?(camera3D().projection==='perspective'?view3d.focalPixels(camera3D(),height)/origin.viewDistance:camera3D().scale):viewScale(),fontSize=fontSizeForHeight(line.height*scale,line.fontFamily),targetWidth=line.width*scale;
     if(!finiteScreenPoint(origin)||!Number.isFinite(fontSize)||fontSize<.5||fontSize>100000||!Number.isFinite(targetWidth)||targetWidth<=0)continue;
     const bounds=primitive.boundsPoints.map(toScreen).filter(finiteScreenPoint);if(bounds.length&&(bounds.every(point=>point.x<0)||bounds.every(point=>point.x>width)||bounds.every(point=>point.y<0)||bounds.every(point=>point.y>height)))continue;
     ctx.save();ctx.translate(origin.x,origin.y);
@@ -729,34 +769,34 @@ function drawAnnotation(entity,{color,opacity=1,grips=false,dash=[]}={}){
   ctx.restore();
 }
 function drawShapePrimitives(entity,primitive,{color,dash=[],opacity=1,grips=false}={}){
-  const ink=color||entity.color||layerFor(entity)?.color||'#dce5e9';ctx.save();ctx.globalAlpha=opacity;ctx.strokeStyle=ink;ctx.fillStyle=ink;ctx.lineWidth=Math.max(1.25,Math.min(8,(entity.lineweight||layerFor(entity)?.lineweight||.25)*4));ctx.setLineDash(dash);
+  const ink=inkFor(entity,color);ctx.save();ctx.globalAlpha=opacity;ctx.strokeStyle=ink;ctx.fillStyle=ink;ctx.lineWidth=Math.max(1.25,Math.min(8,(entity.lineweight||layerFor(entity)?.lineweight||.25)*4));ctx.setLineDash(entityDash(entity,dash));
   const path=(raw,closed=false)=>{const points=raw.map(toScreen);if(points.length<2||points.some(point=>point.clipped||!finiteScreenPoint(point)))return false;ctx.beginPath();ctx.moveTo(points[0].x,points[0].y);points.slice(1).forEach(point=>ctx.lineTo(point.x,point.y));if(closed)ctx.closePath();return true;};
   let analyticFill=false;
   if(entity.type==='HATCH'&&entity.pattern==='solid'&&['CIRCLE','ELLIPSE'].includes(entity.boundary.type)){
-    const boundary=entity.boundary,center=toScreen(boundary.center),major=(boundary.type==='CIRCLE'?boundary.radius:Math.hypot(boundary.major.x,boundary.major.y))*state().viewport.scale,minor=major*(boundary.type==='CIRCLE'?1:boundary.ratio);
+    const boundary=entity.boundary,center=toScreen(boundary.center),major=(boundary.type==='CIRCLE'?boundary.radius:Math.hypot(boundary.major.x,boundary.major.y))*viewScale(),minor=major*(boundary.type==='CIRCLE'?1:boundary.ratio);
     if(!modelWorkspace()&&finiteScreenPoint(center)&&Number.isFinite(major)&&Number.isFinite(minor)&&major>0&&minor>0&&major<1e7){ctx.beginPath();ctx.ellipse(center.x,center.y,major,minor,boundary.type==='CIRCLE'?0:-Math.atan2(boundary.major.y,boundary.major.x),0,Math.PI*2);ctx.globalAlpha=opacity*.3;ctx.fill();ctx.globalAlpha=opacity;analyticFill=true;}
     else primitive={...primitive,fills:[{points:curveDisplayPoints(boundary),closed:true}]};
   }
   if(!analyticFill)for(const fill of primitive.fills||[]){const points=Array.isArray(fill)?fill:fill.points;if(points?.length>=3&&path(points,true)){ctx.globalAlpha=opacity*.3;ctx.fill();ctx.globalAlpha=opacity;}}
   for(const[a,b]of primitive.segments||[])if(path([a,b]))ctx.stroke();
   let exactCurve=false;
-  if(!modelWorkspace()&&entity.type==='ELLIPSE'){const center=toScreen(entity.center),major=Math.hypot(entity.major.x,entity.major.y)*state().viewport.scale,minor=major*entity.ratio;if(finiteScreenPoint(center)&&Number.isFinite(major)&&Number.isFinite(minor)&&major>0&&minor>0&&major<1e7){ctx.beginPath();ctx.ellipse(center.x,center.y,major,minor,-Math.atan2(entity.major.y,entity.major.x),0,Math.PI*2);ctx.stroke();exactCurve=true;}}
+  if(!modelWorkspace()&&entity.type==='ELLIPSE'){const center=toScreen(entity.center),major=Math.hypot(entity.major.x,entity.major.y)*viewScale(),minor=major*entity.ratio;if(finiteScreenPoint(center)&&Number.isFinite(major)&&Number.isFinite(minor)&&major>0&&minor>0&&major<1e7){ctx.beginPath();ctx.ellipse(center.x,center.y,major,minor,-Math.atan2(entity.major.y,entity.major.x),0,Math.PI*2);ctx.stroke();exactCurve=true;}}
   if(!modelWorkspace()&&entity.type==='SPLINE'&&primitive.beziers?.length){const spans=primitive.beziers.map(span=>span.map(toScreen));if(spans.every(span=>span.every(finiteScreenPoint))){ctx.beginPath();ctx.moveTo(spans[0][0].x,spans[0][0].y);for(const[,a,b,end]of spans)ctx.bezierCurveTo(a.x,a.y,b.x,b.y,end.x,end.y);ctx.stroke();exactCurve=true;}}
   if(!exactCurve)for(const item of primitive.paths||[]){const points=Array.isArray(item)?item:item.points;if(points?.length&&path(points,Boolean(item.closed)))ctx.stroke();}
   ctx.restore();if(grips){ctx.save();ctx.fillStyle='#5d9be6';ctx.strokeStyle='#a9d2ff';ctx.lineWidth=1;for(const point of pointsOf(entity).map(toScreen).filter(p=>!p.clipped&&finiteScreenPoint(p)&&p.x>=-8&&p.x<=width+8&&p.y>=-8&&p.y<=height+8)){ctx.fillRect(point.x-3.5,point.y-3.5,7,7);ctx.strokeRect(point.x-3.5,point.y-3.5,7,7);}ctx.restore();}
 }
 function strokeEntity(entity, {color, dash=[], opacity=1, grips=false}={}) {
   if(entity.type==='INSERT'&&geometry.expandedInsertEntities){for(const child of displayInsertChildren(entity))strokeEntity(child,{color:color||entity.color,dash,opacity});if(grips)drawShapePrimitives(entity,{},{color,dash,opacity,grips});return;}
-  if(['ELLIPSE','SPLINE','HATCH'].includes(entity.type)&&geometry.entityDisplayPrimitives){drawShapePrimitives(entity,geometry.entityDisplayPrimitives(entity,state()),{color,dash,opacity,grips});return;}
+  if(['ELLIPSE','SPLINE','HATCH'].includes(entity.type)&&geometry.entityDisplayPrimitives){drawShapePrimitives(entity,geometry.entityDisplayPrimitives(entity,drawingContext()),{color,dash,opacity,grips});return;}
   if(['TEXT','MTEXT','DIMENSION'].includes(entity.type)){drawAnnotation(entity,{color,dash,opacity,grips});return;}
-  if(entity.type==='MESH'||modelWorkspace()&&['CIRCLE','ARC'].includes(entity.type)){for(const[a,b]of projectionEdges(entity))strokeEntity({type:'LINE',start:a,end:b,layer:entity.layer,color:entity.color,lineweight:entity.lineweight},{color,dash,opacity});if(grips)for(const point of pointsOf(entity).map(toScreen).filter(finiteScreenPoint)){ctx.fillStyle='#5d9be6';ctx.fillRect(point.x-3.5,point.y-3.5,7,7);}return;}
+  if(entity.type==='MESH'||spatialCurve(entity)||modelWorkspace()&&['CIRCLE','ARC'].includes(entity.type)){for(const[a,b]of projectionEdges(entity))strokeEntity({type:'LINE',start:a,end:b,layer:entity.layer,color:entity.color,lineweight:entity.lineweight,linetype:entity.linetype},{color,dash,opacity});if(grips)for(const point of pointsOf(entity).map(toScreen).filter(finiteScreenPoint)){ctx.fillStyle='#5d9be6';ctx.fillRect(point.x-3.5,point.y-3.5,7,7);}return;}
   const points = pointsOf(entity).map(toScreen);
   if (!points.length) return;
   const curved=entity.type==='CIRCLE'||entity.type==='ARC';
   if(!curved&&!points.every(finiteScreenPoint))return;
   let circleCenter,circleRadius,drawCircleOutline=true;
   if(curved){
-    circleCenter=toScreen(entity.center);circleRadius=entity.radius*state().viewport.scale;
+    circleCenter=toScreen(entity.center);circleRadius=entity.radius*viewScale();
     if(!finiteScreenPoint(circleCenter))return;
     drawCircleOutline=Number.isFinite(circleRadius)&&circleRadius>0;
     if(drawCircleOutline){
@@ -767,8 +807,8 @@ function strokeEntity(entity, {color, dash=[], opacity=1, grips=false}={}) {
     if(!drawCircleOutline&&!grips)return;
   }
   ctx.globalAlpha=opacity;
-  ctx.strokeStyle=color || entity.color || layerFor(entity)?.color || '#dce5e9';
-  ctx.lineWidth=Math.max(1.25,Math.min(8,(entity.lineweight||layerFor(entity)?.lineweight||.25)*4));ctx.setLineDash(dash);ctx.beginPath();
+  ctx.strokeStyle=inkFor(entity,color);
+  ctx.lineWidth=Math.max(1.25,Math.min(8,(entity.lineweight||layerFor(entity)?.lineweight||.25)*4));ctx.setLineDash(entityDash(entity,dash));ctx.beginPath();
   if(curved){
     if(drawCircleOutline){
       if(entity.type==='ARC')ctx.arc(circleCenter.x,circleCenter.y,circleRadius,-entity.startAngle*Math.PI/180,-(entity.startAngle+entity.sweepAngle)*Math.PI/180,entity.sweepAngle>0);
@@ -785,8 +825,9 @@ function strokeEntity(entity, {color, dash=[], opacity=1, grips=false}={}) {
   }
 }
 function gripPreview() {
+  if(drag?.mode==='subobject-grip'&&pointer){const entity=activeEntities().find(item=>item.id===drag.entityId);if(!entity)return null;const delta={x:pointer.x-drag.startPoint.x,y:pointer.y-drag.startPoint.y,z:pointer.z-drag.startPoint.z},preview=structuredClone(entity);preview.vertices=preview.vertices.map((point,index)=>drag.indices.includes(index)?{x:point.x+delta.x,y:point.y+delta.y,z:point.z+delta.z}:point);preview.faces=preview.faces.flatMap(face=>face.length===4?[[face[0],face[1],face[2]],[face[0],face[2],face[3]]]:[face]);try{geometry.validateMesh(preview);return preview;}catch{return null;}}
   if (drag?.mode !== 'grip' || !pointer) return null;
-  const entity = state().entities.find(e=>e.id===drag.entityId);
+  const entity = activeEntities().find(e=>e.id===drag.entityId);
   if (!entity) return null;
   if(geometry.previewGrip){try{return geometry.previewGrip(entity,drag.index,pointer,state());}catch{return null;}}
   if (entity.type === 'LINE') return {...entity,[drag.index === 0 ? 'start':'end']:pointer};
@@ -794,8 +835,17 @@ function gripPreview() {
   const opposite=entity.points[(drag.index+2)%4];
   return {...entity,points:[{x:pointer.x,y:pointer.y},{x:opposite.x,y:pointer.y},{x:opposite.x,y:opposite.y},{x:pointer.x,y:opposite.y}]};
 }
+function drawActiveGeometry(includeEdits=true){const preview=includeEdits?gripPreview():null;for(const entity of visibleEntities()){const selected=includeEdits&&state().selectionIds.includes(entity.id);strokeEntity(entity,{color:selected?'#79b9ff':undefined,opacity:preview?.id===entity.id ? .35 : 1,grips:selected&&preview?.id!==entity.id});}if(preview)strokeEntity(preview,{color:'#79b9ff',dash:[5,4],grips:true});if(!includeEdits)return;const anchor=state().commandPoints?.at(-1);if(pointer&&anchor&&state().command==='LINE')strokeEntity({type:'LINE',start:anchor,end:pointer,layer:state().currentLayer},{color:'#c28d4f',dash:[5,4]});if(pointer&&anchor&&state().command==='RECTANG'&&!state().commandData?.spatial)strokeEntity({type:'RECTANG',points:[anchor,{x:pointer.x,y:anchor.y},pointer,{x:anchor.x,y:pointer.y}],layer:state().currentLayer},{color:'#c28d4f',dash:[5,4]});if(pointer&&(!['LINE','RECTANG','MVIEW'].includes(state().command)||state().commandData?.spatial))for(const entity of editor.previewCommand(pointer)||[])strokeEntity(entity,{color:'#c28d4f',dash:[5,4]});}
+function drawPaper(){
+  const layout=currentLayout(),paper=layout.paper,a=paperToScreen({x:0,y:paper.heightMm}),b=paperToScreen({x:paper.widthMm,y:0});ctx.save();ctx.shadowColor='#0008';ctx.shadowBlur=18;ctx.shadowOffsetY=6;ctx.fillStyle='#fafbf9';ctx.fillRect(a.x,a.y,b.x-a.x,b.y-a.y);ctx.restore();ctx.save();ctx.strokeStyle='#abb8b9';ctx.lineWidth=1;ctx.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);ctx.strokeStyle='#d4dddd';ctx.setLineDash([4,4]);const inset=10*paperView().scale;ctx.strokeRect(a.x+inset,a.y+inset,b.x-a.x-2*inset,b.y-a.y-2*inset);ctx.restore();
+  for(const originalViewport of layout.viewports){const viewport=viewportNavigationDraft?.id===originalViewport.id?viewportNavigationDraft:originalViewport,bounds=viewportBounds(viewport);ctx.save();ctx.beginPath();ctx.rect(bounds.left,bounds.top,bounds.width,bounds.height);ctx.clip();renderContext={space:'model',layoutId:layout.id,viewportId:viewport.id,viewport,entities:modelEntities(),includeEdits:state().activeViewportId===viewport.id};try{if(modelWorkspace())drawModel();else drawActiveGeometry(renderContext.includeEdits);}finally{renderContext=null;ctx.restore();}}
+  renderContext={space:'paper',layoutId:layout.id,viewportId:null,entities:editor.getPaperEntities(layout.id),includeEdits:paperSpace()};try{drawActiveGeometry(paperSpace());}finally{renderContext=null;}
+  for(const viewport of layout.viewports){if(!geometry.isEntityVisible({layer:viewport.layer||'0',layoutId:layout.id},state(),{space:'paper',layoutId:layout.id,viewportId:null}))continue;const frame=selectedViewportId===viewport.id&&previewViewportFrame()?previewViewportFrame():viewport.frame,points=framePoints(frame).map(paperToScreen),selected=selectedViewportId===viewport.id,active=state().activeViewportId===viewport.id;ctx.save();ctx.strokeStyle=active?'#388569':selected?'#377abb':'#839b9a';ctx.lineWidth=active?2.5:selected?1.8:1;ctx.setLineDash(selected&&drag?.mode?.startsWith('viewport-')?[5,3]:[]);ctx.strokeRect(points[0].x,points[2].y,points[2].x-points[0].x,points[0].y-points[2].y);if(selected&&paperSpace())for(const point of points){ctx.fillStyle='#528fca';ctx.fillRect(point.x-4,point.y-4,8,8);}ctx.restore();}
+  if(state().command==='MVIEW'&&state().commandPoints?.[0]&&pointer){const start=state().commandPoints[0],x=Math.min(start.x,pointer.x),y=Math.min(start.y,pointer.y),points=framePoints({x,y,width:Math.abs(start.x-pointer.x),height:Math.abs(start.y-pointer.y)}).map(paperToScreen);ctx.save();ctx.strokeStyle='#417d9b';ctx.setLineDash([5,3]);ctx.strokeRect(points[0].x,points[2].y,points[2].x-points[0].x,points[0].y-points[2].y);ctx.restore();}
+}
 function draw() {
   ctx.clearRect(0,0,width,height);ctx.fillStyle='#0d171e';ctx.fillRect(0,0,width,height);
+  if(currentLayout())drawPaper();else{
   drawGrid();
   if(modelWorkspace())drawModel();else{
   const origin=toScreen({x:0,y:0});
@@ -822,6 +872,7 @@ function draw() {
   if(state().command==='AREA'&&commandPoints.length>1)strokeEntity({type:'PLINE',points:commandPoints,closed:false,layer:state().currentLayer},{color:'#eab47b',dash:[5,4]});
   if(pointer&&anchor&&state().command==='MTEXT'&&state().commandPhase==='second-corner')strokeEntity({type:'RECTANG',points:[anchor,{x:pointer.x,y:anchor.y},pointer,{x:anchor.x,y:pointer.y}],layer:state().currentLayer},{color:'#eab47b',dash:[5,4]});
   }
+  }
   if(state().command==='STRETCH'&&state().commandPhase==='window-second'&&state().commandPoints?.[0]&&pointer){const a=state().commandPoints[0],b=pointer,points=[a,{x:b.x,y:a.y},b,{x:a.x,y:b.y}].map(toScreen);if(points.every(finiteScreenPoint)){ctx.save();ctx.fillStyle='#48a67f1b';ctx.strokeStyle='#6daf8d';ctx.lineWidth=1;ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(points[0].x,points[0].y);points.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}}
   if (drag?.mode==='box' && drag.moved) {
     const a=drag.start, b=drag.screen;
@@ -842,6 +893,7 @@ function draw() {
     else if(snap.type.toLowerCase().includes('quad')){ctx.beginPath();ctx.moveTo(p.x,p.y-6);ctx.lineTo(p.x+6,p.y);ctx.lineTo(p.x,p.y+6);ctx.lineTo(p.x-6,p.y);ctx.closePath();ctx.stroke();}
     else ctx.strokeRect(p.x-5,p.y-5,10,10);
   }
+  drawSubobjectSelection();
 }
 
 function propertyRow(label,value) {
@@ -851,18 +903,32 @@ function propertyRow(label,value) {
   row.append(name,val);return row;
 }
 function subheading(text) {const item=document.createElement('div');item.className='property-subheading';item.textContent=text;return item;}
-function numberProperty(label,value,aria,apply,{min,step='any',kind='number'}={}){
+function numberProperty(label,value,aria,apply,{min,step='any',kind='number',prefs=displaySettings()}={}){
   const row=propertyRow(label,''),field=document.createElement('input');field.type=kind==='number'?'number':'text';field.step=step;if(min!==undefined&&kind==='number')field.min=min;
-  field.value=kind==='length'?lengthFormat(value):kind==='angle'?angleFormat(value):value;field.setAttribute('aria-label',aria);if(kind!=='number')field.title=`Exact stored value: ${value}${kind==='angle'?' degrees':' model units'}. Explicit unit suffixes are accepted.`;
+  field.value=kind==='length'?lengthFormat(value,prefs):kind==='angle'?angleFormat(value,prefs):value;field.setAttribute('aria-label',aria);if(kind!=='number')field.title=`Exact stored value: ${value}${kind==='angle'?' degrees':' coordinate units'}. Explicit unit suffixes are accepted.`;
   const initial=field.value;
   field.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();field.blur();}});
-  field.addEventListener('change',()=>{if(field.value===initial)return;let parsed;try{parsed=kind==='length'&&geometry.parseLength?geometry.parseLength(field.value,state().settings):kind==='angle'&&geometry.parseAngle?geometry.parseAngle(field.value,state().settings):Number(field.value);if(!field.value.trim()||!Number.isFinite(parsed))throw Error('Enter a finite numeric value.');if(min!==undefined&&parsed<min)throw Error(`Enter a value of at least ${min}.`);}catch(error){addLog(error.message||'Check the entered value.','error');update();return;}resultLog(apply(parsed));});row.lastElementChild.replaceWith(field);return row;
+  field.addEventListener('change',()=>{if(field.value===initial)return;let parsed;try{parsed=kind==='length'&&geometry.parseLength?geometry.parseLength(field.value,prefs):kind==='angle'&&geometry.parseAngle?geometry.parseAngle(field.value,prefs):Number(field.value);if(!field.value.trim()||!Number.isFinite(parsed))throw Error('Enter a finite numeric value.');if(min!==undefined&&parsed<min)throw Error(`Enter a value of at least ${min}.`);}catch(error){addLog(error.message||'Check the entered value.','error');update();return;}resultLog(apply(parsed));});row.lastElementChild.replaceWith(field);return row;
 }
 function styleProperty(label,names,current,aria,apply){const row=propertyRow(label,''),select=document.createElement('select');select.setAttribute('aria-label',aria);for(const name of names){const option=document.createElement('option');option.value=name;option.textContent=name;select.append(option);}select.value=current;select.addEventListener('change',()=>resultLog(apply(select.value)));row.lastElementChild.replaceWith(select);return row;}
 function pointProperties(box,label,point,apply){for(const axis of ['x','y'])box.append(numberProperty(`${label} ${axis.toUpperCase()}`,point[axis],`${label} ${axis.toUpperCase()}`,value=>apply({...point,[axis]:value}),{kind:'length'}));}
 function pointProperties3D(box,label,point,apply){for(const axis of ['x','y','z'])box.append(numberProperty(`${label} ${axis.toUpperCase()}`,point[axis]??0,`${label} ${axis.toUpperCase()}`,value=>apply({...point,[axis]:value}),{kind:'length'}));}
+function renderSubobjectProperties(entity){
+  const selection=selectedSubobject,box=$('properties-content');box.replaceChildren();$('selection-count').textContent=`${selection.kind} ${selection.index+1}`;box.append(propertyRow('Object','Mesh subobject'),propertyRow('Selection',`${selection.kind} ${selection.index+1}`),propertyRow('Affected vertices',selection.indices.length));
+  const center=subobjectCenter(entity,selection.indices),move=delta=>{if(!Object.values(delta).some(value=>value!==0))return{ok:true};const result=editor.moveMeshVertices(entity.id,selection.indices,delta);if(result.ok)selectedSubobject=null;return result;};
+  if(selection.kind==='vertex')pointProperties3D(box,'Vertex',entity.vertices[selection.index],point=>{const result=editor.moveGrip(entity.id,selection.index,point);if(result.ok)selectedSubobject=null;return result;});
+  else pointProperties3D(box,'Subobject center',center,point=>move({x:point.x-center.x,y:point.y-center.y,z:point.z-center.z}));
+  if(selection.kind==='face'){
+    const points=selection.indices.map(index=>entity.vertices[index]),normal=view3d.triangleNormal(...points.slice(0,3));if(normal){box.append(propertyRow('Face normal XYZ',`${format(normal.x,5)}, ${format(normal.y,5)}, ${format(normal.z,5)}`),numberProperty('Move along normal',0,'Face normal distance',distance=>move({x:normal.x*distance,y:normal.y*distance,z:normal.z*distance}),{kind:'length'}));}
+    const button=document.createElement('button');button.textContent='Use face as UCS';button.className='property-button';button.setAttribute('aria-label','Use selected face as UCS');button.addEventListener('click',()=>{const result=editor.setUCSFromFace(entity.id,selection.index);if(result.ok){pointer=null;pointerUnavailable=null;}resultLog(result);});box.append(button);
+  }
+  const note=document.createElement('p');note.className='empty-property';note.textContent='Drag the orange grip in a parallel plane or enter exact world coordinates. Editing triangulates mesh faces; it does not create a solid. Whole-object commands require Whole object mode.';box.append(note);
+  const whole=document.createElement('button');whole.textContent='Whole object properties';whole.className='property-button';whole.addEventListener('click',()=>setSubobjectMode('whole'));box.append(whole);
+}
 function renderProperties() {
-  const selected=state().entities.filter(e=>state().selectionIds.includes(e.id));
+  if(selectedSubobject){const entity=activeEntities().find(item=>item.id===selectedSubobject.entityId);if(entity?.type==='MESH'&&selectedSubobject.indices.every(index=>entity.vertices[index])){renderSubobjectProperties(entity);return;}selectedSubobject=null;}
+  if(paperSpace()&&selectedViewport()){renderViewportProperties();return;}
+  const selected=activeEntities().filter(e=>state().selectionIds.includes(e.id));
   const box=$('properties-content');box.replaceChildren();
   $('selection-count').textContent=selected.length?`${selected.length} selected`:'No selection';
   if(!selected.length){const p=document.createElement('p');p.className='empty-property';p.textContent='Select an object to inspect its geometry.';box.append(p);return;}
@@ -881,6 +947,7 @@ function renderProperties() {
   for(const value of ['BYLAYER',0,0.13,0.18,0.25,0.35,0.5,0.7,1]){const option=document.createElement('option');option.value=value;option.textContent=value==='BYLAYER'?'By layer':`${value} mm`;lw.append(option);}
   lw.value=selected[0].lineweight ?? 'BYLAYER';
   lw.addEventListener('change',()=>resultLog(editor.setSelectionProperties({lineweight:lw.value==='BYLAYER'?'BYLAYER':Number(lw.value)})));lwRow.lastElementChild.replaceWith(lw);box.append(lwRow);
+  if(geometry.LINETYPES)box.append(styleProperty('Linetype',['BYLAYER',...geometry.LINETYPES],selected[0].linetype||'BYLAYER','Selection linetype',linetype=>editor.setSelectionProperties({linetype})));
   if(selected.length===1){const entity=selected[0];box.append(subheading('GEOMETRY'));
     if(is3DEntity(entity)){
       const vertices=entity.type==='MESH'?entity.vertices:entity.points,selectedIndex=Math.min(gripPropertyIndices.get(entity.id)||0,vertices.length-1),bounds=view3d.bounds3D(vertices);gripPropertyIndices.set(entity.id,selectedIndex);
@@ -894,10 +961,10 @@ function renderProperties() {
       box.append(styleProperty('Text style',(state().textStyles||[]).map(style=>style.name),entity.style,'Text style',style=>editor.setTextProperties(entity.id,{style})),numberProperty('Height',entity.height,'Text height',height=>editor.setTextProperties(entity.id,{height}),{min:0,kind:'length'}),numberProperty('Rotation',entity.rotation,'Text rotation',rotation=>editor.setTextProperties(entity.id,{rotation}),{kind:'angle'}));
       if(entity.type==='MTEXT')box.append(numberProperty('Box width',entity.width,'Multiline text width',width=>editor.setTextProperties(entity.id,{width}),{min:0,kind:'length'}));
       pointProperties(box,'Text insertion',entity.position,position=>editor.setTextProperties(entity.id,{position}));
-      if(geometry.textLayout){const layout=geometry.textLayout(entity,state());box.append(propertyRow('Lines',layout.lines.length),propertyRow('Layout width',lengthFormat(layout.width)),propertyRow('Layout height',lengthFormat(layout.height)));}
+      if(geometry.textLayout){const layout=geometry.textLayout(entity,drawingContext());box.append(propertyRow('Lines',layout.lines.length),propertyRow('Layout width',lengthFormat(layout.width)),propertyRow('Layout height',lengthFormat(layout.height)));}
     }else if(entity.type==='DIMENSION'){
       box.append(propertyRow('Dimension kind',entity.kind),styleProperty('Dimension style',(state().dimStyles||[]).map(style=>style.name),entity.style,'Dimension style',style=>editor.setDimensionProperties(entity.id,{style})),numberProperty('Annotation scale',entity.scale,'Dimension annotation scale',scale=>editor.setDimensionProperties(entity.id,{scale}),{min:0}));
-      if(geometry.formatDimension){const measured=geometry.formatDimension(entity,state());box.append(propertyRow('Measurement',entity.kind==='angular'?angleFormat(measured.measurement):lengthFormat(measured.measurement)),propertyRow('Label',measured.label));}
+      if(geometry.formatDimension){const measured=geometry.formatDimension(entity,drawingContext());box.append(propertyRow('Measurement',entity.kind==='angular'?angleFormat(measured.measurement):lengthFormat(measured.measurement)),propertyRow('Label',measured.label));}
       const overrideRow=propertyRow('Label override',''),override=document.createElement('input');override.type='text';override.value=entity.textOverride||'';override.placeholder='<> = measurement';override.setAttribute('aria-label','Dimension text override');override.addEventListener('change',()=>resultLog(editor.setDimensionProperties(entity.id,{textOverride:override.value})));overrideRow.lastElementChild.replaceWith(override);box.append(overrideRow);
       if(entity.vertex)pointProperties(box,'Angle vertex',entity.vertex,vertex=>editor.setDimensionProperties(entity.id,{vertex}));
       if(entity.p1){pointProperties(box,'Definition 1',entity.p1,p1=>editor.setDimensionProperties(entity.id,{p1}));pointProperties(box,'Definition 2',entity.p2,p2=>editor.setDimensionProperties(entity.id,{p2}));if(entity.kind==='linear')box.append(numberProperty('Axis angle',entity.axisAngle,'Dimension axis angle',axisAngle=>editor.setDimensionProperties(entity.id,{axisAngle}),{kind:'angle'}));}
@@ -915,12 +982,14 @@ function renderProperties() {
       box.append(propertyRow('Block name',entity.blockName),propertyRow('Definition objects',state().blocks?.find(block=>block.name===entity.blockName)?.entities.length||0));if(editor.setAdvancedProperties){box.append(numberProperty('Uniform scale',entity.scale,'Block insertion scale',scale=>editor.setAdvancedProperties(entity.id,{scale}),{min:0}),numberProperty('Rotation',entity.rotation,'Block insertion rotation',rotation=>editor.setAdvancedProperties(entity.id,{rotation}),{kind:'angle'}));pointProperties(box,'Block insertion',entity.position,position=>editor.setAdvancedProperties(entity.id,{position}));}else box.append(propertyRow('Scale',format(entity.scale)),propertyRow('Rotation',angleFormat(entity.rotation)));
     }else if(entity.type==='LINE'){
       box.append(propertyRow('Start X / Y',`${lengthFormat(entity.start.x)} / ${lengthFormat(entity.start.y)}`),propertyRow('End X / Y',`${lengthFormat(entity.end.x)} / ${lengthFormat(entity.end.y)}`),propertyRow('Length',lengthFormat(Math.hypot(entity.end.x-entity.start.x,entity.end.y-entity.start.y))),propertyRow('Angle',angleFormat((Math.atan2(entity.end.y-entity.start.y,entity.end.x-entity.start.x)*180/Math.PI+360)%360)));
-    } else if(entity.type==='CIRCLE'){
+    } else if(entity.type==='CIRCLE'||entity.type==='CIRCLE3D'){
+      if(spatialCurve(entity)){pointProperties3D(box,'Circle center',entity.center,point=>editor.moveGrip(entity.id,0,point));box.append(propertyRow('Plane X axis',Object.values(entity.xAxis).map(value=>format(value,5)).join(', ')),propertyRow('Plane Y axis',Object.values(entity.yAxis).map(value=>format(value,5)).join(', ')));}
       const radiusRow=numberProperty('Radius',entity.radius,'Circle radius',radius=>editor.setCircleRadius(entity.id,radius),{min:0,kind:'length'});
       box.append(propertyRow('Center X / Y',`${lengthFormat(entity.center.x)} / ${lengthFormat(entity.center.y)}`),radiusRow,propertyRow('Diameter',lengthFormat(entity.radius*2)),propertyRow('Circumference',lengthFormat(2*Math.PI*entity.radius)),propertyRow('Area',areaFormat(Math.PI*entity.radius*entity.radius)));
-    } else if(entity.type==='ARC'){
+    } else if(entity.type==='ARC'||entity.type==='ARC3D'){
+      if(spatialCurve(entity)){pointProperties3D(box,'Arc center',entity.center,point=>editor.moveGrip(entity.id,3,point));box.append(propertyRow('Plane X axis',Object.values(entity.xAxis).map(value=>format(value,5)).join(', ')),propertyRow('Plane Y axis',Object.values(entity.yAxis).map(value=>format(value,5)).join(', ')));}
       box.append(propertyRow('Center X / Y',`${lengthFormat(entity.center.x)} / ${lengthFormat(entity.center.y)}`),propertyRow('Radius',lengthFormat(entity.radius)),propertyRow('Start angle',angleFormat(entity.startAngle)),propertyRow('Sweep angle',angleFormat(entity.sweepAngle)),propertyRow('Arc length',lengthFormat(entity.radius*Math.abs(entity.sweepAngle)*Math.PI/180)));
-      if(geometry.arcPoint){for(const [label,fraction] of [['Start X / Y',0],['End X / Y',1]]){const point=geometry.arcPoint(entity,fraction);box.append(propertyRow(label,`${lengthFormat(point.x)} / ${lengthFormat(point.y)}`));}}
+      if(entity.type==='ARC'&&geometry.arcPoint){for(const [label,fraction] of [['Start X / Y',0],['End X / Y',1]]){const point=geometry.arcPoint(entity,fraction);box.append(propertyRow(label,`${lengthFormat(point.x)} / ${lengthFormat(point.y)}`));}}
     } else if(entity.type==='PLINE'){
       const vertices=entity.points,edges=vertices.slice(1).map((point,index)=>[vertices[index],point]);if(entity.closed)edges.push([vertices.at(-1),vertices[0]]);
       const length=edges.reduce((total,[a,b])=>total+Math.hypot(b.x-a.x,b.y-a.y),0);
@@ -946,10 +1015,55 @@ function renderLayers() {
     row.append(color,name,eye,lock);container.append(row);
   }
 }
+function layerManagerApply(action){const result=resultLog(action());$('layer-manager-error').textContent=result?.ok===false?result.message:'';renderLayerManager();return result;}
+function renderLayerManager(){
+  if(!$('layer-manager-dialog').open)return;const body=$('layer-manager-rows');body.replaceChildren();const layout=currentLayout(),viewport=selectedViewport();$('manager-viewport-context').textContent=viewport?`VP Freeze: ${layout.name} · selected viewport`:'Select a viewport frame to edit VP Freeze.';
+  for(const layer of state().layers){
+    const row=document.createElement('tr');row.dataset.layer=layer.name;
+    const cell=element=>{const td=document.createElement('td');td.append(element);row.append(td);};
+    const nameGroup=document.createElement('div');nameGroup.className='manager-layer-name';const current=document.createElement('button');current.textContent=layer.name===state().currentLayer?'◆':'◇';current.setAttribute('aria-label',`Make layer ${layer.name} current`);current.addEventListener('click',()=>layerManagerApply(()=>editor.setCurrentLayer(layer.name)));const name=document.createElement('input');name.value=layer.name;name.setAttribute('aria-label',`Layer ${layer.name} name`);name.disabled=layer.name==='0';name.addEventListener('change',()=>layerManagerApply(()=>editor.updateLayer(layer.name,{name:name.value})));nameGroup.append(current,name);cell(nameGroup);
+    const check=(label,value,apply,disabled=false)=>{const input=document.createElement('input');input.type='checkbox';input.checked=value;input.disabled=disabled;input.setAttribute('aria-label',`${label} ${layer.name}`);input.addEventListener('change',()=>layerManagerApply(()=>apply(input.checked)));cell(input);};
+    check('Layer on',layer.visible!==false,value=>editor.updateLayer(layer.name,{visible:value}));check('Layer locked',Boolean(layer.locked),value=>editor.updateLayer(layer.name,{locked:value}));
+    const color=document.createElement('input');color.type='color';color.value=layer.color;color.setAttribute('aria-label',`Layer manager color ${layer.name}`);color.addEventListener('change',()=>layerManagerApply(()=>editor.updateLayer(layer.name,{color:color.value})));cell(color);
+    const select=(label,values,value,apply)=>{const field=document.createElement('select');field.setAttribute('aria-label',`${label} ${layer.name}`);for(const entry of values){const option=document.createElement('option');option.value=entry;option.textContent=label==='Layer lineweight'?`${entry} mm`:entry;field.append(option);}field.value=value;field.addEventListener('change',()=>layerManagerApply(()=>apply(field.value)));cell(field);};
+    select('Layer lineweight',[0,.13,.18,.25,.35,.5,.7,1],layer.lineweight,value=>editor.updateLayer(layer.name,{lineweight:Number(value)}));select('Layer linetype',geometry.LINETYPES||['continuous','dashed','hidden','center'],layer.linetype||'continuous',linetype=>editor.updateLayer(layer.name,{linetype}));
+    check('Layer visible in model',layer.modelVisible!==false,value=>editor.updateLayer(layer.name,{modelVisible:value}));check('Layer visible on paper',layer.paperVisible!==false,value=>editor.updateLayer(layer.name,{paperVisible:value}));
+    check('Layer plot',layer.plot!==false,value=>editor.updateLayer(layer.name,{plot:value}));
+    check('Viewport freeze',Boolean(viewport?.frozenLayers?.includes(layer.name)),value=>editor.freezeViewportLayer(layout.id,viewport.id,layer.name,value),!viewport||!editor.freezeViewportLayer);
+    const remove=document.createElement('button');remove.textContent='Delete';remove.disabled=layer.name==='0';remove.setAttribute('aria-label',`Delete layer ${layer.name}`);remove.addEventListener('click',()=>layerManagerApply(()=>editor.deleteLayer(layer.name)));cell(remove);body.append(row);
+  }
+}
+function showLayerManager(){if(documentActionBusy)return;closePalettes();hideCompletion();if(state().command)editor.cancel();$('layer-manager-error').textContent='';$('layer-manager-dialog').showModal();renderLayerManager();}
+function closeLayerManager(){$('layer-manager-dialog').close();finishDialogReload();canvas.focus();}
+function entityDash(entity,dash=[]){if(dash.length)return dash;const type=String(entity.linetype&&entity.linetype!=='BYLAYER'?entity.linetype:layerFor(entity)?.linetype).toUpperCase();return currentLayout()?(({DASHED:[4,2],CENTER:[8,2,1,2],HIDDEN:[2,1]})[type]||[]).map(value=>value*paperView().scale):({DASHED:[10,6],CENTER:[16,5,3,5],HIDDEN:[6,4]})[type]||[];}
+function setPaperView(view){const result=editor.setPaperView?editor.setPaperView(view):{ok:true};if(!editor.setPaperView)state().paperViewport=view;return result;}
+function fitPaper(){const layout=currentLayout();if(!layout)return;setPaperView({center:{x:layout.paper.widthMm/2,y:layout.paper.heightMm/2},scale:Math.max(1e-6,Math.min(1e6,Math.min(Math.max(10,width-100)/layout.paper.widthMm,Math.max(10,height-80)/layout.paper.heightMm)))});}
+function enterSpace(space,layoutId=null,viewportId=null){if(documentActionBusy||!editor.setSpace)return;editor.cancel();orbitMode=null;orbitPivot=null;drag=null;pointer=null;rawPointer=null;snap=null;selectedSubobject=null;overlapCycle=null;selectedViewportId=viewportId;const result=editor.setSpace(space,layoutId,viewportId);if(result?.ok===false){resultLog(result);return;}if(layoutId&&!viewportId)fitPaper();update();canvas.focus();}
+function viewportBounds(viewport){const frame=viewport.frame,a=paperToScreen({x:frame.x,y:frame.y+frame.height}),b=paperToScreen({x:frame.x+frame.width,y:frame.y});return{left:a.x,top:a.y,width:b.x-a.x,height:b.y-a.y};}
+function viewportAt(screen,edgeOnly=false){const layout=currentLayout();if(!layout)return null;const point=screenToPaper(screen),tolerance=8/paperView().scale;return[...layout.viewports].reverse().find(viewport=>{if(!geometry.isEntityVisible({layoutId:layout.id,layer:viewport.layer||'0'},state(),{space:'paper',layoutId:layout.id,viewportId:null}))return false;const frame=viewport.frame,inside=point.x>=frame.x-tolerance&&point.x<=frame.x+frame.width+tolerance&&point.y>=frame.y-tolerance&&point.y<=frame.y+frame.height+tolerance;if(!inside)return false;return !edgeOnly||Math.min(Math.abs(point.x-frame.x),Math.abs(point.x-frame.x-frame.width),Math.abs(point.y-frame.y),Math.abs(point.y-frame.y-frame.height))<tolerance;})||null;}
+function framePoints(frame){return[{x:frame.x,y:frame.y},{x:frame.x+frame.width,y:frame.y},{x:frame.x+frame.width,y:frame.y+frame.height},{x:frame.x,y:frame.y+frame.height}];}
+function viewportGrip(screen){const viewport=selectedViewport();if(!paperSpace()||!viewport)return null;for(const[index,point]of framePoints(viewport.frame).entries()){const p=paperToScreen(point);if(Math.hypot(p.x-screen.x,p.y-screen.y)<9)return{viewport,index};}return null;}
+function previewViewportFrame(){if(!drag?.mode?.startsWith('viewport-'))return null;if(drag.mode==='viewport-move')return{...drag.frame,x:drag.frame.x+drag.paper.x-drag.startPaper.x,y:drag.frame.y+drag.paper.y-drag.startPaper.y};const opposite=framePoints(drag.frame)[(drag.index+2)%4],point=drag.paper;return{x:Math.min(opposite.x,point.x),y:Math.min(opposite.y,point.y),width:Math.abs(point.x-opposite.x),height:Math.abs(point.y-opposite.y)};}
+function renderSpaceTabs(){
+  const bar=$('layout-tabs');bar.replaceChildren();const add=(name,id)=>{const button=document.createElement('button');button.className='layout-tab';button.textContent=name;button.setAttribute('role','tab');button.setAttribute('aria-selected',String((state().activeLayoutId||null)===id));button.dataset.layout=id||'model';button.addEventListener('click',()=>enterSpace(id?'paper':'model',id));button.addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight'].includes(event.key)){event.preventDefault();const tabs=[...bar.children],next=tabs[(tabs.indexOf(button)+(event.key==='ArrowRight'?1:-1)+tabs.length)%tabs.length];next.click();next.focus();}});bar.append(button);};add('Model',null);for(const layout of state().layouts||[])add(layout.name,layout.id);
+  const layout=currentLayout(),viewport=selectedViewport();$('page-setup-button').textContent=layout?'Page setup':'New layout';$('new-viewport-button').hidden=!layout;$('viewport-lock-button').hidden=!viewport;$('viewport-scale-control').hidden=!viewport;$('viewport-view-control').hidden=!viewport;$('viewport-lock-button').textContent=viewport?.locked?'Viewport locked':'Viewport unlocked';$('viewport-lock-button').setAttribute('aria-pressed',String(Boolean(viewport?.locked)));if(viewport){const value=String(viewport.scaleDenominator);$('viewport-scale').value=['25','50','100','200'].includes(value)?value:'custom';$('viewport-scale').title=`Scale 1:${value}`;$('viewport-view').value=viewport.workspace==='2d'?'top':['top','front','right','left','back','bottom','iso'].includes(viewport.camera3d.mode)?viewport.camera3d.mode:'iso';}
+  $('space-mode-button').textContent=currentViewport()?'VIEWPORT MODEL':paperSpace()?'PAPER · mm':'MODEL';$('space-mode-button').title=currentViewport()?'Return to paper space':layout?'Enter selected viewport model space':'Standalone model space';
+}
+function showPageSetup(create=false){if(documentActionBusy||!editor.addLayout)return;closePalettes();hideCompletion();editor.cancel();const layout=create?null:currentLayout();pageSetupLayoutId=layout?.id||null;const sizes=geometry.PAPER_SIZES||{};fillOptions('layout-paper-size',Object.keys(sizes),layout?.paper.size||'A3');for(const option of $('layout-paper-size').options){const p=sizes[option.value];option.textContent=`${option.value} · ${p.widthMm} × ${p.heightMm} mm`;}$('layout-name-input').value=layout?.name||`Layout ${(state().layouts?.length||0)+1}`;$('layout-orientation').value=layout?.paper.orientation||'landscape';$('page-setup-title').textContent=layout?'Page setup':'Create paper layout';$('page-setup-error').textContent='';refreshPageSetup();$('page-setup-dialog').showModal();}
+function refreshPageSetup(){const paper=geometry.PAPER_SIZES?.[$('layout-paper-size').value];if(!paper)return;const[w,h]=$('layout-orientation').value==='portrait'?[paper.widthMm,paper.heightMm]:[paper.heightMm,paper.widthMm];$('layout-paper-preview').textContent=`${w} × ${h} millimeters · paper coordinates stay independent of the model`;} 
+function closePageSetup(){$('page-setup-dialog').close();finishDialogReload();canvas.focus();}
+function updateSelectedViewport(patch){const layout=currentLayout(),viewport=selectedViewport();return layout&&viewport?editor.updateViewport(layout.id,viewport.id,patch):{ok:false,message:'Select a viewport frame first.'};}
+function setViewportScale(value){const result=resultLog(updateSelectedViewport({scaleDenominator:Number(value)}));if(result?.ok===false)$('viewport-scale-error').textContent=result.message;return result;}
+function setViewportView(name){const viewport=selectedViewport();if(!viewport)return{ok:false,message:'Select a viewport frame first.'};const camera=view3d.cameraPreset({...viewport.camera3d,target:{...viewport.modelCenter},projection:'orthographic'},name);return updateSelectedViewport({workspace:'3d',camera3d:camera});}
+function panSheetOrViewport(dx,dy){const viewport=currentViewport();if(!viewport||viewport.locked||state().command){setPaperView(pan(paperView(),dx,dy));return;}const camera=viewport.workspace==='3d'?viewport.camera3d:view3d.cameraPreset(viewport.camera3d,'top'),axes=view3d.cameraBasis(camera),scale=viewScale(),center=viewport.modelCenter;const modelCenter={x:center.x-axes.right.x*dx/scale+axes.up.x*dy/scale,y:center.y-axes.right.y*dx/scale+axes.up.y*dy/scale,z:(center.z||0)-axes.right.z*dx/scale+axes.up.z*dy/scale};viewportNavigationDraft={...viewport,modelCenter,camera3d:{...viewport.camera3d,target:{...modelCenter}}};}
+function zoomSheetOrViewport(factor,screen){const viewport=currentViewport();if(!viewport||viewport.locked||state().command){setPaperView(zoomAt(paperView(),factor,screen,width,height));return;}const paper=screenToPaper(screen),before=geometry.viewportPaperToModel(paper,viewport,state().settings),scaleDenominator=Math.max(1e-6,Math.min(1e9,viewport.scaleDenominator/factor)),changed={...viewport,scaleDenominator},after=geometry.viewportPaperToModel(paper,changed,state().settings),modelCenter={x:viewport.modelCenter.x+before.x-after.x,y:viewport.modelCenter.y+before.y-after.y,z:(viewport.modelCenter.z||0)+before.z-after.z};const result=editor.updateViewport(currentLayout().id,viewport.id,{modelCenter,scaleDenominator},{navigation:true});if(result.ok===false)toast(result.message);}
+function renderViewportProperties(){const viewport=selectedViewport(),layout=currentLayout(),box=$('properties-content');box.replaceChildren();$('selection-count').textContent='Viewport frame selected';box.append(propertyRow('Object','Model viewport'),propertyRow('Layout',layout.name),propertyRow('Paper units','mm'));if(viewport.layer)box.append(styleProperty('Frame layer',state().layers.map(layer=>layer.name),viewport.layer,'Viewport frame layer',layer=>updateSelectedViewport({layer})));for(const[key,label]of [['x','X'],['y','Y'],['width','Width'],['height','Height']])box.append(numberProperty(label,viewport.frame[key],`Viewport frame ${label}`,value=>updateSelectedViewport({frame:{...viewport.frame,[key]:value}}),{kind:'length',min:0}));box.append(numberProperty('Scale 1:',viewport.scaleDenominator,'Viewport scale denominator',scaleDenominator=>updateSelectedViewport({scaleDenominator}),{min:.000001}),styleProperty('View',['top','front','right','left','back','bottom','iso'],viewport.workspace==='2d'?'top':viewport.camera3d.mode,'Viewport orientation',setViewportView),styleProperty('Navigation',['Locked','Unlocked'],viewport.locked?'Locked':'Unlocked','Viewport navigation lock',value=>updateSelectedViewport({locked:value==='Locked'})),styleProperty('Print border',['No','Yes'],viewport.plotBorder?'Yes':'No','Plot viewport border',value=>updateSelectedViewport({plotBorder:value==='Yes'})));for(const axis of ['x','y','z'])box.append(numberProperty(`Model center ${axis.toUpperCase()}`,viewport.modelCenter[axis]||0,`Viewport model center ${axis.toUpperCase()}`,value=>updateSelectedViewport({modelCenter:{...viewport.modelCenter,[axis]:value}}),{kind:'length',prefs:state().settings}));const deleteRow=propertyRow('Frame',''),remove=document.createElement('button');remove.className='property-button';remove.textContent='Delete viewport';remove.setAttribute('aria-label','Delete selected viewport');remove.addEventListener('click',()=>{const result=editor.deleteViewport(layout.id,viewport.id);selectedViewportId=null;resultLog(result);});deleteRow.lastElementChild.replaceWith(remove);box.append(deleteRow);}
+function fitModelViewport(viewport){if(viewport.locked){fitPaper();return;}const points=modelPoints(modelEntities());if(!points.length)return;const camera=viewport.workspace==='2d'?view3d.cameraPreset({...viewport.camera3d,target:{...viewport.modelCenter}},'top'):{...viewport.camera3d,target:{...viewport.modelCenter}},axes=view3d.cameraBasis(camera),bounds=view3d.bounds3D(points),center={x:bounds.min.x/2+bounds.max.x/2,y:bounds.min.y/2+bounds.max.y/2,z:bounds.min.z/2+bounds.max.z/2};let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;for(const p of points){const delta={x:p.x-center.x,y:p.y-center.y,z:(p.z||0)-center.z},x=view3d.dot3(delta,axes.right),y=view3d.dot3(delta,axes.up);minX=Math.min(minX,x);maxX=Math.max(maxX,x);minY=Math.min(minY,y);maxY=Math.max(maxY,y);}const factor=geometry.modelUnitMillimeters(state().settings),scaleDenominator=Math.max(1e-6,Math.min(1e9,Math.max((maxX-minX)*factor/viewport.frame.width,(maxY-minY)*factor/viewport.frame.height)*1.1));resultLog(editor.updateViewport(currentLayout().id,viewport.id,{modelCenter:center,scaleDenominator},{navigation:true}));}
 function updateStatus() {
-  $('coordinate-readout').textContent=modelWorkspace()&&pointerUnavailable&&!pointer?'Pointer unavailable · type XYZ':`X ${lengthFormat(pointer?.x||0)}   Y ${lengthFormat(pointer?.y||0)}${modelWorkspace()||pointer?.z!==undefined?`   Z ${lengthFormat(pointer?.z??0)}`:''}`;
+  const readoutPoint=modelWorkspace()&&pointer?geometry.worldToPlane(pointer,activePlane()):pointer;
+  $('coordinate-readout').textContent=modelWorkspace()&&pointerUnavailable&&!pointer?'Pointer unavailable · type UCS XYZ':`${modelWorkspace()?'UCS ':''}X ${lengthFormat(readoutPoint?.x||0)}   Y ${lengthFormat(readoutPoint?.y||0)}${modelWorkspace()||readoutPoint?.z!==undefined?`   Z ${lengthFormat(readoutPoint?.z??0)}`:''}`;
   const prefs=draftingSettings(),unitLabel={unitless:'Unitless',mm:'mm',cm:'cm',m:'m',in:'in',ft:'ft'}[prefs.units]||'Units',formatLabel={decimal:'Decimal',architectural:'Architectural',engineering:'Engineering'}[prefs.linearFormat]||'Decimal';$('units-button').textContent=`${unitLabel} · ${formatLabel}`;$('units-button').title=`Drawing units: ${unitLabel}, ${formatLabel}; angles ${prefs.angularFormat||'decimal-degrees'}. Open UNITS to change this drawing.`;
-  $('zoom-readout').textContent=modelWorkspace()?`${format(view3d.pixelScale(camera3D(),height),3)} px/unit at target`:`${format(state().viewport.scale,3)} px/unit`;
+  $('zoom-readout').textContent=currentLayout()?`${format(paperView().scale,3)} px/mm${currentViewport()?` · 1:${format(currentViewport().scaleDenominator)}`:''}`:modelWorkspace()?`${format(view3d.pixelScale(camera3D(),height),3)} px/unit at target`:`${format(state().viewport.scale,3)} px/unit`;
   $('zoom-readout').title=modelWorkspace()?`${camera3D().projection}; yaw ${format(camera3D().yaw,2)}°, pitch ${format(camera3D().pitch,2)}°, roll ${format(camera3D().roll,2)}°; eye distance ${format(camera3D().distance)}`:'';
   for(const [id,enabled] of [['grid-toggle',gridEnabled],['snap-toggle',snapEnabled],['ortho-toggle',orthoEnabled]]){const button=$(id);button.classList.toggle('active',enabled);button.setAttribute('aria-pressed',String(enabled));}
   const tip=$('snap-indicator');tip.hidden=!snap||!state().command;
@@ -963,57 +1077,87 @@ function update() {
   Object.assign(placeholders,{'join-selection':'Select additional paths, then Enter…','axis-first':'First axis endpoint or Center (C)…','axis-second':'Other endpoint of first axis…','ellipse-center':'Ellipse center…','major-endpoint':'First-axis endpoint…','minor-distance':'Other-axis distance or point…','control-point':'Next cubic control vertex or Enter…',vertex:'Angle vertex…','ray-first':'Point on first angle ray…','ray-second':'Point on second angle ray…','window-first':'First crossing-window corner…','window-second':'Opposite crossing-window corner…','block-base':'Block base point…',boundary:'Pick one closed boundary edge…','first-line':'Pick first retained line side…','second-line':'Pick second retained line side…'});
   input.placeholder=placeholders[phase]||(phase==='radius'?(state().commandData?.diameter?'Diameter or point…':'Radius or point…'):state().commandData?.targetKind==='object'?'Pick a line near the part to edit…':state().command?'X,Y or @offset…':'Type a command or coordinate…');
   if(state().commandData?.targetKind==='none'&&!['view-vector','plan-choice'].includes(phase))input.placeholder='Enter the requested value or option…';
-  if(modelWorkspace()&&state().commandData?.threeD)input.placeholder=phase==='height'?'Signed nonzero height…':phase==='axis'?'World axis X / Y / Z…':'X,Y,Z or @offset…';
-  if(phase==='view-vector')input.placeholder='Viewing vector X,Y,Z…';if(phase==='plan-choice')input.placeholder='World (W) or Enter…';
+  if(modelWorkspace()&&(state().commandData?.threeD||state().commandData?.spatial))input.placeholder=phase==='height'?'Signed nonzero height…':phase==='axis'?'World axis X / Y / Z…':'X,Y,Z or @offset…';
+  if(phase==='view-vector')input.placeholder='Viewing vector X,Y,Z…';if(phase==='plan-choice')input.placeholder='Current UCS (Enter) or World (W)…';
   $('command-state').textContent=state().command || (orbitMode?orbitMode==='free'?'3DFORBIT':'3DORBIT':panTool?'PAN':'Ready');
   $('document-name').textContent=documentName;$('dirty-mark').textContent=isDirty()?'•':'';
-  $('undo-button').disabled=Boolean(orbitMode)||!editor.canUndo;$('redo-button').disabled=Boolean(orbitMode)||!editor.canRedo;$('delete-button').disabled=Boolean(orbitMode)||!state().selectionIds.length;
-  $('entity-count').textContent=`${state().entities.length} object${state().entities.length===1?'':'s'}`;
+  $('undo-button').disabled=Boolean(orbitMode)||!editor.canUndo;$('redo-button').disabled=Boolean(orbitMode)||!editor.canRedo;$('delete-button').disabled=Boolean(orbitMode)||!state().selectionIds.length&&!(paperSpace()&&selectedViewport());
+  $('entity-count').textContent=`${activeEntities().length} object${activeEntities().length===1?'':'s'}`;
   document.querySelectorAll('[data-tool]').forEach(button=>button.classList.toggle('active',button.dataset.tool===(state().command || (panTool?'PAN':'SELECT'))));
   canvas.style.cursor=panTool||orbitMode||['pan','orbit'].includes(drag?.mode)?'grabbing':'none';
   const notes={selection:'Select objects • Enter to continue',mode:'Enter Single or Multiple',angle:`Enter an angle (${state().settings?.angularInputUnit||'degrees'}) or click a direction`,distance:'Enter a positive offset distance',factor:'Enter a positive scale factor or pick a distance',object:state().command?.startsWith('DIM')?'Pick the circle to dimension':'Pick a source object • Enter to finish',position:'Pick or enter a text insertion point',height:'Enter text height • Enter uses the style default',rotation:'Enter text rotation • Enter uses the style default','first-corner':'Pick or enter the first text-box corner','second-corner':'Pick opposite corner • H to change text height','mtext-height':'Enter the multiline text height','origin-first':'Pick or enter the first dimension origin','origin-second':'Pick or enter the second dimension origin',placement:state().command==='DIMLINEAR'?'Place dimension • H / V chooses its axis':'Pick or enter the dimension placement','delete-choice':'Delete sources? Yes / No • Enter keeps them','clipboard-ready':'Writing drawing clipboard…','first-break':'Pick or enter the first break point','second-break':'Pick or enter the second break point','arc-first':'Pick or enter the arc start point','arc-second':'Pick or enter a point on the arc','arc-third':'Pick or enter the arc end point'};
   Object.assign(notes,{'join-selection':'Select connected additional paths • Enter joins them','axis-first':'Pick first axis endpoint • C chooses center construction','axis-second':'Pick the other first-axis endpoint','ellipse-center':'Pick the ellipse center','major-endpoint':'Pick the first-axis endpoint','minor-distance':'Enter a positive other-axis distance or pick a point','control-point':'Place control vertices • at least four • U removes the latest • Enter finishes',vertex:'Pick the angle vertex','ray-first':'Pick a point on the first angle ray','ray-second':'Pick a point on the second angle ray','window-first':'Pick the first corner of a planar crossing window','window-second':'Pick its opposite corner • enclosed vertices will stretch','block-base':'Pick the base used for block insertion',boundary:'Pick one closed boundary edge to capture the hatch region','first-line':'Pick the first LINE on the side to retain','second-line':'Pick the second LINE on the side to retain'});
   $('canvas-note').textContent=notes[phase]||(state().commandData?.targetKind==='object'?'Pick the line portion to edit • U to undo • Enter to finish':state().command?'Click a point or enter exact coordinates':state().selectionIds.length?'Drag a blue grip to edit • Delete to erase':'Type a command or choose a drawing tool');
   if(state().commandData?.targetKind==='none'&&phase!=='selection')$('canvas-note').textContent='Enter the requested value or option in the command line';
-  if(modelWorkspace()){if(orbitMode)$('canvas-note').textContent=orbitMode==='free'?'Drag inside the arcball to orbit • outside to roll • Enter or Esc exits':'Drag horizontally / vertically to orbit • Shift allows free orbit • Enter or Esc exits';else if(phase==='height'&&['BOX','CYLINDER','EXTRUDE'].includes(state().command))$('canvas-note').textContent='Type a signed height or place it along the projected Z axis';else if(phase==='first-corner'&&state().command==='BOX')$('canvas-note').textContent='Pick the first box corner on the XY plane or enter XYZ';else if(phase==='opposite-corner')$('canvas-note').textContent='Pick the opposite XY corner or enter its exact XYZ';else if(phase==='axis')$('canvas-note').textContent='Enter world rotation axis X, Y or Z';else if(phase==='view-vector')$('canvas-note').textContent='Enter a nonzero viewing vector X,Y,Z';else if(phase==='plan-choice')$('canvas-note').textContent='Enter W for world plan';else if(!state().command&&!state().selectionIds.length)$('canvas-note').textContent='Shift + middle drag orbits • Ctrl + Shift + middle drag rotates freely';}
+  if(modelWorkspace()){if(orbitMode)$('canvas-note').textContent=orbitMode==='free'?'Drag inside the arcball to orbit • outside to roll • Enter or Esc exits':'Drag horizontally / vertically to orbit • Shift allows free orbit • Enter or Esc exits';else if(phase==='height'&&['BOX','CYLINDER','EXTRUDE'].includes(state().command))$('canvas-note').textContent='Type a signed height or place it along the active plane normal';else if(phase==='first-corner'&&state().command==='BOX')$('canvas-note').textContent='Pick the first corner on the active UCS plane or type UCS XYZ';else if(phase==='opposite-corner')$('canvas-note').textContent='Pick the opposite corner in the active plane or type UCS XYZ';else if(phase==='axis')$('canvas-note').textContent='Enter world rotation axis X, Y or Z';else if(phase==='view-vector')$('canvas-note').textContent='Enter a nonzero viewing vector X,Y,Z';else if(phase==='plan-choice')$('canvas-note').textContent='Enter for Current UCS plan • W chooses World';else if(!state().command&&!state().selectionIds.length)$('canvas-note').textContent='Shift + middle drag orbits • Ctrl + Shift + middle drag rotates freely';}
+  if(selectedSubobject&&!state().command)$('canvas-note').textContent=`${selectedSubobject.kind} selected • drag orange grip / edit world coordinates • Shift+F1 Whole object`;else if(modelWorkspace()&&subobjectMode!=='whole'&&!state().command)$('canvas-note').textContent=`Pick mesh ${subobjectMode}s • Ctrl+Space cycles obscured candidates • Shift+F1–F4 filters • Esc clears`;
   if(state().command)hideCompletion();
-  renderProperties();if(orbitMode)$('properties-content').querySelectorAll('input,select,button').forEach(field=>field.disabled=true);renderLayers();if(orbitMode)$('layers-list').querySelectorAll('input,select,button').forEach(field=>field.disabled=true);renderBlockLibrary();updateModelControls();updateStatus();draw();syncDesktop();scheduleDevelopmentCheckpoint();maybeAnnotationEditor();
+  renderSpaceTabs();renderLayerManager();renderProperties();if(orbitMode)$('properties-content').querySelectorAll('input,select,button').forEach(field=>field.disabled=true);renderLayers();if(orbitMode)$('layers-list').querySelectorAll('input,select,button').forEach(field=>field.disabled=true);renderBlockLibrary();updateModelControls();updateStatus();draw();syncDesktop();scheduleDevelopmentCheckpoint();maybeAnnotationEditor();
 }
 
 function canvasPosition(event) {const rect=canvas.getBoundingClientRect();return {x:event.clientX-rect.left,y:event.clientY-rect.top};}
 function pointerPosition(event) {
   rawPointer=canvasPosition(event);pointer=toWorld(rawPointer);snap=null;pointerScalar=null;pointerUnavailable=null;
   if(modelWorkspace()){
-    if(drag?.mode==='grip'){const entity=state().entities.find(e=>e.id===drag.entityId),point=pointsOf(entity)[drag.index];pointer=view3d.intersectConstructionPlane(view3d.screenRay(rawPointer,camera3D(),width,height),point.z??0);}
-    else if(state().commandPhase==='height'&&['BOX','CYLINDER','EXTRUDE'].includes(state().command)){const base=state().commandData.heightBase;pointerScalar=view3d.heightAlongZ(rawPointer,base,camera3D(),width,height);pointer=pointerScalar===null?null:{...base,z:base.z+pointerScalar};if(pointerScalar===null)pointerUnavailable='Height axis is aligned with the view; type a height.';}
+    if(drag?.mode==='grip'||drag?.mode==='subobject-grip'){const entity=activeEntities().find(e=>e.id===drag.entityId),point=drag.mode==='subobject-grip'?drag.startPoint:pointsOf(entity)[drag.index],curvePlane=spatialCurve(entity)?{xAxis:entity.xAxis,yAxis:entity.yAxis,normal:view3d.cross3(entity.xAxis,entity.yAxis)}:null,plane={...(curvePlane||activePlane()),origin:point};pointer=geometry.intersectPlaneRay(view3d.screenRay(rawPointer,camera3D(),width,height),plane);}
+    else if(state().commandPhase==='height'&&['BOX','CYLINDER','EXTRUDE'].includes(state().command)){const base=state().commandData.heightBase,direction=state().commandData.heightDirection||{x:0,y:0,z:1};pointerScalar=view3d.heightAlongAxis(rawPointer,base,direction,camera3D(),width,height);pointer=pointerScalar===null?null:{x:base.x+direction.x*pointerScalar,y:base.y+direction.y*pointerScalar,z:base.z+direction.z*pointerScalar};if(pointerScalar===null)pointerUnavailable='Height normal is aligned with the view; type a height.';}
     else if(state().commandData?.targetKind==='object'||selectingObjects())pointer=projectedPick(rawPointer,state().commandData?.targetKind==='object'&&!selectingObjects()?visibleEntities():selectableEntities())?.point||pointer;
-    if(!pointer&&!pointerUnavailable)pointerUnavailable='XY plane is edge-on; choose another view or type XYZ.';
-  }else if(drag?.mode==='grip'){const entity=state().entities.find(e=>e.id===drag.entityId);if(is3DEntity(entity))pointer.z=pointsOf(entity)[drag.index].z;}
+    if(!pointer&&!pointerUnavailable)pointerUnavailable='Active plane is edge-on; choose Plan or type UCS coordinates.';
+  }else if(drag?.mode==='grip'){const entity=activeEntities().find(e=>e.id===drag.entityId);if(is3DEntity(entity))pointer.z=pointsOf(entity)[drag.index].z;}
   const anchor=state().commandPoints?.at(-1);
   if(pointer&&orthoEnabled&&anchor&&['LINE','PLINE','3DPOLY','MOVE','COPY','MIRROR','STRETCH'].includes(state().command)&&!['selection','window-first','window-second'].includes(state().commandPhase)) {
-    if(state().command==='3DPOLY'||state().commandData?.threeD){const axes=['x','y','z'].sort((a,b)=>Math.abs((pointer[b]??0)-(anchor[b]??0))-Math.abs((pointer[a]??0)-(anchor[a]??0)));pointer={...anchor,[axes[0]]:pointer[axes[0]]};}
+    if(state().command==='3DPOLY'||state().commandData?.threeD){const plane=state().commandData?.plane||activePlane(),local=geometry.worldToPlane(pointer,plane),base=geometry.worldToPlane(anchor,plane),axes=['x','y','z'].sort((a,b)=>Math.abs(local[b]-base[b])-Math.abs(local[a]-base[a]));pointer=geometry.planeToWorld({...base,[axes[0]]:local[axes[0]]},plane);}
     else if(Math.abs(pointer.x-anchor.x)>=Math.abs(pointer.y-anchor.y))pointer={...pointer,y:anchor.y};
     else pointer={...pointer,x:anchor.x};
   }
   if(snapEnabled&&drag?.mode!=='orbit'&&!orbitMode&&pointerScalar===null&&((state().command&&state().commandData?.targetKind!=='object'&&state().commandData?.targetKind!=='none'&&!['selection','join-selection','window-first','window-second','mode','object','axis','view-vector','plan-choice','height','angle','distance','delete-choice','clipboard-ready'].includes(state().commandPhase))||drag?.mode==='grip')){
-    snap=modelWorkspace()?projectedSnap(rawPointer):pointer?findSnap(visibleEntities().filter(e=>e.id!==drag?.entityId),pointer,10/state().viewport.scale,state()):null;
+    snap=modelWorkspace()?projectedSnap(rawPointer):pointer?findSnap(visibleEntities().filter(e=>e.id!==drag?.entityId),pointer,10/viewScale(),state()):null;
     if(snap)pointer={...snap.point};
   }
-  updateStatus();if(modelWorkspace())$('construction-plane-label').textContent=pointerUnavailable||`Pointer: XY plane at Z ${lengthFormat(drag?.mode==='grip'?pointsOf(state().entities.find(e=>e.id===drag.entityId))[drag.index].z??0:state().settings.constructionElevation)}`;
+  updateStatus();if(modelWorkspace())$('construction-plane-label').textContent=pointerUnavailable||`Pointer: ${planeLabel()}`;
 }
 function gripAt(screen) {
   let best=null;const meshes=visibleEntities().filter(e=>e.type==='MESH');for(const entity of selectableEntities().filter(e=>state().selectionIds.includes(e.id))){const points=pointsOf(entity);for(let index=0;index<points.length;index++){const p=toScreen(points[index]),distance=Math.hypot(p.x-screen.x,p.y-screen.y),depth=modelWorkspace()?p.depth:points[index].z??0;if(distance>8||p.clipped||modelWorkspace()&&camera3D().renderMode==='shaded'&&view3d.pointOccluded(points[index],meshes,camera3D(),width,height))continue;if(!best||distance<best.distance-1e-6||Math.abs(distance-best.distance)<1e-6&&depth>best.depth)best={entityId:entity.id,index,distance,depth};}}return best;
 }
+function meshIndexEdges(entity){const edges=new Map();for(const face of entity.faces)for(let i=0;i<face.length;i++){const a=face[i],b=face[(i+1)%face.length],key=a<b?`${a}:${b}`:`${b}:${a}`;if(!edges.has(key))edges.set(key,[a,b]);}return[...edges.values()];}
+function subobjectCenter(entity,indices){return indices.reduce((point,index)=>({x:point.x+entity.vertices[index].x/indices.length,y:point.y+entity.vertices[index].y/indices.length,z:point.z+entity.vertices[index].z/indices.length}),{x:0,y:0,z:0});}
+function setSubobjectMode(mode){subobjectMode=mode;selectedSubobject=null;gripPropertyIndices.clear();$('selection-mode').value=mode;update();}
+function subobjectCandidates(screen,{includeOccluded=false}={}){
+  const meshes=selectableEntities().filter(entity=>entity.type==='MESH'),camera=camera3D(),candidates=new Map(),ray=subobjectMode==='face'?view3d.screenRay(screen,camera,width,height):null;
+  const add=pick=>{if(!Number.isFinite(pick.depth)||!Number.isFinite(pick.distance)||!includeOccluded&&view3d.pointOccluded(pick.point,meshes,camera,width,height))return;const key=`${pick.entityId}:${pick.kind}:${pick.index}`,previous=candidates.get(key);if(!previous||pick.depth>previous.depth)candidates.set(key,pick);};
+  for(const entity of meshes){
+    if(subobjectMode==='face')for(const triangle of view3d.meshTriangles(entity)){const hit=view3d.intersectTriangle(ray,...triangle.points);if(!hit)continue;const p=toScreen(hit.point);if(p.clipped||!finiteScreenPoint(p))continue;add({entityId:entity.id,index:triangle.faceIndex,indices:[...entity.faces[triangle.faceIndex]],kind:'face',distance:0,depth:p.depth,point:hit.point});}
+    else if(subobjectMode==='vertex')entity.vertices.forEach((point,index)=>{const p=toScreen(point),distance=Math.hypot(p.x-screen.x,p.y-screen.y);if(p.clipped||!finiteScreenPoint(p)||distance>10)return;add({entityId:entity.id,index,indices:[index],kind:'vertex',distance,depth:p.depth,point});});
+    else if(subobjectMode==='edge')meshIndexEdges(entity).forEach((indices,index)=>{const[a,b]=indices.map(i=>entity.vertices[i]),pa=toScreen(a),pb=toScreen(b);if(!finiteScreenPoint(pa)||!finiteScreenPoint(pb)||pa.clipped||pb.clipped)return;const projected=view3d.projectedSegmentDistance(screen,pa,pb);if(projected.distance>8)return;const t=camera.projection==='perspective'?projected.t*pa.viewDistance/((1-projected.t)*pb.viewDistance+projected.t*pa.viewDistance):projected.t,point={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,z:a.z+(b.z-a.z)*t};add({entityId:entity.id,index,indices,kind:'edge',distance:projected.distance,depth:toScreen(point).depth,point});});
+  }
+  return[...candidates.values()].sort((a,b)=>b.depth-a.depth||a.distance-b.distance);
+}
+function subobjectPick(screen){return subobjectCandidates(screen)[0]||null;}
+function cycleSubobject(){
+  if(subobjectMode==='whole'){cycleOverlap();return;}
+  const screen=rawPointer||overlapCycle?.screen;if(!screen)return;const candidates=subobjectCandidates(screen,{includeOccluded:true});if(!candidates.length){toast(`No overlapping mesh ${subobjectMode}s at the cursor.`);return;}
+  const previous=selectedSubobject,index=(candidates.findIndex(pick=>pick.entityId===previous?.entityId&&pick.kind===previous.kind&&pick.index===previous.index)+1)%candidates.length;selectSubobject(candidates[index]);addLog(`${subobjectMode} selection ${index+1} of ${candidates.length} at cursor, including obscured subobjects.`,'notice');
+}
+function selectSubobject(pick){selectedSubobject=pick;selectedViewportId=null;editor.select([pick.entityId]);if(pick.kind==='vertex')gripPropertyIndices.set(pick.entityId,pick.index);update();}
+function subobjectGrip(screen){if(!selectedSubobject||selectedSubobject.kind==='vertex')return null;const entity=activeEntities().find(item=>item.id===selectedSubobject.entityId);if(!entity||selectedSubobject.indices.some(index=>!entity.vertices[index]))return null;const point=subobjectCenter(entity,selectedSubobject.indices),p=toScreen(point);return Math.hypot(p.x-screen.x,p.y-screen.y)<10?{...selectedSubobject,startPoint:point}:null;}
+function drawSubobjectSelection(){if(!selectedSubobject||!modelWorkspace())return;const entity=activeEntities().find(item=>item.id===selectedSubobject.entityId);if(!entity?.vertices||selectedSubobject.indices.some(index=>!entity.vertices[index]))return;const points=selectedSubobject.indices.map(index=>toScreen(entity.vertices[index]));if(!points.every(finiteScreenPoint))return;ctx.save();ctx.lineWidth=3;ctx.strokeStyle='#dc965a';ctx.fillStyle='#de98572a';ctx.beginPath();ctx.moveTo(points[0].x,points[0].y);points.slice(1).forEach(point=>ctx.lineTo(point.x,point.y));if(selectedSubobject.kind==='face'){ctx.closePath();ctx.fill();}ctx.stroke();const center=toScreen(subobjectCenter(entity,selectedSubobject.indices));ctx.fillStyle='#e4a163';ctx.fillRect(center.x-4,center.y-4,8,8);ctx.restore();}
+function overlapPicks(screen){const entities=selectableEntities();if(modelWorkspace())return entities.map(entity=>projectedPick(screen,[entity])).filter(Boolean).sort((a,b)=>b.depth-a.depth).map(pick=>pick.entityId);const world=toWorld(screen);return world?[...entities].reverse().filter(entity=>hitTest([entity],world,8/viewScale(),drawingContext())).map(entity=>entity.id):[];}
+function cycleOverlap(){const screen=rawPointer||overlapCycle?.screen;if(!screen)return;const ids=overlapPicks(screen);if(!ids.length)return;const previous=state().selectionIds[0],index=(ids.indexOf(previous)+1)%ids.length;editor.select([ids[index]]);selectedSubobject=null;subobjectMode='whole';selectedViewportId=null;overlapCycle={screen:{...screen},ids,index};addLog(`Selection ${index+1} of ${ids.length} at cursor.`,'notice');update();}
+function eraseCurrentSelection(){if(selectedSubobject){toast('Subobject deletion is unavailable. Choose Whole object to erase the mesh.');return false;}if(paperSpace()&&selectedViewport()){const viewport=selectedViewport(),result=editor.deleteViewport(currentLayout().id,viewport.id);selectedViewportId=null;return resultLog(result);}return resultLog(editor.deleteSelected());}
 canvas.addEventListener('pointerdown',event=>{
   if(documentActionBusy||event.button!==0&&event.button!==1)return;
-  event.preventDefault();pointerPosition(event);canvas.setPointerCapture(event.pointerId);
+  event.preventDefault();canvas.focus({preventScroll:true});pointerPosition(event);canvas.setPointerCapture(event.pointerId);
   if(modelWorkspace()&&(event.button===1&&event.shiftKey||event.button===0&&orbitMode)){
     const previousMode=orbitMode,free=event.ctrlKey&&event.shiftKey||orbitMode==='free'||event.button===0&&event.shiftKey;startOrbit(free?'free':'constrained',rawPointer,{explicit:!camera3D().autoTarget&&Boolean(camera3D().orbitCenter)});drag={mode:'orbit',start:{...rawPointer},last:{...rawPointer},startCamera:structuredClone(camera3D()),free,transient:event.button===1,previousMode,baseMode:previousMode||'constrained'};draw();return;
   }
   if(event.button===1&&!event.shiftKey&&lastMiddleClick&&event.timeStamp-lastMiddleClick.time<350&&Math.hypot(rawPointer.x-lastMiddleClick.screen.x,rawPointer.y-lastMiddleClick.screen.y)<6){lastMiddleClick=null;drag=null;fit();return;}
   if(event.button===1||panTool){drag={mode:'pan',last:{...rawPointer},start:{...rawPointer},middle:event.button===1,moved:false};canvas.style.cursor='grabbing';return;}
   closePalettes();hideCompletion();
-  if(state().command&&state().commandData?.targetKind!=='none'&&!['selection','join-selection','mode','axis','view-vector','plan-choice','distance','delete-choice','clipboard-ready'].includes(state().commandPhase)&&state().command!=='ZOOM'){if(!pointer){toast(pointerUnavailable||'Type a coordinate or choose a different view.');return;}const command=state().command;if(pointerScalar!==null){runCommand(String(pointerScalar));input.focus({preventScroll:true});return;}addLog(`${currentPrompt()} ${format(pointer.x,6)},${format(pointer.y,6)}${pointer.z!==undefined?`,${format(pointer.z,6)}`:''}`,'input');let result;if(modelWorkspace()&&state().commandData?.targetKind==='object'&&editor.submitObject){const picked=projectedPick(rawPointer,visibleEntities());result=picked?editor.submitObject(picked.entityId,picked.point):{ok:false,message:'No object was picked at that screen location.'};}else result=editor.submitPoint({...pointer});resultLog(result);trackClipboard(command,result);input.focus({preventScroll:true});return;}
+  if(currentViewport()&&!geometry.pointInViewport(screenToPaper(rawPointer),currentViewport())){toast('Double-click outside the viewport to return to paper space.');return;}
+  if(state().command==='UCS'&&state().commandPhase==='ucs-face'){const pick=projectedPick(rawPointer,visibleEntities()),entity=activeEntities().find(item=>item.id===pick?.entityId),face=entity?.type==='MESH'?view3d.pickMesh(entity,rawPointer,camera3D(),width,height):null;resultLog(face?editor.submitFace(entity.id,face.faceIndex):{ok:false,message:'Pick a visible planar mesh face.'});return;}
+  if(!state().command&&modelWorkspace()&&subobjectMode!=='whole'){const grip=subobjectGrip(rawPointer);if(grip){drag={mode:'subobject-grip',...grip,start:{...rawPointer},moved:false};draw();return;}if(subobjectMode==='vertex'&&selectedSubobject?.kind==='vertex'){const point=activeEntities().find(entity=>entity.id===selectedSubobject.entityId)?.vertices[selectedSubobject.index],p=point&&toScreen(point);if(p&&Math.hypot(p.x-rawPointer.x,p.y-rawPointer.y)<9){drag={mode:'grip',entityId:selectedSubobject.entityId,index:selectedSubobject.index};return;}}const pick=subobjectPick(rawPointer);if(pick)selectSubobject(pick);else{selectedSubobject=null;editor.clearSelection();update();}return;}
+  if(paperSpace()&&!state().command){const grip=viewportGrip(rawPointer),viewport=grip?.viewport||viewportAt(rawPointer,true);if(viewport){selectedViewportId=viewport.id;editor.clearSelection();const startPaper=screenToPaper(rawPointer);drag=grip?{mode:'viewport-grip',viewportId:viewport.id,index:grip.index,frame:{...viewport.frame},paper:startPaper,startPaper,start:{...rawPointer},moved:false}:{mode:'viewport-move',viewportId:viewport.id,frame:{...viewport.frame},paper:startPaper,startPaper,start:{...rawPointer},moved:false};update();return;}selectedViewportId=null;}
+  if(state().command&&state().commandData?.targetKind!=='none'&&!['selection','join-selection','mode','axis','view-vector','plan-choice','distance','delete-choice','clipboard-ready'].includes(state().commandPhase)&&state().command!=='ZOOM'){if(!pointer){toast(pointerUnavailable||'Type a coordinate or choose a different view.');return;}const command=state().command;if(pointerScalar!==null){runCommand(String(pointerScalar));input.focus({preventScroll:true});return;}addLog(`${currentPrompt()} ${format(pointer.x,6)},${format(pointer.y,6)}${pointer.z!==undefined?`,${format(pointer.z,6)}`:''}`,'input');let result;if(modelWorkspace()&&state().commandData?.targetKind==='object'&&editor.submitObject){const picked=projectedPick(rawPointer,visibleEntities());result=picked?editor.submitObject(picked.entityId,picked.point):{ok:false,message:'No object was picked at that screen location.'};}else result=editor.submitPoint({...pointer});resultLog(result);trackClipboard(command,result);if(command==='MVIEW'&&result.ok&&!state().command){selectedViewportId=result.viewportId||currentLayout()?.viewports.at(-1)?.id||null;update();}input.focus({preventScroll:true});return;}
   if(state().command&&!selectingObjects()){input.focus({preventScroll:true});return;}
   const grip=selectingObjects()?null:gripAt(rawPointer);
   if(grip){drag={mode:'grip',...grip};draw();return;}
@@ -1024,33 +1168,38 @@ canvas.addEventListener('pointermove',event=>{
   if(documentActionBusy)return;
   const position=canvasPosition(event);
   if(drag?.mode==='orbit'){const free=drag.transient?event.ctrlKey&&event.shiftKey:drag.baseMode==='free'||event.shiftKey;if(Boolean(free)!==drag.free){drag.free=Boolean(free);drag.start={...position};drag.last={...position};drag.startCamera=structuredClone(camera3D());orbitMode=drag.free?'free':'constrained';}const before=drag.free?drag.startCamera:camera3D(),next=drag.free?view3d.orbitFree(before,drag.start,position,width,height):view3d.orbitConstrained(before,position.x-drag.last.x,position.y-drag.last.y);setCamera(view3d.orbitAroundPivot(before,next,orbitPivot));drag.last=position;pointerPosition(event);updateModelControls();draw();return;}
-  if(drag?.mode==='pan'){if(modelWorkspace())setCamera(view3d.panCamera(camera3D(),position.x-drag.last.x,position.y-drag.last.y,height));else state().viewport=pan(state().viewport,position.x-drag.last.x,position.y-drag.last.y);drag.last=position;drag.moved=drag.moved||Math.hypot(position.x-drag.start.x,position.y-drag.start.y)>4;pointerPosition(event);draw();return;}
+  if(drag?.mode==='pan'){if(currentLayout())panSheetOrViewport(position.x-drag.last.x,position.y-drag.last.y);else if(modelWorkspace())setCamera(view3d.panCamera(camera3D(),position.x-drag.last.x,position.y-drag.last.y,height));else state().viewport=pan(state().viewport,position.x-drag.last.x,position.y-drag.last.y);drag.last=position;drag.moved=drag.moved||Math.hypot(position.x-drag.start.x,position.y-drag.start.y)>4;pointerPosition(event);draw();return;}
+  if(drag?.mode?.startsWith('viewport-')){drag.paper=screenToPaper(position);drag.moved=Math.hypot(position.x-drag.start.x,position.y-drag.start.y)>3;rawPointer=position;pointer=drag.paper;updateStatus();draw();return;}
   pointerPosition(event);
+  if(drag?.mode==='subobject-grip')drag.moved=Math.hypot(position.x-drag.start.x,position.y-drag.start.y)>3;
   if(drag?.mode==='box'){drag.screen={...position};drag.moved=Math.hypot(position.x-drag.start.x,position.y-drag.start.y)>4;}
   draw();
 });
 canvas.addEventListener('pointerup',event=>{
   if(documentActionBusy||!drag)return;
-  pointerPosition(event);const operation=drag;drag=null;
+  pointerPosition(event);const operation=drag,framePreview=previewViewportFrame();drag=null;
   if(operation.mode==='orbit'){if(operation.transient)orbitMode=operation.previousMode;if(!orbitMode)orbitPivot=null;}
   else if(operation.mode==='grip'){if(pointer)resultLog(editor.moveGrip(operation.entityId,operation.index,{...pointer}));else toast(pointerUnavailable||'The grip could not be placed from this view.');}
-  else if(operation.mode==='pan'){lastMiddleClick=operation.middle&&!operation.moved?{time:event.timeStamp,screen:{...rawPointer}}:null;}
+  else if(operation.mode==='subobject-grip'){if(operation.moved&&pointer){const delta={x:pointer.x-operation.startPoint.x,y:pointer.y-operation.startPoint.y,z:pointer.z-operation.startPoint.z};const result=editor.moveMeshVertices(operation.entityId,operation.indices,delta);if(result.ok)selectedSubobject=null;resultLog(result);}}
+  else if(operation.mode==='pan'){if(viewportNavigationDraft){const draft=viewportNavigationDraft;viewportNavigationDraft=null;resultLog(editor.updateViewport(currentLayout().id,draft.id,{modelCenter:draft.modelCenter},{navigation:true}));}lastMiddleClick=operation.middle&&!operation.moved?{time:event.timeStamp,screen:{...rawPointer}}:null;}
+  else if(operation.mode.startsWith('viewport-')){if(operation.moved&&framePreview)resultLog(editor.updateViewport(currentLayout().id,operation.viewportId,{frame:framePreview}));}
   else if(operation.mode==='box'){
     const selectingCommand=selectingObjects();
     if(operation.moved){const ids=modelWorkspace()?view3d.entitiesInProjectedBox(selectableEntities(),operation.start,operation.screen,operation.screen.x<operation.start.x,camera3D(),width,height,e=>geometry.entityPoints(e,state()),projectionEdges,projectionFills):entitiesInBox(selectableEntities(),operation.world,toWorld(operation.screen),operation.screen.x<operation.start.x,state());editor.select(ids,{add:operation.shift||selectingCommand});addLog(`${ids.length} object${ids.length===1?'':'s'} found.`);}
-    else {const id=modelWorkspace()?projectedPick(operation.screen)?.entityId:pointer?hitTest(selectableEntities(),pointer,8/state().viewport.scale,state()):null;if(id)editor.select([id],{toggle:operation.shift,add:selectingCommand&&!operation.shift});else if(!operation.shift&&!selectingCommand)editor.clearSelection();}
+    else {const id=modelWorkspace()?projectedPick(operation.screen)?.entityId:pointer?hitTest(selectableEntities(),pointer,8/viewScale(),state()):null;if(id)editor.select([id],{toggle:operation.shift,add:selectingCommand&&!operation.shift});else if(!operation.shift&&!selectingCommand)editor.clearSelection();}
   }
   update();if(state().command)input.focus({preventScroll:true});else canvas.focus({preventScroll:true});
 });
-canvas.addEventListener('pointercancel',()=>{if(drag?.mode==='orbit'&&drag.transient)orbitMode=drag.previousMode;if(!orbitMode)orbitPivot=null;drag=null;update();});
+canvas.addEventListener('pointercancel',()=>{if(drag?.mode==='orbit'&&drag.transient)orbitMode=drag.previousMode;if(!orbitMode)orbitPivot=null;drag=null;viewportNavigationDraft=null;update();});
 canvas.addEventListener('dblclick',event=>{
   if(documentActionBusy||orbitMode||event.button!==0||state().command||panTool)return;
-  const screen=canvasPosition(event),id=modelWorkspace()?projectedPick(screen)?.entityId:hitTest(selectableEntities(),toWorld(screen),8/state().viewport.scale,state()),entity=state().entities.find(item=>item.id===id);
+  if(currentLayout()){const viewport=viewportAt(canvasPosition(event));if(viewport&&state().activeViewportId!==viewport.id){enterSpace('model',currentLayout().id,viewport.id);return;}if(!viewport&&currentViewport()){enterSpace('paper',currentLayout().id);return;}}
+  const screen=canvasPosition(event),id=modelWorkspace()?projectedPick(screen)?.entityId:hitTest(selectableEntities(),toWorld(screen),8/viewScale(),state()),entity=activeEntities().find(item=>item.id===id);
   if(entity&&['TEXT','MTEXT'].includes(entity.type)){editor.select([id]);update();openAnnotationEditor(id);}
 });
 canvas.addEventListener('pointerleave',()=>{if(!drag){rawPointer=null;pointer=null;snap=null;updateStatus();draw();}});
 canvas.addEventListener('contextmenu',event=>{event.preventDefault();if(state().command)runCommand('');else input.focus();});
-canvas.addEventListener('wheel',event=>{event.preventDefault();if(documentActionBusy||!Number.isFinite(event.deltaY))return;const factor=Math.exp(Math.max(-40,Math.min(40,-event.deltaY*.0015)));if(modelWorkspace()){const screen=canvasPosition(event),anchor=projectedPick(screen,visibleEntities())?.point||toWorld(screen)||view3d.pointOnTargetPlane(screen,camera3D(),width,height);setCamera(view3d.zoomCameraAt(camera3D(),factor,screen,width,height,anchor));updateModelControls();}else state().viewport=zoomAt(state().viewport,factor,canvasPosition(event),width,height);pointerPosition(event);draw();scheduleDevelopmentCheckpoint();},{passive:false});
+canvas.addEventListener('wheel',event=>{event.preventDefault();if(documentActionBusy||!Number.isFinite(event.deltaY))return;const factor=Math.exp(Math.max(-40,Math.min(40,-event.deltaY*.0015)));if(currentLayout()){zoomSheetOrViewport(factor,canvasPosition(event));updateModelControls();renderSpaceTabs();}else if(modelWorkspace()){const screen=canvasPosition(event),anchor=projectedPick(screen,visibleEntities())?.point||toWorld(screen)||view3d.pointOnTargetPlane(screen,camera3D(),width,height);setCamera(view3d.zoomCameraAt(camera3D(),factor,screen,width,height,anchor));updateModelControls();}else state().viewport=zoomAt(state().viewport,factor,canvasPosition(event),width,height);pointerPosition(event);draw();scheduleDevelopmentCheckpoint();},{passive:false});
 
 $('command-form').addEventListener('submit',event=>{event.preventDefault();if(completionIndex>=0)acceptCompletion();const value=input.value;input.value='';runCommand(value);input.focus();});
 input.addEventListener('input',renderCompletion);
@@ -1066,7 +1215,7 @@ document.querySelectorAll('[data-tool]').forEach(button=>button.addEventListener
 $('fit-button').addEventListener('click',fit);
 $('undo-button').addEventListener('click',()=>{if(!documentActionBusy&&!orbitMode)resultLog(editor.undo());});
 $('redo-button').addEventListener('click',()=>{if(!documentActionBusy&&!orbitMode)resultLog(editor.redo());});
-$('delete-button').addEventListener('click',()=>{if(!documentActionBusy&&!orbitMode)resultLog(editor.deleteSelected());});
+$('delete-button').addEventListener('click',()=>{if(!documentActionBusy&&!orbitMode)eraseCurrentSelection();});
 $('clear-history').addEventListener('click',()=>{$('command-log').replaceChildren();input.focus();});
 $('grid-toggle').addEventListener('click',()=>setDrafting({gridEnabled:!gridEnabled}));
 $('snap-toggle').addEventListener('click',()=>{snap=null;setDrafting({snapEnabled:!snapEnabled});});
@@ -1115,6 +1264,10 @@ $('workspace-mode').addEventListener('change',()=>setWorkspace($('workspace-mode
 $('view3d-preset').addEventListener('change',()=>{if($('view3d-preset').value!=='custom'){setCamera(view3d.cameraPreset(camera3D(),$('view3d-preset').value));pointer=null;pointerUnavailable=null;update();}});
 $('render3d-mode').addEventListener('change',()=>{setCamera({...camera3D(),renderMode:$('render3d-mode').value});update();});
 $('view3d-projection').addEventListener('change',()=>{const projection=$('view3d-projection').value,old=camera3D(),scale=view3d.pixelScale(old,height),distance=projection==='perspective'?Math.max(1e-6,Math.min(1e12,view3d.focalPixels(old,height)/scale)):old.distance;setCamera({...old,projection,distance,scale:Math.max(1e-6,Math.min(1e6,scale))});update();});
+$('construction-plane').addEventListener('change',()=>{if($('construction-plane').value==='CUSTOM'){runCommand('UCS');runCommand('3');}else{resultLog(editor.setUCS($('construction-plane').value));pointer=null;pointerUnavailable=null;}});
+$('ucs-three-point').addEventListener('click',()=>{if(state().command)editor.cancel();runCommand('UCS');runCommand('3');input.focus();});
+$('plan-ucs').addEventListener('click',()=>{if(state().command)editor.cancel();runCommand('PLAN');runCommand('');});
+$('selection-mode').addEventListener('change',()=>setSubobjectMode($('selection-mode').value));
 $('construction-elevation').addEventListener('change',()=>{try{const value=readQuantityField('construction-elevation','length');resultLog(editor.updateDraftingSettings({constructionElevation:value}));}catch(error){toast(error.message||'Enter a finite elevation.');updateModelControls();}});
 $('construction-elevation').addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();$('construction-elevation').blur();canvas.focus();}});
 $('orbit-tool').addEventListener('click',()=>{if(orbitMode){orbitMode=null;orbitPivot=null;update();}else{if(state().command)editor.cancel();startOrbit('constrained');}canvas.focus();});
@@ -1129,7 +1282,15 @@ $('view-cube').addEventListener('keydown',event=>{if(['Enter',' '].includes(even
 $('import-close').addEventListener('click',()=>$('import-dialog').close());
 $('plot-close').addEventListener('click',closePlot);$('plot-cancel').addEventListener('click',closePlot);$('plot-dialog').addEventListener('cancel',event=>{event.preventDefault();closePlot();});$('plot-form').addEventListener('submit',submitPlot);
 for(const id of ['plot-paper','plot-orientation','plot-mode','plot-scale','plot-margin','plot-color','plot-lineweights'])$(id).addEventListener('change',refreshPlotPreview);
+for(const id of ['plot-space','plot-layout-id'])$(id).addEventListener('change',()=>{refreshPlotSpace();refreshPlotPreview();});
 $('settings-button').addEventListener('click',showSettings);$('settings-close').addEventListener('click',closeSettings);$('settings-cancel').addEventListener('click',closeSettings);$('settings-dialog').addEventListener('cancel',event=>{event.preventDefault();closeSettings();});
+$('add-layout-button').addEventListener('click',()=>showPageSetup(true));$('page-setup-button').addEventListener('click',()=>showPageSetup(!currentLayout()));$('page-setup-close').addEventListener('click',closePageSetup);$('page-setup-cancel').addEventListener('click',closePageSetup);$('page-setup-dialog').addEventListener('cancel',event=>{event.preventDefault();closePageSetup();});for(const id of ['layout-paper-size','layout-orientation'])$(id).addEventListener('change',refreshPageSetup);
+$('page-setup-form').addEventListener('submit',event=>{event.preventDefault();const patch={name:$('layout-name-input').value,paper:{size:$('layout-paper-size').value,orientation:$('layout-orientation').value}},result=pageSetupLayoutId?editor.updateLayout(pageSetupLayoutId,patch):editor.addLayout(patch.name,patch.paper);if(result?.ok===false){$('page-setup-error').textContent=result.message;return;}const id=pageSetupLayoutId||result.layoutId;closePageSetup();selectedViewportId=null;enterSpace('paper',id);resultLog(result);});
+$('new-viewport-button').addEventListener('click',()=>{const layout=currentLayout();if(!layout)return;if(!paperSpace())enterSpace('paper',layout.id);runCommand('MVIEW');});
+$('space-mode-button').addEventListener('click',()=>{const layout=currentLayout();if(!layout)return;if(currentViewport())enterSpace('paper',layout.id);else{const viewport=selectedViewport()||layout.viewports[0];if(viewport)enterSpace('model',layout.id,viewport.id);else toast('Create a viewport before entering model space on this sheet.');}});
+$('viewport-lock-button').addEventListener('click',()=>{const viewport=selectedViewport();if(viewport)resultLog(updateSelectedViewport({locked:!viewport.locked}));});$('viewport-view').addEventListener('change',()=>resultLog(setViewportView($('viewport-view').value)));
+$('viewport-scale').addEventListener('change',()=>{if($('viewport-scale').value==='custom'){$('viewport-custom-scale').value=selectedViewport()?.scaleDenominator||100;$('viewport-scale-error').textContent='';$('viewport-scale-dialog').showModal();}else setViewportScale($('viewport-scale').value);});$('viewport-scale-cancel').addEventListener('click',()=>{$('viewport-scale-dialog').close();finishDialogReload();});$('viewport-scale-form').addEventListener('submit',event=>{event.preventDefault();const result=setViewportScale($('viewport-custom-scale').valueAsNumber);if(result?.ok!==false){$('viewport-scale-dialog').close();finishDialogReload();}});
+$('layer-manager-button').addEventListener('click',showLayerManager);$('layer-manager-close').addEventListener('click',closeLayerManager);$('layer-manager-dialog').addEventListener('cancel',event=>{event.preventDefault();closeLayerManager();});$('manager-add-layer').addEventListener('click',()=>$('add-layer').click());
 $('units-button').addEventListener('click',()=>runCommand('UNITS'));
 $('setting-unit-preset').addEventListener('change',changeUnitPreset);
 for(const id of ['setting-units','setting-precision','setting-linear-format','setting-fraction-precision','setting-angular-input','setting-angular-format','setting-angular-precision'])$(id).addEventListener('input',()=>{$('setting-unit-preset').value='custom';refreshUnitPreview();});
@@ -1154,9 +1315,14 @@ function showHelp(){$('help-dialog').showModal();}
 $('help-button').addEventListener('click',showHelp);$('show-guide').addEventListener('click',showHelp);$('close-help').addEventListener('click',()=>$('help-dialog').close());
 document.addEventListener('keydown',event=>{
   if(event.defaultPrevented||documentActionBusy)return;
-  if($('help-dialog').open||$('layer-dialog').open||$('reference-dialog').open||$('annotation-dialog').open||$('settings-dialog').open||$('import-dialog').open||$('plot-dialog').open)return;
+  if($('help-dialog').open||$('layer-dialog').open||$('reference-dialog').open||$('annotation-dialog').open||$('settings-dialog').open||$('import-dialog').open||$('plot-dialog').open||$('page-setup-dialog').open||$('viewport-scale-dialog').open||$('layer-manager-dialog').open)return;
   const editing=textEditing(event.target);
   if(event.key==='Escape'){event.preventDefault();cancel();input.focus();return;}
+  if(!editing&&modelWorkspace()&&!state().command){
+    if(event.shiftKey&&/^F[1-4]$/.test(event.key)){event.preventDefault();setSubobjectMode(['whole','vertex','edge','face'][Number(event.key.slice(1))-1]);return;}
+    if(event.code==='Space'&&event.ctrlKey){event.preventDefault();cycleSubobject();return;}
+  }
+  if(!editing&&!state().command&&event.code==='Space'&&event.shiftKey){event.preventDefault();cycleOverlap();return;}
   if(event.ctrlKey||event.metaKey){
     const clipboardAction={c:event.shiftKey?'copy-base':'copy',x:'cut',v:'paste'}[event.key.toLowerCase()];
     if(clipboardAction){if(!editing){event.preventDefault();runAction(clipboardAction);}return;}
@@ -1180,13 +1346,13 @@ document.addEventListener('keydown',event=>{
   if(event.key==='F3'){event.preventDefault();$('snap-toggle').click();return;}
   if(event.key==='F7'){event.preventDefault();$('grid-toggle').click();return;}
   if(event.key==='F8'){event.preventDefault();$('ortho-toggle').click();return;}
-  if(event.key==='Delete'&&!editing){event.preventDefault();if(!orbitMode)resultLog(editor.deleteSelected());return;}
+  if(event.key==='Delete'&&!editing){event.preventDefault();if(!orbitMode)eraseCurrentSelection();return;}
   if(!editing&&!event.altKey&&event.key.length===1){event.preventDefault();input.focus();input.value+=event.key;renderCompletion();}
   if(!editing&&event.key==='Enter'){event.preventDefault();input.focus();runCommand(input.value);input.value='';}
 });
 window.addEventListener('beforeunload',event=>{if(!desktop&&isDirty()){event.preventDefault();event.returnValue='';}});
 new ResizeObserver(resized).observe(canvas);
-window.linecraft={get editor(){return editor;},execute:runCommand,fit,getSnapshot:()=>JSON.parse(JSON.stringify(state())),getDocumentState:documentInfo,getDevelopmentState:()=>({...developmentState}),getCommandReference:()=>JSON.parse(JSON.stringify([...commandCatalog,...unavailableCatalog])),get3DState:()=>({camera:structuredClone(camera3D()),workspace:state().workspace,orbitMode,pivot:orbitPivot?{...orbitPivot}:null,constructionElevation:state().settings?.constructionElevation,documentActionBusy,importedAwaitingSave}),project:point=>toScreen(point),acquire:screen=>toWorld(screen),runAction,canvas};
+window.linecraft={get editor(){return editor;},execute:runCommand,fit,getSnapshot:()=>JSON.parse(JSON.stringify(state())),getDocumentState:documentInfo,getDevelopmentState:()=>({...developmentState}),getCommandReference:()=>JSON.parse(JSON.stringify([...commandCatalog,...unavailableCatalog])),getSpaceState:()=>({activeSpace:state().activeSpace,activeLayoutId:state().activeLayoutId,activeViewportId:state().activeViewportId,selectedViewportId,paperViewport:structuredClone(paperView()),subobjectMode,selectedSubobject:selectedSubobject?structuredClone(selectedSubobject):null,plane:structuredClone(activePlane())}),getModelEntities:()=>structuredClone(modelEntities()),getPaperEntities:id=>structuredClone(editor.getPaperEntities(id)),projectPaper:point=>paperToScreen(point),get3DState:()=>({camera:structuredClone(camera3D()),workspace:state().workspace,orbitMode,pivot:orbitPivot?{...orbitPivot}:null,constructionElevation:state().settings?.constructionElevation,documentActionBusy,importedAwaitingSave}),project:point=>toScreen(point),acquire:screen=>toWorld(screen),runAction,canvas};
 if(desktop){desktop.onAction(action=>runAction(action));document.querySelector('.local-badge').lastChild.textContent=' Desktop workspace';}
 addLog('Linecraft CAD · New drawing ready.');
 addLog('Draw, modify and place geometry. Open Commands to search supported tools, options and examples.');

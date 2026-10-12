@@ -1,0 +1,322 @@
+{
+  "format": "Linecraft/1",
+  "entities": [
+    {
+      "id": "red-model",
+      "type": "LINE",
+      "layer": "Red",
+      "start": {
+        "x": 0,
+        "y": 0
+      },
+      "end": {
+        "x": 1200,
+        "y": 0
+      }
+    }
+  ],
+  "layers": [
+    {
+      "name": "0",
+      "color": "#000000",
+      "visible": true,
+      "locked": false,
+      "lineweight": 0.25,
+      "modelVisible": true,
+      "paperVisible": true,
+      "plot": true,
+      "linetype": "continuous"
+    },
+    {
+      "name": "Red",
+      "color": "#ff0000",
+      "visible": true,
+      "locked": false,
+      "lineweight": 0.5,
+      "modelVisible": true,
+      "paperVisible": true,
+      "plot": true,
+      "linetype": "continuous"
+    },
+    {
+      "name": "Green",
+      "color": "#00aa00",
+      "visible": true,
+      "locked": false,
+      "lineweight": 0.35,
+      "modelVisible": true,
+      "paperVisible": true,
+      "plot": true,
+      "linetype": "continuous"
+    },
+    {
+      "name": "Blue",
+      "color": "#0000ff",
+      "visible": true,
+      "locked": false,
+      "lineweight": 0.25,
+      "modelVisible": true,
+      "paperVisible": true,
+      "plot": true,
+      "linetype": "continuous"
+    },
+    {
+      "name": "Yellow",
+      "color": "#ffff00",
+      "visible": true,
+      "locked": false,
+      "lineweight": 0.25,
+      "modelVisible": true,
+      "paperVisible": true,
+      "plot": true,
+      "linetype": "continuous"
+    }
+  ],
+  "currentLayer": "0",
+  "textStyles": [
+    {
+      "name": "Standard",
+      "fontFamily": "Arial",
+      "defaultHeight": 2.5,
+      "defaultRotation": 0,
+      "widthFactor": 1
+    }
+  ],
+  "dimStyles": [
+    {
+      "name": "Standard",
+      "textStyle": "Standard",
+      "textHeight": 2.5,
+      "arrowSize": 2.5,
+      "gap": 1,
+      "extensionOffset": 1,
+      "extensionOvershoot": 1.25,
+      "precision": 2,
+      "scale": 1,
+      "prefix": "",
+      "suffix": ""
+    }
+  ],
+  "currentTextStyle": "Standard",
+  "currentDimStyle": "Standard",
+  "settings": {
+    "units": "in",
+    "precision": 4,
+    "linearFormat": "architectural",
+    "fractionPrecision": 4,
+    "angularInputUnit": "degrees",
+    "angularFormat": "decimal-degrees",
+    "angularPrecision": 4,
+    "gridEnabled": true,
+    "snapEnabled": true,
+    "orthoEnabled": false,
+    "snapModes": [
+      "endpoint",
+      "midpoint",
+      "center",
+      "quadrant"
+    ],
+    "gridAdaptive": true,
+    "gridSpacing": 10,
+    "constructionElevation": 0,
+    "constructionPlane": "XY"
+  },
+  "blocks": [],
+  "layouts": [
+    {
+      "id": "inch-paper",
+      "name": "Owned A4 in",
+      "paper": {
+        "size": "A4",
+        "orientation": "portrait",
+        "widthMm": 210,
+        "heightMm": 297
+      },
+      "viewports": [
+        {
+          "id": "inch-paper-one",
+          "frame": {
+            "x": 10,
+            "y": 20,
+            "width": 90,
+            "height": 60
+          },
+          "modelCenter": {
+            "x": 600,
+            "y": 0,
+            "z": 0
+          },
+          "scaleDenominator": 1000,
+          "locked": true,
+          "frozenLayers": [],
+          "workspace": "2d",
+          "camera3d": {
+            "target": {
+              "x": 600,
+              "y": 0,
+              "z": 0
+            },
+            "orbitCenter": null,
+            "scale": 10,
+            "yaw": -90,
+            "pitch": 90,
+            "roll": 0,
+            "mode": "top",
+            "renderMode": "shaded",
+            "projection": "orthographic",
+            "distance": 200,
+            "fov": 45,
+            "autoTarget": true
+          },
+          "plotBorder": false,
+          "layer": "0"
+        },
+        {
+          "id": "inch-paper-two",
+          "frame": {
+            "x": 110,
+            "y": 20,
+            "width": 90,
+            "height": 60
+          },
+          "modelCenter": {
+            "x": 600,
+            "y": 0,
+            "z": 0
+          },
+          "scaleDenominator": 500,
+          "locked": false,
+          "frozenLayers": [],
+          "workspace": "2d",
+          "camera3d": {
+            "target": {
+              "x": 600,
+              "y": 0,
+              "z": 0
+            },
+            "orbitCenter": null,
+            "scale": 10,
+            "yaw": -90,
+            "pitch": 90,
+            "roll": 0,
+            "mode": "top",
+            "renderMode": "shaded",
+            "projection": "orthographic",
+            "distance": 200,
+            "fov": 45,
+            "autoTarget": true
+          },
+          "plotBorder": false,
+          "layer": "0"
+        }
+      ],
+      "entities": [
+        {
+          "id": "green-paper",
+          "type": "LINE",
+          "layer": "Green",
+          "start": {
+            "x": 20,
+            "y": 200
+          },
+          "end": {
+            "x": 120,
+            "y": 200
+          }
+        },
+        {
+          "id": "paper-title",
+          "type": "TEXT",
+          "layer": "0",
+          "position": {
+            "x": 20,
+            "y": 275
+          },
+          "text": "Inches model: 100-foot line",
+          "height": 4,
+          "rotation": 0,
+          "style": "Standard"
+        },
+        {
+          "id": "paper-dimension",
+          "type": "DIMENSION",
+          "layer": "0",
+          "kind": "linear",
+          "placement": {
+            "x": 70,
+            "y": 165
+          },
+          "style": "Standard",
+          "scale": 1,
+          "p1": {
+            "x": 20,
+            "y": 180
+          },
+          "p2": {
+            "x": 120,
+            "y": 180
+          },
+          "axisAngle": 0
+        }
+      ]
+    }
+  ],
+  "ucs": {
+    "origin": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "xAxis": {
+      "x": 1,
+      "y": 0,
+      "z": 0
+    },
+    "yAxis": {
+      "x": 0,
+      "y": 1,
+      "z": 0
+    },
+    "zAxis": {
+      "x": 0,
+      "y": 0,
+      "z": 1
+    }
+  },
+  "viewport": {
+    "center": {
+      "x": 0,
+      "y": 0
+    },
+    "scale": 10
+  },
+  "workspace": "2d",
+  "camera3d": {
+    "target": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "orbitCenter": null,
+    "scale": 10,
+    "yaw": 45,
+    "pitch": 35.264389682754654,
+    "roll": 0,
+    "mode": "iso",
+    "renderMode": "shaded",
+    "projection": "orthographic",
+    "distance": 200,
+    "fov": 45,
+    "autoTarget": true
+  },
+  "activeSpace": "paper",
+  "activeLayoutId": "inch-paper",
+  "activeViewportId": null,
+  "paperViewport": {
+    "center": {
+      "x": 105,
+      "y": 148.5
+    },
+    "scale": 2
+  }
+}

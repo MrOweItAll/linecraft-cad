@@ -88,7 +88,10 @@ export function orbitAroundPivot(before,after,pivot){
   return{...after,target:add(xyz(pivot),add(add(multiply(next.right,dot3(relative,old.right)),multiply(next.up,dot3(relative,old.up))),multiply(next.normal,dot3(relative,old.normal))))};
 }
 export function heightAlongZ(screen,base,camera,width,height){
-  const ray=screenRay(screen,camera,width,height);if(!ray.direction)return null;const relative=subtract(ray.origin,xyz(base)),denominator=1-ray.direction.z**2;if(denominator<1e-10)return null;const value=(relative.z-dot3(relative,ray.direction)*ray.direction.z)/denominator;return Number.isFinite(value)?value:null;
+  return heightAlongAxis(screen,base,{x:0,y:0,z:1},camera,width,height);
+}
+export function heightAlongAxis(screen,base,direction,camera,width,height){
+  const length=Math.hypot(direction.x,direction.y,direction.z);if(!Number.isFinite(length)||length===0)return null;const axis=multiply(direction,1/length),ray=screenRay(screen,camera,width,height);if(!ray.direction)return null;const relative=subtract(ray.origin,xyz(base)),alignment=dot3(ray.direction,axis),denominator=1-alignment*alignment;if(denominator<1e-10)return null;const value=(dot3(relative,axis)-dot3(relative,ray.direction)*alignment)/denominator;return Number.isFinite(value)?value:null;
 }
 function rotateVector(value,axis,angle){const c=Math.cos(angle),s=Math.sin(angle);return add(add(multiply(value,c),multiply(cross3(axis,value),s)),multiply(axis,dot3(axis,value)*(1-c)));}
 function cameraFromBasis(camera,basis){

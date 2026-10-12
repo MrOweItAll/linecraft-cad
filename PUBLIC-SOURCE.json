@@ -1,17 +1,29 @@
 {
-  "version": "1.5.0",
-  "scope": "Original public runtime and synthetic regression suite; native desktop evidence excluded.",
+  "version": "1.6.0",
+  "scope": "Original public runtime and synthetic regression suite; private native drawings and evidence excluded.",
   "runtimeFiles": [
     {
       "file": "core.mjs",
-      "bytes": 243008,
-      "sha256": "875c22d2d065a1536ccd5f5169dc4891e2029b4d791274ce85364214eb4beb6d",
+      "bytes": 286825,
+      "sha256": "8df950ec6be38a91b20bb6c4673d29db078bc000763f38f06883879dd727f114",
       "matchesInternalRuntime": true
     },
     {
       "file": "units.mjs",
       "bytes": 10227,
       "sha256": "8185ed2bc0e549a2e981361615fb2a77917941988445c60e55a630a640192d1c",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "paper-space.mjs",
+      "bytes": 8739,
+      "sha256": "6df7a0df5e08693c37ecd52cfdfe0f55c45e73c079949aaf164baaa8665c9725",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "drawing-plane.mjs",
+      "bytes": 6947,
+      "sha256": "518ec8370666bfe797e8923cfeb13796af4bbf732de39f54d7e28e138392fb7b",
       "matchesInternalRuntime": true
     },
     {
@@ -22,38 +34,38 @@
     },
     {
       "file": "3d-view.mjs",
-      "bytes": 17453,
-      "sha256": "4699fb54f155507df12aec0be236d434e09e177207ffdd898cb24a1aab378b3c",
+      "bytes": 17790,
+      "sha256": "369b78d2ecdc0bdbb95e878b0a3d017a4c694aeeb0c3a529c7c0324f3a64e19f",
       "matchesInternalRuntime": true
     },
     {
       "file": "dwg-import.mjs",
-      "bytes": 34434,
-      "sha256": "518e573c4faa3af05d11edf6e95cf73984cfdb5335fb6bce5f956a28b69727fd",
+      "bytes": 35155,
+      "sha256": "2c8e68abe9cb139e99a1c78b17a3f28a6e4845b2737f957699d2efba2466279f",
       "matchesInternalRuntime": true
     },
     {
       "file": "plot-document.mjs",
-      "bytes": 14095,
-      "sha256": "c1ceb4d1b8ff848abda674ffb5e454d72ab1e930b90a87845144f28b9a1d979e",
+      "bytes": 21033,
+      "sha256": "cef46cce290bef567910a2c1c4b52f7e6ddd55461cc467ed9d2e80013122f1b8",
       "matchesInternalRuntime": true
     },
     {
       "file": "app.mjs",
-      "bytes": 163383,
-      "sha256": "5123a33f479be1f181e7d0985e9f2be9e394e8ee4262b3bfb69dd7b6808ccc4b",
+      "bytes": 215886,
+      "sha256": "9140334b4e27e5628820a11876ef46bbecb579796e5b8f02ea991543af06dfb7",
       "matchesInternalRuntime": true
     },
     {
       "file": "index.html",
-      "bytes": 35649,
-      "sha256": "8290dbb20bdc91a1f4a2992a31bc35234a686042fe68cccfe67cbe6543647d54",
+      "bytes": 41671,
+      "sha256": "18d0c7e13a056581b5d4d3419125d03f0003046b726c095ae4a7fc4de62952fe",
       "matchesInternalRuntime": true
     },
     {
       "file": "styles.css",
-      "bytes": 30190,
-      "sha256": "bcd839cf31e1efe2b2d39abe5bb582d6c3f4aa36edf30b129547f9db0be7999c",
+      "bytes": 34327,
+      "sha256": "3d11c12894ddaa84055349657dab4983595c0e1afc58bc9669502a5de385f872",
       "matchesInternalRuntime": true
     },
     {
@@ -64,8 +76,8 @@
     },
     {
       "file": "desktop/main.cjs",
-      "bytes": 27070,
-      "sha256": "69982e4afba69ed14b69a958334e48ce9e85211a8c41b4b185ef6876e47fc2e4",
+      "bytes": 27198,
+      "sha256": "f93f3e935b6655aee8b7e3dddd56f5a26bee465e5363ef67eeacc1a2cc053a83",
       "matchesInternalRuntime": true
     },
     {
@@ -111,20 +123,20 @@
     "third-party/libredwg/runtime/libredwg-0.dll"
   ],
   "publicTestAdaptations": {
-    "core.test.mjs": "Removed native evidence-dependent cases; all remaining case bodies unchanged.",
-    "dwg-import.test.mjs": "Removed native evidence and historical sample-dependent cases; remaining bodies unchanged.",
-    "reference-annotations.mjs": "Retains only original standalone synthetic DXF group record reader.",
-    "units-v15.cjs": "Requires local pinned Playwright rather than personal cached runtime.",
-    "desktop-unit.test.cjs": "Outside-app path fixture is resolved as a sibling of the repository root; the internal test assumed work was outside outputs/linecraft-cad."
+    "core.test.mjs": "Native evidence/helper and archived-sample-dependent test expressions removed; remaining synthetic bodies preserved. Pure sequence labels identify synthetic cases.",
+    "dwg-import.test.mjs": "Native/historical sample-dependent cases removed; synthetic decoder bodies preserved.",
+    "reference-annotations.mjs": "Original standalone group-code reader only.",
+    "units-v15.cjs and layouts-v16.cjs": "Require local pinned Playwright, without personal cache paths.",
+    "desktop-unit.test.cjs": "Outside-app fixture is a sibling of repository root, independent of workspace layout.",
+    "run-layout-pdf-v16.cjs": "Uses local pinned Electron without private cache lookup."
   },
-  "removedNativeTestCount": {
-    "core.test.mjs": 6,
+  "removedPrivateTestCount": {
+    "core.test.mjs": 9,
     "dwg-import.test.mjs": 3
   },
   "exclusions": [
-    "All evidence directories, native drawings, scripts, reader outputs and screenshots",
-    "All historical/current test results, logs, images, registry and installation metadata",
-    "Internal MANIFEST.json, OBSERVATIONS.md, internal TEST-REPORT.md and private command corpora",
-    "node_modules, Windows-Release, work, standalone.html and internal dev/release harness"
+    "Native drawings, scripts, exported references, observed JSON, images, evidence and command corpora",
+    "Current/historical reports, screenshots, logs, registry/install metadata and private paths",
+    "Internal release driver/manifest/documentation; node_modules, build outputs and standalone bundle"
   ]
 }

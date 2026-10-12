@@ -5,6 +5,7 @@ work/
 tests/*-results.json
 tests/*.png
 tests/*.log
+tests/layout-pdf-v16/
 *.tmp
 .env
 .env.*

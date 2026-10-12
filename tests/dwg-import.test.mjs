@@ -1,11 +1,31 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {importDXF,decodeCADText,readDWGMetadata} from '../dwg-import.mjs';
-import {createEditor,formatDimension} from '../core.mjs';
+import {createEditor,formatDimension,spatialCurvePoint,spatialCurveBounds} from '../core.mjs';
 const record=(type,...groups)=>[0,type,...groups.flat()];
 const file=(entities,tables=[],blocks=[],ending='\n')=>[0,'SECTION',2,'TABLES',...tables,0,'ENDSEC',0,'SECTION',2,'BLOCKS',...blocks,0,'ENDSEC',0,'SECTION',2,'ENTITIES',...entities,0,'ENDSEC',0,'EOF'].join(ending)+ending;
 const load=source=>{const r=importDXF(source);return{...r,document:JSON.parse(r.text)};};
 const line=(a,b,layer='0')=>record('LINE',[8,layer],[10,a[0]],[20,a[1]],[30,a[2]??0],[11,b[0]],[21,b[1]],[31,b[2]??0]);
+
+test('tilted OCS circles remain exact editable curves with world-space center and extrema',()=>{
+ const a=load(file(record('CIRCLE',[10,150],[20,350],[30,-200],[40,10],[210,0],[220,-1],[230,0]))),e=a.document.entities[0];
+ assert.equal(a.document.workspace,'3d');assert.equal(e.type,'CIRCLE3D');assert.deepEqual(e.center,{x:150,y:200,z:350});assert.equal(e.radius,10);
+ assert.deepEqual(spatialCurvePoint(e,0),{x:160,y:200,z:350});assert.deepEqual(spatialCurvePoint(e,.25),{x:150,y:200,z:360});
+ const pts=spatialCurveBounds(e);assert.equal(Math.min(...pts.map(p=>p.z)),340);assert.equal(Math.max(...pts.map(p=>p.x)),160);assert.ok(!a.report.warnings.some(w=>w.message.includes('polygonal')));
+});
+
+test('tilted native ARC endpoints and quarter-circle midpoint preserve OCS sweep',()=>{
+ const a=load(file(record('ARC',[10,100],[20,300],[30,-200],[40,10],[50,0],[51,90],[210,0],[220,-1],[230,0]))),e=a.document.entities[0];
+ assert.equal(e.type,'ARC3D');assert.equal(e.sweepAngle,90);assert.deepEqual(spatialCurvePoint(e,0),{x:110,y:200,z:300});assert.deepEqual(spatialCurvePoint(e,1),{x:100,y:200,z:310});
+ const middle=spatialCurvePoint(e,.5);assert.ok(Math.abs(middle.x-(100+Math.sqrt(50)))<1e-12);assert.ok(Math.abs(middle.z-(300+Math.sqrt(50)))<1e-12);assert.equal(middle.y,200);
+});
+
+test('standard source layer patterns, no-plot flags and entity overrides survive import',()=>{
+ const layers=[...record('LAYER',[2,'0'],[62,7],[6,'CONTINUOUS']),...record('LAYER',[2,'Hidden'],[62,3],[6,'HIDDEN'],[370,50],[290,0]),...record('LAYER',[2,'Custom'],[62,7],[6,'OWNED_CUSTOM'])];
+ const a=load(file([...line([0,0],[10,0],'Hidden'),...record('LINE',[8,'0'],[6,'CENTER'],[10,0],[20,1],[11,10],[21,1])],layers));
+ const l=a.document.layers.find(l=>l.name==='Hidden');assert.equal(l.linetype,'hidden');assert.equal(l.plot,false);assert.equal(l.lineweight,.5);assert.equal(l.color,'#00ff00');assert.equal(a.document.entities[1].linetype,'center');
+ assert.equal(a.document.layers.find(l=>l.name==='Custom').linetype,'continuous');assert.ok(a.report.warnings.some(w=>w.message.includes('custom linetypes')));
+});
 
 test('exact WCS LINE endpoints retain nonzero Z instead of flattening',()=>{
  const d=load(file([...line([0,0,0],[100,0,0]),...line([0,0,10],[100,60,30])])).document;
@@ -46,6 +66,7 @@ test('metadata preserves actual frozen/off/locked source states and rejects miss
  const a=readDWGMetadata(make([{object:'LAYER',name:'0',flag0:1008},{object:'LAYER',name:'Off',flag0:2},{object:'LAYER',name:'Frozen',flag0:1},{object:'LAYER',name:'Locked',flag0:8}]));assert.deepEqual(a.layers.map(l=>[l.name,l.visible,l.locked]),[['0',true,false],['Off',false,false],['Frozen',false,false],['Locked',true,true]]);
  assert.throws(()=>readDWGMetadata(make([{object:'LAYER',name:'0'}])),/flag metadata/);assert.throws(()=>readDWGMetadata(make([{object:'LAYER',name:'0',flag0:0},{object:'LAYER',name:'0',flag0:0}])),/duplicate/);assert.throws(()=>importDXF(file(line([0,0],[1,0])),{dwgMetadata:{layers:[{name:'Missing',visible:true,locked:false}]}}),/does not match/);
 });
+
 test('bounded ordinary block expansion respects source base, rotation, scale and layer inheritance',()=>{
  const blocks=[...record('BLOCK',[2,'OwnedBlock'],[10,10],[20,20]),...line([10,20],[20,20]),...record('ENDBLK')];
  const inserts=record('INSERT',[2,'OwnedBlock'],[8,'Geometry'],[10,100],[20,50],[41,2],[42,2],[43,2],[50,90]);
@@ -80,6 +101,9 @@ test('external references are counted without following their paths; files conta
  const block=[...record('BLOCK',[2,'External'],[70,4],[10,0],[20,0],[1,'C:\\unrelated\\never-open.dwg']),...record('ENDBLK')];
  const d=load(file([...line([0,0],[1,1]),...record('INSERT',[2,'External'],[10,0],[20,0])],[],block));assert.equal(d.document.entities.length,1);assert.equal(d.report.unsupportedByType['INSERT-xref'],1);assert.throws(()=>load(file(record('3DSOLID',[1,'Owned unsupported']))),/no supported/);
 });
+
+
+
 test('source drawing linear and angular unit header fields preserve display choices without changing XYZ',()=>{
  const header=(linear,angular,precision=3)=>[0,'SECTION',2,'HEADER',9,'$INSUNITS',70,1,9,'$LUNITS',70,linear,9,'$LUPREC',70,precision,9,'$AUNITS',70,angular,9,'$AUPREC',70,2,0,'ENDSEC'].join('\n')+'\n';
  for(const [linear,angular,linearFormat,angularFormat]of [[4,0,'architectural','decimal-degrees'],[3,1,'engineering','dms'],[3,3,'engineering','radians']]){

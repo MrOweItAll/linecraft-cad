@@ -111,10 +111,11 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
   const skip=(type,message)=>{unsupported.set(type,(unsupported.get(type)??0)+1);if(message)warn(type,message);};
   const hv=name=>header[name]?.[0]?.[1];
   const ensureLayer=name=>{if(!layers.has(name))layers.set(name,{name,color:'#ffffff',lineweight:.25,visible:true,locked:false});return name;};
+  const linetypeFor=(record,entity=false)=>{const name=first(record,6,entity?'BYLAYER':'CONTINUOUS').trim().toUpperCase();if(entity&&['BYLAYER','BYBLOCK'].includes(name))return undefined;if(['CONTINUOUS','DASHED','HIDDEN','CENTER'].includes(name))return name.toLowerCase();warn('linetype','Unsupported custom linetypes import with continuous display; native pattern definitions are not copied.');return 'continuous';};
   const safeName=(value,fallback='Standard')=>{const name=String(value??fallback).trim();if(!name||name.length>255||/[<>\/:;?*|=,\x00-\x1f]/.test(name)){warn('resource-name','Invalid resource names were replaced.');return fallback;}return name;};
   ensureLayer('0');styles.set('Standard',{name:'Standard',fontFamily:'Arial',defaultHeight:2.5,defaultRotation:0,widthFactor:1});
   for(const record of records.filter(r=>r.section==='TABLES')){
-    if(record.type==='LAYER'){const name=safeName(first(record,2),'0'),flags=num(record,70,0);layers.set(name,{name,color:color(record)??aciColor(num(record,62,7)),lineweight:Math.max(0,num(record,370,25))/100,visible:num(record,62,7)>=0&&!(flags&1),locked:!!(flags&4)});if(first(record,6,'CONTINUOUS').trim().toUpperCase()!=='CONTINUOUS')warn('linetype','Non-continuous linetypes import with continuous display.');}
+    if(record.type==='LAYER'){const name=safeName(first(record,2),'0'),flags=num(record,70,0);layers.set(name,{name,color:color(record)??aciColor(num(record,62,7)),lineweight:Math.max(0,num(record,370,25))/100,visible:num(record,62,7)>=0&&!(flags&1),locked:!!(flags&4),linetype:linetypeFor(record),plot:num(record,290,1)!==0});}
     if(record.type==='STYLE'){const name=safeName(first(record,2)),file=first(record,3,'').toLowerCase().replace(/^.*[\\/]/,'');let fontFamily=file.includes('arial')?'Arial':file.includes('consola')?'Consolas':file.includes('segoe')?'Segoe UI':'Arial';if(!/arial|consola|segoe/.test(file))warn('font','Unsupported source fonts use installed Arial; native font metrics are not retained.');styles.set(name,{name,fontFamily,defaultHeight:num(record,40,0)>0?num(record,40):2.5,defaultRotation:0,widthFactor:num(record,41,1)});if(first(record,5))handleStyles.set(first(record,5).trim(),name);}
   }
   if(dwgMetadata!==null){
@@ -146,7 +147,7 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
     else if(record.type==='ENDBLK')current=null;else current?.records.push(record);
   }
   const publish=entity=>{if(entities.length>=MAX_ENTITIES)throw Error('Imported drawing exceeds 100000 objects.');entities.push({id:`e${entities.length+1}`,...entity});};
-  const styleFor=(record,context)=>{const layer=ensureLayer(safeName(first(record,8,'0'),'0')==='0'&&context.layer?context.layer:safeName(first(record,8,'0'),'0')),ink=color(record,context.color);return{layer,...(ink?{color:ink}:{}),...(num(record,370,-1)>=0?{lineweight:num(record,370)/100}:{})};};
+  const styleFor=(record,context)=>{const layer=ensureLayer(safeName(first(record,8,'0'),'0')==='0'&&context.layer?context.layer:safeName(first(record,8,'0'),'0')),ink=color(record,context.color),linetype=linetypeFor(record,true);return{layer,...(ink?{color:ink}:{}),...(linetype?{linetype}:{}),...(num(record,370,-1)>=0?{lineweight:num(record,370)/100}:{})};};
   const path=(points,closed,common)=>{const p=compact(points,closed);if(p.length<(closed?3:2))throw Error('Collapsed imported path.');if(p.every(v=>v.z===0))publish({...common,type:'PLINE',points:p.map(xy),closed});else publish({...common,type:'POLY3D',points:p,closed});};
   const line=(a,b,common)=>{if(eq(a,b))throw Error('Collapsed imported line.');if(a.z===0&&b.z===0)publish({...common,type:'LINE',start:xy(a),end:xy(b)});else publish({...common,type:'POLY3D',points:[a,b],closed:false});};
   const curve=(center,radius,start,sweep,isCircle,transform,common)=>{
@@ -155,9 +156,12 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
     if(c.z===0&&u.z===0&&v.z===0&&Math.abs(ru-rv)<=1e-10*Math.max(ru,rv)&&orthogonal){
       if(isCircle)publish({...common,type:'CIRCLE',center:xy(c),radius:ru});
       else{const sign=u.x*v.y-u.y*v.x<0?-1:1;publish({...common,type:'ARC',center:xy(c),radius:ru,startAngle:angle(Math.atan2(u.y,u.x))+sign*start,sweepAngle:sign*sweep});}
+    }else if(ru>0&&rv>0&&Number.isFinite(ru)&&Number.isFinite(rv)&&Math.abs(ru-rv)<=1e-10*Math.max(ru,rv)&&orthogonal){
+      const basis={center:c,radius:ru,xAxis:mul(u,1/ru),yAxis:mul(v,1/rv)};
+      publish({...common,type:isCircle?'CIRCLE3D':'ARC3D',...basis,...(isCircle?{}:{startAngle:start,sweepAngle:sweep})});
     }else{
       const count=Math.max(8,Math.ceil(Math.abs(sweep)/5)),points=Array.from({length:isCircle?count:count+1},(_,i)=>transform(add(center,{x:radius*Math.cos(radians(start+sweep*i/count)),y:radius*Math.sin(radians(start+sweep*i/count)),z:0})));
-      path(points,isCircle,common);warn('tessellated-curve','Tilted or nonuniformly scaled circles/arcs are polygonal approximations with at most 5-degree angular steps.');
+      path(points,isCircle,common);warn('tessellated-curve','Nonuniformly scaled circles/arcs are polygonal approximations with at most 5-degree angular steps.');
     }
   };
   const decodeRecords=(list,context={transform:identity,layer:null,color:null},depth=0,ancestry=[])=>{
@@ -283,7 +287,7 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
   const nativeAngularPrecision=Number.isInteger(rawAngularPrecision)&&rawAngularPrecision>=0&&rawAngularPrecision<=8?rawAngularPrecision:4;
   if(angularFormat==='dms'&&nativeAngularPrecision<4)warn('coarse-dms','Source degrees-only or degree/minute precision uses whole-second DMS display; geometric angles are retained.');
   const unitSettings={units,precision,linearFormat,fractionPrecision:linearFormat==='architectural'?precision:4,angularInputUnit:angularCode===3?'radians':'degrees',angularFormat,angularPrecision:angularFormat==='dms'?Math.max(0,nativeAngularPrecision-4):nativeAngularPrecision};
-  const document={format:'Linecraft/1',entities,layers:[...layers.values()],currentLayer,textStyles:[...styles.values()],dimStyles:[...dimStyles.values()],settings:unitSettings,workspace:entities.some(entity=>['MESH','POLY3D'].includes(entity.type))?'3d':'2d'};
+  const document={format:'Linecraft/1',entities,layers:[...layers.values()],currentLayer,textStyles:[...styles.values()],dimStyles:[...dimStyles.values()],settings:unitSettings,workspace:entities.some(entity=>['MESH','POLY3D','CIRCLE3D','ARC3D'].includes(entity.type))?'3d':'2d'};
   const editor=createEditor(),accepted=editor.importJSON(JSON.stringify(document));if(!accepted.ok)throw Error(`Imported geometry did not pass document validation: ${accepted.message}`);
   const text=editor.serialize();if(new TextEncoder().encode(text).length>25*1024*1024)throw Error('Normalized drawing exceeds the 25MiB document limit.');
   const report={sourceFormat:'DXF',sourceName:String(sourceName).slice(0,1024),modelSourceEntities:modelRecords.filter(record=>!['VERTEX','SEQEND'].includes(record.type)).length,importedEntities:editor.state.entities.length,unsupportedByType:Object.fromEntries(unsupported),unsupportedEntities:[...unsupported.values()].reduce((sum,n)=>sum+n,0),warnings:[...warnings.values()],modelSpaceOnly:true,sourceLayerStatesFromDWG:dwgMetadata!==null,sourceAssociationAdopted:false,originalFileWritten:false,scope:'Model-space supported primitives with bounded ordinary block expansion. Unsupported entities and appearance changes are reported; proprietary solids, xrefs, paper layouts and full native glyph/style fidelity are not claimed.'};

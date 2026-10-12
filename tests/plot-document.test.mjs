@@ -4,6 +4,12 @@ import {createEditor} from '../core.mjs';
 import {buildPlotHTML,normalizePlotOptions,PLOT_FONT_CALIBRATION} from '../plot-document.mjs';
 const drawing=(sequence,settings={units:'mm'})=>{const e=createEditor({settings});for(const input of sequence){const r=e.execute(input);assert.equal(r.ok,true,`${input}: ${r.message}`);}return e.serialize();};
 const source=text=>[{title:'Owned drawing',text}];
+
+test('exact arbitrary-plane circle geometry plots projected continuous vectors and stays inside fitted margins',()=>{
+ const e=createEditor({workspace:'3d',settings:{units:'mm'},entities:[{id:'tilted',type:'CIRCLE3D',layer:'0',center:{x:10,y:20,z:30},radius:25,xAxis:{x:1,y:0,z:0},yAxis:{x:0,y:0,z:1}}]}),before=e.serialize(),a=buildPlotHTML(source(before));
+ assert.equal(e.serialize(),before);assert.equal(a.report.clipped,false);assert.ok((a.previewSVG.match(/<path /g)||[]).length>=180);assert.doesNotMatch(a.previewSVG,/NaN|Infinity/);
+ for(const [,x,y]of a.previewSVG.matchAll(/[ML]([\d.e+-]+),([\d.e+-]+)/g)){assert.ok(Number(x)>=10-1e-8&&Number(x)<=287+1e-8);assert.ok(Number(y)>=10-1e-8&&Number(y)<=200+1e-8);}
+});
 test('exact 1:2 millimeter plotting has physical 50mm dimension independent of viewport',()=>{
  const text=drawing(['LINE','0,0','100,0','']);const a=buildPlotHTML(source(text),{options:{scaleMode:'scale',ratio:2}});
  const path=a.previewSVG.match(/d="M([\d.e+-]+),([\d.e+-]+) L([\d.e+-]+),([\d.e+-]+)"/);
@@ -27,7 +33,7 @@ test('label and title escaping prevents executable markup in preview and PDF doc
 });
 test('batch pages retain independent unit scales, with no drawing edits',()=>{
  const a=drawing(['RECTANG','0,0','20,10']),b=drawing(['RECTANG','0,0','2,1'],{units:'in'}),result=buildPlotHTML([{title:'Metric',text:a},{title:'Imperial',text:b}],{options:{scaleMode:'scale',ratio:2}});
- assert.equal(result.report.pages,2);assert.deepEqual(result.report.sheets.map(s=>s.plotScaleMmPerUnit),[.5,12.7]);assert.equal((result.html.match(/<section>/g)||[]).length,2);assert.match(result.html,/plot-area-0/);assert.match(result.html,/plot-area-1/);assert.equal(a,drawing(['RECTANG','0,0','20,10']));
+ assert.equal(result.report.pages,2);assert.deepEqual(result.report.sheets.map(s=>s.plotScaleMmPerUnit),[.5,12.7]);assert.equal((result.html.match(/<section\b/g)||[]).length,2);assert.match(result.html,/plot-area-0/);assert.match(result.html,/plot-area-1/);assert.equal(a,drawing(['RECTANG','0,0','20,10']));
 });
 test('circle and arc stay analytic in 2D output',()=>{
  const a=buildPlotHTML(source(drawing(['CIRCLE','0,0','10','ARC','20,0','30,10','40,0'])));assert.match(a.previewSVG,/<circle /);assert.match(a.previewSVG,/ A[\d.e+-]+,[\d.e+-]+ 0 /);
