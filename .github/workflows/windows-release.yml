@@ -54,8 +54,8 @@ jobs:
           node node_modules/electron/install.js
           if ($LASTEXITCODE -ne 0) { throw 'The pinned Electron vendor installer failed.' }
           if (!(Test-Path -LiteralPath node_modules/electron/dist/electron.exe)) { throw 'The pinned Electron executable was not installed.' }
-          $electronVersion = & ./node_modules/electron/dist/electron.exe --version
-          if ($LASTEXITCODE -ne 0 -or $electronVersion.Trim() -ne 'v44.7.0') { throw 'The Electron executable differs from the frozen runtime version.' }
+          node -e "const {spawnSync}=require('node:child_process'); const {resolve}=require('node:path'); const result=spawnSync(resolve('node_modules/electron/dist/electron.exe'),['--version'],{encoding:'utf8',timeout:15000,windowsHide:true}); if(result.error || result.status!==0 || String(result.stdout).trim()!=='v44.7.0') throw new Error('Pinned Electron executable version probe failed: '+JSON.stringify({status:result.status,stdout:result.stdout,stderr:result.stderr,error:result.error?.message})); console.log(String(result.stdout).trim());"
+          if ($LASTEXITCODE -ne 0) { throw 'The Electron executable differs from the frozen runtime version.' }
       - name: Test source, test unpacked application, compile NSIS
         run: npm run build
       - name: Create checksum and release notes
