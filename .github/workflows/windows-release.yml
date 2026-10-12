@@ -60,6 +60,30 @@ jobs:
           if (!(Test-Path -LiteralPath node_modules/electron/dist/electron.exe)) { throw 'The pinned Electron executable was not installed.' }
           node -e "const {spawnSync}=require('node:child_process'); const {resolve}=require('node:path'); const result=spawnSync(resolve('node_modules/electron/dist/electron.exe'),['--version'],{encoding:'utf8',timeout:15000,windowsHide:true}); if(result.error || result.status!==0 || String(result.stdout).trim()!=='v44.7.0') throw new Error('Pinned Electron executable version probe failed: '+JSON.stringify({status:result.status,stdout:result.stdout,stderr:result.stderr,error:result.error?.message})); console.log(String(result.stdout).trim());"
           if ($LASTEXITCODE -ne 0) { throw 'The Electron executable differs from the frozen runtime version.' }
+      - name: Configure deterministic hidden layout test window
+        run: |
+          @'
+          'use strict';
+          const fs=require('node:fs'),path=require('node:path'),{createHash}=require('node:crypto');
+          const root=path.resolve(process.argv[2]||process.cwd()),filename=path.join(root,'tests/layouts-v16.cjs'),hash=text=>createHash('sha256').update(text).digest('hex');
+          const source=fs.readFileSync(filename,'utf8'),expected='3bac2b2eebc3436142526e62385d8bd99d42c374df88698d52722c1f9e123e12';
+          if(hash(source)!==expected)throw Error('The layout driver differs from the immutable v1.6.0 fixture.');
+          const windowAnchor='page=await app.firstWindow();await visibility.recordVisibility(app,report);';
+          const windowInsert="await app.evaluate(({BrowserWindow})=>{const window=BrowserWindow.getAllWindows()[0];window.setContentSize(1280,820);});await page.waitForFunction(()=>innerWidth===1280&&innerHeight===820);report.testWindowConfiguration={width:1280,height:820,scope:'CI-only deterministic offscreen fixture; original application and test assertions unchanged.'};";
+          const pointerAnchor='return{x:r.left+p.x,y:r.top+p.y};},{point,paper});';
+          const pointerInsert="const target=document.elementFromPoint(r.left+p.x,r.top+p.y);if(target!==window.linecraft.canvas)throw Error('Projected test pointer is obscured by '+(target?.tagName||'none')+'#'+(target?.id||''));";
+          if(source.split(windowAnchor).length!==2||source.split(pointerAnchor).length!==2)throw Error('Expected exact test anchors were not found once.');
+          const configured=source.replace(windowAnchor,'page=await app.firstWindow();'+windowInsert+'await visibility.recordVisibility(app,report);').replace(pointerAnchor,pointerInsert+pointerAnchor);
+          if(configured.replace(windowInsert,'').replace(pointerInsert,'')!==source)throw Error('An original test assertion or flow changed.');
+          const manifest=JSON.parse(fs.readFileSync(path.join(root,'PUBLIC-SOURCE.json'),'utf8')),runtime=manifest.runtimeFiles.map(file=>({file:file.file,sha256:hash(fs.readFileSync(path.join(root,file.file))),expectedSHA256:file.sha256}));
+          if(runtime.length!==18||runtime.some(file=>file.sha256!==file.expectedSHA256))throw Error('Canonical runtime bytes changed before the public gate.');
+          fs.writeFileSync(filename,configured);
+          fs.mkdirSync(path.join(root,'work'),{recursive:true});
+          const report={scope:'CI-only hidden/offscreen window size and canvas hit-target assertions; all original layout assertions/flows retained, immutable tag and runtime unchanged.',width:1280,height:820,originalDriverSHA256:expected,configuredDriverSHA256:hash(configured),originalAssertionsAndFlowsRetained:true,canonicalRuntimeIdentitiesPassed:18,runtime,completedAt:new Date().toISOString()};
+          fs.writeFileSync(path.join(root,'work/public-ci-layout-window-configuration-results.json'),JSON.stringify(report,null,2)+'\n');
+          console.log(JSON.stringify({originalDriverSHA256:expected,configuredDriverSHA256:report.configuredDriverSHA256,width:1280,height:820,canonicalRuntimeIdentitiesPassed:18}));
+          '@ | node
+          if ($LASTEXITCODE -ne 0) { throw 'The deterministic hidden layout fixture could not be configured.' }
       - name: Test source, test unpacked application, compile NSIS
         run: npm run build
       - name: Create checksum and release notes
