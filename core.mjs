@@ -1,9 +1,9 @@
 /* Linecraft geometry and command engine. Original implementation; no external dependencies. */
 import {validateEllipse,ellipsePoint,ellipseBoundsPoints,validateSpline,makeClampedKnots,splinePoint,splineBezierSegments,splineBoundsPoints,sampleCurve,boundaryPolygon,boundaryContains,hatchGeometry,filletLines,chamferLines} from './advanced-geometry.mjs';
 import {parseLength,parseAngle,formatLength,formatAngle,formatArea,UNIT_PRESETS,UNIT_SETTINGS_DEFAULTS,normalizeUnitSettings,dxfUnitFormat} from './units.mjs';
-import {PAPER_SIZES,LINETYPES,modelUnitMillimeters,normalizePaper,normalizeLayouts,normalizePaperViewport,normalizePaperView,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible} from './paper-space.mjs';
+import {PAPER_SIZES,LINETYPES,modelUnitMillimeters,normalizePaper,normalizeLayouts,normalizePaperViewport,normalizePaperView,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible,viewportBoundaryPoints,viewportFrameFromPoints,normalizeViewportBoundary,viewportAsObject,compensateViewportResize} from './paper-space.mjs';
 import {presetUCS,normalizeUCS,ucsFromThreePoints,constructionPlane,planeToWorld,worldToPlane,intersectPlaneRay,planeCamera,spatialCurvePoint,spatialAngleOnArc,spatialCurveBounds,validateSpatialCurve,sampleSpatialCurve,spatialCurveOCS} from './drawing-plane.mjs';
-export {PAPER_SIZES,LINETYPES,modelUnitMillimeters,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible,presetUCS,normalizeUCS,ucsFromThreePoints,constructionPlane,planeToWorld,worldToPlane,intersectPlaneRay,planeCamera};
+export {PAPER_SIZES,LINETYPES,modelUnitMillimeters,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible,viewportBoundaryPoints,viewportFrameFromPoints,normalizeViewportBoundary,viewportAsObject,compensateViewportResize,presetUCS,normalizeUCS,ucsFromThreePoints,constructionPlane,planeToWorld,worldToPlane,intersectPlaneRay,planeCamera};
 export {spatialCurvePoint,spatialCurveBounds,validateSpatialCurve,sampleSpatialCurve};
 export {parseLength,parseAngle,formatLength,formatAngle,formatArea,UNIT_PRESETS,dxfUnitFormat};
 export {ellipsePoint,splinePoint,splineBezierSegments,sampleCurve,hatchGeometry,filletLines,chamferLines};
@@ -382,6 +382,7 @@ export function pan(viewport, dx, dy) {
 }
 
 export function entityPoints(entity,document={}) {
+  if(entity.type==='VIEWPORT')return viewportBoundaryPoints(entity);
   if(SPATIAL_CURVES.has(entity.type))return spatialCurveBounds(entity);
   if(entity.type==='ELLIPSE')return ellipseBoundsPoints(entity);
   if(entity.type==='SPLINE')return splineBoundsPoints(entity);
@@ -403,6 +404,7 @@ export function entityPoints(entity,document={}) {
 }
 
 export function entityGripPoints(entity,document={}) {
+  if(entity.type==='VIEWPORT'){const points=viewportBoundaryPoints(entity);return[...points,...points.map((a,i)=>{const b=points[(i+1)%points.length];return{x:midpoint(a.x,b.x),y:midpoint(a.y,b.y)};})];}
   if(entity.type==='CIRCLE3D')return[entity.center,...[0,.25,.5,.75].map(t=>spatialCurvePoint(entity,t))];
   if(entity.type==='ARC3D')return[spatialCurvePoint(entity,0),spatialCurvePoint(entity,.5),spatialCurvePoint(entity,1),entity.center];
   if(entity.type==='ELLIPSE')return[entity.center,ellipsePoint(entity,0),ellipsePoint(entity,.25)];
@@ -462,7 +464,8 @@ function validatePolyline(points, closed) {
 
 function mapEntity(entity, mapping, radiusFactor = 1,rawDocument={}) {
   const transformed = clone(entity);
-  if(SPATIAL_CURVES.has(entity.type)){transformed.center=point3(mapping(entity.center));transformed.radius*=radiusFactor;validateSpatialCurve(transformed);}
+  if(entity.type==='VIEWPORT'){const points=normalizeViewportBoundary(viewportBoundaryPoints(entity).map(p=>point(mapping(p))));transformed.frame=viewportFrameFromPoints(points);transformed.points=points;const f=transformed.frame,corners=viewportBoundaryPoints({frame:f});if(entity.boundary||points.some((p,i)=>p.x!==corners[i]?.x||p.y!==corners[i]?.y))transformed.boundary=points;else delete transformed.boundary;}
+  else if(SPATIAL_CURVES.has(entity.type)){transformed.center=point3(mapping(entity.center));transformed.radius*=radiusFactor;validateSpatialCurve(transformed);}
   else if(entity.type==='ELLIPSE'){
     transformed.center=point(mapping(entity.center));transformed.major=point({x:entity.major.x*radiusFactor,y:entity.major.y*radiusFactor});validateEllipse(transformed);
   }else if(entity.type==='SPLINE'){
@@ -519,7 +522,7 @@ export function rotateEntity(entity, rawBase, degrees,document={}) {
 export function scaleEntity(entity, rawBase, factor,document={}) {
   const is3D=TYPES3D.has(entity.type),base = is3D?point3(rawBase):point(rawBase);
   if (!finite(factor) || factor <= 0) throw new Error('Scale factor must be positive and finite.');
-  return mapEntity(entity, p => ({ x: base.x + (p.x - base.x) * factor, y: base.y + (p.y - base.y) * factor,...(is3D?{z:base.z+(p.z-base.z)*factor}:{}) }), factor,document);
+  const transformed=mapEntity(entity,p=>({x:base.x+(p.x-base.x)*factor,y:base.y+(p.y-base.y)*factor,...(is3D?{z:base.z+(p.z-base.z)*factor}:{})}),factor,document);return entity.type==='VIEWPORT'?compensateViewportResize(entity,transformed,document.settings):transformed;
 }
 
 export function mirrorEntity(entity, rawFirst, rawSecond,document={}) {
@@ -591,7 +594,12 @@ export function offsetEntity(entity, distance, rawSide) {
 /** Preview and commit share the same constrained grip geometry. */
 export function previewGrip(entity, index, rawPoint,document={}) {
   const p = TYPES3D.has(entity.type)?point3(rawPoint):point(rawPoint), edited = clone(entity);
-  if(entity.type==='ELLIPSE'){
+  if(entity.type==='VIEWPORT'){
+    const points=viewportBoundaryPoints(entity),n=points.length;if(!Number.isInteger(index)||index<0||index>=2*n)throw Error('Viewport grip index is invalid.');
+    if(entity.boundary){if(index<n)points[index]=p;else{const i=index-n,j=(i+1)%n,a=points[i],b=points[j],dx=p.x-midpoint(a.x,b.x),dy=p.y-midpoint(a.y,b.y);points[i]={x:a.x+dx,y:a.y+dy};points[j]={x:b.x+dx,y:b.y+dy};}edited.boundary=normalizeViewportBoundary(points);edited.frame=viewportFrameFromPoints(edited.boundary);}
+    else{const f=entity.frame;let left=f.x,right=f.x+f.width,bottom=f.y,top=f.y+f.height;if(index<n){const opposite=points[(index+2)%4];left=Math.min(p.x,opposite.x);right=Math.max(p.x,opposite.x);bottom=Math.min(p.y,opposite.y);top=Math.max(p.y,opposite.y);}else{if(index===4)bottom=p.y;if(index===5)right=p.x;if(index===6)top=p.y;if(index===7)left=p.x;if(right<=left||top<=bottom)throw Error('Viewport edge grip would collapse or cross its opposite edge.');}edited.frame=viewportFrameFromPoints([{x:left,y:bottom},{x:right,y:top}]);}
+    edited.points=viewportBoundaryPoints(edited);
+  }else if(entity.type==='ELLIPSE'){
     if(index===0)edited.center=p;else if(index===1)edited.major=point({x:p.x-entity.center.x,y:p.y-entity.center.y});else if(index===2){const length=Math.hypot(entity.major.x,entity.major.y),minor=Math.abs((p.x-entity.center.x)*(-entity.major.y/length)+(p.y-entity.center.y)*(entity.major.x/length));edited.ratio=minor/length;}else throw new Error('ELLIPSE grip index is invalid.');validateEllipse(edited);
   }else if(entity.type==='SPLINE'){
     if(!Number.isInteger(index)||index<0||index>=edited.controlPoints.length)throw new Error('SPLINE control grip index is invalid.');edited.controlPoints[index]=p;validateSpline(edited);splineBoundsPoints(edited).forEach(point);
@@ -649,10 +657,11 @@ export function previewGrip(entity, index, rawPoint,document={}) {
     edited.points[previous] = point({ x: opposite.x + alongU * ux, y: opposite.y + alongU * uy });
     validateRectangle(edited.points);
   } else throw new Error('Unsupported entity type.');
-  return edited;
+  return entity.type==='VIEWPORT'?compensateViewportResize(entity,edited,document.settings):edited;
 }
 
 function segments(entity,document={}) {
+  if(entity.type==='VIEWPORT'){const points=viewportBoundaryPoints(entity);return points.map((a,i)=>[a,points[(i+1)%points.length]]);}
   if(['ELLIPSE','SPLINE'].includes(entity.type)){const points=sampleCurve(entity,128);return points.slice(0,-1).map((p,i)=>[p,points[i+1]]);}
   if(entity.type==='HATCH')return hatchGeometry(entity).segments;
   if(entity.type==='INSERT')return visibleInsertEntities(entity,document).flatMap(child=>segments(child,document));
@@ -676,6 +685,7 @@ export function expandedEntities(entities,document={}){return entities.flatMap(e
 export function visibleInsertEntities(entity,document={}){return expandedInsertEntities(entity,document).filter(child=>isEntityVisible({...child,...(entity.layoutId?{layoutId:entity.layoutId}:{})},document));}
 export function entityDisplayPrimitives(entity,document={}){
   const empty={segments:[],paths:[],fills:[],texts:[]};
+  if(entity.type==='VIEWPORT')return{...empty,paths:[{points:viewportBoundaryPoints(entity),closed:true}]};
   if(entity.type==='INSERT'){const all=visibleInsertEntities(entity,document).map(child=>entityDisplayPrimitives(child,document));return Object.fromEntries(Object.keys(empty).map(key=>[key,all.flatMap(item=>item[key])]));}
   if(entity.type==='HATCH')return hatchGeometry(entity);
   if(['ELLIPSE','SPLINE'].includes(entity.type))return{...empty,paths:[{points:sampleCurve(entity,128),closed:entity.type==='ELLIPSE'}],...(entity.type==='SPLINE'?{beziers:splineBezierSegments(entity)}:{})};
@@ -1160,12 +1170,14 @@ function writeDXF(document) {
     if(entity.type==='DIMENSION')assertExportableSingleLineText(formatDimension(entity,document).label,'dimension label');
   }
   const rows = [], pair = (code, value) => rows.push(String(code), String(value));
+  const exportLayers=document.layers.map(layer=>({...layer}));let clippingNoPlotLayer=null;
+  if(document.layouts.some(layout=>layout.viewports.some(view=>view.boundary&&!view.plotBorder&&document.layers.find(layer=>layer.name===view.layer)?.plot!==false))){let n=1;do{clippingNoPlotLayer=`LinecraftViewportClipNoPlot${n++}`;}while(exportLayers.some(layer=>layer.name===clippingNoPlotLayer));exportLayers.push({...document.layers[0],name:clippingNoPlotLayer,visible:true,modelVisible:true,paperVisible:true,locked:false,plot:false});}
   let next = 1;
   const allocate = () => (next++).toString(16).toUpperCase();
   const tableNames = ['VPORT', 'LTYPE', 'LAYER', 'STYLE', 'VIEW', 'UCS', 'APPID', 'DIMSTYLE', 'BLOCK_RECORD'];
   const tableIds = Object.fromEntries(tableNames.map(name => [name, allocate()]));
-  const activeView = allocate(), lineTypes = ['BYBLOCK', 'BYLAYER', 'CONTINUOUS',...new Set([...document.layers.map(layer=>layer.linetype),...document.entities.map(entity=>entity.linetype)].filter(type=>type&&type!=='continuous').map(type=>type.toUpperCase()))].map(name => ({ name, id: allocate() }));
-  const layerIds = new Map(document.layers.map(layer => [layer.name, allocate()]));
+  const activeView = allocate(), lineTypes = ['BYBLOCK', 'BYLAYER', 'CONTINUOUS',...new Set([...document.layers.map(layer=>layer.linetype),...document.entities.map(entity=>entity.linetype),...document.layouts.flatMap(layout=>layout.viewports.map(view=>view.linetype))].filter(type=>type&&type!=='continuous').map(type=>type.toUpperCase()))].map(name => ({ name, id: allocate() }));
+  const layerIds = new Map(exportLayers.map(layer => [layer.name, allocate()]));
   const textStyleIds=new Map(document.textStyles.map(style=>[style.name,allocate()]));
   const appId=allocate(),exportDimStyles=document.dimStyles.map(style=>({...style})),dimensionPictures=[];
   const allDimensionSources=[...document.entities.map((entity,index)=>({entity,key:`model:${index}`,index})),...document.blocks.flatMap(block=>block.entities.map((entity,index)=>({entity,key:`block:${block.name}:${index}`,index:index+document.entities.length})))];
@@ -1190,7 +1202,7 @@ function writeDXF(document) {
   const rootDictionary = allocate(), groupDictionary = allocate(), layoutDictionary = allocate(), plotDictionary = allocate();
   const plotStyleDictionary = allocate(), normalPlotStyle = allocate();
   const modelLayout = allocate(), paperLayout = allocate();
-  const sheets=document.layouts.length?document.layouts.map((layout,index)=>({...layout,record:index===0?paperRecord:allocate(),begin:index===0?paperBegin:allocate(),end:index===0?paperEnd:allocate(),layoutHandle:index===0?paperLayout:allocate(),blockName:index===0?'*Paper_Space':`*Paper_Space${index-1}`,overallViewport:allocate(),viewportHandles:layout.viewports.map(()=>allocate())})):[{id:null,name:'Layout1',paper:{widthMm:420,heightMm:297},viewports:[],record:paperRecord,begin:paperBegin,end:paperEnd,layoutHandle:paperLayout,blockName:'*Paper_Space'}];
+  const sheets=document.layouts.length?document.layouts.map((layout,index)=>({...layout,record:index===0?paperRecord:allocate(),begin:index===0?paperBegin:allocate(),end:index===0?paperEnd:allocate(),layoutHandle:index===0?paperLayout:allocate(),blockName:index===0?'*Paper_Space':`*Paper_Space${index-1}`,overallViewport:allocate(),viewportHandles:layout.viewports.map(()=>allocate()),viewportClips:layout.viewports.map(view=>view.boundary?allocate():null)})):[{id:null,name:'Layout1',paper:{widthMm:420,heightMm:297},viewports:[],record:paperRecord,begin:paperBegin,end:paperEnd,layoutHandle:paperLayout,blockName:'*Paper_Space'}];
   const entityIds = document.entities.map(() => allocate());
   const threeDHandles=document.entities.map((entity,index)=>entity.type==='MESH'?entity.faces.map((_,faceIndex)=>faceIndex===0?entityIds[index]:allocate()):entity.type==='POLY3D'?{vertices:entity.points.map(()=>allocate()),end:allocate()}:null);
   const box = bounds3D(document.entities.filter(entity=>!entity.layoutId),document) ?? { minX: 0, minY: 0,minZ:0, maxX: 1, maxY: 1,maxZ:0 };
@@ -1250,8 +1262,8 @@ function writeDXF(document) {
     symbol('LTYPE', type.id, 'LTYPE', 'AcDbLinetypeTableRecord', type.name); pair(70, 0); pair(3, type.name === 'CONTINUOUS' ? 'Solid line' : ''); pair(72, 65); pair(73, pattern.length); pair(40, pattern.reduce((sum,value)=>sum+Math.abs(value),0));for(const length of pattern){pair(49,length);pair(74,0);}
   }
   pair(0, 'ENDTAB');
-  beginTable('LAYER', document.layers.length);
-  for (const layer of document.layers) {
+  beginTable('LAYER', exportLayers.length);
+  for (const layer of exportLayers) {
     symbol('LAYER', layerIds.get(layer.name), 'LAYER', 'AcDbLayerTableRecord', layer.name); pair(70, layer.locked ? 4 : 0);
     pair(62, layer.visible ? 7 : -7); pair(6, (layer.linetype??'continuous').toUpperCase()); pair(420, Number.parseInt(layer.color.slice(1), 16)); pair(290, layer.plot===false?0:1); pair(370, lineweight(layer.lineweight)); pair(390, normalPlotStyle); pair(347, '0');
   }
@@ -1337,12 +1349,12 @@ function writeDXF(document) {
     pair(0,'ENDBLK');pair(5,block.end);pair(330,block.record);pair(100,'AcDbEntity');pair(8,'0');pair(100,'AcDbBlockEnd');
   }
   endSection();beginSection('ENTITIES');document.entities.forEach((entity,index)=>{if(!entity.layoutId||entity.layoutId===sheets[0].id)writeEntity(entity,index,entity.layoutId?sheets[0].record:modelRecord);});
-  function viewportRecord(sheet,view,handle,nativeId){
-    entityHeader('VIEWPORT',handle,{layer:view.layer??'0'},sheet.record);pair(100,'AcDbViewport');point3(10,{x:view.frame.x+view.frame.width/2,y:view.frame.y+view.frame.height/2,z:0});pair(40,view.frame.width);pair(41,view.frame.height);pair(68,nativeId);pair(69,nativeId);pair(12,nativeId===1?sheet.paper.widthMm/2:0);pair(22,nativeId===1?sheet.paper.heightMm/2:0);pair(13,0);pair(23,0);pair(14,10);pair(24,10);pair(15,10);pair(25,10);
+  function viewportRecord(sheet,view,handle,nativeId,clipHandle=null){
+    entityHeader('VIEWPORT',handle,view,sheet.record);pair(100,'AcDbViewport');point3(10,{x:view.frame.x+view.frame.width/2,y:view.frame.y+view.frame.height/2,z:0});pair(40,view.frame.width);pair(41,view.frame.height);pair(68,nativeId);pair(69,nativeId);pair(12,nativeId===1?sheet.paper.widthMm/2:0);pair(22,nativeId===1?sheet.paper.heightMm/2:0);pair(13,0);pair(23,0);pair(14,10);pair(24,10);pair(15,10);pair(25,10);
     const camera=view.workspace==='3d'?view.camera3d:{yaw:-90,pitch:90,roll:0},rad=Math.PI/180,normal={x:Math.cos(camera.yaw*rad)*Math.cos(camera.pitch*rad),y:Math.sin(camera.yaw*rad)*Math.cos(camera.pitch*rad),z:Math.sin(camera.pitch*rad)};
-    point3(16,normal);point3(17,view.modelCenter);pair(42,50);pair(43,0);pair(44,0);pair(45,nativeId===1?sheet.paper.heightMm:view.frame.height*view.scaleDenominator/modelUnitMillimeters(document.settings));pair(50,0);pair(51,camera.roll);pair(72,100);for(const name of new Set([...view.frozenLayers,...document.layers.filter(layer=>layer.paperVisible===false).map(layer=>layer.name)]))pair(331,layerIds.get(name));pair(90,32768+(view.locked?16384:0));pair(281,view.workspace==='3d'?(view.camera3d.renderMode==='shaded'?3:1):0);pair(71,0);pair(74,0);point3(110,document.ucs.origin);point3(111,document.ucs.xAxis);point3(112,document.ucs.yAxis);pair(79,0);pair(146,document.settings.constructionElevation);
+    point3(16,normal);point3(17,view.modelCenter);pair(42,50);pair(43,0);pair(44,0);pair(45,nativeId===1?sheet.paper.heightMm:view.frame.height*view.scaleDenominator/modelUnitMillimeters(document.settings));pair(50,0);pair(51,camera.roll);pair(72,100);for(const name of new Set([...view.frozenLayers,...document.layers.filter(layer=>layer.paperVisible===false).map(layer=>layer.name)]))pair(331,layerIds.get(name));pair(90,32768+(view.locked?16384:0)+(clipHandle?65536:0));if(clipHandle)pair(340,clipHandle);pair(281,view.workspace==='3d'?(view.camera3d.renderMode==='shaded'?3:1):0);pair(71,0);pair(74,0);point3(110,document.ucs.origin);point3(111,document.ucs.xAxis);point3(112,document.ucs.yAxis);pair(79,0);pair(146,document.settings.constructionElevation);
   }
-  function sheetViewports(sheet){const overall={frame:{x:0,y:0,width:sheet.paper.widthMm,height:sheet.paper.heightMm},modelCenter:{x:0,y:0,z:0},scaleDenominator:1,locked:false,frozenLayers:[],workspace:'2d',layer:'0'};viewportRecord(sheet,overall,sheet.overallViewport,1);sheet.viewports.forEach((view,index)=>viewportRecord(sheet,view,sheet.viewportHandles[index],index+2));}
+  function sheetViewports(sheet){const overall={frame:{x:0,y:0,width:sheet.paper.widthMm,height:sheet.paper.heightMm},modelCenter:{x:0,y:0,z:0},scaleDenominator:1,locked:false,frozenLayers:[],workspace:'2d',layer:'0'};viewportRecord(sheet,overall,sheet.overallViewport,1);sheet.viewports.forEach((view,index)=>{const clip=sheet.viewportClips[index];if(clip){const sourceLayer=document.layers.find(layer=>layer.name===view.layer),layer=!view.plotBorder&&sourceLayer?.plot!==false?clippingNoPlotLayer:view.layer,attributes=layer===clippingNoPlotLayer?{color:view.color??sourceLayer.color,lineweight:view.lineweight??sourceLayer.lineweight,linetype:view.linetype??sourceLayer.linetype}:{...(view.color?{color:view.color}:{}),...(view.lineweight!==undefined?{lineweight:view.lineweight}:{}),...(view.linetype?{linetype:view.linetype}:{})};writeEntity({type:'PLINE',layer,points:view.boundary,closed:true,...attributes},-1,sheet.record,'viewport-clip',clip,null);}viewportRecord(sheet,view,sheet.viewportHandles[index],index+2,clip);});}
   if(sheets[0].id)sheetViewports(sheets[0]);
   endSection(); beginSection('OBJECTS');
   const dictionary = (id, owner, entries = []) => {
@@ -1376,6 +1388,7 @@ export function createEditor(initialState = {}) {
   applyActiveView();
   let nextId = 1, transactionBefore = null, transactionIds = [], transformSources = [], copyBatches = [], editingSteps = [], clipboard = null, pendingCut = null;
   const allocatedIds=new Set(document.entities.map(entity=>entity.id));
+  const allocatedViewportIds=new Set(document.layouts.flatMap(layout=>layout.viewports.map(view=>view.id))),objectOrder=new Map();let nextObjectOrder=0;
   const entityScopes=new Map();
   const stampScopes=()=>{for(const entity of state.entities)if(entityScopes.has(entity.id)){const layoutId=entityScopes.get(entity.id);if(layoutId)entity.layoutId=layoutId;else delete entity.layoutId;entityScopes.delete(entity.id);}};
   const undoStack = [], redoStack = [];
@@ -1385,7 +1398,11 @@ export function createEditor(initialState = {}) {
   const activeOwned=entity=>state.activeSpace==='paper'?entity.layoutId===state.activeLayoutId:!entity.layoutId;
   const visible=entity=>activeOwned(entity)&&isEntityVisible(entity,state,activeContext());
   const editable = entity => { const layer = layerOf(entity); return layer && visible(entity) && !layer.locked; };
-  const validateSelection = () => { state.selectionIds = state.selectionIds.filter(id => state.entities.some(entity => entity.id === id && editable(entity))); };
+  const viewportProxy=(view,layoutId)=>viewportAsObject(view,layoutId,{entityIds:allocatedIds,settings:state.settings});
+  const allObjects=()=>{stampScopes();const objects=[...state.entities,...state.layouts.flatMap(layout=>layout.viewports.map(view=>viewportProxy(view,layout.id)))];for(const object of objects)if(!objectOrder.has(object.id))objectOrder.set(object.id,nextObjectOrder++);return objects.sort((a,b)=>objectOrder.get(a.id)-objectOrder.get(b.id));};
+  const objectById=value=>{const objects=allObjects();return objects.find(object=>object.id===value)??objects.find(object=>object.type==='VIEWPORT'&&object.viewportId===value&&activeOwned(object));};
+  const validateSelection = () => {const objects=new Map(allObjects().map(object=>[object.id,object]));state.selectionIds=state.selectionIds.filter(id=>objects.has(id)&&editable(objects.get(id)));};
+  allObjects();
   const result = (ok, message, changed = false) => {
     stampScopes();
     state.message = message;
@@ -1393,7 +1410,7 @@ export function createEditor(initialState = {}) {
     return { ok, message, changed };
   };
   const reconcileSpaces=()=>{const priorLayoutId=state.activeLayoutId;if(state.activeLayoutId&&!state.layouts.some(layout=>layout.id===state.activeLayoutId)){state.activeLayoutId=null;state.activeViewportId=null;state.activeSpace='model';}if(state.activeViewportId&&!state.layouts.find(layout=>layout.id===state.activeLayoutId)?.viewports.some(view=>view.id===state.activeViewportId)){state.activeViewportId=null;state.activeSpace=state.activeLayoutId?'paper':'model';}if(state.activeLayoutId||priorLayoutId)applyActiveView();};
-  const restore = data => { Object.assign(state, clone(data));state.entities.forEach(entity=>allocatedIds.add(entity.id));reconcileSpaces();validateSelection(); };
+  const restore = data => { Object.assign(state, clone(data));state.entities.forEach(entity=>allocatedIds.add(entity.id));state.layouts.forEach(layout=>layout.viewports.forEach(view=>allocatedViewportIds.add(view.id)));reconcileSpaces();validateSelection(); };
   const record = before => {
     const after = snapshot();
     const beforeJSON=JSON.stringify(before),afterJSON=JSON.stringify(after);if(beforeJSON===afterJSON)return false;
@@ -1411,12 +1428,22 @@ export function createEditor(initialState = {}) {
   };
   const commandAPI=callback=>{const command=state.command;state.command=null;let response;try{response=callback();}finally{state.command=command;}if(response.ok){transactionBefore=null;idle();}return response;};
   const id = () => { let value; do { value = `e${nextId++}`; } while (allocatedIds.has(value));allocatedIds.add(value);entityScopes.set(value,state.activeSpace==='paper'?state.activeLayoutId:null);return value; };
+  const nextViewportId=(reserved=allocatedViewportIds)=>{let n=1;while(reserved.has(`vp${n}`))n++;return`vp${n}`;};
+  const planObjects=(objects,replaced=[],copyObjects=false)=>{
+    const frames=objects.filter(object=>object.type==='VIEWPORT'),geometry=objects.filter(object=>object.type!=='VIEWPORT'),removed=new Set(replaced),layouts=clone(state.layouts),reserved=new Set(allocatedViewportIds),created=[];
+    for(const object of frames){if(state.activeSpace!=='paper'||object.layoutId!==state.activeLayoutId)throw Error('Viewport frames are edited in their paper layout.');const layout=layouts.find(layout=>layout.id===object.layoutId);if(!layout)throw Error('Viewport layout does not exist.');const viewportId=copyObjects?nextViewportId(reserved):object.viewportId;if(copyObjects){reserved.add(viewportId);created.push(viewportId);}const{type,id:selectionId,viewportId:discard,points,closed,layoutId,...definition}=object,newView={...definition,id:viewportId};if(copyObjects)layout.viewports.push(newView);else{const index=layout.viewports.findIndex(view=>view.id===viewportId);if(index<0||!removed.has(object.id))throw Error('Viewport replacement source is unavailable.');layout.viewports[index]=newView;}}
+    const geometryIds=new Set(state.entities.map(entity=>entity.id)),normalizedLayouts=normalizeLayouts(layouts,state.layers,normalizeCamera3D);check3DResources(geometry,replaced.filter(value=>geometryIds.has(value)));
+    return{geometry,layouts:normalizedLayouts,created};
+  };
+  const commitObjects=(objects,replaced=[],copyObjects=false)=>{const proposal=planObjects(objects,replaced,copyObjects),geometry=proposal.geometry.map(entity=>{const changed=clone(entity);if(copyObjects)changed.id=id();return changed;}),byId=new Map(geometry.map(entity=>[entity.id,entity]));state.entities=copyObjects?[...state.entities,...geometry]:state.entities.map(entity=>byId.get(entity.id)??entity);state.layouts=proposal.layouts;proposal.created.forEach(value=>allocatedViewportIds.add(value));const createdObjects=allObjects().filter(object=>byId.has(object.id)||object.type==='VIEWPORT'&&proposal.created.includes(object.viewportId));reconcileSpaces();return copyObjects?createdObjects.map(object=>object.id):objects.map(object=>object.id);};
+  const removeObjects=ids=>{const removed=new Set(ids),retainedFrames=new Map(state.layouts.map(layout=>[layout.id,layout.viewports.filter(view=>!removed.has(viewportProxy(view,layout.id).id))]));state.entities=state.entities.filter(entity=>!removed.has(entity.id));for(const layout of state.layouts)layout.viewports=retainedFrames.get(layout.id);reconcileSpaces();};
   const acceptTransformSelection = () => {
     validateSelection();
     if (!state.selectionIds.length) return result(false, 'No objects selected. Select objects and press Enter.');
     state.commandSelectionIds = [...state.selectionIds];
     const selected = new Set(state.commandSelectionIds);
-    transformSources = clone(state.entities.filter(entity => selected.has(entity.id)));
+    transformSources = clone(allObjects().filter(entity => selected.has(entity.id)));
+    if(transformSources.some(object=>object.type==='VIEWPORT')&&!['MOVE','COPY','ERASE','SCALE','ROTATE','MIRROR','ARRAYRECT'].includes(state.command))throw Error('Viewport frames support MOVE, COPY, ERASE, SCALE, ROTATE, MIRROR, ARRAYRECT and grips; this operation is unsupported for the whole selection.');
     state.commandData.threeD=transformSources.some(entity=>TYPES3D.has(entity.type));
     if(state.command==='ARRAYRECT'){state.commandPhase='rows';state.commandData.targetKind='none';state.prompt='ARRAYRECT Enter row count (1..100):';return result(true,`${transformSources.length} source objects accepted.`);}
     if(state.command==='PEDIT'){
@@ -1443,7 +1470,7 @@ export function createEditor(initialState = {}) {
       state.commandPhase='text';state.commandData.targetKind='none';state.commandData.text=transformSources[0].text;state.prompt='TEXTEDIT Enter replacement text:';return result(true,'Text object accepted.');
     }
     if (state.command === 'ERASE') {
-      state.entities = state.entities.filter(entity => !selected.has(entity.id)); state.selectionIds = [];
+      removeObjects(selected);state.selectionIds = [];
       return finish(`${transformSources.length} objects erased.`);
     }
     if(state.command==='JOIN') {
@@ -1483,7 +1510,8 @@ export function createEditor(initialState = {}) {
     return result(true, `${transformSources.length} objects accepted.`);
   };
   const captureClipboard = rawBase => {
-    const sources = (transformSources.length ? transformSources : state.entities.filter(entity => state.selectionIds.includes(entity.id) && editable(entity))).map(({layoutId,...entity})=>entity);
+    const sources=(transformSources.length?transformSources:allObjects().filter(entity=>state.selectionIds.includes(entity.id)&&editable(entity))).map(({layoutId,...entity})=>entity);
+    if(sources.some(entity=>entity.type==='VIEWPORT'))throw Error('Viewport frames use ordinary COPY inside paper space; geometry clipboard cannot carry layout view definitions.');
     if (!sources.length) throw new Error('Select objects to copy to the clipboard.');
     const is3D=sources.some(entity=>TYPES3D.has(entity.type)),box = is3D?bounds3D(sources,state):bounds(sources,state), base = rawBase == null ? { x: box.minX, y: box.minY,...(is3D?{z:box.minZ}:{}) } : is3D?point3(rawBase):point(rawBase);
     const layerNames = new Set(sources.map(entity => entity.layer));
@@ -1565,7 +1593,7 @@ export function createEditor(initialState = {}) {
     transactionIds = []; transformSources = []; copyBatches = []; editingSteps = [];
     if(['LINE','PLINE','RECTANG','CIRCLE','ARC',...DRAW3D].includes(command)){state.commandData.plane=clone(plane);state.commandData.spatial=spatial;if(spatial)state.commandData.threeD=true;}
     if(command==='LAYOUT'){state.commandPhase='layout-option';state.commandData.targetKind='none';state.prompt='LAYOUT Enter [New/Set/Delete/Rename]:';return result(true,'Manage named paper layouts.');}
-    if(command==='MVIEW'){if(state.activeSpace!=='paper'){idle();return result(false,'Enter paper space before creating a model viewport.');}state.commandPhase='viewport-first';state.commandData.targetKind='point';state.prompt='MVIEW Specify first paper corner (mm):';return result(true,'Create one rectangular scaled model viewport.');}
+    if(command==='MVIEW'){if(state.activeSpace!=='paper'){idle();return result(false,'Enter paper space before creating a model viewport.');}state.commandPhase='viewport-first';state.commandData.targetKind='point';state.prompt='MVIEW Specify first paper corner or [Polygonal/Object] (mm):';return result(true,'Create a rectangular or simple polygonal scaled model viewport.');}
     if(command==='UCS'){state.commandPhase='ucs-choice';state.commandData.targetKind='none';state.prompt='UCS Enter [World/XY/XZ/YZ/3point/Face] <World>:';return result(true,'Choose an orthonormal world, three-point or mesh-face construction plane.');}
     if (command === 'COPY') state.commandData = { copyMode: 'multiple', copyCount: 0 };
     if(command==='ELLIPSE'){state.selectionIds=[];state.commandPhase='axis-first';state.commandData.targetKind='point';state.prompt='ELLIPSE Specify first axis endpoint or [Center]:';return result(true,'ELLIPSE started.');}
@@ -1620,6 +1648,8 @@ export function createEditor(initialState = {}) {
   const updateLinePrompt = () => {
     state.prompt = state.commandPoints.length > 2 ? `${state.command} Specify next point or [Close/Undo]:` : `${state.command} Specify next point or [Undo]:`;
   };
+  const completeViewport=(points,polygon=false)=>{const boundary=polygon?normalizeViewportBoundary(points):undefined,frame=viewportFrameFromPoints(points),response=commandAPI(()=>editor.addViewport(state.activeLayoutId,frame,{layer:state.currentLayer,...(boundary?{boundary}:{})}));if(response.ok){editor.select([response.object.id]);response.message=polygon?'Polygonal model viewport created; source boundary retained.':'Rectangular model viewport created.';}return response;};
+  const viewportFromObject=entityId=>{const source=objectById(entityId);if(!source||!editable(source)||!(source.type==='RECTANG'||source.type==='PLINE'&&source.closed))throw Error('MVIEW Object requires one visible unlocked closed straight PLINE or RECTANG; the source is retained.');return completeViewport(source.points,true);};
   const preparedCircle=radius=>{const center=state.commandPoints[0],entity={type:state.commandData.spatial?'CIRCLE3D':'CIRCLE',center:{...center},radius,layer:state.currentLayer,...(state.commandData.spatial?{xAxis:clone(state.commandData.plane.xAxis),yAxis:clone(state.commandData.plane.yAxis)}:{})};if(state.commandData.spatial)validateSpatialCurve(entity);else validateCircle(center,radius);return entity;};
   const preparedSpatialArc=p=>{const plane=state.commandData.plane,points=[...state.commandPoints,p].map(q=>worldToPlane(q,plane));if(points.some(q=>Math.abs(q.z-points[0].z)>1e-9*Math.max(1,...points.map(q=>Math.hypot(q.x,q.y)))))throw new Error('ARC points must lie in one current-UCS plane.');const arc=arcThroughPoints(...points.map(({x,y})=>({x,y}))),entity={type:'ARC3D',center:planeToWorld({...arc.center,z:points[0].z},plane),radius:arc.radius,xAxis:clone(plane.xAxis),yAxis:clone(plane.yAxis),startAngle:arc.startAngle,sweepAngle:arc.sweepAngle,layer:state.currentLayer};validateSpatialCurve(entity);return entity;};
   const completeCircle = radius => {
@@ -1627,7 +1657,7 @@ export function createEditor(initialState = {}) {
     return finish('CIRCLE completed.');
   };
   const transformedGeometry = rawValue => {
-    if(state.command==='COPY'||state.command==='MIRROR'&&!state.commandData.deleteOriginal)check3DResources(transformSources);
+    if(state.command==='COPY'||state.command==='MIRROR'&&!state.commandData.deleteOriginal)planObjects(transformSources,[],true);
     const base = state.commandPoints[0];
     if(state.command==='ROTATE3D')return transformSources.map(entity=>rotateEntity3D(entity,base,state.commandData.axis,rawValue));
     if (state.command === 'ROTATE') return transformSources.map(entity => rotateEntity(entity, base, rawValue,state));
@@ -1639,18 +1669,14 @@ export function createEditor(initialState = {}) {
   const completeTransform = value => {
     const command = state.command, transformed = transformedGeometry(value);
     if (command === 'COPY' || command === 'MIRROR' && !state.commandData.deleteOriginal) {
-      check3DResources(transformed);
-      const ids = [];
-      for (const entity of transformed) { entity.id = id(); ids.push(entity.id); state.entities.push(entity); }
+      const ids=commitObjects(transformed,[],true);
       copyBatches.push({ ids, destination: { ...value } }); state.commandData.copyCount = copyBatches.length;
       if (command === 'COPY' && state.commandData.copyMode === 'multiple') {
         state.prompt = 'COPY Specify second point or [Exit/Undo] <Exit>:';
         return result(true, `${transformed.length} objects copied. Enter another point or press Enter to finish.`, true);
       }
     } else {
-      check3DResources(transformed,transformed.map(entity=>entity.id));
-      const byId = new Map(transformed.map(entity => [entity.id, entity]));
-      state.entities = state.entities.map(entity => byId.get(entity.id) ?? entity);
+      commitObjects(transformed,transformed.map(entity=>entity.id));
     }
     state.selectionIds = [];
     return finish(`${command} completed for ${transformed.length} objects.`);
@@ -1691,9 +1717,9 @@ export function createEditor(initialState = {}) {
   const completeInsert=rotation=>{drawingLayerReady();const entity=preparedInsert(state.commandPoints[0],state.commandData.scale,rotation);check3DResources([entity]);entity.id=id();state.entities.push(entity);state.selectionIds=[];return finish(`Block ${entity.blockName} inserted.`);};
   const completeArray=()=>{
     const{rows,columns,rowSpacing,columnSpacing}=state.commandData,count=rows*columns;if(count>1000||transformSources.length*(count-1)>10000)throw new Error('ARRAYRECT is limited to 1000 cells and 10000 new objects.');const created=[];
-    check3DResources(Array.from({length:rows*columns-1},()=>transformSources).flat());
+    planObjects(Array.from({length:rows*columns-1},()=>transformSources).flat(),[],true);
     for(let row=0;row<rows;row++)for(let column=0;column<columns;column++){if(row===0&&column===0)continue;const delta={x:column*columnSpacing,y:row*rowSpacing};for(const source of transformSources)created.push(translateEntity(source,delta,state));}check3DResources(created);
-    created.forEach(entity=>{entity.id=id();state.entities.push(entity);});state.selectionIds=[];return finish(`ARRAYRECT created ${created.length} ordinary copies; the array is nonassociative.`);
+    commitObjects(created,[],true);state.selectionIds=[];return finish(`ARRAYRECT created ${created.length} ordinary copies; the array is nonassociative.`);
   };
   const cornerConnector=(prepared,first,second)=>{
     const extra=prepared.arc??prepared.connector;if(extra&&first.layer!==second.layer){drawingLayerReady();extra.layer=state.currentLayer;delete extra.color;delete extra.lineweight;}return extra;
@@ -1714,9 +1740,9 @@ export function createEditor(initialState = {}) {
   };
   const acceptStretchWindow=(rawStart,rawEnd)=>{
     const start=point(rawStart),end=point(rawEnd),box={minX:Math.min(start.x,end.x),maxX:Math.max(start.x,end.x),minY:Math.min(start.y,end.y),maxY:Math.max(start.y,end.y)};if(box.minX===box.maxX||box.minY===box.maxY)throw new Error('STRETCH crossing window needs nonzero width and height.');
-    const crossed=new Set(entitiesInBox(state.entities.filter(editable),start,end,true,state)),items=[];
-    for(const source of state.entities.filter(entity=>crossed.has(entity.id))){if(TYPES3D.has(source.type))throw new Error('STRETCH supports planar objects only; a crossing 3D object rejects this operation.');const points=entityPoints(source,state),whole=points.length&&points.every(p=>inBox(p,box));if(whole){items.push({source:clone(source),whole:true});continue;}
-      const controls=source.type==='LINE'?[source.start,source.end]:['PLINE','RECTANG'].includes(source.type)?source.points:source.type==='SPLINE'?source.controlPoints:null;
+    const candidates=allObjects().filter(editable),crossed=new Set(entitiesInBox(candidates,start,end,true,state)),items=[];
+    for(const source of candidates.filter(entity=>crossed.has(entity.id))){if(TYPES3D.has(source.type))throw new Error('STRETCH supports planar objects only; a crossing 3D object rejects this operation.');const points=entityPoints(source,state),whole=points.length&&points.every(p=>inBox(p,box));if(whole){items.push({source:clone(source),whole:true});continue;}
+      const controls=source.type==='LINE'?[source.start,source.end]:['PLINE','RECTANG','VIEWPORT'].includes(source.type)?entityPoints(source):source.type==='SPLINE'?source.controlPoints:null;
       if(controls){const indices=controls.map((p,i)=>inBox(p,box)?i:-1).filter(i=>i>=0);if(indices.length)items.push({source:clone(source),whole:false,indices});}
       else if(!['CIRCLE','ELLIPSE','INSERT'].includes(source.type))throw new Error(`Partial ${source.type} stretching is unsupported; fully enclose it or change the crossing window.`);
     }
@@ -1724,13 +1750,13 @@ export function createEditor(initialState = {}) {
   };
   const stretchGeometry=destination=>{
     const base=state.commandPoints[0],p=point(destination),delta=point({x:p.x-base.x,y:p.y-base.y});return state.commandData.stretchItems.map(({source,whole,indices})=>{
-      const live=state.entities.find(entity=>entity.id===source.id);if(!live||!editable(live)||JSON.stringify(live)!==JSON.stringify(source))throw new Error('A STRETCH source changed or is no longer editable.');if(whole)return translateEntity(source,delta,state);const changed=clone(source),move=p=>point({x:p.x+delta.x,y:p.y+delta.y});
+      const live=objectById(source.id);if(!live||!editable(live)||JSON.stringify(live)!==JSON.stringify(source))throw new Error('A STRETCH source changed or is no longer editable.');if(whole)return translateEntity(source,delta,state);const changed=clone(source),move=p=>point({x:p.x+delta.x,y:p.y+delta.y});
       if(source.type==='LINE'){if(indices.includes(0))changed.start=move(source.start);if(indices.includes(1))changed.end=move(source.end);if(samePoint(changed.start,changed.end))throw new Error('STRETCH would collapse a LINE.');}
       else if(source.type==='SPLINE'){changed.controlPoints=source.controlPoints.map((p,i)=>indices.includes(i)?move(p):{...p});validateSpline(changed);splineBoundsPoints(changed).forEach(point);}
-      else{changed.points=source.points.map((p,i)=>indices.includes(i)?move(p):{...p});if(source.type==='RECTANG'){changed.type='PLINE';changed.closed=true;}validatePolyline(changed.points,changed.closed);}return changed;
+      else{changed.points=source.points.map((p,i)=>indices.includes(i)?move(p):{...p});if(source.type==='VIEWPORT'){changed.points=normalizeViewportBoundary(changed.points);changed.frame=viewportFrameFromPoints(changed.points);const corners=viewportBoundaryPoints({frame:changed.frame});if(source.boundary||changed.points.some((p,i)=>!samePoint(p,corners[i])))changed.boundary=clone(changed.points);else delete changed.boundary;return compensateViewportResize(source,changed,state.settings);}else{if(source.type==='RECTANG'){changed.type='PLINE';changed.closed=true;}validatePolyline(changed.points,changed.closed);}}return changed;
     });
   };
-  const completeStretch=destination=>{const changed=stretchGeometry(destination);check3DResources(changed,changed.map(entity=>entity.id));const byId=new Map(changed.map(entity=>[entity.id,entity]));state.entities=state.entities.map(entity=>byId.get(entity.id)??entity);state.selectionIds=[];state.lastPoint={...point(destination)};return finish('Crossing-window STRETCH completed.');};
+  const completeStretch=destination=>{const changed=stretchGeometry(destination);commitObjects(changed,changed.map(entity=>entity.id));state.selectionIds=[];state.lastPoint={...point(destination)};return finish('Crossing-window STRETCH completed.');};
   const peditOptionPrompt=()=>{const source=state.entities.find(entity=>entity.id===state.commandData.peditId);state.commandData.targetKind='none';if(['LINE','RECTANG'].includes(source?.type)){state.commandPhase='convert';state.prompt=`PEDIT Convert ${source.type} to a straight PLINE? [Yes/No] <Yes>:`;}else{state.commandPhase='option';state.prompt='PEDIT Enter [Open/Close/Join/Reverse/Undo] <finish>:';}};
   const peditChange=mode=>{
     const source=state.entities.find(entity=>entity.id===state.commandData.peditId);if(!source||!editable(source))throw new Error('PEDIT source is unavailable or locked.');const before=snapshot(),changed=clone(source);
@@ -1769,6 +1795,14 @@ export function createEditor(initialState = {}) {
         const token = typeof inputText === 'string' ? inputText.toUpperCase().replace(/^[_.]+/, '') : '';
         if (['ESC', 'ESCAPE', 'CANCEL'].includes(token)) response = editor.cancel();
         else if(state.commandPhase==='text')response=editor.submitText(typeof input==='string'?input:String(input));
+        else if(state.command==='MVIEW'){
+          if(state.commandPhase==='viewport-first'&&['P','POLYGONAL'].includes(token)){state.commandPhase='viewport-polygon';state.commandPoints=[];state.commandData.targetKind='point';state.prompt='MVIEW Specify polygon vertex (mm), then Close:';response=result(true,'Collect a simple closed straight viewport boundary.');}
+          else if(state.commandPhase==='viewport-first'&&['O','OBJECT'].includes(token)){state.commandPhase='viewport-object';state.commandData.targetKind='object';state.prompt='MVIEW Select closed PLINE/RECTANG (source retained):';const selected=editor.getSelectionObjects();response=selected.length===1?viewportFromObject(selected[0].id):result(true,'Pick one closed straight boundary.');}
+          else if(state.commandPhase==='viewport-polygon'&&(inputText===''||['C','CLOSE'].includes(token)))response=completeViewport(state.commandPoints,true);
+          else if(state.commandPhase==='viewport-polygon'&&['U','UNDO'].includes(token)){if(!state.commandPoints.length)throw Error('No viewport polygon vertex to undo.');state.commandPoints.pop();response=result(true,'Last viewport polygon vertex removed.');}
+          else if(state.commandPhase==='viewport-object'){if(typeof inputText==='string'&&objectById(inputText))response=viewportFromObject(inputText);else response=editor.submitPoint(parseCoordinate(inputText,state.lastPoint));}
+          else response=editor.submitPoint(parseCoordinate(inputText,state.commandPoints.at(-1)??state.lastPoint));
+        }
         else if(state.command==='ELLIPSE'){
           if(state.commandPhase==='axis-first'&&['C','CENTER'].includes(token)){state.commandPhase='ellipse-center';state.prompt='ELLIPSE Specify center:';response=result(true,'Center construction selected.');}
           else if(state.commandPhase==='minor-distance'&&scalarInput(inputText))response=completeEllipse(lengthScalar(inputText));
@@ -1880,9 +1914,9 @@ export function createEditor(initialState = {}) {
           else response = result(false, 'ZOOM supports E (Extents).');
         } else if (SELECT_COMMANDS.has(state.command) && state.commandPhase === 'selection') {
             if (inputText === '') response = acceptTransformSelection();
-            else if (['ALL', 'SELECT ALL'].includes(token)) response = editor.select(state.entities.map(entity => entity.id), { add: true });
-            else if (['LAST', 'L'].includes(token)) { const last = state.entities.filter(editable).at(-1); response = last ? editor.select([last.id], { add: true }) : result(false, 'No objects available.'); }
-            else if (typeof inputText === 'string' && state.entities.some(entity => entity.id === inputText)) response = editor.select([inputText], { add: true });
+            else if (['ALL', 'SELECT ALL'].includes(token)) response = editor.select(allObjects().map(entity => entity.id), { add: true });
+            else if (['LAST', 'L'].includes(token)) { const last = allObjects().filter(editable).at(-1); response = last ? editor.select([last.id], { add: true }) : result(false, 'No objects available.'); }
+            else if (typeof inputText === 'string' && objectById(inputText)) response = editor.select([inputText], { add: true });
             else response = editor.submitPoint(parseCoordinate(inputText, state.lastPoint));
         } else if (state.command === 'CUTCLIP') response = result(false, 'CUTCLIP awaits clipboard acknowledgement; Escape cancels without erasing.');
         else if (state.command === 'COPYBASE') {
@@ -1930,7 +1964,7 @@ export function createEditor(initialState = {}) {
             const batch = copyBatches.pop();
             if (!batch) response = result(false, 'No COPY destination to undo.');
             else {
-              const ids = new Set(batch.ids); state.entities = state.entities.filter(entity => !ids.has(entity.id));
+              removeObjects(batch.ids);
               state.lastPoint = { ...(copyBatches.at(-1)?.destination ?? state.commandPoints[0]) }; state.commandData.copyCount = copyBatches.length;
               state.prompt = 'COPY Specify second point or [Exit/Undo] <Exit>:'; response = result(true, 'Last COPY destination removed.', true);
             }
@@ -2029,7 +2063,7 @@ export function createEditor(initialState = {}) {
         else if (['Z', 'ZOOM'].includes(token)) { state.command = 'ZOOM'; state.commandPoints = []; state.prompt = 'ZOOM Enter option [Extents]:'; response = result(true, 'Enter E for extents.'); }
         else if (['Z E', 'ZOOM E', 'ZE', 'EXTENTS'].includes(token)) {
           response=editor.fitView();
-        } else if (['ALL', 'SELECT ALL'].includes(token)) { editor.select(state.entities.map(entity => entity.id)); response = result(true, `${state.selectionIds.length} objects selected.`); }
+        } else if (['ALL', 'SELECT ALL'].includes(token)) { editor.select(allObjects().map(entity => entity.id)); response = result(true, `${state.selectionIds.length} objects selected.`); }
         else if (inputText === '') response = result(true, 'Ready.');
         else response = result(false, `Unknown command: ${String(inputText)}. Use a drawing or editing command, U, REDO, or ZOOM.`);
       } catch (error) { response = result(false, error.message); }
@@ -2047,8 +2081,10 @@ export function createEditor(initialState = {}) {
           state.commandPoints=points;state.lastPoint={...p};state.commandPhase=points.length===1?'ucs-x-axis':'ucs-y-axis';state.prompt=points.length===1?'UCS Specify WCS point on positive X axis:':'UCS Specify WCS point toward positive Y:';return result(true,'UCS point accepted.');
         }
         if(state.command==='MVIEW'){
+          if(state.commandPhase==='viewport-object'){const entityId=hitTest(state.entities.filter(editable),p,8/state.paperViewport.scale,state);if(!entityId)throw Error('Pick a closed straight paper boundary.');return viewportFromObject(entityId);}
+          if(state.commandPhase==='viewport-polygon'){if(state.commandPoints.length>=64)throw Error('Viewport polygon is limited to 64 vertices.');if(state.commandPoints.length&&samePoint(state.commandPoints.at(-1),p))throw Error('Consecutive viewport polygon vertices must differ.');state.commandPoints.push(p);state.lastPoint={...p};state.prompt='MVIEW Specify next polygon vertex or [Close/Undo]:';return result(true,'Viewport boundary vertex accepted.');}
           if(state.commandPhase==='viewport-first'){state.commandPoints=[p];state.commandPhase='viewport-second';state.prompt='MVIEW Specify opposite paper corner (mm):';return result(true,'First viewport corner accepted.');}
-          const first=state.commandPoints[0],frame={x:Math.min(first.x,p.x),y:Math.min(first.y,p.y),width:Math.abs(p.x-first.x),height:Math.abs(p.y-first.y)};return commandAPI(()=>editor.addViewport(state.activeLayoutId,frame));
+          const first=state.commandPoints[0];return completeViewport([first,p]);
         }
         if(state.command==='ELLIPSE'){
           drawingLayerReady();if(['axis-first','ellipse-center'].includes(state.commandPhase)){state.commandPoints=[p];state.lastPoint={...p};if(state.commandPhase==='ellipse-center'){state.commandData.center=p;state.commandPhase='major-endpoint';state.prompt='ELLIPSE Specify first-axis endpoint:';}else{state.commandPhase='axis-second';state.prompt='ELLIPSE Specify other endpoint of first axis:';}return result(true,'Ellipse axis origin accepted.');}
@@ -2123,7 +2159,7 @@ export function createEditor(initialState = {}) {
           if(state.commandPoints.length&&samePoint(state.commandPoints.at(-1),p))throw new Error('Consecutive measurement points must differ.');state.commandPoints.push(p);state.lastPoint={...p};state.prompt=state.command==='DIST'?'DIST Specify second point:':'AREA Specify next point or Enter to finish:';return result(true,'Measurement point accepted.');
         }
         if (SELECT_COMMANDS.has(state.command) && state.commandPhase === 'selection') {
-          const entityId = hitTest(state.entities.filter(editable), p, 8 / state.viewport.scale,state);
+          const entityId = hitTest(allObjects().filter(editable), p, 8 / (state.activeSpace==='paper'?state.paperViewport.scale:state.viewport.scale),state);
           return entityId ? editor.select([entityId], { add: true }) : result(false, 'No selectable object at that point.');
         }
         if (state.command === 'COPYBASE') {
@@ -2159,7 +2195,7 @@ export function createEditor(initialState = {}) {
         if (TRANSFORMS.has(state.command)) {
           if (state.commandPhase === 'mode') return result(false, 'Choose Single or Multiple copy mode using the command line.');
           if (state.commandPhase === 'selection') {
-            const entityId = hitTest(state.entities.filter(editable), p, 8 / state.viewport.scale,state);
+            const entityId = hitTest(allObjects().filter(editable), p, 8 / (state.activeSpace==='paper'?state.paperViewport.scale:state.viewport.scale),state);
             return entityId ? editor.select([entityId], { add: true }) : result(false, 'No selectable object at that point.');
           }
           if (state.commandPhase === 'base') {
@@ -2247,6 +2283,10 @@ export function createEditor(initialState = {}) {
     previewCommand(raw) {
       try {
         const p = threeDPointMode()?point3(raw):point(raw);
+        if(state.command==='MVIEW'&&['viewport-second','viewport-polygon'].includes(state.commandPhase)){
+          const polygon=state.commandPhase==='viewport-polygon',points=[...state.commandPoints,p];if(polygon&&points.length<3)return points.length>1?[{type:'PLINE',points,closed:false,layer:state.currentLayer}]:[];
+          const frame=viewportFrameFromPoints(points),layout=state.layouts.find(item=>item.id===state.activeLayoutId),view=normalizePaperViewport({id:'preview',frame,layer:state.currentLayer,...(polygon?{boundary:normalizeViewportBoundary(points)}:{})},layout.paper,state.layers,normalizeCamera3D);return[viewportAsObject(view,layout.id,state)];
+        }
         if(state.commandData.spatial&&['LINE','PLINE','RECTANG'].includes(state.command)&&state.commandPoints.length){const first=state.commandPoints[0];if(state.command==='RECTANG'){const plane=state.commandData.plane,a=worldToPlane(first,plane),b=worldToPlane(p,plane),points=[a,{x:b.x,y:a.y,z:a.z},{x:b.x,y:b.y,z:a.z},{x:a.x,y:b.y,z:a.z}].map(q=>planeToWorld(q,plane));return[{type:'POLY3D',points,closed:true,layer:state.currentLayer}];}return[{type:'POLY3D',points:[state.commandPoints.at(-1),p],closed:false,layer:state.currentLayer}];}
         if(state.command==='STRETCH'&&state.commandPhase==='target')return stretchGeometry(p);
         if(state.command==='INSERT'&&state.commandPhase==='position')return[preparedInsert(p)];
@@ -2309,7 +2349,7 @@ export function createEditor(initialState = {}) {
       restore(entry.after); undoStack.push(entry); return result(true, 'Redo completed.', true);
     },
     select(ids, options = {}) {
-      const valid = [...new Set(ids)].filter(id => state.entities.some(entity => entity.id === id && editable(entity)));
+      const objects=allObjects(),byId=new Map(objects.map(object=>[object.id,object])),aliases=new Map(objects.filter(object=>object.type==='VIEWPORT'&&activeOwned(object)).map(object=>[object.viewportId,object]));const valid=[...new Set(ids.map(value=>byId.get(value)??aliases.get(value)).filter(object=>object&&editable(object)).map(object=>object.id))];
       const selected = new Set(options.add || options.toggle ? state.selectionIds : []);
       for (const id of valid) { if (options.toggle && selected.has(id)) selected.delete(id); else selected.add(id); }
       state.selectionIds = [...selected];
@@ -2319,6 +2359,7 @@ export function createEditor(initialState = {}) {
     setStretchWindow(start,end){try{if(state.command!=='STRETCH'||!['window-first','window-second'].includes(state.commandPhase))return result(false,'Start STRETCH before defining its crossing window.');return acceptStretchWindow(start,end);}catch(error){return result(false,error.message);}},
     submitObject(entityId,rawPoint){
       try{
+        if(state.command==='MVIEW'&&state.commandPhase==='viewport-object')return viewportFromObject(entityId);
         const source=state.entities.find(entity=>entity.id===entityId);if(!source||!visible(source))return result(false,'Object is unavailable or hidden.');
         if(state.command==='UCS'&&state.commandPhase==='ucs-face')return editor.execute(entityId);
         if(SELECT_COMMANDS.has(state.command)&&state.commandPhase==='selection'||state.command==='PEDIT'&&state.commandPhase==='join-selection')return editor.select([entityId],{add:true});
@@ -2437,17 +2478,16 @@ export function createEditor(initialState = {}) {
       validateSelection();
       if (!state.selectionIds.length) return result(false, 'Select objects to erase.');
       const before = snapshot(), count = state.selectionIds.length, selected = new Set(state.selectionIds);
-      state.entities = state.entities.filter(entity => !selected.has(entity.id)); state.selectionIds = [];
+      removeObjects(selected);state.selectionIds = [];
       record(before); return result(true, `${count} objects erased.`, true);
     },
     moveGrip(entityId, index, raw) {
       if (state.command) return result(false, 'Finish or cancel the active command before editing grips.');
       try {
-        const entity = state.entities.find(item => item.id === entityId),p=entity&&TYPES3D.has(entity.type)?point3(raw):point(raw);
+        const entity=objectById(entityId),p=entity&&TYPES3D.has(entity.type)?point3(raw):point(raw);
         if (!entity || !editable(entity)) return result(false, 'Object is unavailable or its layer is locked.');
         const before = snapshot();
-        const edited = previewGrip(entity, index, p,state);check3DResources([edited],[entityId]);
-        state.entities = state.entities.map(item => item.id === entityId ? edited : item);
+        const edited=previewGrip(entity,index,p,state);commitObjects([edited],[entity.id]);
         const changed = record(before); return result(true, 'Grip moved.', changed);
       } catch (error) { return result(false, error.message); }
     },
@@ -2470,13 +2510,14 @@ export function createEditor(initialState = {}) {
         if (properties.layer != null && !state.layers.some(layer => layer.name === properties.layer)) return result(false, 'Target layer does not exist.');
         if (properties.color != null && properties.color !== 'BYLAYER' && !/^#[0-9a-f]{6}$/i.test(properties.color)) return result(false, 'Color must be a six-digit hex value or BYLAYER.');
         if (properties.lineweight != null && properties.lineweight !== 'BYLAYER' && (!finite(properties.lineweight) || properties.lineweight < 0 || properties.lineweight > 10)) return result(false, 'Lineweight must be between 0 and 10 mm or BYLAYER.');
+        if(properties.linetype!=null&&properties.linetype!=='BYLAYER'&&!LINETYPES.includes(properties.linetype))return result(false,'Linetype must be Continuous, Dashed, Hidden, Center or BYLAYER.');
         const before = snapshot(), selected = new Set(state.selectionIds);
-        for (const entity of state.entities) {
-          if (!selected.has(entity.id)) continue;
+        const proposals=allObjects().filter(entity=>selected.has(entity.id)).map(source=>{const entity=clone(source);
           if (properties.layer != null) entity.layer = properties.layer;
           if (Object.hasOwn(properties, 'color')) { if (properties.color == null || properties.color === 'BYLAYER') delete entity.color; else entity.color = properties.color; }
           if (Object.hasOwn(properties, 'lineweight')) { if (properties.lineweight == null || properties.lineweight === 'BYLAYER') delete entity.lineweight; else entity.lineweight = properties.lineweight; }
-        }
+          if(Object.hasOwn(properties,'linetype')){if(properties.linetype==null||properties.linetype==='BYLAYER')delete entity.linetype;else entity.linetype=properties.linetype;}return entity;});
+        commitObjects(proposals,proposals.map(entity=>entity.id));
         const changed = record(before); validateSelection(); return result(true, 'Object properties updated.', changed);
       } catch (error) { return result(false, error.message); }
     },
@@ -2525,6 +2566,9 @@ export function createEditor(initialState = {}) {
       if (finite(width) && width > 0 && finite(height) && height > 0) state.canvasSize = { width, height };
     },
     getActiveEntities(){stampScopes();return state.entities.filter(activeOwned);},
+    getActiveObjects(){return allObjects().filter(activeOwned);},
+    getPaperObjects(layoutId=state.activeLayoutId){return allObjects().filter(object=>object.layoutId===layoutId);},
+    getSelectionObjects(){validateSelection();const objects=new Map(allObjects().map(object=>[object.id,object]));return state.selectionIds.map(id=>objects.get(id));},
     getModelEntities(){stampScopes();return state.entities.filter(entity=>!entity.layoutId);},
     getPaperEntities(layoutId=state.activeLayoutId){stampScopes();return state.entities.filter(entity=>entity.layoutId===layoutId);},
     getActiveViewport(){return state.layouts.find(layout=>layout.id===state.activeLayoutId)?.viewports.find(view=>view.id===state.activeViewportId)??null;},
@@ -2554,13 +2598,18 @@ export function createEditor(initialState = {}) {
     deleteLayout(layoutId){if(state.command)return result(false,'Finish or cancel the active command before deleting a layout.');if(!state.layouts.some(layout=>layout.id===layoutId))return result(false,'Layout does not exist.');const before=snapshot();state.layouts=state.layouts.filter(layout=>layout.id!==layoutId);state.entities=state.entities.filter(entity=>entity.layoutId!==layoutId);reconcileSpaces();validateSelection();return result(true,'Layout and its paper geometry deleted.',record(before));},
     addViewport(layoutId,frame,options={}){
       if(state.command)return result(false,'Finish or cancel the active command before creating a viewport.');
-      try{const layout=state.layouts.find(item=>item.id===layoutId);if(!layout)throw new Error('Layout does not exist.');let n=1;while(state.layouts.some(item=>item.viewports.some(view=>view.id===`vp${n}`)))n++;const viewport=normalizePaperViewport({...options,id:`vp${n}`,frame},layout.paper,state.layers,normalizeCamera3D);if(layout.viewports.length>=16)throw new Error('Each layout supports at most 16 viewports.');const before=snapshot();layout.viewports.push(viewport);return{...result(true,'Model viewport created.',record(before)),viewportId:viewport.id,viewport:clone(viewport)};}catch(error){return result(false,error.message);}
+      try{const layout=state.layouts.find(item=>item.id===layoutId);if(!layout)throw new Error('Layout does not exist.');const viewport=normalizePaperViewport({...options,id:nextViewportId(),frame},layout.paper,state.layers,normalizeCamera3D);if(layout.viewports.length>=16)throw new Error('Each layout supports at most 16 viewports.');const probe=viewportProxy(viewport,layoutId);if(layerOf(probe)?.locked||!isEntityVisible(probe,state,{space:'paper',layoutId,viewportId:null}))throw Error('Viewport border layer must be visible in paper space and unlocked.');const before=snapshot();layout.viewports.push(viewport);allocatedViewportIds.add(viewport.id);allObjects();return{...result(true,'Model viewport created.',record(before)),viewportId:viewport.id,viewport:clone(viewport),object:viewportProxy(viewport,layoutId)};}catch(error){return result(false,error.message);}
     },
     updateViewport(layoutId,viewportId,patch,{navigation=false}={}){
-      if(state.command)return result(false,'Finish or cancel the active command before editing a viewport.');
-      try{const layout=state.layouts.find(item=>item.id===layoutId),index=layout?.viewports.findIndex(view=>view.id===viewportId);if(index==null||index<0)throw new Error('Viewport does not exist.');const source=layout.viewports[index];if(!patch||Object.keys(patch).some(key=>!['frame','modelCenter','scaleDenominator','locked','frozenLayers','workspace','camera3d','plotBorder','layer'].includes(key)))throw new Error('Unsupported viewport property.');if(source.locked&&navigation)throw new Error('Viewport is locked; unlock it before panning or zooming its model view.');const camera3d=patch.camera3d?{...source.camera3d,...patch.camera3d}:source.camera3d,modelCenter=patch.modelCenter??patch.camera3d?.target??source.modelCenter,viewport=normalizePaperViewport({...source,...patch,camera3d,modelCenter},layout.paper,state.layers,normalizeCamera3D),before=snapshot();layout.viewports[index]=viewport;if(state.activeViewportId===viewportId){state.camera3d=clone(viewport.camera3d);state.workspace=viewport.workspace;}return result(true,'Viewport updated.',record(before));}catch(error){return result(false,error.message);}
+      if(state.command&&!navigation)return result(false,'Finish or cancel the active command before editing a viewport.');
+      try{const layout=state.layouts.find(item=>item.id===layoutId),index=layout?.viewports.findIndex(view=>view.id===viewportId);if(index==null||index<0)throw new Error('Viewport does not exist.');const source=layout.viewports[index];if(!patch||Object.keys(patch).some(key=>!['frame','boundary','modelCenter','scaleDenominator','locked','frozenLayers','workspace','camera3d','plotBorder','layer','color','lineweight','linetype'].includes(key)))throw new Error('Unsupported viewport property.');if(navigation&&Object.keys(patch).some(key=>!['modelCenter','scaleDenominator','workspace','camera3d'].includes(key)))throw Error('Viewport navigation changes only model view fields.');if(source.locked&&navigation)throw new Error('Viewport is locked; unlock it before panning or zooming its model view.');if(state.command&&navigation&&(state.activeViewportId!==viewportId||state.activeLayoutId!==layoutId||state.activeSpace!=='model'))throw Error('Navigate the active model viewport during a drawing prompt.');const probe=viewportAsObject(source,layoutId,state);if(!navigation&&(layerOf(probe)?.locked||!isEntityVisible(probe,state,{space:'paper',layoutId,viewportId:null})))throw Error('Viewport border layer must be visible in paper space and unlocked.');
+        for(const key of ['frame','modelCenter','camera3d'])if(Object.hasOwn(patch,key)&&(!patch[key]||typeof patch[key]!=='object'||Array.isArray(patch[key])))throw Error(`${key} must be a valid object, not null.`);
+        const camera3d=patch.camera3d?{...source.camera3d,...patch.camera3d}:source.camera3d,modelCenter=patch.modelCenter??patch.camera3d?.target??source.modelCenter;let frame=patch.frame??source.frame,boundary=patch.boundary??source.boundary;if(Object.hasOwn(patch,'boundary')){boundary=normalizeViewportBoundary(patch.boundary);if(!Object.hasOwn(patch,'frame'))frame=viewportFrameFromPoints(boundary);}else if(source.boundary&&patch.frame){const a=source.frame,b=patch.frame;boundary=source.boundary.map(p=>({x:b.x+(p.x-a.x)*b.width/a.width,y:b.y+(p.y-a.y)*b.height/a.height}));}
+        let viewport=normalizePaperViewport({...source,...patch,frame,...(boundary?{boundary}:{}),camera3d,modelCenter},layout.paper,state.layers,normalizeCamera3D);if(!navigation&&!Object.hasOwn(patch,'modelCenter')&&!Object.hasOwn(patch.camera3d??{},'target')&&(Object.hasOwn(patch,'boundary')||frame.width!==source.frame.width||frame.height!==source.frame.height))viewport=normalizePaperViewport(compensateViewportResize(source,viewport,state.settings),layout.paper,state.layers,normalizeCamera3D);const before=state.command&&navigation?null:snapshot();layout.viewports[index]=viewport;if(state.activeViewportId===viewportId){state.camera3d=clone(viewport.camera3d);state.workspace=viewport.workspace;}
+        if(state.command&&navigation){const preserve=data=>{const saved=data?.layouts?.find(item=>item.id===layoutId)?.viewports.find(view=>view.id===viewportId);if(saved)for(const key of ['modelCenter','scaleDenominator','camera3d','workspace'])saved[key]=clone(viewport[key]);};preserve(transactionBefore);editingSteps.forEach(preserve);for(const entry of [...undoStack,...redoStack]){preserve(entry.before);preserve(entry.after);}return result(true,'Active viewport navigated; drawing prompt retained.',JSON.stringify(source)!==JSON.stringify(viewport));}
+        return result(true,'Viewport updated.',record(before));}catch(error){return result(false,error.message);}
     },
-    deleteViewport(layoutId,viewportId){if(state.command)return result(false,'Finish or cancel the active command before deleting a viewport.');const layout=state.layouts.find(item=>item.id===layoutId);if(!layout?.viewports.some(view=>view.id===viewportId))return result(false,'Viewport does not exist.');const before=snapshot();layout.viewports=layout.viewports.filter(view=>view.id!==viewportId);reconcileSpaces();validateSelection();return result(true,'Viewport deleted.',record(before));},
+    deleteViewport(layoutId,viewportId){if(state.command)return result(false,'Finish or cancel the active command before deleting a viewport.');const layout=state.layouts.find(item=>item.id===layoutId),view=layout?.viewports.find(view=>view.id===viewportId);if(!view)return result(false,'Viewport does not exist.');const probe=viewportAsObject(view,layoutId,state);if(layerOf(probe)?.locked||!isEntityVisible(probe,state,{space:'paper',layoutId,viewportId:null}))return result(false,'Viewport border layer must be visible in paper space and unlocked.');const before=snapshot();layout.viewports=layout.viewports.filter(view=>view.id!==viewportId);reconcileSpaces();validateSelection();return result(true,'Viewport deleted.',record(before));},
     freezeViewportLayer(layoutId,viewportId,name,frozen=true){if(typeof frozen!=='boolean')return result(false,'Freeze must be boolean.');const view=state.layouts.find(layout=>layout.id===layoutId)?.viewports.find(view=>view.id===viewportId);if(!view||!state.layers.some(layer=>layer.name===name))return result(false,'Viewport or layer does not exist.');return editor.updateViewport(layoutId,viewportId,{frozenLayers:frozen?[...new Set([...view.frozenLayers,name])]:view.frozenLayers.filter(layer=>layer!==name)});},
     getConstructionPlane(){return state.activeSpace==='paper'?constructionPlane(presetUCS(),0):constructionPlane(state.ucs,state.settings.constructionElevation);},
     submitFace(entityId,faceIndex){if(state.command!=='UCS'||!['ucs-face','ucs-face-index'].includes(state.commandPhase))return result(false,'Start UCS Face before submitting a mesh face.');return commandAPI(()=>editor.setUCSFromFace(entityId,faceIndex));},

@@ -74,6 +74,21 @@ function projectedBoundsPoints(entity,document,camera){
   return curvePoints(entity)||core.entityPoints(entity,document);
 }
 
+// Split a segment at every polygon edge so a concave gap cannot hide between
+// two inside endpoints. This flag is informational; SVG performs the clipping.
+function segmentLeavesViewport(a,b,viewport,boundary){
+  const cuts=[0,1],dx=b.x-a.x,dy=b.y-a.y;
+  for(let i=0;i<boundary.length;i++){
+    const c=boundary[i],d=boundary[(i+1)%boundary.length],ex=d.x-c.x,ey=d.y-c.y,den=dx*ey-dy*ex;
+    if(Math.abs(den)<1e-12)continue;
+    const t=((c.x-a.x)*ey-(c.y-a.y)*ex)/den,u=((c.x-a.x)*dy-(c.y-a.y)*dx)/den;
+    if(t>0&&t<1&&u>=0&&u<=1)cuts.push(t);
+  }
+  cuts.sort((x,y)=>x-y);
+  for(let i=1;i<cuts.length;i++){const t=(cuts[i-1]+cuts[i])/2;if(!core.pointInViewport({x:a.x+dx*t,y:a.y+dy*t},viewport))return true;}
+  return false;
+}
+
 function drawingPage(source,document,options,width,height,pageIndex){
   const warnings=[],entities=visibleEntities(document),is3D=document.workspace==='3d',perspective=is3D&&document.camera3d.projection==='perspective';
   if(!entities.length)throw Error('The drawing has no visible objects to plot.');
@@ -113,23 +128,29 @@ function layoutPage(source,document,layout,options,pageIndex){
     const frame=viewport.frame,layer=document.layers.find(item=>item.name===viewport.layer);
     const clipId=`viewport-${pageIndex}-${plottedViewports.length}`;
     const borderRect=`x="${numeric(frame.x)}" y="${numeric(height-frame.y-frame.height)}" width="${numeric(frame.width)}" height="${numeric(frame.height)}"`;
-    defs.push(`<clipPath id="${clipId}"><rect ${borderRect}/></clipPath>`);
+    const boundary=core.viewportBoundaryPoints(viewport),polygonPath=viewport.boundary?`M${boundary.map(point=>pointString(paperMap(point))).join(' L')} Z`:null;
+    const clipShape=polygonPath?`<path d="${polygonPath}"/>`:`<rect ${borderRect}/>`;
+    defs.push(`<clipPath id="${clipId}">${clipShape}</clipPath>`);
+    if(boundary.some(p=>p.x<0||p.x>width||p.y<0||p.y>height))clipped=true;
     const entities=visibleEntities(document,{space:'paper',layoutId:layout.id,viewportId:viewport.id});
     const factor=core.modelUnitMillimeters(document.settings)/viewport.scaleDenominator;
     const map=p=>paperMap(core.viewportModelToPaper(p,viewport,document.settings));
-    for(const entity of entities)for(const p of core.entityPoints(entity,document)){
-      const q=core.viewportModelToPaper(p,viewport,document.settings);
-      if(q.x<frame.x-1e-8||q.x>frame.x+frame.width+1e-8||q.y<frame.y-1e-8||q.y>frame.y+frame.height+1e-8)clipped=true;
+    let viewportCropped=false;
+    for(const entity of entities){
+      const points=(curvePoints(entity)||(['ELLIPSE','SPLINE'].includes(entity.type)?core.sampleCurve(entity,128):core.entityPoints(entity,document))).map(p=>core.viewportModelToPaper(p,viewport,document.settings));
+      if(points.some(point=>!core.pointInViewport(point,viewport)))viewportCropped=true;
+      if(viewport.boundary&&!viewportCropped)for(let i=1;i<points.length;i++)if(segmentLeavesViewport(points[i-1],points[i],viewport,boundary)){viewportCropped=true;break;}
     }
     const body=renderEntities(entities,document,options,map,factor,viewport.workspace==='3d');
     parts.push(`<g data-viewport="${escape(viewport.id)}" clip-path="url(#${clipId})">${body.join('')}</g>`);
     if(viewport.workspace==='3d')warnings.push('3D paper viewports are plotted as vector wireframe; shaded surfaces and hidden-line removal are not plotted.');
     if(viewport.plotBorder&&layer?.plot!==false&&layer?.visible!==false&&layer?.paperVisible!==false){
-      const rgb=layer?.color??'#000000',color=options.colorMode==='monochrome'?'#000000':options.colorMode==='grayscale'?gray(rgb):rgb;
-      const weight=options.lineweights?layer?.lineweight??.25:.18;
-      parts.push(`<rect ${borderRect} fill="none" stroke="${color}" stroke-width="${numeric(Math.max(.01,weight))}"${dashAttribute(layer?.linetype)} data-viewport-border="${escape(viewport.id)}"/>`);
+      const rgb=viewport.color??layer?.color??'#000000',color=options.colorMode==='monochrome'?'#000000':options.colorMode==='grayscale'?gray(rgb):rgb;
+      const weight=options.lineweights?(viewport.lineweight??layer?.lineweight??.25):.18;
+      const lineType=viewport.linetype??layer?.linetype;
+      parts.push(`${polygonPath?`<path d="${polygonPath}"`:`<rect ${borderRect}`} fill="none" stroke="${color}" stroke-width="${numeric(Math.max(.01,weight))}"${dashAttribute(lineType)} data-viewport-border="${escape(viewport.id)}"/>`);
     }
-    plottedViewports.push({id:viewport.id,scaleDenominator:viewport.scaleDenominator,plotScaleMmPerUnit:factor,frame:{...frame},workspace:viewport.workspace,modelCenter:{...viewport.modelCenter},visibleEntities:entities.length});
+    plottedViewports.push({id:viewport.id,scaleDenominator:viewport.scaleDenominator,plotScaleMmPerUnit:factor,frame:{...frame},...(viewport.boundary?{boundary:boundary.map(point=>({...point}))}:{}),workspace:viewport.workspace,modelCenter:{...viewport.modelCenter},visibleEntities:entities.length,viewportCropped});
   }
   parts.push(...renderEntities(visiblePaper,document,options,paperMap,1));
   for(const entity of visiblePaper)for(const p of core.entityPoints(entity,document))if(p.x<0||p.x>width||p.y<0||p.y>height)clipped=true;

@@ -56,7 +56,8 @@ test('viewport clip inclusion uses its frame only, including exact borders and e
 });
 test('viewport frame/scale/freeze validation rejects unsafe nested values and perspective scale',()=>{
  const paper=normalizePaper(),layers=[{name:'0'}],camera=raw=>createEditor({camera3d:raw}).state.camera3d,base=viewport();
- for(const frame of [{x:-1,y:0,width:10,height:10},{x:0,y:0,width:.005,height:10},{x:0,y:0,width:421,height:10},{x:0,y:null,width:10,height:10}])assert.throws(()=>normalizeFrame(frame,paper));
+ for(const frame of [{x:-1e9-1,y:0,width:10,height:10},{x:1e9+1,y:0,width:10,height:10},{x:0,y:1e9+1,width:10,height:10},{x:0,y:0,width:.005,height:10},{x:0,y:0,width:1e9+1,height:10},{x:0,y:0,width:10,height:1e9+1},{x:0,y:null,width:10,height:10}])assert.throws(()=>normalizeFrame(frame,paper));
+ for(const frame of [{x:-30,y:20,width:100,height:60},{x:0,y:0,width:421,height:10}])assert.deepEqual(normalizeFrame(frame,paper),frame,'Valid off-sheet frames are preserved, never cropped to their paper size.');
  for(const patch of [{scaleDenominator:0},{scaleDenominator:1e10},{scaleDenominator:null},{frozenLayers:['missing']},{frozenLayers:['0','0']},{locked:'true'},{workspace:null},{modelCenter:{x:0,y:0,z:null}},{camera3d:{projection:'perspective'}}])assert.throws(()=>normalizePaperViewport({...base,...patch},paper,layers,camera));
 });
 test('global/model/paper visibility rules are distinct from locking and plot flags',()=>{
@@ -107,10 +108,10 @@ test('paper command ownership stays separate from model geometry and supports on
  accept(editor,['LINE','0,0','100,0','']);assert.equal(editor.getModelEntities().length,1);assert.equal(editor.getPaperEntities(created.layoutId).length,1);let serialized=JSON.parse(editor.serialize());assert.deepEqual(serialized.entities,[model]);assert.equal(serialized.layouts[0].entities[0].end.x,100);assert.equal(serialized.layouts[0].entities[0].layoutId,undefined);
  const before=editor.getPaperEntities(created.layoutId);assert.equal(editor.undo().ok,true);assert.equal(editor.getPaperEntities(created.layoutId).length,0);assert.deepEqual(editor.getModelEntities(),[model]);assert.equal(editor.redo().ok,true);assert.deepEqual(editor.getPaperEntities(created.layoutId),before);
 });
-test('locked viewport navigation and out-of-sheet paper changes reject without state/history mutation',()=>{
+test('locked viewport navigation and invalid paper resources reject without state/history mutation',()=>{
  const editor=createEditor(),layout=editor.addLayout('Lock test'),view=editor.addViewport(layout.layoutId,{x:20,y:20,width:300,height:200},{locked:true});assert.equal(view.ok,true);const before=editor.serialize(),canUndo=editor.canUndo;
  assert.equal(editor.updateViewport(layout.layoutId,view.viewportId,{modelCenter:point(10,0)},{navigation:true}).ok,false);assert.equal(editor.serialize(),before);assert.equal(editor.canUndo,canUndo);
- assert.equal(editor.updateLayout(layout.layoutId,{paper:{size:'A5'}}).ok,false);assert.equal(editor.serialize(),before);
+ assert.equal(editor.updateLayout(layout.layoutId,{paper:{size:'Custom',orientation:'portrait',widthMm:9,heightMm:100}}).ok,false);assert.equal(editor.serialize(),before);
 });
 test('layer rename updates model/paper ownership and all viewport freeze/border references in one undoable step',()=>{
  const editor=createEditor({layers:[{name:'0'},{name:'Owned'}],entities:[{id:'model',type:'LINE',layer:'Owned',start:{x:0,y:0},end:{x:1,y:0}}]}),layout=editor.addLayout('Rename test'),view=editor.addViewport(layout.layoutId,{x:10,y:10,width:100,height:50},{layer:'Owned',frozenLayers:['Owned']});assert.equal(view.ok,true);const before=editor.serialize();assert.equal(editor.renameLayer('Owned','Renamed').ok,true);

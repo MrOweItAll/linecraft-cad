@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {spawnSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),files=['core.mjs','paper-space.mjs','drawing-plane.mjs','advanced-geometry.mjs','units.mjs','3d-view.mjs','plot-document.mjs','tests/viewport-fixtures-v17.mjs','tests/viewport-object-independent.test.mjs','tests/viewport-object-tests.mjs'],hashes=()=>Object.fromEntries(files.map(file=>[file,createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex')]));
+const sourceSHA256=hashes(),started=Date.now(),result=spawnSync(process.execPath,['--test','--test-reporter=tap','tests/viewport-object-independent.test.mjs'],{cwd:root,encoding:'utf8',timeout:30000,maxBuffer:2*1024*1024});
+process.stdout.write(result.stdout||'');process.stderr.write(result.stderr||'');const count=name=>Number((result.stdout||'').match(new RegExp(`# ${name} (\\d+)`))?.[1]);
+const after=hashes(),sourceChangedDuringRun=JSON.stringify(sourceSHA256)!==JSON.stringify(after),total=count('tests'),passed=count('pass'),failed=count('fail');
+const report={framework:'Actual independent viewport-object engine/helper regression execution',scope:'Original hand-calculated geometry, transforms, resource/selection atomicity and navigation-state invariants; no native AutoCAD or GUI claims.',completedAt:new Date().toISOString(),durationMs:Date.now()-started,sourceSHA256,sourceChangedDuringRun,total,passed,failed,exitCode:result.status,error:result.error?.message};
+fs.writeFileSync(path.join(root,'tests/viewport-object-v17-results.json'),JSON.stringify(report,null,2)+'\n');process.exitCode=result.status!==0||sourceChangedDuringRun||!Number.isInteger(total)||total<23||failed!==0?1:0;

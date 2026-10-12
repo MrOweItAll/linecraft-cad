@@ -1,4 +1,4 @@
-# Linecraft CAD 1.6 quick use
+# Linecraft CAD 1.7 quick use
 
 Use the command line for exact input, and the canvas for placement, selection and navigation. Enter accepts an input; Escape ends the active command or clears selection. HELP opens searchable command options and limits.
 
@@ -12,13 +12,14 @@ Use the command line for exact input, and the canvas for placement, selection an
 ## Put model views on paper
 
 1. Click + beside the bottom Model tab. Give the sheet a name, choose paper size/orientation, and Apply page setup. Paper coordinates and annotations use millimeters.
-2. Choose New viewport, or enter MVIEW. Enter two paper corners, for example `10,10` and `190,120`. This creates a rectangular window onto the model without copying or rescaling model geometry.
+2. Choose New viewport, or enter MVIEW. Two corners, such as `10,10` and `190,120`, create a rectangle. Enter `P` for a simple straight polygon, collect 3–64 vertices and `C` to close. Enter `O` to pick an existing closed straight PLINE/RECTANG; its source stays in the drawing. New windows start unlocked, at model center `0,0,0` and 1:100.
 3. Select the frame edge. Choose a scale such as 1:50/1:100, or Custom. Model units determine physical scale: a 1000 mm model line is 20 mm long on paper at 1:50. A unitless model uses millimeters for viewport scaling.
-4. Edit model center XYZ, paper frame dimensions and orthographic orientation in Properties. Each viewport keeps its own scale and view. Drag frame edges to move it, or corner grips to resize it; Undo restores accepted frame edits.
-5. Double-click inside a viewport to work in its model space. Double-click outside, click the VIEWPORT MODEL status button, or enter PSPACE to return to paper. Use the Model tab for the standalone drawing.
-6. Lock the viewport after choosing its view. Wheel and middle drag then zoom/pan the whole sheet while retaining MSPACE; the viewport ratio and model center stay fixed. Unlocked navigation edits that viewport’s view and can be undone.
+4. Frames select with ordinary click/window/crossing selection and can share MOVE/COPY/ERASE/SCALE edits with paper objects. Drag a frame to move it. Rectangles have four corner and four edge-midpoint grips; polygons have vertex and edge grips. Properties edits size, location, view and appearance. Undo restores accepted edits.
+5. Resizing, SCALE and partial STRETCH expose a different clipped region while keeping the model picture anchored on paper and its ratio unchanged. MOVE/COPY carries the window and picture together. Width/height Properties behaves like resizing; X/Y-only relocation behaves like MOVE. The eight rectangular grips are Linecraft's ergonomic controls, not a claim of identical native grips.
+6. Double-click inside the actual boundary to work in that model view; a concave notch stays paper space. Wheel zoom anchors at the cursor and middle drag pans through the clip. Double-click outside, click VIEWPORT MODEL, or enter PSPACE to return to paper. Use Model for the standalone drawing.
+7. Lock the viewport after choosing its view. Wheel/middle drag then navigates the whole sheet while retaining MSPACE and the viewport ratio/center. Unlocked navigation changes that view. During a drawing prompt, it retains accepted points/anchors and geometry Undo keeps the latest navigation.
 
-Paper annotations belong to the sheet. Draw TEXT, dimensions and planar geometry in PAPER; those objects stay independent of projected model objects. Page setup changes the sheet size, never geometry scale. Existing frames must fit the new page. Frame borders are visible on screen and print only when Print border is set to Yes.
+Paper annotations belong to the sheet. Draw TEXT, dimensions and planar geometry in PAPER; those objects stay independent of projected model objects. Page setup changes sheet size, never geometry scale. Frames may extend off-sheet; printed content clips at the page. Frame borders appear on screen and print only when Print border is Yes. Ordinary COPY duplicates a viewport within the drawing; geometry clipboard commands reject viewport frames, including mixed selections.
 
 ## Control layers
 

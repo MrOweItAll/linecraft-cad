@@ -20,12 +20,25 @@ const xyz=p=>({...xy(p),z:p.z===undefined?0:(finite(p.z)?p.z:(()=>{throw Error('
 export function normalizeFrame(raw,paper){
   if(!raw||typeof raw!=='object')throw Error('Viewport frame must be an object.');
   const{x,y,width,height}=raw;
-  if(![x,y,width,height].every(finite)||x<0||y<0||width<.01||height<.01||x+width>paper.widthMm+1e-9||y+height>paper.heightMm+1e-9)throw Error('Viewport frame must be finite, positive and inside its paper sheet.');
+  if(![x,y,width,height,x+width,y+height].every(finite)||Math.abs(x)>1e9||Math.abs(y)>1e9||width<.01||height<.01||width>1e9||height>1e9)throw Error('Viewport frame must have finite coordinates within +/-1000000000 mm and dimensions 0.01..1000000000 mm.');
   return{x,y,width,height};
 }
+export function viewportBoundaryPoints(view){const f=view.frame;return view.boundary?copy(view.boundary):[{x:f.x,y:f.y},{x:f.x+f.width,y:f.y},{x:f.x+f.width,y:f.y+f.height},{x:f.x,y:f.y+f.height}];}
+export function viewportFrameFromPoints(points){if(!Array.isArray(points)||!points.length)throw Error('Viewport boundary needs points.');points.forEach(xy);const xs=points.map(p=>p.x),ys=points.map(p=>p.y),x=Math.min(...xs),y=Math.min(...ys);return normalizeFrame({x,y,width:Math.max(...xs)-x,height:Math.max(...ys)-y});}
+export function normalizeViewportBoundary(raw){
+  if(!Array.isArray(raw)||raw.length<3||raw.length>64)throw Error('Viewport polygon needs 3..64 distinct vertices, storing its first vertex once.');
+  const points=raw.map(xy);if(points.some(p=>Math.abs(p.x)>1e9||Math.abs(p.y)>1e9))throw Error('Viewport polygon coordinates must be within +/-1000000000 mm.');
+  const f=viewportFrameFromPoints(points),scale=Math.max(f.width,f.height),local=points.map(p=>({x:(p.x-f.x)/scale,y:(p.y-f.y)/scale})),cross=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x),tol=Number.EPSILON*64;
+  if(new Set(points.map(p=>JSON.stringify([p.x,p.y]))).size!==points.length)throw Error('Viewport polygon vertices must be distinct.');
+  const on=(a,b,p)=>Math.abs(cross(a,b,p))<=tol&&p.x>=Math.min(a.x,b.x)-tol&&p.x<=Math.max(a.x,b.x)+tol&&p.y>=Math.min(a.y,b.y)-tol&&p.y<=Math.max(a.y,b.y)+tol;
+  for(let i=0;i<local.length;i++){const a=local[i],b=local[(i+1)%local.length],c=local[(i+2)%local.length];if(Math.abs(cross(a,b,c))<=tol&&on(a,b,c))throw Error('Viewport polygon cannot retrace an adjacent edge.');for(let j=i+1;j<local.length;j++){if(j===i+1||i===0&&j===local.length-1)continue;const c=local[j],d=local[(j+1)%local.length],ab1=cross(a,b,c),ab2=cross(a,b,d),cd1=cross(c,d,a),cd2=cross(c,d,b);if(ab1*ab2<0&&cd1*cd2<0||on(a,b,c)||on(a,b,d)||on(c,d,a)||on(c,d,b))throw Error('Viewport polygon must be simple without crossed or touching edges.');}}
+  const area=local.reduce((sum,p,i)=>{const q=local[(i+1)%local.length];return sum+p.x*q.y-q.x*p.y;},0);if(Math.abs(area)<=tol)throw Error('Viewport polygon has no usable area.');return points;
+}
+export function viewportAsObject(view,layoutId,document={}){let id=`@VIEWPORT/${encodeURIComponent(layoutId)}/${encodeURIComponent(view.id)}`;while(document.entityIds?.has(id)||document.entities?.some(entity=>entity.id===id))id='@'+id;return{...copy(view),id,viewportId:view.id,type:'VIEWPORT',layoutId,modelUnitMm:modelUnitMillimeters(document.settings),points:viewportBoundaryPoints(view),closed:true};}
 export function normalizePaperViewport(raw,paper,layers,normalizeCamera){
   if(!raw||typeof raw.id!=='string'||!raw.id.length||raw.id.length>255)throw Error('Viewport ID must be a nonempty string of at most 255 characters.');
-  const frame=normalizeFrame(raw.frame,paper),modelCenter=xyz(raw.modelCenter===undefined?{x:0,y:0,z:0}:raw.modelCenter),scaleDenominator=raw.scaleDenominator===undefined?100:raw.scaleDenominator;
+  const frame=normalizeFrame(raw.frame,paper),boundary=raw.boundary===undefined?undefined:normalizeViewportBoundary(raw.boundary),modelCenter=xyz(raw.modelCenter===undefined?{x:0,y:0,z:0}:raw.modelCenter),scaleDenominator=raw.scaleDenominator===undefined?100:raw.scaleDenominator;
+  if(boundary){const bounds=viewportFrameFromPoints(boundary);if(['x','y','width','height'].some(key=>Math.abs(frame[key]-bounds[key])>1e-9*Math.max(1,Math.abs(bounds[key]))))throw Error('Viewport frame must equal its polygon boundary bounds.');}
   if(!finite(scaleDenominator)||scaleDenominator<1e-6||scaleDenominator>1e9)throw Error('Viewport scale denominator must be between 0.000001 and 1000000000.');
   for(const key of ['locked','plotBorder'])if(raw[key]!==undefined&&typeof raw[key]!=='boolean')throw Error(`${key} must be boolean.`);
   const frozenLayers=raw.frozenLayers===undefined?[]:raw.frozenLayers;
@@ -35,7 +48,8 @@ export function normalizePaperViewport(raw,paper,layers,normalizeCamera){
   const camera3d=normalizeCamera({...raw.camera3d,target:modelCenter,...(raw.camera3d===undefined?{yaw:-90,pitch:90,roll:0,mode:'top',projection:'orthographic'}:{})});
   if(camera3d.projection!=='orthographic')throw Error('Scaled paper viewports support orthographic projection only.');
   const layer=raw.layer===undefined?'0':raw.layer;if(!layers.some(item=>item.name===layer))throw Error('Viewport border layer does not exist.');
-  return{id:raw.id,frame,modelCenter,scaleDenominator,locked:raw.locked??false,frozenLayers:[...frozenLayers],workspace,camera3d,plotBorder:raw.plotBorder??false,layer};
+  const attributes={};if(raw.color!==undefined){if(typeof raw.color!=='string'||!/^#[0-9a-f]{6}$/i.test(raw.color))throw Error('Viewport color must be a six-digit hex value.');attributes.color=raw.color;}if(raw.lineweight!==undefined){if(!finite(raw.lineweight)||raw.lineweight<0||raw.lineweight>10)throw Error('Viewport lineweight must be 0..10 mm.');attributes.lineweight=raw.lineweight;}if(raw.linetype!==undefined){if(!LINETYPES.includes(raw.linetype))throw Error('Viewport linetype is invalid.');attributes.linetype=raw.linetype;}
+  return{id:raw.id,frame,...(boundary?{boundary}:{}),modelCenter,scaleDenominator,locked:raw.locked??false,frozenLayers:[...frozenLayers],workspace,camera3d,plotBorder:raw.plotBorder??false,layer,...attributes};
 }
 export function normalizeLayouts(raw,layers,normalizeCamera){
   if(!Array.isArray(raw)||raw.length>32)throw Error('Drawing supports at most 32 layouts.');
@@ -66,7 +80,13 @@ export function viewportPaperToModel(rawPoint,viewport,settings={}){
   const result={x:c.x+axes.right.x*x+axes.up.x*y,y:c.y+axes.right.y*x+axes.up.y*y,z:c.z+axes.right.z*x+axes.up.z*y};
   if(!Object.values(result).every(finite))throw Error('Viewport inverse projection exceeds the finite numeric range.');return result;
 }
-export function pointInViewport(p,viewport){return p.x>=viewport.frame.x&&p.x<=viewport.frame.x+viewport.frame.width&&p.y>=viewport.frame.y&&p.y<=viewport.frame.y+viewport.frame.height;}
+/** Border resizing keeps the same model points anchored to absolute paper. */
+export function compensateViewportResize(source,edited,settings={}){
+  const units=source.modelUnitMm===undefined?modelUnitMillimeters(settings):source.modelUnitMm;if(!finite(units)||units<=0)throw Error('Viewport model-unit conversion must be positive and finite.');
+  const a=source.frame,b=edited.frame,dx=((b.x+b.width/2)-(a.x+a.width/2))*source.scaleDenominator/units,dy=((b.y+b.height/2)-(a.y+a.height/2))*source.scaleDenominator/units,axes=basis(source),c=xyz(source.modelCenter),modelCenter={x:c.x+axes.right.x*dx+axes.up.x*dy,y:c.y+axes.right.y*dx+axes.up.y*dy,z:c.z+axes.right.z*dx+axes.up.z*dy};
+  if(!Object.values(modelCenter).every(finite))throw Error('Viewport resize compensation exceeds the finite numeric range.');return{...edited,modelCenter,camera3d:{...edited.camera3d,target:{...modelCenter}}};
+}
+export function pointInViewport(p,viewport){if(!(p.x>=viewport.frame.x&&p.x<=viewport.frame.x+viewport.frame.width&&p.y>=viewport.frame.y&&p.y<=viewport.frame.y+viewport.frame.height))return false;if(!viewport.boundary)return true;const points=viewport.boundary;let inside=false;for(let i=0,j=points.length-1;i<points.length;j=i++){const a=points[j],b=points[i],cross=(p.x-a.x)*(b.y-a.y)-(p.y-a.y)*(b.x-a.x);if(Math.abs(cross)<=Number.EPSILON*64*Math.max(1,Math.abs((p.x-a.x)*(b.y-a.y)),Math.abs((p.y-a.y)*(b.x-a.x)))&&p.x>=Math.min(a.x,b.x)&&p.x<=Math.max(a.x,b.x)&&p.y>=Math.min(a.y,b.y)&&p.y<=Math.max(a.y,b.y))return true;if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)inside=!inside;}return inside;}
 export function normalizePaperView(raw={center:{x:210,y:148.5},scale:2}){const center=xy(raw.center);if(!finite(raw.scale)||raw.scale<1e-6||raw.scale>1e6)throw Error('Paper view scale must be 0.000001..1000000 pixels/mm.');return{center,scale:raw.scale};}
 export function isEntityVisible(entity,document={},context={}){
   const layoutId=context.layoutId===undefined?document.activeLayoutId:context.layoutId,viewportId=context.viewportId===undefined?document.activeViewportId:context.viewportId;

@@ -1,0 +1,6 @@
+'use strict';
+const {spawn}=require('node:child_process'),path=require('node:path'),fs=require('node:fs');
+const root=path.resolve(__dirname,'..'),workspace=path.basename(path.dirname(root))==='outputs'?path.dirname(path.dirname(root)):root,executable=process.argv[2]||path.join(root,'node_modules/electron/dist/electron.exe'),env={...process.env};delete env.ELECTRON_RUN_AS_NODE;
+const started=Date.now(),reportPath=path.join(__dirname,'viewport-pdf-v17-render-results.json');
+const child=spawn(executable,[path.join(__dirname,'viewport-pdf-v17.cjs'),'--linecraft-test-hidden'],{cwd:root,env,windowsHide:true,stdio:'inherit'});
+child.once('error',error=>{console.error(error);process.exitCode=1;});child.once('exit',(code,signal)=>{try{if(code!==0)throw Error(`Hidden polygon PDF process failed (${code??signal}).`);const report=JSON.parse(fs.readFileSync(reportPath,'utf8'));if(Date.parse(report.completedAt)<started||report.failed||report.sourceChangedDuringRun)throw Error('A fresh passing polygon PDF report was not produced.');console.log(`${report.passed}/${report.total} actual polygon PDF checks passed; show events ${report.showEvents}.`);}catch(error){console.error(error.message);process.exitCode=1;}});
