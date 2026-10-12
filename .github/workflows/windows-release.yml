@@ -84,6 +84,24 @@ jobs:
           console.log(JSON.stringify({originalDriverSHA256:expected,configuredDriverSHA256:report.configuredDriverSHA256,width:1280,height:820,canonicalRuntimeIdentitiesPassed:18}));
           '@ | node
           if ($LASTEXITCODE -ne 0) { throw 'The deterministic hidden layout fixture could not be configured.' }
+      - name: Disable builder auto-publication before the verified release step
+        run: |
+          @'
+          'use strict';
+          const fs=require('node:fs'),path=require('node:path'),{createHash}=require('node:crypto');
+          const root=path.resolve(process.argv[2]||process.cwd()),filename=path.join(root,'desktop/dev-tools.cjs'),hash=value=>createHash('sha256').update(value).digest('hex');
+          const source=fs.readFileSync(filename,'utf8'),expected='6bf4f6a20960e3dea1d51aeb8022a2b56b3692b5bfbb7f8ece18cb56d760321d';
+          if(hash(source)!==expected)throw Error('The public build driver differs from the immutable v1.6.0 source.');
+          const anchor="[builder,'--win'",configuredAnchor="[builder,'--publish','never','--win'";
+          if(source.split(anchor).length!==3)throw Error('Expected exactly two frozen builder invocations.');
+          const configured=source.replaceAll(anchor,configuredAnchor);
+          if(configured.replaceAll(configuredAnchor,anchor)!==source)throw Error('An original stage, test assertion or build argument changed.');
+          fs.writeFileSync(filename,configured);fs.mkdirSync(path.join(root,'work'),{recursive:true});
+          const report={scope:'CI-only explicit electron-builder --publish never on both unpacked and NSIS calls. Every original stage/assertion/build argument is retained; only the later gh release step receives publication credentials.',originalDriverSHA256:expected,configuredDriverSHA256:hash(configured),builderInvocations:2,publishPolicy:'never',originalStagesAssertionsAndBuildArgumentsRetained:true,completedAt:new Date().toISOString()};
+          fs.writeFileSync(path.join(root,'work/public-ci-builder-publish-policy-results.json'),JSON.stringify(report,null,2)+'\n');
+          console.log(JSON.stringify(report));
+          '@ | node
+          if ($LASTEXITCODE -ne 0) { throw 'Unable to configure explicit build-only publication policy.' }
       - name: Test source, test unpacked application, compile NSIS
         run: npm run build
       - name: Create checksum and release notes
