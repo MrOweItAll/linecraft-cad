@@ -1,6 +1,6 @@
 {
   "name": "linecraft-cad",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Independent offline 2D drafting and polygonal 3D modeling for Windows",
   "author": "Linecraft contributors",
   "license": "MIT",
@@ -22,6 +22,11 @@
     "test:paper-pdf": "node dev-tools.cjs test-pdf",
     "test:viewport-pdf": "node dev-tools.cjs test-viewport-pdf",
     "test:viewport-export": "node ../tests/export-viewport-v17.mjs",
+    "test:scale-catalog": "node --test ../tests/viewport-scales.test.mjs",
+    "test:scale-math": "node ../tests/viewport-scales-tests.mjs",
+    "test:scale-security": "node ../tests/viewport-scales-security-v18.cjs",
+    "test:scales": "node dev-tools.cjs test-scales",
+    "test:scale-pdf": "node dev-tools.cjs test-scales-pdf",
     "test:desktop": "node dev-tools.cjs desktop",
     "test:converter": "node ../tests/converter-identity.cjs",
     "unpacked": "node dev-tools.cjs unpacked",
@@ -59,7 +64,8 @@
       "desktop/plot-files.cjs",
       "units.mjs",
       "paper-space.mjs",
-      "drawing-plane.mjs"
+      "drawing-plane.mjs",
+      "viewport-scales.mjs"
     ],
     "win": {
       "target": "nsis",

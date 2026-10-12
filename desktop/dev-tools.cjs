@@ -13,6 +13,9 @@ const pureStages=[
  ['paper/viewport/layer/plane IPC validation and real files',['tests/layouts-security.test.cjs']],
  ['independent viewport objects, clipping owner graphs and resize compensation',['tests/viewport-object-tests.mjs']],
  ['polygon viewport IPC schema, bounded resources and real Save/Open validation',['tests/viewport-security-v17.cjs']],
+ ['physical viewport scale catalog, notation and XP factors',['--test','tests/viewport-scales.test.mjs']],
+ ['independent architectural scale arithmetic and unchanged geometry',['tests/viewport-scales-tests.mjs']],
+ ['viewport scale and XP IPC validation with real files',['tests/viewport-scales-security-v18.cjs']],
  ['original clipped-viewport DXF fixture export',['tests/export-viewport-v17.mjs']],
  ['desktop trust and native file boundaries',['tests/desktop-unit.test.cjs']],
  ['restricted geometry clipboard transport',['tests/clipboard-security.test.cjs']],
@@ -29,7 +32,7 @@ const pureStages=[
  ['DWG converter isolation and bounded failure handling',['tests/import-files.test.cjs']],
  ['synthetic bounded DXF decoder',['--test','tests/dwg-import.test.mjs']]
 ];
-function sourceFiles(folder=root,prefix=''){const result=[];for(const item of fs.readdirSync(folder,{withFileTypes:true})){const name=prefix+item.name;if(['node_modules','Windows-Release','work','.git','.linecraft-dev-profile','__pycache__'].includes(item.name)||['tests/layout-pdf-v16','tests/viewport-pdf-v17'].includes(name))continue;if(item.isDirectory())result.push(...sourceFiles(path.join(folder,item.name),name+'/'));else if(item.isFile()&&!/-results\.json$|\.log$/.test(name)&&!(name.startsWith('tests/')&&name.endsWith('.png')))result.push(name);}return result.sort();}
+function sourceFiles(folder=root,prefix=''){const result=[];for(const item of fs.readdirSync(folder,{withFileTypes:true})){const name=prefix+item.name;if(['node_modules','Windows-Release','work','.git','.linecraft-dev-profile','__pycache__'].includes(item.name)||['tests/layout-pdf-v16','tests/viewport-pdf-v17','tests/viewport-scales-pdf-v18'].includes(name))continue;if(item.isDirectory())result.push(...sourceFiles(path.join(folder,item.name),name+'/'));else if(item.isFile()&&!/-results\.json$|\.log$/.test(name)&&!(name.startsWith('tests/')&&name.endsWith('.png')))result.push(name);}return result.sort();}
 const fingerprint=files=>Object.fromEntries(files.map(name=>[name,createHash('sha256').update(fs.readFileSync(path.join(root,name))).digest('hex')]));
 function assertStable(report){const after=fingerprint(Object.keys(report.sourceSHA256)),changed=Object.keys(after).filter(name=>after[name]!==report.sourceSHA256[name]);if(changed.length)throw Error(`Public sources changed: ${changed.join(', ')}. Repeat before building.`);}
 async function check(report,name,args){const row={name,status:'running'},start=Date.now();report.stages.push(row);console.log(`[Public check ${report.stages.length}] ${name}`);try{await run(process.execPath,args);row.status='passed';}catch(error){row.status='failed';row.error=error.message;throw error;}finally{row.durationMs=Date.now()-start;}}
@@ -45,6 +48,8 @@ async function gate(command){const version=JSON.parse(fs.readFileSync(path.join(
    await check(report,'actual hidden source active-command viewport pan and cursor-anchored zoom',['tests/viewport-regression-v17.cjs',executable,entry,'public-source-viewport-navigation']);
    await check(report,'actual hidden production paper PDF and unequal Publish sheets',['tests/run-layout-pdf-v16.cjs',executable]);
    await check(report,'actual hidden production polygon clipping and off-sheet vector PDF',['tests/run-viewport-pdf-v17.cjs',executable]);
+   await check(report,'actual hidden source architectural and engineering scale choices, exact custom ratios and lock protection',['tests/viewport-scales-v18.cjs',executable,entry,'public-source-viewport-scales']);
+   await check(report,'actual hidden production architectural preset PDF in four assigned model units',['tests/run-viewport-scales-pdf-v18.cjs',executable]);
    assertStable(report);
    if(['unpacked','build'].includes(command)){
     const builder=dependency('electron-builder','cli.js'),out=JSON.parse(fs.readFileSync(path.join(root,'package.json'))).build.directories.output,unpacked=path.join(root,out,'win-unpacked'),app=path.join(unpacked,'Linecraft CAD.exe');
@@ -53,6 +58,7 @@ async function gate(command){const version=JSON.parse(fs.readFileSync(path.join(
     await check(report,'actual hidden unpacked layout/UCS workflow',['tests/layouts-v16.cjs',app,'','public-unpacked-layouts']);
     await check(report,'actual hidden unpacked rectangle/polygon viewport workflow',['tests/viewports-v17.cjs',app,'','public-unpacked-viewports']);
     await check(report,'actual hidden unpacked active-command viewport pan and zoom',['tests/viewport-regression-v17.cjs',app,'','public-unpacked-viewport-navigation']);
+    await check(report,'actual hidden unpacked common viewport scales, XP input and protected lock workflow',['tests/viewport-scales-v18.cjs',app,'','public-unpacked-viewport-scales']);
     await check(report,'packaged converter/license/source byte identities',['tests/converter-identity.cjs',path.join(unpacked,'resources/third-party/libredwg'),'public-unpacked-converter']);
     assertStable(report);
     if(command==='build')await check(report,'compile NSIS from tested unpacked application',[builder,'--publish','never','--win','nsis','--x64','--projectDir',root,'--prepackaged',unpacked]);
@@ -62,5 +68,5 @@ async function gate(command){const version=JSON.parse(fs.readFileSync(path.join(
  }catch(error){report.status='failed';report.error=error.message;throw error;}
  finally{report.completedAt=new Date().toISOString();report.durationMs=Date.now()-start;report.passed=report.stages.filter(stage=>stage.status==='passed').length;report.failed=report.status==='passed'?0:Math.max(1,report.stages.filter(stage=>stage.status==='failed').length);fs.mkdirSync(path.join(root,'work'),{recursive:true});fs.writeFileSync(path.join(root,'work',`public-${command}-results.json`),JSON.stringify(report,null,2)+'\n');console.log(`Public ${command}: ${report.passed}/${report.stages.length} stages, ${report.status}.`);}
 }
-async function main(){const command=process.argv[2]||'dev';if(['test','desktop','unpacked','build'].includes(command))return gate(command);if(command==='dev'){const profile=path.join(root,'.linecraft-dev-profile');fs.mkdirSync(profile,{recursive:true});return run(runtime(),[path.join(root,'desktop/main.cjs'),`--user-data-dir=${profile}`]);}const focused={'test-units':'units-v15.cjs','test-layouts':'layouts-v16.cjs','test-viewports':'viewports-v17.cjs','test-viewport-navigation':'viewport-regression-v17.cjs'};if(focused[command]){dependency('playwright','index.js');return run(process.execPath,[`tests/${focused[command]}`,runtime(),path.join(root,'desktop/main.cjs'),`public-${command.slice(5)}`]);}if(command==='test-pdf'||command==='test-viewport-pdf')return run(process.execPath,[command==='test-pdf'?'tests/run-layout-pdf-v16.cjs':'tests/run-viewport-pdf-v17.cjs',runtime()]);throw Error('Use dev, test, desktop, test-units, test-layouts, test-viewports, test-viewport-navigation, test-pdf, test-viewport-pdf, unpacked or build.');}
+async function main(){const command=process.argv[2]||'dev';if(['test','desktop','unpacked','build'].includes(command))return gate(command);if(command==='dev'){const profile=path.join(root,'.linecraft-dev-profile');fs.mkdirSync(profile,{recursive:true});return run(runtime(),[path.join(root,'desktop/main.cjs'),`--user-data-dir=${profile}`]);}const focused={'test-units':'units-v15.cjs','test-layouts':'layouts-v16.cjs','test-viewports':'viewports-v17.cjs','test-viewport-navigation':'viewport-regression-v17.cjs','test-scales':'viewport-scales-v18.cjs'};if(focused[command]){dependency('playwright','index.js');return run(process.execPath,[`tests/${focused[command]}`,runtime(),path.join(root,'desktop/main.cjs'),`public-${command.slice(5)}`]);}if(['test-pdf','test-viewport-pdf','test-scales-pdf'].includes(command)){const producer={'test-pdf':'run-layout-pdf-v16.cjs','test-viewport-pdf':'run-viewport-pdf-v17.cjs','test-scales-pdf':'run-viewport-scales-pdf-v18.cjs'}[command];return run(process.execPath,['tests/'+producer,runtime()]);}throw Error('Use dev, test, desktop, test-units, test-layouts, test-viewports, test-viewport-navigation, test-scales, test-pdf, test-viewport-pdf, test-scales-pdf, unpacked or build.');}
 main().catch(error=>{console.error(error.stack||error);process.exitCode=1;});

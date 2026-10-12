@@ -1,0 +1,11 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {spawnSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),files=['core.mjs','viewport-scales.mjs','paper-space.mjs','units.mjs','tests/viewport-scales-fixtures-v18.mjs','tests/viewport-scales-independent.test.mjs','tests/viewport-scales-tests.mjs'];
+const hashes=()=>Object.fromEntries(files.map(file=>[file,createHash('sha256').update(fs.readFileSync(path.join(root,file))).digest('hex')])),sourceSHA256=hashes(),started=Date.now();
+const result=spawnSync(process.execPath,['--test','--test-reporter=tap','tests/viewport-scales-independent.test.mjs'],{cwd:root,encoding:'utf8',timeout:30000,maxBuffer:2*1024*1024});process.stdout.write(result.stdout||'');process.stderr.write(result.stderr||'');
+const count=name=>Number((result.stdout||'').match(new RegExp(`# ${name} (\\d+)`))?.[1]),total=count('tests'),passed=count('pass'),failed=count('fail'),sourceChangedDuringRun=JSON.stringify(sourceSHA256)!==JSON.stringify(hashes());
+const report={framework:'Actual independent architectural viewport scale and raw XP regression execution',scope:'Hand-specified paper coordinates and physical lengths across inch, foot, millimeter and meter models; parser limits, exact custom labels, history and raw paper-mm/model-unit XP. No native CAD or GUI claim.',completedAt:new Date().toISOString(),durationMs:Date.now()-started,sourceSHA256,sourceChangedDuringRun,total,passed,failed,exitCode:result.status,error:result.error?.message};
+fs.writeFileSync(path.join(root,'tests/viewport-scales-independent-results.json'),JSON.stringify(report,null,2)+'\n');process.exitCode=result.status!==0||sourceChangedDuringRun||!Number.isInteger(total)||total<21||failed!==0?1:0;

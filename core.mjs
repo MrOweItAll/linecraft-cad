@@ -3,9 +3,11 @@ import {validateEllipse,ellipsePoint,ellipseBoundsPoints,validateSpline,makeClam
 import {parseLength,parseAngle,formatLength,formatAngle,formatArea,UNIT_PRESETS,UNIT_SETTINGS_DEFAULTS,normalizeUnitSettings,dxfUnitFormat} from './units.mjs';
 import {PAPER_SIZES,LINETYPES,modelUnitMillimeters,normalizePaper,normalizeLayouts,normalizePaperViewport,normalizePaperView,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible,viewportBoundaryPoints,viewportFrameFromPoints,normalizeViewportBoundary,viewportAsObject,compensateViewportResize} from './paper-space.mjs';
 import {presetUCS,normalizeUCS,ucsFromThreePoints,constructionPlane,planeToWorld,worldToPlane,intersectPlaneRay,planeCamera,spatialCurvePoint,spatialAngleOnArc,spatialCurveBounds,validateSpatialCurve,sampleSpatialCurve,spatialCurveOCS} from './drawing-plane.mjs';
+import {parseViewportZoomFactor} from './viewport-scales.mjs';
 export {PAPER_SIZES,LINETYPES,modelUnitMillimeters,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible,viewportBoundaryPoints,viewportFrameFromPoints,normalizeViewportBoundary,viewportAsObject,compensateViewportResize,presetUCS,normalizeUCS,ucsFromThreePoints,constructionPlane,planeToWorld,worldToPlane,intersectPlaneRay,planeCamera};
 export {spatialCurvePoint,spatialCurveBounds,validateSpatialCurve,sampleSpatialCurve};
 export {parseLength,parseAngle,formatLength,formatAngle,formatArea,UNIT_PRESETS,dxfUnitFormat};
+export {VIEWPORT_SCALE_GROUPS,VIEWPORT_SCALES,MIN_VIEWPORT_SCALE_DENOMINATOR,MAX_VIEWPORT_SCALE_DENOMINATOR,getViewportScale,parseViewportScale,matchViewportScale,formatViewportScale,parseViewportZoomFactor} from './viewport-scales.mjs';
 export {ellipsePoint,splinePoint,splineBezierSegments,sampleCurve,hatchGeometry,filletLines,chamferLines};
 export const ADVANCED_COMMANDS=Object.freeze(['HATCH','DIMANGULAR','BLOCK','INSERT','ARRAYRECT','FILLET','CHAMFER','ELLIPSE','SPLINE','STRETCH','PEDIT']);
 const NUMBER = '[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?';
@@ -1910,8 +1912,12 @@ export function createEditor(initialState = {}) {
         else if (state.command === 'ZOOM') {
           if (token === 'E' || token === 'EXTENTS') {
             response=commandAPI(()=>editor.fitView());
+          } else if (/XP$/i.test(inputText)) {
+            const view=editor.getActiveViewport();
+            if(state.activeSpace!=='model'||!view)response=result(false,'ZOOM XP requires an active unlocked model viewport.');
+            else{const factor=parseViewportZoomFactor(inputText),scaleDenominator=modelUnitMillimeters(state.settings)/factor;response=commandAPI(()=>editor.updateViewport(state.activeLayoutId,view.id,{scaleDenominator},{navigation:true}));}
           } else if (inputText === '') { idle(); response = result(true, 'ZOOM canceled.'); }
-          else response = result(false, 'ZOOM supports E (Extents).');
+          else response = result(false, 'ZOOM supports E (Extents) or factorXP in an unlocked model viewport. XP means paper mm per model unit.');
         } else if (SELECT_COMMANDS.has(state.command) && state.commandPhase === 'selection') {
             if (inputText === '') response = acceptTransformSelection();
             else if (['ALL', 'SELECT ALL'].includes(token)) response = editor.select(allObjects().map(entity => entity.id), { add: true });
@@ -2060,7 +2066,7 @@ export function createEditor(initialState = {}) {
         else if (['U', 'UNDO'].includes(token)) response = editor.undo();
         else if (['REDO', 'MREDO'].includes(token)) response = editor.redo();
         else if (['E', 'ERASE', 'DELETE'].includes(token)) response = startCommand('ERASE');
-        else if (['Z', 'ZOOM'].includes(token)) { state.command = 'ZOOM'; state.commandPoints = []; state.prompt = 'ZOOM Enter option [Extents]:'; response = result(true, 'Enter E for extents.'); }
+        else if (['Z', 'ZOOM'].includes(token)) { state.command = 'ZOOM'; state.commandPhase='zoom-option';state.commandData={targetKind:'none'};state.commandPoints = []; state.prompt = 'ZOOM Enter E (Extents) or factorXP (paper mm per model unit):'; response = result(true, 'Enter E or a positive XP factor in an unlocked model viewport.'); }
         else if (['Z E', 'ZOOM E', 'ZE', 'EXTENTS'].includes(token)) {
           response=editor.fitView();
         } else if (['ALL', 'SELECT ALL'].includes(token)) { editor.select(allObjects().map(entity => entity.id)); response = result(true, `${state.selectionIds.length} objects selected.`); }

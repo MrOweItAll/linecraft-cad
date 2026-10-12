@@ -8,7 +8,7 @@ on:
       release_tag:
         description: Immutable version tag to build and publish
         required: true
-        default: v1.7.0
+        default: v1.8.0
         type: string
 permissions:
   contents: write
@@ -27,7 +27,7 @@ jobs:
     steps:
       - name: Validate release tag input
         run: |
-          if ($env:RELEASE_TAG -notmatch '\Av[0-9]+\.[0-9]+\.[0-9]+\z') { throw 'Use a version tag such as v1.7.0.' }
+          if ($env:RELEASE_TAG -notmatch '\Av[0-9]+\.[0-9]+\.[0-9]+\z') { throw 'Use a version tag such as v1.8.0.' }
       - name: Preserve canonical repository bytes on checkout
         run: |
           git config --global core.autocrlf false
@@ -66,12 +66,12 @@ jobs:
           'use strict';
           const fs=require('node:fs'),{createHash}=require('node:crypto');
           const manifest=JSON.parse(fs.readFileSync('PUBLIC-SOURCE.json','utf8'));
-          if(manifest.version!==require('./package.json').version||manifest.runtimeFiles.length!==18)throw Error('Public runtime manifest does not match this release.');
+          if(manifest.version!==require('./package.json').version||manifest.runtimeFiles.length!==19)throw Error('Public runtime manifest does not match this release.');
           for(const file of manifest.runtimeFiles){const actual=createHash('sha256').update(fs.readFileSync(file.file)).digest('hex');if(actual!==file.sha256)throw Error('Canonical runtime bytes changed: '+file.file);}
           const driver=fs.readFileSync('desktop/dev-tools.cjs','utf8');
           if((driver.match(/\[builder,'--publish','never','--win'/g)||[]).length!==2)throw Error('Both builder stages must explicitly disable automatic publication.');
-          for(const file of ['tests/layouts-v16.cjs','tests/viewports-v17.cjs','tests/viewport-regression-v17.cjs']){const source=fs.readFileSync(file,'utf8');if(!source.includes('setContentSize(1280,820)'))throw Error('A hidden UI fixture lacks its deterministic content size: '+file);}
-          console.log('Canonical runtime identities: 18/18; build-only policy and deterministic hidden fixtures verified.');
+          for(const file of ['tests/layouts-v16.cjs','tests/viewports-v17.cjs','tests/viewport-regression-v17.cjs','tests/viewport-scales-v18.cjs']){const source=fs.readFileSync(file,'utf8');if(!source.includes('setContentSize(1280,820)'))throw Error('A hidden UI fixture lacks its deterministic content size: '+file);}
+          console.log('Canonical runtime identities: 19/19; build-only policy and deterministic hidden fixtures verified.');
           '@ | node
           if ($LASTEXITCODE -ne 0) { throw 'Canonical runtime or build fixture policy verification failed.' }
       - name: Test source, test unpacked application, compile NSIS
@@ -86,7 +86,7 @@ jobs:
           @"
           Linecraft CAD $version for Windows x64.
 
-          Built from this tag after the public synthetic source and hidden desktop gates, including editable rectangular and simple closed polygon viewports, cursor-anchored model navigation, viewport scales, UCS construction and vector PDF clipping. The unsigned installer includes the pinned standalone Electron runtime. GNU LibreDWG and libiconv retain their separate licenses and matching source archives.
+          Built from this tag after the public synthetic source and hidden desktop gates, including editable rectangular and simple closed polygon viewports, cursor-anchored model navigation, physical architectural/engineering/ratio presets, exact custom scales, protected scale controls, UCS construction and vector PDF clipping. The unsigned installer includes the pinned standalone Electron runtime. GNU LibreDWG and libiconv retain their separate licenses and matching source archives.
 
           Viewport frame resize retains its physical model scale; MOVE translates the window and content. DWG input remains bounded model-space import; DWG writing, full native drawing fidelity and ACIS solids are unsupported.
 

@@ -1,11 +1,17 @@
 {
-  "version": "1.7.0",
+  "version": "1.8.0",
   "scope": "Original public runtime and synthetic regression suite; private native drawings and evidence excluded.",
   "runtimeFiles": [
     {
       "file": "core.mjs",
-      "bytes": 302053,
-      "sha256": "b8b2da9e99b09fcd1d37a76afaa58163a731fad7fc3fec3a3250788422b7ff27",
+      "bytes": 303044,
+      "sha256": "6cbe2973c480f52b00b2eacc84b5124a86d93af1656de6ca8a03e8a7d839d216",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "viewport-scales.mjs",
+      "bytes": 5396,
+      "sha256": "b78f658a01343fd21224442b5cb2c69d1e057f8d31bb102157e17f76df4ab592",
       "matchesInternalRuntime": true
     },
     {
@@ -52,20 +58,20 @@
     },
     {
       "file": "app.mjs",
-      "bytes": 230497,
-      "sha256": "dce6c149f83ddaeae880b3bd9ea8d02af2373cd7a5a0c38c7241b960d6c41bd4",
+      "bytes": 236970,
+      "sha256": "97001be66deacac27962ad536aefb61ce66d333c2ffa06d6359edbd772d7e3fc",
       "matchesInternalRuntime": true
     },
     {
       "file": "index.html",
-      "bytes": 41928,
-      "sha256": "cfb5636b9d9398f86aa8550ce82683663c1c37be505bea629ac8a3f8be3a41d4",
+      "bytes": 42495,
+      "sha256": "2d29eb766270b4bb0f5875365bcf00e4ade6ff60987ef2244fb5a2e19b9e8509",
       "matchesInternalRuntime": true
     },
     {
       "file": "styles.css",
-      "bytes": 34604,
-      "sha256": "d426f82061c810efef819415b6d3ee8467f55446b4f38157fea15763de326a78",
+      "bytes": 36267,
+      "sha256": "923aa006801603d227f2ee48b97b3b2ce9759d7e0943773e39f3da67b5350a8a",
       "matchesInternalRuntime": true
     },
     {
@@ -76,8 +82,8 @@
     },
     {
       "file": "desktop/main.cjs",
-      "bytes": 27198,
-      "sha256": "f93f3e935b6655aee8b7e3dddd56f5a26bee465e5363ef67eeacc1a2cc053a83",
+      "bytes": 27264,
+      "sha256": "83b25898e41e3d9e9ec6d7be0aa47ca5f1aae793b0282af8b2a1ce32dfb7a262",
       "matchesInternalRuntime": true
     },
     {
@@ -126,9 +132,10 @@
     "core.test.mjs": "Native evidence/helper and archived-sample-dependent test expressions removed individually; remaining synthetic bodies preserved. Pure sequence labels identify synthetic cases.",
     "dwg-import.test.mjs": "Native/historical sample-dependent cases removed; synthetic decoder bodies preserved.",
     "reference-annotations.mjs": "Original standalone group-code reader only.",
-    "units-v15.cjs, layouts-v16.cjs, viewports-v17.cjs and viewport-regression-v17.cjs": "Require local pinned Playwright, without personal cache paths.",
+    "units-v15.cjs, layouts-v16.cjs, viewports-v17.cjs, viewport-regression-v17.cjs and viewport-scales-v18.cjs": "Require local pinned Playwright, without personal cache paths.",
     "desktop-unit.test.cjs": "Outside-app fixture is a sibling of repository root, independent of workspace layout.",
-    "run-layout-pdf-v16.cjs and run-viewport-pdf-v17.cjs": "Use local pinned Electron without private cache lookup.",
+    "run-layout-pdf-v16.cjs, run-viewport-pdf-v17.cjs and run-viewport-scales-pdf-v18.cjs": "Use local pinned Electron without private cache lookup.",
+    "export-viewport-scales-sample.mjs": "The same original sample generator places its optional audited PDF under ignored work; source includes only the editable Linecraft sample.",
     "audit-viewport-dxf-v17.py": "Optional independent reader cache stays under the cloned repository work directory."
   },
   "removedPrivateTestCount": {

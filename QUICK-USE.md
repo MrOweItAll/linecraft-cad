@@ -1,4 +1,4 @@
-# Linecraft CAD 1.7 quick use
+# Linecraft CAD 1.8 quick use
 
 Use the command line for exact input, and the canvas for placement, selection and navigation. Enter accepts an input; Escape ends the active command or clears selection. HELP opens searchable command options and limits.
 
@@ -13,11 +13,24 @@ Use the command line for exact input, and the canvas for placement, selection an
 
 1. Click + beside the bottom Model tab. Give the sheet a name, choose paper size/orientation, and Apply page setup. Paper coordinates and annotations use millimeters.
 2. Choose New viewport, or enter MVIEW. Two corners, such as `10,10` and `190,120`, create a rectangle. Enter `P` for a simple straight polygon, collect 3–64 vertices and `C` to close. Enter `O` to pick an existing closed straight PLINE/RECTANG; its source stays in the drawing. New windows start unlocked, at model center `0,0,0` and 1:100.
-3. Select the frame edge. Choose a scale such as 1:50/1:100, or Custom. Model units determine physical scale: a 1000 mm model line is 20 mm long on paper at 1:50. A unitless model uses millimeters for viewport scaling.
+3. Select the frame edge. Use the bottom scale picker or Properties → Standard scale. Architectural choices include `1/16" = 1'-0"`, `3/32" = 1'-0"`, `1/8" = 1'-0"` and `1/4" = 1'-0"`; separate groups offer paper:model ratios and engineering feet per paper inch. Model units determine physical scale: a 1000 mm model line is 20 mm long on paper at 1:50. Set UNITS to the intended model unit before choosing a scale. A unitless model uses millimeters for viewport scaling.
 4. Frames select with ordinary click/window/crossing selection and can share MOVE/COPY/ERASE/SCALE edits with paper objects. Drag a frame to move it. Rectangles have four corner and four edge-midpoint grips; polygons have vertex and edge grips. Properties edits size, location, view and appearance. Undo restores accepted edits.
 5. Resizing, SCALE and partial STRETCH expose a different clipped region while keeping the model picture anchored on paper and its ratio unchanged. MOVE/COPY carries the window and picture together. Width/height Properties behaves like resizing; X/Y-only relocation behaves like MOVE. The eight rectangular grips are Linecraft's ergonomic controls, not a claim of identical native grips.
 6. Double-click inside the actual boundary to work in that model view; a concave notch stays paper space. Wheel zoom anchors at the cursor and middle drag pans through the clip. Double-click outside, click VIEWPORT MODEL, or enter PSPACE to return to paper. Use Model for the standalone drawing.
-7. Lock the viewport after choosing its view. Wheel/middle drag then navigates the whole sheet while retaining MSPACE and the viewport ratio/center. Unlocked navigation changes that view. During a drawing prompt, it retains accepted points/anchors and geometry Undo keeps the latest navigation.
+7. Lock the viewport after choosing its view. Scale fields become disabled until you click Unlock. Wheel/middle drag then navigates the whole sheet while retaining MSPACE and the viewport ratio/center. Unlocked navigation changes that view. During a drawing prompt, it retains accepted points/anchors and geometry Undo keeps the latest navigation.
+
+Custom accepts an exact denominator (`96`), paper:model ratio (`1:96`), or physical notation (`1/8” = 1’-0”`, `1cm = 1m`). Its preview reports the physical result before Apply; Cancel keeps the drawing unchanged. Each applied scale is one undoable edit. Changing scale retains the frame and view center. Different windows can have different scales. Unlocked wheel zoom updates the actual scale; a value that no longer matches a preset is shown as Custom.
+
+In an unlocked active model viewport, `ZOOM` followed by `25.4/96XP` sets an inch model to 1/8 inch per foot. XP is the number of millimeters on paper per model unit: use `304.8/96XP` for a foot model or `1/96XP` for a millimeter model. AutoCAD drawings whose paper coordinates are inches instead use an inch-paper factor; those raw factors need this paper-unit conversion. ZOOM Extents remains available.
+
+For a 24-foot model line, these printed lengths provide a ruler check when printing a layout PDF at Actual Size:
+
+| Scale | Physical ratio | Printed length |
+| --- | --- | --- |
+| 1/16" = 1'-0" | 1:192 | 1.5 in / 38.1 mm |
+| 3/32" = 1'-0" | 1:128 | 2.25 in / 57.15 mm |
+| 1/8" = 1'-0" | 1:96 | 3 in / 76.2 mm |
+| 1/4" = 1'-0" | 1:48 | 6 in / 152.4 mm |
 
 Paper annotations belong to the sheet. Draw TEXT, dimensions and planar geometry in PAPER; those objects stay independent of projected model objects. Page setup changes sheet size, never geometry scale. Frames may extend off-sheet; printed content clips at the page. Frame borders appear on screen and print only when Print border is Yes. Ordinary COPY duplicates a viewport within the drawing; geometry clipboard commands reject viewport frames, including mixed selections.
 

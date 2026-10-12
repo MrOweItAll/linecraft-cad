@@ -6,11 +6,29 @@ Download the Windows x64 installer from [GitHub Releases](https://github.com/MrO
 
 ## Paper layouts and physical scales
 
-Version 1.7 adds editable rectangular and simple closed polygon viewport objects. Select their borders with normal picks or windows; MOVE, COPY, ERASE, SCALE, ROTATE, MIRROR and crossing-window STRETCH operate on frames, including mixed paper geometry selections. Rectangles expose four corner and four edge-midpoint grips. Polygon boundaries expose vertex and edge-midpoint grips. MVIEW Polygonal accepts a closed straight boundary; MVIEW Object retains its original closed polyline/rectangle while creating an independent viewport. Boundaries support 3–64 vertices, without holes or curved edges.
+
+Version 1.8 adds grouped Architectural, Engineering and paper:model ratio choices to both the bottom viewport picker and Properties. For example:
+
+| Paper inches per model foot | Physical denominator |
+| --- | --- |
+| 1/16 inch | 192 |
+| 3/32 inch | 128 |
+| 1/8 inch | 96 |
+| 1/4 inch | 48 |
+
+These are physical scales: an inch model uses 25.4 millimeters per model unit, while a meter model uses 1000. Changing the scale leaves model geometry, the paper frame and the model center unchanged. Both controls derive the same label from the saved denominator. The Engineering choices are convenient feet-per-paper-inch presets; a drawing's editable native scale list may differ.
+
+Custom scale accepts a positive denominator, a paper:model ratio such as 1:96, or physical equality such as 1/8" = 1'-0". The preview does not edit the document; Apply makes one undoable change. Custom denominators retain their stored precision rather than snapping to a nearby preset. Select a scale, then lock the viewport. Locked scale controls stay readable and are disabled until the viewport is unlocked. Annotation styles remain separate.
+
+In an active unlocked model viewport, ZOOM accepts a positive numeric/fraction factor with XP. That factor is paper millimeters per model coordinate unit: 25.4/96XP sets the 1/8-inch-per-foot scale in an inch drawing; 1/96XP does so in a millimeter drawing. General X zoom and editing the preset list are not implemented.
+
+Editable rectangular and simple closed polygon viewport objects support ordinary selection and commands. Select their borders with normal picks or windows; MOVE, COPY, ERASE, SCALE, ROTATE, MIRROR and crossing-window STRETCH operate on frames, including mixed paper geometry selections. Rectangles expose four corner and four edge-midpoint grips. Polygon boundaries expose vertex and edge-midpoint grips. MVIEW Polygonal accepts a closed straight boundary; MVIEW Object retains its original closed polyline/rectangle while creating an independent viewport. Boundaries support 3–64 vertices, without holes or curved edges.
 
 Double-click inside a viewport to edit the model through that window. Unlocked windows zoom around the cursor and pan with the middle mouse button, including while LINE is active. A burst of wheel events commits one view change after navigation settles. Returning to paper space preserves sheet navigation. New windows start unlocked; explicit locks protect the model camera and allow sheet navigation instead. Resizing a frame retains the physical internal scale and existing paper projection; moving the whole frame translates its content. Off-sheet frames are allowed and output clips at the physical page edge.
 
 Named sheets support A0–A5/Letter/Tabloid and bounded custom paper, independent viewport scales and per-viewport layer freezing. Model units and paper units are separate: paper geometry is in millimeters. A 100-foot segment measures 30.48 mm at 1:1000 whether its model coordinates use inches or meters. The Model tab keeps its own view. Page setup, frame/scale, clipping boundary, model/paper visibility, colors, lineweights, continuous/dashed/hidden/center linetypes and Plot flags are stored with the drawing.
+
+The original [architectural scale example](samples/viewport-scales-v18.linecraft) shows four independently sized model views at the common 1/8, 1/4, 1/16 and 3/32 choices.
 
 Start with the original [inch/A4 example](samples/layouts-inch-v16.linecraft), [meter/A3 example](samples/layouts-meter-v16.linecraft) or [polygon/off-sheet example](samples/viewport-v17-reference.linecraft). These are independently authored synthetic drawings. [Quick use](QUICK-USE.md) covers the controls.
 
@@ -54,7 +72,7 @@ npm run dev
 
 Electron 44 downloads its native binary on first use rather than through an npm postinstall script. The explicit vendor installer above downloads the pinned 44.7.0 binary before Linecraft tooling checks for it. This step is needed for a fresh source checkout; an installed Linecraft application already includes its runtime. See [Electron's binary installation instructions](https://www.electronjs.org/docs/latest/tutorial/installation).
 
-The development profile is separate. Renderer edits reload with an accepted-drawing checkpoint. Host/preload and static geometry/unit/paper/plane helper changes require restart. Routine iteration does not reinstall the application. Tooling requires local pinned dependencies; it does not search personal caches.
+The development profile is separate. Renderer edits reload with an accepted-drawing checkpoint. Host/preload and static geometry/unit/paper/plane/viewport-scale helper changes require restart. Routine iteration does not reinstall the application. Tooling requires local pinned dependencies; it does not search personal caches.
 
 ```powershell
 npm run test:desktop
@@ -63,17 +81,20 @@ npm run test:paper-pdf
 npm run test:viewports-desktop
 npm run test:viewport-navigation
 npm run test:viewport-pdf
+npm run test:scale-math
+npm run test:scales
+npm run test:scale-pdf
 npm run unpacked
 npm run build
 ```
 
-The public gate has 22 pure synthetic stages, including independent viewport arithmetic, raw DXF clipping ownership and resource validation. The desktop gate adds reader identity, hidden unit/layout/viewport/navigation GUI suites and two actual PDF producers: 29 stages. Unpacked adds one build, four hidden executable suites and resource identities: 35 stages. Build adds NSIS compilation from the tested application: 36 stages. These are required stages, not an automatic passing claim. Read completed reports under `work/`.
+The public gate has 25 pure synthetic stages, including the immutable scale catalog, independent physical arithmetic, XP notation and native-file validation. The desktop gate adds reader identity, five hidden unit/layout/viewport/navigation/scale GUI suites and three actual PDF producers: 34 stages. Unpacked adds one build, five hidden executable suites and resource identities: 41 stages. Build adds NSIS compilation from the tested application: 42 stages. These are required stages, not an automatic passing claim. Read completed reports under `work/`.
 
 Automated application windows stay hidden and offscreen, with visibility/show-event assertions. Native choices use owned-file stubs; no unrelated OS clipboard data is read. Synthetic events, visible UI and physical gestures are distinct evidence. Optional external Python PDF/DXF readers are not application or build dependencies. See [tests](tests/README.md) for those independently measured audits.
 
 ## Automated releases
 
-A version tag matching `package.json`, such as `v1.7.0`, triggers Windows CI. The workflow can also be dispatched manually for an existing immutable version tag. It installs locked dependencies and the pinned Electron binary, runs the public gate, tests the unpacked executable, builds NSIS and publishes the installer plus SHA-256 checksum using the repository's `GITHUB_TOKEN`. No stored user credentials or manual browser upload are required. Failed checks prevent publication. The workflow must complete before a release outcome is claimed. See [GitHub tag triggers](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow) and [CLI release creation](https://cli.github.com/manual/gh_release_create).
+A version tag matching `package.json`, such as `v1.8.0`, triggers Windows CI. The workflow can also be dispatched manually for an existing immutable version tag. It installs locked dependencies and the pinned Electron binary, runs the public gate, tests the unpacked executable, builds NSIS and publishes the installer plus SHA-256 checksum using the repository's `GITHUB_TOKEN`. No stored user credentials or manual browser upload are required. Failed checks prevent publication. The workflow must complete before a release outcome is claimed. See [GitHub tag triggers](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow) and [CLI release creation](https://cli.github.com/manual/gh_release_create).
 
 ## Tests, privacy and licenses
 
