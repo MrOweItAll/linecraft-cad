@@ -46,6 +46,16 @@ jobs:
           if ($LASTEXITCODE -ne 0 -or $headCommit -ne $tagCommit) { throw 'Checkout is not the exact release tag commit.' }
       - name: Install pinned dependencies
         run: npm ci --no-audit --no-fund
+      - name: Bootstrap and verify pinned Electron vendor runtime
+        run: |
+          if ($env:ELECTRON_SKIP_BINARY_DOWNLOAD) { throw 'Electron binary downloads are explicitly disabled in this environment.' }
+          $electronPackage = Get-Content -LiteralPath node_modules/electron/package.json -Raw | ConvertFrom-Json
+          if ($electronPackage.version -ne '44.7.0') { throw 'The installed Electron package differs from the frozen pin.' }
+          node node_modules/electron/install.js
+          if ($LASTEXITCODE -ne 0) { throw 'The pinned Electron vendor installer failed.' }
+          if (!(Test-Path -LiteralPath node_modules/electron/dist/electron.exe)) { throw 'The pinned Electron executable was not installed.' }
+          $electronVersion = & ./node_modules/electron/dist/electron.exe --version
+          if ($LASTEXITCODE -ne 0 -or $electronVersion.Trim() -ne 'v44.7.0') { throw 'The Electron executable differs from the frozen runtime version.' }
       - name: Test source, test unpacked application, compile NSIS
         run: npm run build
       - name: Create checksum and release notes
