@@ -1,0 +1,64 @@
+{
+  "library": "GNU LibreDWG",
+  "version": "0.13.4",
+  "libraryLicense": "GPL-3.0-or-later",
+  "runtimeProcess": "dwgread.exe",
+  "runtimeDependency": {
+    "name": "GNU libiconv",
+    "version": "1.18",
+    "license": "LGPL-2.1-or-later"
+  },
+  "officialBinaryZipSHA256": "cb46bce034296e91cb1a982cd53ec1928b11f4f7f70512dd21513a27959688b5",
+  "sourceArchiveSHA256": "7e153ea4dac4cbf3dc9c50b9ef7a5604e09cdd4c5520bcf8017877bbe1422cd5",
+  "binarySource": "https://github.com/LibreDWG/libredwg/releases/tag/0.13.4",
+  "sourceSource": "https://github.com/LibreDWG/libredwg/releases/tag/0.13.4",
+  "dependencySource": "https://ftp.gnu.org/gnu/libiconv/libiconv-1.18.tar.gz",
+  "unmodifiedThirdPartyBinaries": true,
+  "files": [
+    {
+      "file": "COPYING",
+      "bytes": 35147,
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+    },
+    {
+      "file": "dist.sha256",
+      "bytes": 362,
+      "sha256": "5793a78a7fb58a4440cc8ea11f32e24a04b8b8838d2d4d8754307bc0c87c6fec"
+    },
+    {
+      "file": "libiconv-1.18.tar.gz",
+      "bytes": 5822590,
+      "sha256": "3b08f5f4f9b4eb82f151a7040bfd6fe6c6fb922efe4b1659c66ea933276965e8"
+    },
+    {
+      "file": "libiconv-COPYING",
+      "bytes": 35147,
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+    },
+    {
+      "file": "libiconv-COPYING.LIB",
+      "bytes": 26419,
+      "sha256": "20e50fe7aae3e56378ebf0417d9de904f55a0e61e4df315333e632a4d3555d95"
+    },
+    {
+      "file": "libredwg-0.13.4.tar.xz",
+      "bytes": 10997280,
+      "sha256": "7e153ea4dac4cbf3dc9c50b9ef7a5604e09cdd4c5520bcf8017877bbe1422cd5"
+    },
+    {
+      "file": "runtime/dwgread.exe",
+      "bytes": 311139,
+      "sha256": "88f3c398bc1ff5a83c365fe8180018ef26947a63fff21fad8a032dd056a47c94"
+    },
+    {
+      "file": "runtime/libiconv-2.dll",
+      "bytes": 1136529,
+      "sha256": "ff31fa811f9c07cc7fdaa68c9e8bca3a7b4fdf6e0a079a58175ea58ba139c7ae"
+    },
+    {
+      "file": "runtime/libredwg-0.dll",
+      "bytes": 35993761,
+      "sha256": "20cf92d51abc8c27f1af623f68aa4f4d90cf4993737ceac4bc482b237f1f781b"
+    }
+  ]
+}

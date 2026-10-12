@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' file: data: blob:; script-src 'self' file:; style-src 'self' file: 'unsafe-inline'; img-src 'self' file: data: blob:; font-src 'self' file: data:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111b22">
+  <title>Linecraft CAD</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <svg class="symbol-sheet" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-line" viewBox="0 0 24 24"><path d="M5 19 19 5"/><rect x="3" y="17" width="4" height="4"/><rect x="17" y="3" width="4" height="4"/></symbol>
+    <symbol id="i-rectangle" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12"/><path d="M3 4v4M1 6h4M19 16v4M17 18h4"/></symbol>
+    <symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M9 12h6M12 9v6M12 12l6-6"/></symbol>
+    <symbol id="i-polyline" viewBox="0 0 24 24"><path d="m4 18 5-11 6 8 5-10"/><rect x="2" y="16" width="4" height="4"/><rect x="7" y="5" width="4" height="4"/><rect x="13" y="13" width="4" height="4"/><rect x="18" y="3" width="4" height="4"/></symbol>
+    <symbol id="i-arc" viewBox="0 0 24 24"><path d="M4 18a8 8 0 0 1 16 0"/><rect x="2" y="16" width="4" height="4"/><rect x="10" y="8" width="4" height="4"/><rect x="18" y="16" width="4" height="4"/></symbol>
+    <symbol id="i-text" viewBox="0 0 24 24"><path d="M4 5h16M12 5v15M8 20h8M4 5v3M20 5v3"/></symbol>
+    <symbol id="i-mtext" viewBox="0 0 24 24"><path d="M3 5h9M7.5 5v12M3 5v2M12 5v2M3 20h18M15 7h6M15 11h6M15 15h6"/></symbol>
+    <symbol id="i-dimension" viewBox="0 0 24 24"><path d="M4 7v14M20 7v14M4 17h16M7 14l-3 3 3 3M17 14l3 3-3 3M8 4h8"/></symbol>
+    <symbol id="i-aligned" viewBox="0 0 24 24"><path d="m3 10 8 11M13 2l8 11M7 16 17 8M6 12l1 4 4 1M13 7l4 1 1 4"/></symbol>
+    <symbol id="i-radius" viewBox="0 0 24 24"><path d="M4 18a8 8 0 0 1 16 0M12 18 18 8M14 9l4-1 1 4M10 18h4M12 16v4"/></symbol>
+    <symbol id="i-diameter" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="m6 18 12-12M6 14v4h4M14 6h4v4"/></symbol>
+    <symbol id="i-settings" viewBox="0 0 24 24"><path d="m9 3 6 0 1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1z"/><circle cx="12" cy="12" r="4"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="m3 7 9-5 9 5v10l-9 5-9-5zM3 7l9 5 9-5M12 12v10"/></symbol>
+    <symbol id="i-cylinder" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 4 16 4 16 0V5M4 19c0-4 16-4 16 0"/></symbol>
+    <symbol id="i-sphere" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><ellipse cx="12" cy="12" rx="9" ry="3"/></symbol>
+    <symbol id="i-extrude" viewBox="0 0 24 24"><path d="m3 18 8-4 10 4-8 4zM3 18V8l8-4 10 4v10M11 4v10M13 12v10M13 12l8-4M3 8l10 4M12 1v5M9 4l3-3 3 3"/></symbol>
+    <symbol id="i-orbit" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="10" ry="5" transform="rotate(-30 12 12)"/><path d="m17 3 4 2-2 4M7 21l-4-2 2-4"/></symbol>
+    <symbol id="i-join" viewBox="0 0 24 24"><path d="m3 18 6-6 6 0 6-6"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/></symbol>
+    <symbol id="i-explode" viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5M12 8v8M8 12h8"/></symbol>
+    <symbol id="i-modify" viewBox="0 0 24 24"><path d="m4 20 8-8M14 10l6-6M3 6h7M6 3v6M15 18h6M18 15v6"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-move" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="3" y="3" width="11" height="11"/><rect x="10" y="10" width="11" height="11"/><path d="M7 18h3M18 7v3"/></symbol>
+    <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M5 9a8 8 0 1 1 0 8M5 3v6h6"/><path d="m10 14 4-5 4 5z"/></symbol>
+    <symbol id="i-scale" viewBox="0 0 24 24"><rect x="3" y="13" width="8" height="8"/><path d="M3 9V3h18v18h-6M13 11l8-8M15 3h6v6"/></symbol>
+    <symbol id="i-mirror" viewBox="0 0 24 24"><path d="M12 2v3m0 3v3m0 3v3m0 3v2M9 5 3 17h6zM15 5l6 12h-6z"/></symbol>
+    <symbol id="i-offset" viewBox="0 0 24 24"><path d="M3 20V4h16M8 20V9h11M12 16l4-4m-4 0h4v4"/></symbol>
+    <symbol id="i-trim" viewBox="0 0 24 24"><path d="M8 3v18M3 15h5M8 15h13M12 3l6 6M18 3l-6 6"/></symbol>
+    <symbol id="i-extend" viewBox="0 0 24 24"><path d="M19 3v18M3 15h8m3 0h5M15 11l4 4-4 4"/></symbol>
+    <symbol id="i-break" viewBox="0 0 24 24"><path d="M3 18 9 12M15 6l6-6M9 8v4h4M11 6l2 3M14 10l3 2"/></symbol>
+    <symbol id="i-clipboard" viewBox="0 0 24 24"><path d="M8 5H4v16h16V5h-4M8 3h8v5H8zM8 12h8M8 16h6"/></symbol>
+    <symbol id="i-ellipse" viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="5" transform="rotate(-25 12 12)"/></symbol>
+    <symbol id="i-spline" viewBox="0 0 24 24"><path d="M3 18C4 4 10 2 12 12s7 10 9-7"/><circle cx="3" cy="18" r="1.5"/><circle cx="21" cy="5" r="1.5"/></symbol>
+    <symbol id="i-hatch" viewBox="0 0 24 24"><path d="M3 3h18v18H3zM3 11l8-8M3 19 19 3M9 21 21 9M17 21l4-4"/></symbol>
+    <symbol id="i-block" viewBox="0 0 24 24"><path d="M3 3h9v9H3zM12 12h9v9h-9zM3 17h5M17 3v5M5 15v5M15 5h5"/></symbol>
+    <symbol id="i-insert" viewBox="0 0 24 24"><path d="M3 11h10v10H3zM11 3h10v10M15 7l6-4-4 6M17 3l4 0v4"/></symbol>
+    <symbol id="i-array" viewBox="0 0 24 24"><path d="M3 3h5v5H3zM16 3h5v5h-5zM3 16h5v5H3zM16 16h5v5h-5z"/></symbol>
+    <symbol id="i-fillet" viewBox="0 0 24 24"><path d="M3 20h10a7 7 0 0 0 7-7V3M13 20v-7h7"/></symbol>
+    <symbol id="i-chamfer" viewBox="0 0 24 24"><path d="M3 20h10l7-7V3M13 20v-7h7"/></symbol>
+    <symbol id="i-stretch" viewBox="0 0 24 24"><path d="M3 4h7v16H3zM10 4h7v16h-7M14 12h7m-3-3 3 3-3 3"/></symbol>
+    <symbol id="i-pedit" viewBox="0 0 24 24"><path d="m3 19 6-10 6 5 6-11M6 6h6v6H6zM12 11h6v6h-6z"/></symbol>
+    <symbol id="i-plot" viewBox="0 0 24 24"><path d="M6 8V3h12v5M6 17H3V8h18v9h-3M6 13h12v8H6zM17 11h1"/></symbol>
+    <symbol id="i-publish" viewBox="0 0 24 24"><path d="M3 6h12v15H3zM7 3h12v15M11 1h12v14M6 11h6M6 15h6"/></symbol>
+    <symbol id="i-select" viewBox="0 0 24 24"><path d="m6 3 12 10-6 1-2 6z"/></symbol>
+    <symbol id="i-pan" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></symbol>
+    <symbol id="i-fit" viewBox="0 0 24 24"><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5"/><rect x="7" y="7" width="10" height="10"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="m9 4-6 6 6 6M3 10h11a6 6 0 0 1 0 12"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path d="m15 4 6 6-6 6M21 10H10a6 6 0 0 0 0 12"/></symbol>
+    <symbol id="i-delete" viewBox="0 0 24 24"><path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6h7l2 3h9v11H3zM3 6V4h7l2 3h7v2"/></symbol>
+    <symbol id="i-save" viewBox="0 0 24 24"><path d="M4 3h14l3 3v15H3V3zM7 3v6h10V3M7 21v-8h10v8"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 8a3 3 0 1 1 4 3c-1 1-1 1-1 3M12 17v.1"/></symbol>
+  </svg>
+  <main id="application">
+    <header class="appbar">
+      <a class="brand" href="#" aria-label="Linecraft CAD home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 25V7h9M11 25h16V11M5 25 27 5"/></svg><span>Linecraft <b>CAD</b></span></a>
+      <nav class="file-actions" aria-label="Document actions">
+        <button id="new-document" title="New drawing"><svg><use href="#i-plus"/></svg><span>New</span></button>
+        <button id="open-document" title="Open a drawing"><svg><use href="#i-folder"/></svg><span>Open</span></button>
+        <button id="save-document" title="Save drawing · Ctrl+S"><svg><use href="#i-save"/></svg><span>Save</span></button>
+        <button id="export-dxf" title="Export geometry to DXF"><svg><use href="#i-download"/></svg><span>DXF</span></button>
+      </nav>
+      <div class="top-spacer"></div><span class="local-badge"><i></i> Local workspace</span>
+      <button id="settings-button" class="icon-button" aria-label="Drawing settings and styles" title="Drawing settings and styles"><svg><use href="#i-settings"/></svg></button>
+      <button id="help-button" class="icon-button" aria-label="Help"><svg><use href="#i-help"/></svg></button>
+    </header>
+    <div class="document-bar">
+      <div class="drawing-tab"><span class="document-dot"></span><span id="document-name">Untitled drawing</span><span id="dirty-mark" aria-label="Unsaved changes"></span></div>
+      <span class="document-caption">2D drafting</span>
+      <label class="workspace-picker"><span>Workspace</span><select id="workspace-mode" aria-label="Drawing workspace"><option value="2d">2D drawing</option><option value="3d">3D model</option></select></label>
+      <div class="quick-history"><button id="undo-button" class="icon-button" title="Undo · Ctrl+Z" aria-label="Undo"><svg><use href="#i-undo"/></svg></button><button id="redo-button" class="icon-button" title="Redo · Ctrl+Y" aria-label="Redo"><svg><use href="#i-redo"/></svg></button></div>
+    </div>
+    <div class="workspace">
+      <nav class="draw-tools" aria-label="Drawing tools">
+        <button data-tool="SELECT" class="tool active" title="Select · Esc"><svg><use href="#i-select"/></svg><span>Select</span></button>
+        <button data-tool="LINE" class="tool" title="Line · L"><svg><use href="#i-line"/></svg><span>Line</span></button>
+        <button data-tool="PLINE" class="tool" title="Polyline · PL"><svg><use href="#i-polyline"/></svg><span>Polyline</span></button>
+        <button data-tool="ARC" class="tool" title="Arc through three points · A"><svg><use href="#i-arc"/></svg><span>Arc</span></button>
+        <button data-tool="CIRCLE" class="tool" title="Circle · C"><svg><use href="#i-circle"/></svg><span>Circle</span></button>
+        <button data-tool="RECTANG" class="tool" title="Rectangle · REC"><svg><use href="#i-rectangle"/></svg><span>Rect</span></button>
+        <button id="draw-tools" class="tool" title="Drawing commands" aria-expanded="false" aria-controls="draw-palette"><svg><use href="#i-spline"/></svg><span>Draw tools</span></button>
+        <div class="tool-divider"></div>
+        <button id="modify-tools" class="tool" title="Modify tools" aria-expanded="false" aria-controls="modify-palette"><svg><use href="#i-modify"/></svg><span>Modify</span></button>
+        <button id="clipboard-tools" class="tool" title="Drawing clipboard" aria-expanded="false" aria-controls="clipboard-palette"><svg><use href="#i-clipboard"/></svg><span>Clipboard</span></button>
+        <button id="annotation-tools" class="tool" title="Text and dimensions" aria-expanded="false" aria-controls="annotation-palette"><svg><use href="#i-text"/></svg><span>Annotate</span></button>
+        <button id="model-tools" class="tool" title="3D model tools" aria-expanded="false" aria-controls="model-palette"><svg><use href="#i-box"/></svg><span>Model</span></button>
+        <button id="blocks-tools" class="tool" title="Reusable geometry" aria-expanded="false" aria-controls="blocks-palette" hidden><svg><use href="#i-block"/></svg><span>Blocks</span></button>
+        <button id="output-tools" class="tool" title="PDF sheets" aria-expanded="false" aria-controls="output-palette" hidden><svg><use href="#i-plot"/></svg><span>Output</span></button>
+        <button id="reference-tools" class="tool" title="Search supported commands"><svg><use href="#i-help"/></svg><span>Commands</span></button>
+        <div class="tool-divider"></div>
+        <button data-tool="PAN" class="tool" title="Pan · Middle mouse"><svg><use href="#i-pan"/></svg><span>Pan</span></button>
+        <button id="fit-button" class="tool" title="Zoom extents · Z, E"><svg><use href="#i-fit"/></svg><span>Fit</span></button>
+        <div class="tool-divider"></div>
+        <button id="delete-button" class="tool" title="Erase selection · Delete"><svg><use href="#i-delete"/></svg><span>Erase</span></button>
+      </nav>
+      <section id="draw-palette" class="tool-palette" aria-label="Drawing commands" hidden><div class="palette-heading"><h2>Construct geometry</h2><button class="palette-close" aria-label="Close drawing commands">×</button></div><p>Enter exact coordinates or place points in the canvas.</p><div id="draw-command-list" class="palette-grid"></div><button class="palette-reference" data-reference="Draw">See construction options ↗</button></section>
+      <section id="modify-palette" class="tool-palette" aria-label="Modify tools" hidden><div class="palette-heading"><h2>Modify geometry</h2><button class="palette-close" aria-label="Close modify tools">×</button></div><p>Select objects first, or start a command and select them.</p><div id="modify-command-list" class="palette-grid"></div><button class="palette-reference" data-reference="Modify">See options and examples ↗</button></section>
+      <section id="clipboard-palette" class="tool-palette" aria-label="Drawing clipboard" hidden><div class="palette-heading"><h2>Drawing clipboard</h2><button class="palette-close" aria-label="Close clipboard tools">×</button></div><p>Copy geometry between drawings. Text fields keep their usual shortcuts.</p><div id="clipboard-command-list" class="palette-grid"></div><button class="palette-reference" data-reference="Clipboard">See clipboard commands ↗</button></section>
+      <section id="annotation-palette" class="tool-palette" aria-label="Annotation tools" hidden><div class="palette-heading"><h2>Annotate your drawing</h2><button class="palette-close" aria-label="Close annotation tools">×</button></div><p>Place text or measured dimensions. Drawing settings define their styles.</p><div id="annotation-command-list" class="palette-grid"></div><h3 class="palette-subheading">Inspect geometry</h3><div id="measurement-command-list" class="palette-grid"></div><button class="palette-reference" data-reference="Annotate">See annotation options ↗</button></section>
+      <section id="model-palette" class="tool-palette" aria-label="3D model tools" hidden><div class="palette-heading"><h2>Build and inspect in 3D</h2><button class="palette-close" aria-label="Close model tools">×</button></div><p>XYZ coordinates define faceted meshes and 3D paths. Shaded overlaps are approximate; wireframe shows all edges.</p><div id="model-command-list" class="palette-grid"></div><button class="palette-reference" data-reference="Model">See 3D commands and limits ↗</button></section>
+      <section id="blocks-palette" class="tool-palette" aria-label="Reusable geometry" hidden><div class="palette-heading"><h2>Reuse named geometry</h2><button class="palette-close" aria-label="Close block tools">×</button></div><p>Define a flat block, then place references with an insertion point, scale and rotation.</p><div id="blocks-command-list" class="palette-grid"></div><h3 class="palette-subheading">Drawing block library</h3><div id="block-library" class="block-library"></div><button class="palette-reference" data-reference="Blocks">See block options ↗</button></section>
+      <section id="output-palette" class="tool-palette" aria-label="PDF sheets" hidden><div class="palette-heading"><h2>Produce a PDF sheet</h2><button class="palette-close" aria-label="Close output tools">×</button></div><p>Plot the current drawing or publish saved Linecraft drawings as a set of vector PDF sheets.</p><div id="output-command-list" class="palette-grid"></div><button class="palette-reference" data-reference="Output">See PDF output options ↗</button></section>
+      <section class="drawing-area" aria-label="Drawing workspace">
+        <canvas id="drawing-canvas" tabindex="0" aria-label="2D drawing canvas. Use the command line for exact coordinates."></canvas>
+        <div class="view-label"><span class="view-dot"></span><span id="view-name">TOP</span><span>/</span><span id="view-style">2D WIREFRAME</span></div>
+        <div id="model-controls" class="model-controls" hidden><div class="model-control-row"><select id="view3d-preset" aria-label="3D view preset"><option value="iso">NE Isometric</option><option value="seiso">SE Isometric</option><option value="swiso">SW Isometric</option><option value="nwiso">NW Isometric</option><option value="top">Top</option><option value="front">Front</option><option value="right">Right</option><option value="back">Back</option><option value="left">Left</option><option value="bottom">Bottom</option><option value="custom">Custom orbit</option></select><select id="view3d-projection" aria-label="3D projection"><option value="orthographic">Orthographic</option><option value="perspective">Perspective</option></select><select id="render3d-mode" aria-label="3D display style"><option value="shaded">Shaded faces</option><option value="wireframe">Wireframe</option></select></div><div class="model-control-row"><label class="plane-elevation">XY plane Z <input id="construction-elevation" type="number" step="any" value="0" aria-label="Construction plane elevation"></label><button id="orbit-tool" title="Constrained orbit · Shift + middle drag">Orbit</button><label class="auto-target-label"><input id="orbit-auto-target" type="checkbox" checked>Auto target</label><output id="construction-plane-label">Pointer: XY plane at Z 0</output></div></div>
+        <svg id="view-cube" class="view-cube" viewBox="0 0 90 90" aria-label="Original 3D view control" hidden></svg>
+        <div class="canvas-note" id="canvas-note">Type a command or choose a drawing tool</div>
+        <div class="view-compass" aria-hidden="true"><span class="north">Y</span><span class="east">X</span><i></i></div>
+        <div id="snap-indicator" class="snap-indicator" hidden></div>
+      </section>
+      <aside class="inspector" aria-label="Drawing inspector">
+        <div class="inspector-heading"><h2>Drawing</h2><span id="entity-count">0 objects</span></div>
+        <div class="inspector-section">
+          <div class="section-heading"><h3>Properties</h3><span id="selection-count">No selection</span></div>
+          <div id="properties-content" class="properties-content"><p class="empty-property">Select an object to inspect its geometry.</p></div>
+        </div>
+        <div class="inspector-section layers-section">
+          <div class="section-heading"><h3>Layers</h3><button id="add-layer" class="mini-button" aria-label="Add layer" title="Add layer">+</button></div>
+          <p class="section-hint">Click a name to set the current layer.</p>
+          <div id="layers-list"></div>
+        </div>
+        <div class="inspector-foot"><span class="small-label">QUICK START</span><p><kbd>L</kbd> then <kbd>0,0</kbd> and <kbd>100,60</kbd></p><p>Press <kbd>Enter</kbd> to finish a line.</p><button id="show-guide">View drafting guide <span>↗</span></button></div>
+      </aside>
+    </div>
+    <section class="command-panel" aria-label="Command line">
+      <div class="command-heading"><span>COMMAND LINE</span><span id="command-state">Ready</span><button id="clear-history" aria-label="Clear command display" title="Clear command display">Clear</button></div>
+      <div id="command-log" class="command-log" role="log" aria-live="polite"></div>
+      <form id="command-form" autocomplete="off"><label id="command-prompt" for="command-input">Command:</label><input id="command-input" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Type a command or coordinate…" aria-label="Command or coordinate" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="command-suggestions"><span class="enter-hint">↵</span><div id="command-suggestions" class="command-suggestions" role="listbox" aria-label="Command suggestions" hidden></div></form>
+    </section>
+    <footer class="statusbar">
+      <span class="model-tab">MODEL</span><output id="coordinate-readout">X 0.0000 &nbsp; Y 0.0000</output><span class="status-spacer"></span>
+      <button id="grid-toggle" class="status-toggle active" aria-pressed="true" title="Show grid · F7">GRID</button>
+      <button id="snap-toggle" class="status-toggle active" aria-pressed="true" title="Endpoint, midpoint, center and quadrant snaps · F3">OSNAP <small>F3</small></button>
+      <button id="ortho-toggle" class="status-toggle" aria-pressed="false" title="Constrain pointer to axes · F8">ORTHO <small>F8</small></button>
+      <span id="zoom-readout" class="zoom-readout">10 px/unit</span><button id="units-button" class="units" title="Drawing units" aria-label="Drawing units">Units</button>
+    </footer>
+  </main>
+  <input type="file" id="file-input" accept=".json,.linecraft,application/json" hidden>
+  <dialog id="layer-dialog"><form id="layer-form"><div class="dialog-heading"><div><span class="eyebrow">DRAWING LAYER</span><h2>Add a layer</h2></div></div><label for="layer-name-input">Layer name</label><input id="layer-name-input" required maxlength="255" autocomplete="off"><div id="layer-dialog-actions"><button type="button" id="layer-cancel">Cancel</button><button type="submit" id="layer-confirm">Add layer</button></div></form></dialog>
+  <dialog id="help-dialog"><div class="dialog-heading"><div><span class="eyebrow">LINECRAFT CAD</span><h2>A precise place to draw.</h2></div><button id="close-help" class="close-button" aria-label="Close guide">×</button></div><p>Choose a tool or enter a command below the canvas. Coordinates use a standard Cartesian plane with positive Y upward.</p><div class="help-grid"><section><h3>Draw with coordinates</h3><dl><dt><kbd>L</kbd> or <kbd>LINE</kbd></dt><dd>Enter successive points. Enter ends the line; <kbd>U</kbd> removes its last segment; <kbd>C</kbd> closes it.</dd><dt><kbd>REC</kbd> or <kbd>RECTANG</kbd></dt><dd>Enter two opposite corners.</dd><dt><kbd>C</kbd> or <kbd>CIRCLE</kbd></dt><dd>Enter a center and radius. Enter <kbd>D</kbd> after the center to specify a diameter.</dd><dt><kbd>M</kbd>, <kbd>CO</kbd>, <kbd>RO</kbd></dt><dd>Move, copy, or rotate selected objects. Select before the command, or select after it and press Enter. Enter a base point, then a destination or rotation angle.</dd><dt><kbd>10,20</kbd></dt><dd>Absolute X,Y point.</dd><dt><kbd>@10,20</kbd></dt><dd>Offset from the previous point.</dd><dt><kbd>@50&lt;30</kbd></dt><dd>Length 50 at 30°, counterclockwise from +X.</dd></dl></section><section><h3>Navigate and edit</h3><dl><dt>Wheel / middle drag</dt><dd>Zoom around the cursor / pan.</dd><dt>Click / Shift+click</dt><dd>Select / toggle an object.</dd><dt>Drag empty space</dt><dd>Left-to-right selects enclosed objects. Right-to-left selects touched objects.</dd><dt>Blue square grips</dt><dd>Drag an endpoint, rectangle corner, or circle center/radius grip.</dd><dt><kbd>Ctrl+Z</kbd> / <kbd>Ctrl+Y</kbd></dt><dd>Undo / redo. <kbd>Delete</kbd> erases selection.</dd><dt><kbd>Esc</kbd> / <kbd>Z</kbd> then <kbd>E</kbd></dt><dd>Cancel / fit all visible geometry.</dd></dl></section></div><div class="help-footer">Drawings stay on your computer. Save a Linecraft JSON file to preserve layers, or export DXF geometry for exchange.</div></dialog>
+  <dialog id="reference-dialog" aria-labelledby="reference-title">
+    <div class="dialog-heading"><div><span class="eyebrow">COMMAND REFERENCE</span><h2 id="reference-title">Find your next command.</h2></div><button id="close-reference" class="close-button" aria-label="Close command reference">×</button></div>
+    <p class="reference-intro">Explore available commands, their input sequence and supported options. Each command states its limits.</p>
+    <div class="reference-search"><label for="reference-search-input">Search commands</label><input id="reference-search-input" type="search" placeholder="Name, alias, or task…" autocomplete="off"><span id="reference-count"></span></div>
+    <nav id="reference-filters" class="reference-filters" aria-label="Command categories"></nav>
+    <div id="reference-results" class="reference-results"></div>
+    <div class="reference-limit"><strong>Current drafting scope</strong><span>Model geometry, drawing text and measured dimensions use finite numeric coordinates. 3D tools create faceted meshes; typed XYZ defines spatial geometry. Import reports identify supported and skipped records. Each command lists its supported options and limits. Font layout is independently defined.</span></div>
+  </dialog>
+  <dialog id="annotation-dialog" aria-labelledby="annotation-dialog-title"><form id="annotation-form"><div class="dialog-heading"><div><span class="eyebrow">DRAWING ANNOTATION</span><h2 id="annotation-dialog-title">Edit text</h2></div><button type="button" id="annotation-close" class="close-button" aria-label="Cancel text editing">×</button></div><label for="annotation-content">Text content</label><textarea id="annotation-content" rows="6" spellcheck="false" aria-label="Annotation text"></textarea><p id="annotation-editor-hint">Enter drawing text. Its height and angle come from the drawing style.</p><p id="annotation-error" class="dialog-error" role="alert"></p><div class="dialog-actions"><button type="button" id="annotation-cancel">Cancel</button><button type="submit" id="annotation-apply" class="primary-action">Apply text</button></div></form></dialog>
+  <dialog id="import-dialog" aria-labelledby="import-title"><div class="dialog-heading"><div><span class="eyebrow">DRAWING IMPORT</span><h2 id="import-title">Import report</h2></div><button id="import-close" class="close-button" aria-label="Close import report">×</button></div><div id="import-report-content"></div><p class="setting-hint">Save this imported drawing as a Linecraft file. The source drawing remains unchanged.</p></dialog>
+  <dialog id="plot-dialog" aria-labelledby="plot-title"><form id="plot-form"><div class="dialog-heading"><div><span class="eyebrow">VECTOR PDF OUTPUT</span><h2 id="plot-title">Plot drawing</h2></div><button type="button" id="plot-close" class="close-button" aria-label="Close PDF setup">×</button></div><p id="plot-intro">Set up a sheet and preview the current drawing. The source drawing remains unchanged.</p><div class="plot-layout"><div class="plot-fields"><label>Paper<select id="plot-paper"><option>A4</option><option>A3</option><option>Letter</option><option>Tabloid</option></select></label><label>Orientation<select id="plot-orientation"><option value="landscape">Landscape</option><option value="portrait">Portrait</option></select></label><label>Plot area and scale<select id="plot-mode"><option value="fit">Extents, fit to sheet</option><option value="scale">Extents, exact scale</option></select></label><label>Scale 1:<input id="plot-scale" type="number" min="1" max="1000000000" step="any" value="1"></label><label>Margin (mm)<input id="plot-margin" type="number" min="5" max="40" step="any" value="10"></label><label>Drawing colors<select id="plot-color"><option value="color">Color</option><option value="grayscale">Grayscale</option><option value="monochrome" selected>Monochrome</option></select></label><label class="setting-check"><input id="plot-lineweights" type="checkbox" checked>Use drawing lineweights</label></div><div class="plot-preview-panel"><div id="plot-preview" aria-label="Sheet preview"></div><p id="plot-summary"></p></div></div><p class="setting-hint">Exact scale uses the drawing units. Unitless drawings support fit to sheet; choose drawing units before an exact scale. A perspective view supports fit only. PDF output uses model geometry and the current 3D view.</p><p id="plot-error" class="dialog-error" role="alert"></p><div class="dialog-actions"><button type="button" id="plot-cancel">Cancel</button><button type="submit" id="plot-submit" class="primary-action">Save PDF</button></div></form></dialog>
+  <dialog id="settings-dialog" aria-labelledby="settings-title"><form id="settings-form"><div class="dialog-heading"><div><span class="eyebrow">DRAWING PREFERENCES</span><h2 id="settings-title">Settings &amp; styles</h2></div><button type="button" id="settings-close" class="close-button" aria-label="Close drawing settings">×</button></div><p class="settings-intro">Saved with this drawing. Apply a change, then use Undo to restore its previous value.</p><div class="settings-sections">
+    <fieldset class="units-fieldset"><legend>Drawing units</legend><details id="units-tree" class="units-root" open><summary>Drawing units <span>Saved with this drawing</span></summary><div class="unit-branches">
+      <details id="units-presets" open><summary>Presets</summary><div class="unit-branch-fields"><label>Preset<select id="setting-unit-preset"><option value="architectural">Architectural</option><option value="surveyor">Surveyor</option><option value="engineering">Engineering</option><option value="custom">Custom</option></select></label><p id="units-model-summary" class="unit-description"></p><p class="unit-description">Presets set model inches and independent linear and angular formats. Choose Custom or edit a field for other combinations.</p></div></details>
+      <details id="units-linear" open><summary>Linear</summary><div class="unit-branch-fields"><label>Model unit<select id="setting-units"><option value="unitless">Unitless</option><option value="mm">Millimeters</option><option value="cm">Centimeters</option><option value="m">Meters</option><option value="in">Inches</option><option value="ft">Feet</option></select></label><label>Display format<select id="setting-linear-format"><option value="decimal">Decimal model units</option><option value="architectural">Feet + fractional inches</option><option value="engineering">Feet + decimal inches</option></select></label><label>Decimal precision<input id="setting-precision" type="number" min="0" max="8" step="1"></label><label>Fraction precision<select id="setting-fraction-precision"><option value="0">Whole inch</option><option value="1">1/2 inch</option><option value="2">1/4 inch</option><option value="3">1/8 inch</option><option value="4">1/16 inch</option><option value="5">1/32 inch</option><option value="6">1/64 inch</option><option value="7">1/128 inch</option><option value="8">1/256 inch</option></select></label><output id="units-linear-preview" class="unit-preview" aria-label="Linear units preview"></output></div></details>
+      <details id="units-angular" open><summary>Angular</summary><div class="unit-branch-fields"><label>Bare angle input<select id="setting-angular-input"><option value="degrees">Degrees</option><option value="minutes">Minutes</option><option value="seconds">Seconds</option><option value="radians">Radians</option></select></label><label>Display format<select id="setting-angular-format"><option value="decimal-degrees">Decimal degrees</option><option value="dms">DMS (° ′ ″)</option><option value="decimal-minutes">Decimal arcminutes</option><option value="decimal-seconds">Decimal arcseconds</option><option value="radians">Radians</option></select></label><label>Angular precision<input id="setting-angular-precision" type="number" min="0" max="8" step="1"></label><output id="units-angular-preview" class="unit-preview" aria-label="Angular units preview"></output><p class="unit-description">Input units apply to bare typed angles. Explicit degree, minute, second or radian suffixes override that choice.</p></div></details>
+    </div></details><p class="setting-hint">Formatting does not rescale existing geometry. Bare lengths use the model unit; explicit length units are converted to it. In a unitless drawing, explicit feet and inches use inches. Surveyor bearings are unavailable.</p></fieldset>
+    <fieldset><legend>Drafting</legend><label class="setting-check"><input id="setting-grid-adaptive" type="checkbox">Adaptive grid spacing</label><label>Fixed grid spacing<input id="setting-grid-spacing" type="number" min="0" step="any"></label><label class="setting-check"><input id="setting-grid" type="checkbox">Show grid</label><label class="setting-check"><input id="setting-snap" type="checkbox">Use object snaps</label><label class="setting-check"><input id="setting-ortho" type="checkbox">Constrain eligible pointer segments to axes</label><div class="snap-mode-fields"><label class="setting-check"><input data-setting-snap="endpoint" type="checkbox">Endpoint</label><label class="setting-check"><input data-setting-snap="midpoint" type="checkbox">Midpoint</label><label class="setting-check"><input data-setting-snap="center" type="checkbox">Center</label><label class="setting-check"><input data-setting-snap="quadrant" type="checkbox">Quadrant</label></div></fieldset>
+    <fieldset><legend>Text style</legend><label>Style<select id="setting-text-style"></select></label><div class="new-style-row"><input id="new-text-style-name" aria-label="New text style name" placeholder="New style name" maxlength="255"><button id="add-text-style" type="button">Create</button></div><label>Font<select id="setting-text-font"><option value="Segoe UI">Segoe UI</option><option value="Arial">Arial</option><option value="Consolas">Consolas</option></select></label><label>Default height<input id="setting-text-height" type="number" min="0" step="any"></label><label>Default rotation<input id="setting-text-rotation" type="number" step="any"></label><label>Width factor<input id="setting-text-width-factor" type="number" min="0" step="any"></label><p class="setting-hint">Installed system fonts are used; no font files are included.</p></fieldset>
+    <fieldset><legend>Dimension style</legend><label>Style<select id="setting-dim-style"></select></label><div class="new-style-row"><input id="new-dim-style-name" aria-label="New dimension style name" placeholder="New style name" maxlength="255"><button id="add-dim-style" type="button">Create</button></div><label>Label text style<select id="setting-dim-text-style"></select></label><label>Text height<input id="setting-dim-text-height" type="number" min="0" step="any"></label><label>Arrow size<input id="setting-dim-arrow-size" type="number" min="0" step="any"></label><label>Text gap<input id="setting-dim-gap" type="number" min="0" step="any"></label><label>Extension offset<input id="setting-dim-extension-offset" type="number" min="0" step="any"></label><label>Extension overshoot<input id="setting-dim-extension-overshoot" type="number" min="0" step="any"></label><label>Style scale<input id="setting-dim-scale" type="number" min="0" step="any"></label><label>Measurement precision<input id="setting-dim-precision" type="number" min="0" max="8" step="1"></label><label>Label prefix<input id="setting-dim-prefix" type="text" maxlength="200"></label><label>Label suffix<input id="setting-dim-suffix" type="text" maxlength="200"></label><p class="setting-hint">Measurements use the drawing’s linear and angular formats. Style precision controls decimal labels; drawing fraction precision applies unless overridden. Definition points and per-object labels remain editable.</p></fieldset>
+    </div><p id="settings-error" class="dialog-error" role="alert"></p><div class="dialog-actions"><button type="button" id="settings-cancel">Cancel</button><button type="submit" id="settings-apply" class="primary-action">Apply settings</button></div></form></dialog>
+  <script type="module" src="app.mjs"></script>
+</body>
+</html>

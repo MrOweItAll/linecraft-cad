@@ -1,0 +1,79 @@
+{
+  "name": "linecraft-cad",
+  "version": "1.5.0",
+  "description": "Independent offline 2D drafting and polygonal 3D modeling for Windows",
+  "author": "Linecraft contributors",
+  "license": "MIT",
+  "private": true,
+  "main": "desktop/main.cjs",
+  "scripts": {
+    "dev": "node dev-tools.cjs dev",
+    "test": "node dev-tools.cjs test",
+    "test:core": "node ../tests/run-tests.mjs",
+    "test:units-math": "node --test ../tests/units-independent.test.mjs",
+    "test:units-desktop": "node dev-tools.cjs test-units",
+    "test:converter": "node ../tests/converter-identity.cjs",
+    "unpacked": "node dev-tools.cjs unpacked",
+    "build": "node dev-tools.cjs build"
+  },
+  "devDependencies": {
+    "electron": "44.7.0",
+    "electron-builder": "26.15.3",
+    "playwright": "1.62.1"
+  },
+  "build": {
+    "appId": "org.linecraft.cad",
+    "productName": "Linecraft CAD",
+    "asar": true,
+    "electronDist": "node_modules/electron/dist",
+    "directories": {
+      "output": "dist",
+      "buildResources": "desktop"
+    },
+    "files": [
+      "index.html",
+      "app.mjs",
+      "core.mjs",
+      "styles.css",
+      "favicon.svg",
+      "desktop/main.cjs",
+      "desktop/preload.cjs",
+      "desktop/icon.ico",
+      "LICENSE",
+      "dwg-import.mjs",
+      "desktop/import-files.cjs",
+      "3d-view.mjs",
+      "advanced-geometry.mjs",
+      "plot-document.mjs",
+      "desktop/plot-files.cjs",
+      "units.mjs"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "desktop/icon.ico",
+      "signAndEditExecutable": true,
+      "artifactName": "Linecraft-CAD-${version}-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Linecraft CAD",
+      "runAfterFinish": false,
+      "deleteAppDataOnUninstall": false,
+      "license": "LICENSE"
+    },
+    "extraResources": [
+      {
+        "from": "third-party/libredwg",
+        "to": "third-party/libredwg",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
+  }
+}

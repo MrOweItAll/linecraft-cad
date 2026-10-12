@@ -1,0 +1,130 @@
+{
+  "version": "1.5.0",
+  "scope": "Original public runtime and synthetic regression suite; native desktop evidence excluded.",
+  "runtimeFiles": [
+    {
+      "file": "core.mjs",
+      "bytes": 243008,
+      "sha256": "875c22d2d065a1536ccd5f5169dc4891e2029b4d791274ce85364214eb4beb6d",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "units.mjs",
+      "bytes": 10227,
+      "sha256": "8185ed2bc0e549a2e981361615fb2a77917941988445c60e55a630a640192d1c",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "advanced-geometry.mjs",
+      "bytes": 12289,
+      "sha256": "b7d2bc3072a88ae4dd5bd1692e0ef041ac752c021f68d2b97fbe89e60ede3167",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "3d-view.mjs",
+      "bytes": 17453,
+      "sha256": "4699fb54f155507df12aec0be236d434e09e177207ffdd898cb24a1aab378b3c",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "dwg-import.mjs",
+      "bytes": 34434,
+      "sha256": "518e573c4faa3af05d11edf6e95cf73984cfdb5335fb6bce5f956a28b69727fd",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "plot-document.mjs",
+      "bytes": 14095,
+      "sha256": "c1ceb4d1b8ff848abda674ffb5e454d72ab1e930b90a87845144f28b9a1d979e",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "app.mjs",
+      "bytes": 163383,
+      "sha256": "5123a33f479be1f181e7d0985e9f2be9e394e8ee4262b3bfb69dd7b6808ccc4b",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "index.html",
+      "bytes": 35649,
+      "sha256": "8290dbb20bdc91a1f4a2992a31bc35234a686042fe68cccfe67cbe6543647d54",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "styles.css",
+      "bytes": 30190,
+      "sha256": "bcd839cf31e1efe2b2d39abe5bb582d6c3f4aa36edf30b129547f9db0be7999c",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "favicon.svg",
+      "bytes": 255,
+      "sha256": "174509e4f53db6334b62f292e9d5f0d28373df5e22f987d9bddf18412ad02bd5",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "desktop/main.cjs",
+      "bytes": 27070,
+      "sha256": "69982e4afba69ed14b69a958334e48ce9e85211a8c41b4b185ef6876e47fc2e4",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "desktop/preload.cjs",
+      "bytes": 1843,
+      "sha256": "ea015f2b2f3e08da80ee49862f184fd39a8b5e8e1e9b5bdba8eb70b853cee589",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "desktop/import-files.cjs",
+      "bytes": 7738,
+      "sha256": "864499054c083f5332e1fe50437a529b5b009163f9c9c7ec543d6210117c94d3",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "desktop/plot-files.cjs",
+      "bytes": 7043,
+      "sha256": "56c6ba9c01b61396a7f0acd08fa48450720a0472e7433ed8d012ca7d4b484d53",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "desktop/icon.ico",
+      "bytes": 19692,
+      "sha256": "2c979f490efa29b4ecd9a2771fefffa0ad3a86f097c05b310d642488c179ddda",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "LICENSE",
+      "bytes": 1083,
+      "sha256": "155eae99601ecc2325927203fa7e8450e688cf131772d0986a1a3daab0df09bb",
+      "matchesInternalRuntime": true
+    }
+  ],
+  "thirdPartyResources": [
+    "third-party/libredwg/COPYING",
+    "third-party/libredwg/dist.sha256",
+    "third-party/libredwg/libiconv-1.18.tar.gz",
+    "third-party/libredwg/libiconv-COPYING",
+    "third-party/libredwg/libiconv-COPYING.LIB",
+    "third-party/libredwg/libredwg-0.13.4.tar.xz",
+    "third-party/libredwg/runtime/dwgread.exe",
+    "third-party/libredwg/runtime/libiconv-2.dll",
+    "third-party/libredwg/runtime/libredwg-0.dll"
+  ],
+  "publicTestAdaptations": {
+    "core.test.mjs": "Removed native evidence-dependent cases; all remaining case bodies unchanged.",
+    "dwg-import.test.mjs": "Removed native evidence and historical sample-dependent cases; remaining bodies unchanged.",
+    "reference-annotations.mjs": "Retains only original standalone synthetic DXF group record reader.",
+    "units-v15.cjs": "Requires local pinned Playwright rather than personal cached runtime.",
+    "desktop-unit.test.cjs": "Outside-app path fixture is resolved as a sibling of the repository root; the internal test assumed work was outside outputs/linecraft-cad."
+  },
+  "removedNativeTestCount": {
+    "core.test.mjs": 6,
+    "dwg-import.test.mjs": 3
+  },
+  "exclusions": [
+    "All evidence directories, native drawings, scripts, reader outputs and screenshots",
+    "All historical/current test results, logs, images, registry and installation metadata",
+    "Internal MANIFEST.json, OBSERVATIONS.md, internal TEST-REPORT.md and private command corpora",
+    "node_modules, Windows-Release, work, standalone.html and internal dev/release harness"
+  ]
+}

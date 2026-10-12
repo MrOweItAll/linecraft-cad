@@ -1,0 +1,11 @@
+node_modules/
+Windows-Release/
+work/
+.linecraft-dev-profile/
+tests/*-results.json
+tests/*.png
+tests/*.log
+*.tmp
+.env
+.env.*
+!.env.example
