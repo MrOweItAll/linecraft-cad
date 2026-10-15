@@ -1,11 +1,11 @@
 {
-  "version": "1.9.0",
+  "version": "1.10.0",
   "scope": "Original public runtime and synthetic regression suite; private native drawings and evidence excluded.",
   "runtimeFiles": [
     {
       "file": "core.mjs",
-      "bytes": 313244,
-      "sha256": "d16ae819eb0c9208e13e50a2b88f15f972ab2b613d92aad1bd10f90de940c2f5",
+      "bytes": 319261,
+      "sha256": "cc51f6a61839d0e331c88cc02ea669ca47f030733d8b98c230a6add34611053b",
       "matchesInternalRuntime": true
     },
     {
@@ -58,14 +58,14 @@
     },
     {
       "file": "app.mjs",
-      "bytes": 265563,
-      "sha256": "c77cbacf9125db346aa463eff587a2348dd6b6ce7c1f0bc00afb7c93b6792cd4",
+      "bytes": 279514,
+      "sha256": "676ffb637be08ccda46cc6e3e325f73bc248e099a54af9b5f0f7c266f84fa3d6",
       "matchesInternalRuntime": true
     },
     {
       "file": "index.html",
-      "bytes": 52625,
-      "sha256": "a5a4974921012d27b4e4869c07e6b2e6793792440908fc270d0a60de0325e16a",
+      "bytes": 57372,
+      "sha256": "cd7b2b3758685e3ac948839076f342f83d71a2940fa6bb9494e800098992b4c6",
       "matchesInternalRuntime": true
     },
     {
@@ -118,14 +118,14 @@
     },
     {
       "file": "architecture/editor-adapter.mjs",
-      "bytes": 18131,
-      "sha256": "ce46481eb5189e8a0164aed260a00bba560a7e90ffec7fc97e49a9d4fd02a8b4",
+      "bytes": 27797,
+      "sha256": "a3006b56eeb540f8752a755debe9de91215b75e72925f2293e8db1436d1eaca5",
       "matchesInternalRuntime": true
     },
     {
       "file": "architecture/model.mjs",
-      "bytes": 14727,
-      "sha256": "5e6a5be68d0fc29a44020c39ef287254422b745798fe150ab7812d7a93b75205",
+      "bytes": 15626,
+      "sha256": "b96cab82b4903d6b8c07b1fbf84d633923af2db6f2ba3abf5053447d1321f1e4",
       "matchesInternalRuntime": true
     },
     {
@@ -163,6 +163,18 @@
       "bytes": 3627,
       "sha256": "3a911f52ee7810d1bd6d4663f841c4b1250bff59ba1bc7ab397335c819884190",
       "matchesInternalRuntime": true
+    },
+    {
+      "file": "architecture/clearance.mjs",
+      "bytes": 16540,
+      "sha256": "dc9aed4d7f916f4a103e6c2885ae682aa9b0eb19cdddeacb1b3fbe9ea071eda0",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "architecture/sections.mjs",
+      "bytes": 5305,
+      "sha256": "cd591c8b01d42a6bde4d1152cdb28e091f5c21210017f8ef21d9dc759f6c1fc1",
+      "matchesInternalRuntime": true
     }
   ],
   "thirdPartyResources": [
@@ -186,7 +198,10 @@
     "export-viewport-scales-sample.mjs": "The same original sample generator places its optional audited PDF under ignored work; source includes only the editable Linecraft sample.",
     "audit-viewport-dxf-v17.py": "Optional independent reader cache stays under the cloned repository work directory.",
     "architecture-desktop.cjs, dev-reload.cjs and dev-validator.cjs": "Require the local pinned Playwright dependency instead of a personal runtime-cache fallback.",
-    "samples/viewport-v17-reference.linecraft": "Regenerated original synthetic fixture under 1.9 adds architecture:null to its Linecraft/1 document; geometry and layouts are unchanged."
+    "samples/viewport-v17-reference.linecraft": "Regenerated original synthetic fixture under 1.9 adds architecture:null to its Linecraft/1 document; geometry and layouts are unchanged.",
+    "clearance-desktop.cjs": "Require the local pinned Playwright dependency instead of a personal runtime-cache fallback.",
+    "units-v15.cjs, layouts-v16.cjs, viewports-v17.cjs, viewport-scales-v18.cjs and viewport-regression-v17.cjs": "Use the corrected source fixtures: real native resize plus explicit CSS viewport sizing, avoiding Windows DPI rounding. Keep all exact-size and no-overflow assertions. Require local pinned Playwright without personal cache paths.",
+    "samples/roof-space-H-v19.linecraft": "Retained original schema 1 bytes as a migration fixture; the updated exporter verifies the canonical archived file before migration."
   },
   "removedPrivateTestCount": {
     "core.test.mjs": 12,

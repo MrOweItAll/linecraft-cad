@@ -6,6 +6,8 @@ import {presetUCS,normalizeUCS,ucsFromThreePoints,constructionPlane,planeToWorld
 import {parseViewportZoomFactor} from './viewport-scales.mjs';
 import {normalizeArchitecture} from './architecture/model.mjs';
 import {applyArchitectureEdit,generateArchitecture} from './architecture/editor-adapter.mjs';
+import {buildRoomSection} from './architecture/sections.mjs';
+import {physicalScale} from './architecture/units-adapter.mjs';
 export {roofBoundaryFromWalls} from './architecture/plan-topology.mjs';
 export {fromWorld as architectureWorldToLocal,toWorld as architectureLocalToWorld} from './architecture/units-adapter.mjs';
 const ARCHITECTURE_PREFIX='@architecture/';
@@ -1806,6 +1808,7 @@ export function createEditor(initialState = {}) {
   const editor = {
     state,
     applyArchitecture(operation){
+      if(operation?.type==='exportSection')return editor.addRoomSection(operation);
       if(state.command)return result(false,'Finish or cancel the active command before editing Architecture.');
       if(state.activeSpace==='paper')return result(false,'Architectural source is edited in model space.');
       try{
@@ -1816,7 +1819,33 @@ export function createEditor(initialState = {}) {
       }catch(error){return result(false,`Architecture rejected: ${error.message}`);}
     },
     getArchitectureOwner(entityId){return clone(state.architectureDerived?.owners?.[entityId]??null);},
-    getArchitectureReport(){return clone({schemaVersion:1,modelUnits:state.settings.units,source:state.architecture,derived:state.architectureDerived,framingStatus:'unverified',trussDesignManufacturingComplexitySurcharge:0});},
+    getArchitectureReport(){return clone({schemaVersion:2,modelUnits:state.settings.units,source:state.architecture,derived:state.architectureDerived,spaces:state.architectureDerived?.spaces??[],roofGeometryFingerprint:state.architectureDerived?.roofGeometryFingerprint??null,framingStatus:'unverified',trussDesignManufacturingComplexitySurcharge:0});},
+    addRoomSection(options={}){
+      if(state.command)return result(false,'Finish or cancel the active command before exporting a room section.');
+      if(state.activeSpace==='paper')return result(false,'Export architectural sections in model space.');
+      try{
+        drawingLayerReady();if(!state.architecture)throw Error('An architectural model is required.');
+        const intent=state.architecture.rooms.find(room=>room.id===options.roomId),region=state.architectureDerived.rooms.find(room=>room.id===options.roomId),analysis=state.architectureDerived.spaces?.find(room=>room.roomId===options.roomId);
+        if(!intent||!region||!analysis||!['ok','infeasible'].includes(analysis.status))throw Error('A complete supported room clearance analysis is required for a dimensioned section.');
+        const room={...region,...intent,boundary:region.boundary},section=buildRoomSection({analysis,room,axis:options.axis??'x',coordinate:options.coordinate});
+        if(section.status!=='ok')throw Error(section.message??section.diagnostics?.map(d=>d.message??d).join(' ')??'The requested section is unsupported.');
+        const origin=point(options.origin??{x:0,y:0}),unit=25.4/physicalScale(state.settings),height=3*unit,gap=12*unit,floor=room.floorElevation;
+        const station=p=>section.axis==='y'?p.y-section.start.y:p.x-section.start.x;
+        const project=p=>point({x:origin.x+station(p),y:origin.y+p.z-floor});
+        const generated=[],line=(a,b)=>{const start=project(a),end=project(b);if(!samePoint(start,end))generated.push({id:id(),type:'LINE',layer:state.currentLayer,start,end});};
+        for(const segment of section.segments??[])line(segment.start,segment.end);
+        for(const segment of section.roofSegments??[])line(segment.start,segment.end);
+        const profiles=section.profileSegments??section.profiles??{};for(const profile of Object.values(profiles)){if(Array.isArray(profile)&&profile.length===2&&profile[0]?.x!==undefined)line(profile[0],profile[1]);else if(Array.isArray(profile))for(const interval of profile)if(Array.isArray(interval)&&interval.length===2)line(interval[0],interval[1]);}
+        const title=`${room.label} | ${section.axis.toUpperCase()} section | ${analysis.status==='infeasible'?'INFEASIBLE declared clearance | ':''}fixed-roof geometry, framing unverified`;
+        generated.push({id:id(),type:'TEXT',layer:state.currentLayer,position:{x:origin.x,y:origin.y-gap},text:title,height,rotation:0,style:state.currentTextStyle});
+        const dimension=(value,index,label)=>{if(!finite(value)||value<=floor)return;generated.push({id:id(),type:'DIMENSION',kind:'aligned',layer:state.currentLayer,p1:{x:origin.x,y:origin.y},p2:{x:origin.x,y:origin.y+value-floor},placement:{x:origin.x-gap*(index+1),y:origin.y+(value-floor)/2},style:state.currentDimStyle,scale:1,textOverride:`${label}: <>`});};
+        dimension(room.ceilingElevation,0,'Current');dimension(room.targetCeilingElevation,1,'Target');dimension(analysis.maxFlatCeilingElevation,2,'Maximum');
+        if(!(section.length>0)||!generated.length)throw Error('The requested section contains no drawable interval.');
+        generated.push({id:id(),type:'DIMENSION',kind:'aligned',layer:state.currentLayer,p1:{x:origin.x,y:origin.y},p2:{x:origin.x+section.length,y:origin.y},placement:{x:origin.x+section.length/2,y:origin.y-gap*2},style:state.currentDimStyle,scale:1});
+        const before=snapshot(),normalized=normalizeDocument({...state,...before,entities:[...before.entities,...generated]});Object.assign(state,normalized);normalized.entities.forEach(entity=>allocatedIds.add(entity.id));state.selectionIds=generated.map(entity=>entity.id);validateSelection();
+        return {...result(true,'Dimensioned static section exported as ordinary model-space geometry. Roof and architectural source are unchanged.',record(before)),section:clone(section),entityIds:generated.map(entity=>entity.id)};
+      }catch(error){return result(false,`Section rejected: ${error.message}`);}
+    },
     detachArchitectureSelection(){
       if(state.command)return result(false,'Finish or cancel the active command before detaching.');
       const selected=state.entities.filter(entity=>state.selectionIds.includes(entity.id)&&architecturalEntity(entity)&&selectable(entity));
@@ -2081,7 +2110,16 @@ export function createEditor(initialState = {}) {
         else if(token==='ROOFUPDATE')response=editor.applyArchitecture({type:'regenerate'});
         else if(token==='ROOFREPORT')response={...result(true,'Architectural source, geometric quantities and unverified framing status.'),report:editor.getArchitectureReport()};
         else if(token==='ROOFDETACH')response=editor.detachArchitectureSelection();
-        else if(['ROOFSPACE','ROOFOPTIMIZE','ROOFSECTION'].includes(token))response=result(false,`${token} is a subsequent Roof + Space milestone; no ceiling clearance, optimization or section is computed in R0–R2.`);
+        else if(token==='ROOFSPACE'){
+          const selectedRooms=new Set(state.selectionIds.map(value=>state.architectureDerived?.owners?.[value]).filter(owner=>owner?.kind==='room').map(owner=>owner.id)),spaces=(state.architectureDerived?.spaces??[]).filter(space=>!selectedRooms.size||selectedRooms.has(space.roomId)),declared=spaces.filter(space=>['ok','infeasible'].includes(space.status)&&space.declared);
+          response={...result(declared.length>0,declared.length?declared.map(space=>`${state.architecture.rooms.find(room=>room.id===space.roomId)?.label??space.roomId}: maximum declared flat ceiling ${formatLength(space.maxFlatCeilingElevation,state.settings)}, ${space.status}; framing unverified.`).join(' '):'No complete declared ceiling-space report is available. Use Architecture > Ceiling space to declare an assembly and resolve room/roof coverage.'),spaces:clone(spaces)};
+        }
+        else if(token==='ROOFSECTION'){
+          const selectedRooms=[...new Set(state.selectionIds.map(value=>state.architectureDerived?.owners?.[value]).filter(owner=>owner?.kind==='room').map(owner=>owner.id))];
+          if(selectedRooms.length!==1)response=result(false,'Select one generated room boundary to export its default X section, or choose Architecture > Ceiling space for axis, crossing coordinate and origin. The explicit API is addRoomSection({roomId, axis, coordinate, origin}).');
+          else{const room=state.architectureDerived.rooms.find(room=>room.id===selectedRooms[0]);response=editor.addRoomSection({roomId:selectedRooms[0],axis:'x',origin:{x:Math.max(...room.boundary.map(p=>p.x))+parseLength('24"',state.settings),y:Math.min(...room.boundary.map(p=>p.y))}});}
+        }
+        else if(token==='ROOFOPTIMIZE')response=result(false,'Bounded roof/space alternatives are a later milestone; no optimization is performed.');
         else if (['L', 'LINE'].includes(token)) response = startCommand('LINE');
         else if(['ELLIPSE','EL','SPLINE','SPL','HATCH','H','FILLET','F','CHAMFER','CHA','ARRAYRECT','AR','STRETCH','S','PEDIT','PE','BLOCK','B','INSERT','I'].includes(token))response=startCommand(({EL:'ELLIPSE',SPL:'SPLINE',H:'HATCH',F:'FILLET',CHA:'CHAMFER',AR:'ARRAYRECT',S:'STRETCH',PE:'PEDIT',B:'BLOCK',I:'INSERT'})[token]??token);
         else if(['PSPACE','PS'].includes(token)){if(!state.layouts.length){const created=editor.addLayout('Layout1');if(!created.ok)response=created;else response=editor.setSpace('paper',created.layoutId);}else response=editor.setSpace('paper');}

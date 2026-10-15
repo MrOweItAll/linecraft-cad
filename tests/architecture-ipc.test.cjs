@@ -33,12 +33,12 @@ async function main(){
  for(const op of [{type:'addWalls',points:[{x:0,y:0},{x:240,y:0},{x:240,y:144},{x:0,y:144}],closed:true,referenceFace:'right',thickness:6,bearingElevation:108},{type:'recognizeRooms'},{type:'addRoof',overhang:12}])assert.equal(editor.applyArchitecture(op).ok,true);
  const source=editor.serialize(),doc=JSON.parse(source),tests=[];
  const check=async(name,fn)=>{try{await fn();tests.push({name,status:'passed'});console.log(`PASS ${name}`);}catch(error){tests.push({name,status:'failed',error:error.stack});console.log(`FAIL ${name}: ${error.message}`);}};
- await check('production Save/Open retains schema1 source, precision, rooms and regenerated roof; no derived cache is stored',async()=>{
+ await check('production Save/Open retains migrated schema2 source, precision, rooms and regenerated roof; no derived cache is stored',async()=>{
   assert.equal((await invoke('linecraft:save',source,true)).ok,true);const bytes=await fs.readFile(filename,'utf8');assert.equal(bytes,source);assert.equal(JSON.parse(bytes).entities.length,0);const loaded=await invoke('linecraft:open');assert.equal(loaded.ok,true);const restored=createEditor(JSON.parse(loaded.text));assert.deepEqual(restored.state.architecture,editor.state.architecture);assert.deepEqual(restored.state.entities,editor.state.entities);
  });
  await check('future schemas, executable fields, nonzero truss surcharges and forged derivatives reject before chooser or overwrite',async()=>{
   const original=await fs.readFile(filename,'utf8'),choices=calls.saveDialog;
-  for(const mutate of [d=>d.architecture.schemaVersion=2,d=>d.architecture.constraints=[{id:'bad',kind:'expression',code:'eval'}],d=>d.architecture.costAssumptions.manufacturingComplexitySurcharge=1,d=>d.architecture.roofGroups[0].riseTwice=8.1,d=>d.architecture.modelUnits='ft',d=>d.entities.push({id:'@architecture/forged',type:'LINE',start:{x:0,y:0},end:{x:1,y:1}})]){
+  for(const mutate of [d=>d.architecture.schemaVersion=99,d=>d.architecture.constraints=[{id:'bad',kind:'expression',code:'eval'}],d=>d.architecture.costAssumptions.manufacturingComplexitySurcharge=1,d=>d.architecture.roofGroups[0].riseTwice=8.1,d=>d.architecture.modelUnits='ft',d=>d.entities.push({id:'@architecture/forged',type:'LINE',start:{x:0,y:0},end:{x:1,y:1}})]){
    const bad=structuredClone(doc);mutate(bad);const r=await invoke('linecraft:save',JSON.stringify(bad),true);assert.equal(r.ok,false);assert.ok(r.error);
   }assert.equal(calls.saveDialog,choices);assert.equal(await fs.readFile(filename,'utf8'),original);
  });

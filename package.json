@@ -1,6 +1,6 @@
 {
   "name": "linecraft-cad",
-  "version": "1.9.0",
+  "version": "1.10.0",
   "description": "Independent offline 2D drafting and polygonal 3D modeling for Windows",
   "author": "Linecraft contributors",
   "license": "MIT",
@@ -33,7 +33,9 @@
     "build": "node desktop/dev-tools.cjs build",
     "test:architecture": "node tests/run-architecture-tests.mjs",
     "test:architecture-ipc": "node tests/architecture-ipc.test.cjs",
-    "test:architecture-desktop": "node desktop/dev-tools.cjs test-architecture"
+    "test:architecture-desktop": "node desktop/dev-tools.cjs test-architecture",
+    "test:space": "node tests/run-clearance-tests.mjs",
+    "test:space-desktop": "node desktop/dev-tools.cjs test-space"
   },
   "devDependencies": {
     "electron": "44.7.0",

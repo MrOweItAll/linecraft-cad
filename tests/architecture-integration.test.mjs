@@ -41,7 +41,7 @@ test('R2 analytical H is generated from boundary only, valid source survives nat
 test('R2 ceiling-only change leaves fixed exterior mesh byte identical; physical costs remain explicit',()=>{
  const e=editor();apply(e,wallOp);apply(e,{type:'recognizeRooms'});apply(e,{type:'addRoof',overhang:12,riseTwice:8});const mesh=JSON.stringify(roofMesh(e));
  apply(e,{type:'setRoom',roomId:e.state.architecture.rooms[0].id,values:{ceilingElevation:120}});assert.equal(JSON.stringify(roofMesh(e)),mesh);
- const report=e.getArchitectureReport();assert.equal(report.trussDesignManufacturingComplexitySurcharge,0);assert.equal(report.derived.quantities.framingLumber,null);assert.equal(report.framingStatus,'unverified');assert.equal(report.derived.validation.clearance,'not-assessed');
+ const report=e.getArchitectureReport();assert.equal(report.trussDesignManufacturingComplexitySurcharge,0);assert.equal(report.derived.quantities.framingLumber,null);assert.equal(report.framingStatus,'unverified');assert.equal(report.derived.validation.clearance,'unsupported');
 });
 test('owner picking is selectable while ordinary grips, erase, transforms and mesh edits cannot break links',()=>{
  const e=editor();apply(e,wallOp);const mesh=e.state.entities[0],source=e.serialize();e.select([mesh.id]);assert.equal(e.getSelectionObjects().length,1);assert.deepEqual(e.getArchitectureOwner(mesh.id),{kind:'wall',id:'wall-1'});
