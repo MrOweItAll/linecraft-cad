@@ -25,6 +25,8 @@ function watchDevelopment(root, getWindow, {debounceMs = 180, log = console.log}
   watchers.push(fs.watch(path.join(root, 'desktop'), (_event, name) => {
     if (name && hostFiles.has(String(name))) log(`[Linecraft dev] Host file changed: desktop/${name}. Restart launch-dev.cmd explicitly to load it; the development profile retains its drawing checkpoint.`);
   }));
+  const architectureRoot=path.join(root,'architecture');
+  if(fs.existsSync(architectureRoot))watchers.push(fs.watch(architectureRoot,(_event,name)=>{if(!name||!/^[a-z0-9-]+\.mjs$/i.test(String(name)))return;pending.add(`architecture/${name}`);clearTimeout(timer);timer=setTimeout(flush,debounceMs);}));
   for (const watcher of watchers) watcher.on('error', error => log(`[Linecraft dev] Watch error: ${error.message}`));
   log('[Linecraft dev] Watching app/core/3D/import modules, styles, index, and original favicon. No installer is used.');
   return {close() {closed = true; clearTimeout(timer); for (const watcher of watchers) watcher.close();}};

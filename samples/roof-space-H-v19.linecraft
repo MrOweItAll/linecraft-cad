@@ -1,0 +1,586 @@
+{
+  "format": "Linecraft/2",
+  "entities": [],
+  "layers": [
+    {
+      "name": "0",
+      "color": "#e5e7eb",
+      "visible": true,
+      "locked": false,
+      "lineweight": 0.25,
+      "modelVisible": true,
+      "paperVisible": true,
+      "plot": true,
+      "linetype": "continuous"
+    }
+  ],
+  "currentLayer": "0",
+  "textStyles": [
+    {
+      "name": "Standard",
+      "fontFamily": "Arial",
+      "defaultHeight": 2.5,
+      "defaultRotation": 0,
+      "widthFactor": 1
+    }
+  ],
+  "dimStyles": [
+    {
+      "name": "Standard",
+      "textStyle": "Standard",
+      "textHeight": 2.5,
+      "arrowSize": 2.5,
+      "gap": 1,
+      "extensionOffset": 1,
+      "extensionOvershoot": 1.25,
+      "precision": 2,
+      "scale": 1,
+      "prefix": "",
+      "suffix": ""
+    }
+  ],
+  "currentTextStyle": "Standard",
+  "currentDimStyle": "Standard",
+  "settings": {
+    "units": "in",
+    "precision": 4,
+    "linearFormat": "architectural",
+    "fractionPrecision": 4,
+    "angularInputUnit": "degrees",
+    "angularFormat": "decimal-degrees",
+    "angularPrecision": 4,
+    "gridEnabled": true,
+    "snapEnabled": true,
+    "orthoEnabled": false,
+    "snapModes": [
+      "endpoint",
+      "midpoint",
+      "center",
+      "quadrant"
+    ],
+    "gridAdaptive": true,
+    "gridSpacing": 10,
+    "constructionElevation": 0,
+    "constructionPlane": "XY"
+  },
+  "blocks": [],
+  "layouts": [
+    {
+      "id": "layout1",
+      "name": "H roof review — A3",
+      "paper": {
+        "size": "A3",
+        "orientation": "landscape",
+        "widthMm": 420,
+        "heightMm": 297
+      },
+      "viewports": [
+        {
+          "id": "vp1",
+          "frame": {
+            "x": 15,
+            "y": 20,
+            "width": 215,
+            "height": 250
+          },
+          "modelCenter": {
+            "x": 384,
+            "y": 360,
+            "z": 0
+          },
+          "scaleDenominator": 96,
+          "locked": true,
+          "frozenLayers": [],
+          "workspace": "2d",
+          "camera3d": {
+            "target": {
+              "x": 384,
+              "y": 360,
+              "z": 0
+            },
+            "orbitCenter": null,
+            "scale": 10,
+            "yaw": -90,
+            "pitch": 90,
+            "roll": 0,
+            "mode": "top",
+            "renderMode": "shaded",
+            "projection": "orthographic",
+            "distance": 200,
+            "fov": 45,
+            "autoTarget": true
+          },
+          "plotBorder": false,
+          "layer": "0"
+        },
+        {
+          "id": "vp2",
+          "frame": {
+            "x": 245,
+            "y": 70,
+            "width": 160,
+            "height": 160
+          },
+          "modelCenter": {
+            "x": 384,
+            "y": 360,
+            "z": 80
+          },
+          "scaleDenominator": 192,
+          "locked": true,
+          "frozenLayers": [],
+          "workspace": "3d",
+          "camera3d": {
+            "target": {
+              "x": 384,
+              "y": 360,
+              "z": 80
+            },
+            "orbitCenter": null,
+            "scale": 10,
+            "yaw": 45,
+            "pitch": 35.264389682754654,
+            "roll": 0,
+            "mode": "iso",
+            "renderMode": "shaded",
+            "projection": "orthographic",
+            "distance": 200,
+            "fov": 45,
+            "autoTarget": true
+          },
+          "plotBorder": false,
+          "layer": "0"
+        }
+      ],
+      "entities": []
+    }
+  ],
+  "ucs": {
+    "origin": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "xAxis": {
+      "x": 1,
+      "y": 0,
+      "z": 0
+    },
+    "yAxis": {
+      "x": 0,
+      "y": 1,
+      "z": 0
+    },
+    "zAxis": {
+      "x": 0,
+      "y": 0,
+      "z": 1
+    }
+  },
+  "architecture": {
+    "schemaVersion": 1,
+    "modelUnits": "in",
+    "revision": 5,
+    "buildingFrame": {
+      "origin": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotationDegrees": 0
+    },
+    "levels": [
+      {
+        "id": "level-1",
+        "name": "Ground floor",
+        "floorElevation": 0,
+        "defaultBearingElevation": 96.00000000000001,
+        "defaultCeilingElevation": 96.00000000000001
+      }
+    ],
+    "wallNodes": [
+      {
+        "id": "node-1",
+        "x": 0,
+        "y": 0
+      },
+      {
+        "id": "node-2",
+        "x": 240,
+        "y": 0
+      },
+      {
+        "id": "node-3",
+        "x": 240,
+        "y": 192
+      },
+      {
+        "id": "node-4",
+        "x": 528,
+        "y": 192
+      },
+      {
+        "id": "node-5",
+        "x": 528,
+        "y": 0
+      },
+      {
+        "id": "node-6",
+        "x": 768,
+        "y": 0
+      },
+      {
+        "id": "node-7",
+        "x": 768,
+        "y": 720
+      },
+      {
+        "id": "node-8",
+        "x": 528,
+        "y": 720
+      },
+      {
+        "id": "node-9",
+        "x": 528,
+        "y": 528
+      },
+      {
+        "id": "node-10",
+        "x": 240,
+        "y": 528
+      },
+      {
+        "id": "node-11",
+        "x": 240,
+        "y": 720
+      },
+      {
+        "id": "node-12",
+        "x": 0,
+        "y": 720
+      }
+    ],
+    "walls": [
+      {
+        "id": "wall-1",
+        "startNodeId": "node-1",
+        "endNodeId": "node-2",
+        "referenceFace": "right",
+        "thickness": 6,
+        "baseElevation": 0,
+        "bearingElevation": 120,
+        "role": "exterior",
+        "levelId": "level-1",
+        "roofGroupId": null,
+        "heightLocked": false
+      },
+      {
+        "id": "wall-2",
+        "startNodeId": "node-2",
+        "endNodeId": "node-3",
+        "referenceFace": "right",
+        "thickness": 6,
+        "baseElevation": 0,
+        "bearingElevation": 120,
+        "role": "exterior",
+        "levelId": "level-1",
+        "roofGroupId": null,
+        "heightLocked": false
+      },
+      {
+        "id": "wall-3",
+        "startNodeId": "node-3",
+        "endNodeId": "node-4",
+        "referenceFace": "right",
+        "thickness": 6,
+        "baseElevation": 0,
+        "bearingElevation": 120,
+        "role": "exterior",
+        "levelId": "level-1",
+        "roofGroupId": null,
+        "heightLocked": false
+      },
+      {
+        "id": "wall-4",
+        "startNodeId": "node-4",
+        "endNodeId": "node-5",
+        "referenceFace": "right",
+        "thickness": 6,
+        "baseElevation": 0,
+        "bearingElevation": 120,
+        "role": "exterior",
+        "levelId": "level-1",
+        "roofGroupId": null,
+        "heightLocked": false
+      },
+      {
+        "id": "wall-5",
+        "startNodeId": "node-5",
+        "endNodeId": "node-6",
+        "referenceFace": "right",
+        "thickness": 6,
+        "baseElevation": 0,
+        "bearingElevation": 120,
+        "role": "exterior",
+        "levelId": "level-1",
+        "roofGroupId": null,
+        "heightLocked": false
+      },
+      {
+        "id": "wall-6",
+        "startNodeId": "node-6",
+        "endNodeId": "node-7",
+        "referenceFace": "right",
+        "thickness": 6,
+        "baseElevation": 0,
+        "bearingElevation": 120,
+        "role": "exterior",
+        "levelId": "level-1",
+        "roofGroupId": null,
+        "heightLocked": false
+      },
+      {
+        "id": "wall-7",
+        "startNodeId": "node-7",
+        "endNodeId": "node-8",
+        "referenceFace": "right",
+        "thickness": 6,
+        "baseElevation": 0,
+        "bearingElevation": 120,
+        "role": "exterior",
+        "levelId": "level-1",
+        "roofGroupId": null,
+        "heightLocked": false
+      },
+      {
+        "id": "wall-8",
+        "startNodeId": "node-8",
+        "endNodeId": "node-9",
+        "referenceFace": "right",
+        "thickness": 6,
+        "baseElevation": 0,
+        "bearingElevation": 120,
+        "role": "exterior",
+        "levelId": "level-1",
+        "roofGroupId": null,
+        "heightLocked": false
+      },
+      {
+        "id": "wall-9",
+        "startNodeId": "node-9",
+        "endNodeId": "node-10",
+        "referenceFace": "right",
+        "thickness": 6,
+        "baseElevation": 0,
+        "bearingElevation": 120,
+        "role": "exterior",
+        "levelId": "level-1",
+        "roofGroupId": null,
+        "heightLocked": false
+      },
+      {
+        "id": "wall-10",
+        "startNodeId": "node-10",
+        "endNodeId": "node-11",
+        "referenceFace": "right",
+        "thickness": 6,
+        "baseElevation": 0,
+        "bearingElevation": 120,
+        "role": "exterior",
+        "levelId": "level-1",
+        "roofGroupId": null,
+        "heightLocked": false
+      },
+      {
+        "id": "wall-11",
+        "startNodeId": "node-11",
+        "endNodeId": "node-12",
+        "referenceFace": "right",
+        "thickness": 6,
+        "baseElevation": 0,
+        "bearingElevation": 120,
+        "role": "exterior",
+        "levelId": "level-1",
+        "roofGroupId": null,
+        "heightLocked": false
+      },
+      {
+        "id": "wall-12",
+        "startNodeId": "node-12",
+        "endNodeId": "node-1",
+        "referenceFace": "right",
+        "thickness": 6,
+        "baseElevation": 0,
+        "bearingElevation": 120,
+        "role": "exterior",
+        "levelId": "level-1",
+        "roofGroupId": null,
+        "heightLocked": false
+      }
+    ],
+    "openings": [
+      {
+        "id": "opening-1",
+        "wallId": "wall-1",
+        "station": 48,
+        "width": 36,
+        "sillElevation": 0,
+        "headElevation": 84,
+        "openingType": "door"
+      }
+    ],
+    "rooms": [
+      {
+        "id": "room-1",
+        "label": "H footprint — ceiling intent only",
+        "anchor": {
+          "x": 384,
+          "y": 360
+        },
+        "levelId": "level-1",
+        "floorElevation": 0,
+        "ceilingElevation": 108,
+        "targetCeilingElevation": 120,
+        "ceilingType": "flat",
+        "allowCeilingChange": false,
+        "priority": 1
+      }
+    ],
+    "roofGroups": [
+      {
+        "id": "roof-1",
+        "name": "Analytical H · equal-eave HIP",
+        "boundary": [
+          {
+            "x": 240,
+            "y": 192
+          },
+          {
+            "x": 528,
+            "y": 192
+          },
+          {
+            "x": 528,
+            "y": 0
+          },
+          {
+            "x": 768,
+            "y": 0
+          },
+          {
+            "x": 768,
+            "y": 720
+          },
+          {
+            "x": 528,
+            "y": 720
+          },
+          {
+            "x": 528,
+            "y": 528
+          },
+          {
+            "x": 240,
+            "y": 528
+          },
+          {
+            "x": 240,
+            "y": 720
+          },
+          {
+            "x": 0,
+            "y": 720
+          },
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 240,
+            "y": 0
+          }
+        ],
+        "boundarySource": "walls",
+        "boundaryWallIds": [
+          "wall-1",
+          "wall-2",
+          "wall-3",
+          "wall-4",
+          "wall-5",
+          "wall-6",
+          "wall-7",
+          "wall-8",
+          "wall-9",
+          "wall-10",
+          "wall-11",
+          "wall-12"
+        ],
+        "riseTwice": 8,
+        "overhang": 24,
+        "bearingElevation": 120,
+        "heelOffset": 0,
+        "eaveElevation": null,
+        "roofType": "HIP",
+        "assemblyId": null,
+        "supportWallIds": [
+          "wall-1",
+          "wall-2",
+          "wall-3",
+          "wall-4",
+          "wall-5",
+          "wall-6",
+          "wall-7",
+          "wall-8",
+          "wall-9",
+          "wall-10",
+          "wall-11",
+          "wall-12"
+        ],
+        "maxRidgeElevation": null
+      }
+    ],
+    "assemblies": [],
+    "constraints": [],
+    "acceptedAlternativeId": null,
+    "costAssumptions": {
+      "prefabricatedTrussDesignSurcharge": 0,
+      "manufacturingComplexitySurcharge": 0
+    }
+  },
+  "viewport": {
+    "center": {
+      "x": 0,
+      "y": 0
+    },
+    "scale": 10
+  },
+  "workspace": "3d",
+  "camera3d": {
+    "target": {
+      "x": 384,
+      "y": 360,
+      "z": 80
+    },
+    "orbitCenter": null,
+    "scale": 0.7,
+    "yaw": 45,
+    "pitch": 35.264389682754654,
+    "roll": 0,
+    "mode": "iso",
+    "renderMode": "shaded",
+    "projection": "orthographic",
+    "distance": 200,
+    "fov": 45,
+    "autoTarget": false
+  },
+  "activeSpace": "model",
+  "activeLayoutId": null,
+  "activeViewportId": null,
+  "paperViewport": {
+    "center": {
+      "x": 210,
+      "y": 148.5
+    },
+    "scale": 2
+  }
+}

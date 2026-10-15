@@ -420,6 +420,7 @@
       "z": 1
     }
   },
+  "architecture": null,
   "viewport": {
     "center": {
       "x": 0,

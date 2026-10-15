@@ -1,11 +1,11 @@
 {
-  "version": "1.8.0",
+  "version": "1.9.0",
   "scope": "Original public runtime and synthetic regression suite; private native drawings and evidence excluded.",
   "runtimeFiles": [
     {
       "file": "core.mjs",
-      "bytes": 303044,
-      "sha256": "6cbe2973c480f52b00b2eacc84b5124a86d93af1656de6ca8a03e8a7d839d216",
+      "bytes": 313244,
+      "sha256": "d16ae819eb0c9208e13e50a2b88f15f972ab2b613d92aad1bd10f90de940c2f5",
       "matchesInternalRuntime": true
     },
     {
@@ -58,20 +58,20 @@
     },
     {
       "file": "app.mjs",
-      "bytes": 236970,
-      "sha256": "97001be66deacac27962ad536aefb61ce66d333c2ffa06d6359edbd772d7e3fc",
+      "bytes": 265563,
+      "sha256": "c77cbacf9125db346aa463eff587a2348dd6b6ce7c1f0bc00afb7c93b6792cd4",
       "matchesInternalRuntime": true
     },
     {
       "file": "index.html",
-      "bytes": 42495,
-      "sha256": "2d29eb766270b4bb0f5875365bcf00e4ade6ff60987ef2244fb5a2e19b9e8509",
+      "bytes": 52625,
+      "sha256": "a5a4974921012d27b4e4869c07e6b2e6793792440908fc270d0a60de0325e16a",
       "matchesInternalRuntime": true
     },
     {
       "file": "styles.css",
-      "bytes": 36267,
-      "sha256": "923aa006801603d227f2ee48b97b3b2ce9759d7e0943773e39f3da67b5350a8a",
+      "bytes": 39893,
+      "sha256": "989dcadfcccb87154ba99f35c8ab98c4607a6545564810a9467a73720783e240",
       "matchesInternalRuntime": true
     },
     {
@@ -82,8 +82,8 @@
     },
     {
       "file": "desktop/main.cjs",
-      "bytes": 27264,
-      "sha256": "83b25898e41e3d9e9ec6d7be0aa47ca5f1aae793b0282af8b2a1ce32dfb7a262",
+      "bytes": 28055,
+      "sha256": "b7d6acefd2b07034efebd5e8072637c9b26b9cac1eff1a20f0a3ad05ec0e7900",
       "matchesInternalRuntime": true
     },
     {
@@ -115,6 +115,54 @@
       "bytes": 1083,
       "sha256": "155eae99601ecc2325927203fa7e8450e688cf131772d0986a1a3daab0df09bb",
       "matchesInternalRuntime": true
+    },
+    {
+      "file": "architecture/editor-adapter.mjs",
+      "bytes": 18131,
+      "sha256": "ce46481eb5189e8a0164aed260a00bba560a7e90ffec7fc97e49a9d4fd02a8b4",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "architecture/model.mjs",
+      "bytes": 14727,
+      "sha256": "5e6a5be68d0fc29a44020c39ef287254422b745798fe150ab7812d7a93b75205",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "architecture/plan-topology.mjs",
+      "bytes": 9839,
+      "sha256": "7de49e0a0d96631310d03d3e01cd1c64b59ee8783f6bffe727f328ed939eb4c1",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "architecture/roof-boundary.mjs",
+      "bytes": 4430,
+      "sha256": "d9b84167971bff404d741873b643ceb09e1edf54d730358ae8615d48c730c1a4",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "architecture/roof-hip.mjs",
+      "bytes": 16907,
+      "sha256": "7721739ed0f61880b50f94b7c83f4f8c6c35604d7bc53acfcda368ace01392ed",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "architecture/roof-validate.mjs",
+      "bytes": 13370,
+      "sha256": "5e85a95cf010453975b7616618a7ec3220d948d82de21029b581737a5677c735",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "architecture/units-adapter.mjs",
+      "bytes": 1004,
+      "sha256": "47aa78e4cb3f8aa3b29beb213fa54db0472adf14fcfcaa40c87e8824d5bcc145",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "architecture/wall-geometry.mjs",
+      "bytes": 3627,
+      "sha256": "3a911f52ee7810d1bd6d4663f841c4b1250bff59ba1bc7ab397335c819884190",
+      "matchesInternalRuntime": true
     }
   ],
   "thirdPartyResources": [
@@ -136,7 +184,9 @@
     "desktop-unit.test.cjs": "Outside-app fixture is a sibling of repository root, independent of workspace layout.",
     "run-layout-pdf-v16.cjs, run-viewport-pdf-v17.cjs and run-viewport-scales-pdf-v18.cjs": "Use local pinned Electron without private cache lookup.",
     "export-viewport-scales-sample.mjs": "The same original sample generator places its optional audited PDF under ignored work; source includes only the editable Linecraft sample.",
-    "audit-viewport-dxf-v17.py": "Optional independent reader cache stays under the cloned repository work directory."
+    "audit-viewport-dxf-v17.py": "Optional independent reader cache stays under the cloned repository work directory.",
+    "architecture-desktop.cjs, dev-reload.cjs and dev-validator.cjs": "Require the local pinned Playwright dependency instead of a personal runtime-cache fallback.",
+    "samples/viewport-v17-reference.linecraft": "Regenerated original synthetic fixture under 1.9 adds architecture:null to its Linecraft/1 document; geometry and layouts are unchanged."
   },
   "removedPrivateTestCount": {
     "core.test.mjs": 12,
@@ -146,5 +196,8 @@
     "Native drawings, scripts, exported references, observed JSON, images, evidence and command corpora",
     "Current/historical reports, screenshots, logs, registry/install metadata and private paths",
     "Internal release driver/manifest/documentation; node_modules, build outputs and standalone bundle"
-  ]
+  ],
+  "publicDocumentationAdaptations": {
+    "docs/roof-space/IMPLEMENTATION_HANDOFF.md": "Owner-provided implementation specification, with prepared-for personal name omitted and client drawing warning generalized. The independently supplied synthetic fixture and technical requirements are retained."
+  }
 }

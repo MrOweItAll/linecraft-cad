@@ -1,0 +1,607 @@
+{
+  "format": "LinecraftRoofAnalyticalFixture/1",
+  "status": "analytical_expected_values_not_Linecraft_solver_output",
+  "name": "H hip roof \u2014 64 by 60 feet; connector 24 by 28 feet",
+  "input": {
+    "modelUnit": "in",
+    "buildingFrame": "local XY horizontal; Z up",
+    "wallReferenceBoundaryXY": [
+      [
+        0,
+        0
+      ],
+      [
+        240,
+        0
+      ],
+      [
+        240,
+        192
+      ],
+      [
+        528,
+        192
+      ],
+      [
+        528,
+        0
+      ],
+      [
+        768,
+        0
+      ],
+      [
+        768,
+        720
+      ],
+      [
+        528,
+        720
+      ],
+      [
+        528,
+        528
+      ],
+      [
+        240,
+        528
+      ],
+      [
+        240,
+        720
+      ],
+      [
+        0,
+        720
+      ]
+    ],
+    "wallReferenceMeaning": "Dimensioned exterior/reference footprint, not wall centerlines",
+    "roofType": "HIP",
+    "riseTwice": 8,
+    "pitch": 0.3333333333333333,
+    "eaveOverhang": 24,
+    "eaveSurfaceElevation": 112,
+    "datumNote": "Surface at wall-reference line is 120 inches; bearing/heel/ceiling datums are not inferred",
+    "holes": [],
+    "regionPolicy": "Do not cover the two open recesses beyond the stated overhang"
+  },
+  "expected": {
+    "eaveBoundaryXYInches": [
+      [
+        -24,
+        -24
+      ],
+      [
+        264,
+        -24
+      ],
+      [
+        264,
+        168
+      ],
+      [
+        504,
+        168
+      ],
+      [
+        504,
+        -24
+      ],
+      [
+        792,
+        -24
+      ],
+      [
+        792,
+        744
+      ],
+      [
+        504,
+        744
+      ],
+      [
+        504,
+        552
+      ],
+      [
+        264,
+        552
+      ],
+      [
+        264,
+        744
+      ],
+      [
+        -24,
+        744
+      ]
+    ],
+    "nodesInches": {
+      "E0": [
+        -24,
+        -24,
+        112.0
+      ],
+      "E1": [
+        264,
+        -24,
+        112.0
+      ],
+      "E2": [
+        264,
+        168,
+        112.0
+      ],
+      "E3": [
+        504,
+        168,
+        112.0
+      ],
+      "E4": [
+        504,
+        -24,
+        112.0
+      ],
+      "E5": [
+        792,
+        -24,
+        112.0
+      ],
+      "E6": [
+        792,
+        744,
+        112.0
+      ],
+      "E7": [
+        504,
+        744,
+        112.0
+      ],
+      "E8": [
+        504,
+        552,
+        112.0
+      ],
+      "E9": [
+        264,
+        552,
+        112.0
+      ],
+      "E10": [
+        264,
+        744,
+        112.0
+      ],
+      "E11": [
+        -24,
+        744,
+        112.0
+      ],
+      "A1": [
+        120,
+        120,
+        160.0
+      ],
+      "A2": [
+        120,
+        600,
+        160.0
+      ],
+      "A3": [
+        648,
+        120,
+        160.0
+      ],
+      "A4": [
+        648,
+        600,
+        160.0
+      ],
+      "B1": [
+        120,
+        312,
+        160.0
+      ],
+      "B2": [
+        120,
+        408,
+        160.0
+      ],
+      "B3": [
+        648,
+        312,
+        160.0
+      ],
+      "B4": [
+        648,
+        408,
+        160.0
+      ],
+      "C1": [
+        168,
+        360,
+        176.0
+      ],
+      "C2": [
+        600,
+        360,
+        176.0
+      ]
+    },
+    "featureEdges": [
+      {
+        "kind": "outer_hip",
+        "from": "E0",
+        "to": "A1",
+        "lengthFeet": 17.435595774162696,
+        "horizontalLengthFeet": 16.97056274847714
+      },
+      {
+        "kind": "outer_hip",
+        "from": "E1",
+        "to": "A1",
+        "lengthFeet": 17.435595774162696,
+        "horizontalLengthFeet": 16.97056274847714
+      },
+      {
+        "kind": "outer_hip",
+        "from": "E11",
+        "to": "A2",
+        "lengthFeet": 17.435595774162696,
+        "horizontalLengthFeet": 16.97056274847714
+      },
+      {
+        "kind": "outer_hip",
+        "from": "E10",
+        "to": "A2",
+        "lengthFeet": 17.435595774162696,
+        "horizontalLengthFeet": 16.97056274847714
+      },
+      {
+        "kind": "outer_hip",
+        "from": "E4",
+        "to": "A3",
+        "lengthFeet": 17.435595774162696,
+        "horizontalLengthFeet": 16.97056274847714
+      },
+      {
+        "kind": "outer_hip",
+        "from": "E5",
+        "to": "A3",
+        "lengthFeet": 17.435595774162696,
+        "horizontalLengthFeet": 16.97056274847714
+      },
+      {
+        "kind": "outer_hip",
+        "from": "E7",
+        "to": "A4",
+        "lengthFeet": 17.435595774162696,
+        "horizontalLengthFeet": 16.97056274847714
+      },
+      {
+        "kind": "outer_hip",
+        "from": "E6",
+        "to": "A4",
+        "lengthFeet": 17.435595774162696,
+        "horizontalLengthFeet": 16.97056274847714
+      },
+      {
+        "kind": "valley",
+        "from": "E2",
+        "to": "B1",
+        "lengthFeet": 17.435595774162696,
+        "horizontalLengthFeet": 16.97056274847714
+      },
+      {
+        "kind": "valley",
+        "from": "E9",
+        "to": "B2",
+        "lengthFeet": 17.435595774162696,
+        "horizontalLengthFeet": 16.97056274847714
+      },
+      {
+        "kind": "valley",
+        "from": "E3",
+        "to": "B3",
+        "lengthFeet": 17.435595774162696,
+        "horizontalLengthFeet": 16.97056274847714
+      },
+      {
+        "kind": "valley",
+        "from": "E8",
+        "to": "B4",
+        "lengthFeet": 17.435595774162696,
+        "horizontalLengthFeet": 16.97056274847714
+      },
+      {
+        "kind": "rising_hip",
+        "from": "B1",
+        "to": "C1",
+        "lengthFeet": 5.8118652580542305,
+        "horizontalLengthFeet": 5.656854249492381
+      },
+      {
+        "kind": "rising_hip",
+        "from": "B2",
+        "to": "C1",
+        "lengthFeet": 5.8118652580542305,
+        "horizontalLengthFeet": 5.656854249492381
+      },
+      {
+        "kind": "rising_hip",
+        "from": "B3",
+        "to": "C2",
+        "lengthFeet": 5.8118652580542305,
+        "horizontalLengthFeet": 5.656854249492381
+      },
+      {
+        "kind": "rising_hip",
+        "from": "B4",
+        "to": "C2",
+        "lengthFeet": 5.8118652580542305,
+        "horizontalLengthFeet": 5.656854249492381
+      },
+      {
+        "kind": "wing_ridge",
+        "from": "A1",
+        "to": "B1",
+        "lengthFeet": 16.0,
+        "horizontalLengthFeet": 16.0
+      },
+      {
+        "kind": "wing_ridge",
+        "from": "B2",
+        "to": "A2",
+        "lengthFeet": 16.0,
+        "horizontalLengthFeet": 16.0
+      },
+      {
+        "kind": "wing_ridge",
+        "from": "A3",
+        "to": "B3",
+        "lengthFeet": 16.0,
+        "horizontalLengthFeet": 16.0
+      },
+      {
+        "kind": "wing_ridge",
+        "from": "B4",
+        "to": "A4",
+        "lengthFeet": 16.0,
+        "horizontalLengthFeet": 16.0
+      },
+      {
+        "kind": "main_ridge",
+        "from": "C1",
+        "to": "C2",
+        "lengthFeet": 36.0,
+        "horizontalLengthFeet": 36.0
+      }
+    ],
+    "roofFacets": [
+      {
+        "id": "F1",
+        "nodeIds": [
+          "E0",
+          "E11",
+          "A2",
+          "B2",
+          "C1",
+          "B1",
+          "A1"
+        ],
+        "planAreaSquareFeet": 640.0,
+        "surfaceAreaSquareFeet": 674.6192341692542,
+        "fittedPlaneFeet": {
+          "a": 0.3333333333333336,
+          "b": -5.551115123125783e-17,
+          "c": 10.000000000000002
+        },
+        "planeConvention": "z_ft = a*x_ft + b*y_ft + c"
+      },
+      {
+        "id": "F2",
+        "nodeIds": [
+          "E1",
+          "E0",
+          "A1"
+        ],
+        "planAreaSquareFeet": 144.0,
+        "surfaceAreaSquareFeet": 151.78932768808224,
+        "fittedPlaneFeet": {
+          "a": 6.087706398330575e-17,
+          "b": 0.3333333333333339,
+          "c": 9.999999999999996
+        },
+        "planeConvention": "z_ft = a*x_ft + b*y_ft + c"
+      },
+      {
+        "id": "F3",
+        "nodeIds": [
+          "E11",
+          "E10",
+          "A2"
+        ],
+        "planAreaSquareFeet": 144.0,
+        "surfaceAreaSquareFeet": 151.78932768808244,
+        "fittedPlaneFeet": {
+          "a": 2.909419342840491e-14,
+          "b": -0.33333333333333853,
+          "c": 29.999999999999996
+        },
+        "planeConvention": "z_ft = a*x_ft + b*y_ft + c"
+      },
+      {
+        "id": "F4",
+        "nodeIds": [
+          "E2",
+          "E1",
+          "A1",
+          "B1"
+        ],
+        "planAreaSquareFeet": 192.0,
+        "surfaceAreaSquareFeet": 202.38577025077632,
+        "fittedPlaneFeet": {
+          "a": -0.3333333333333339,
+          "b": 6.661338147750939e-16,
+          "c": 16.666666666666668
+        },
+        "planeConvention": "z_ft = a*x_ft + b*y_ft + c"
+      },
+      {
+        "id": "F5",
+        "nodeIds": [
+          "E10",
+          "E9",
+          "B2",
+          "A2"
+        ],
+        "planAreaSquareFeet": 192.0,
+        "surfaceAreaSquareFeet": 202.38577025077632,
+        "fittedPlaneFeet": {
+          "a": -0.333333333333334,
+          "b": -1.1102230246251565e-16,
+          "c": 16.666666666666675
+        },
+        "planeConvention": "z_ft = a*x_ft + b*y_ft + c"
+      },
+      {
+        "id": "F6",
+        "nodeIds": [
+          "E3",
+          "E2",
+          "B1",
+          "C1",
+          "C2",
+          "B3"
+        ],
+        "planAreaSquareFeet": 544.0,
+        "surfaceAreaSquareFeet": 573.426349043866,
+        "fittedPlaneFeet": {
+          "a": 1.8126333791920313e-16,
+          "b": 0.3333333333333329,
+          "c": 4.666666666666667
+        },
+        "planeConvention": "z_ft = a*x_ft + b*y_ft + c"
+      },
+      {
+        "id": "F7",
+        "nodeIds": [
+          "E9",
+          "E8",
+          "B4",
+          "C2",
+          "C1",
+          "B2"
+        ],
+        "planAreaSquareFeet": 544.0,
+        "surfaceAreaSquareFeet": 573.4263490438663,
+        "fittedPlaneFeet": {
+          "a": -6.091283147598801e-17,
+          "b": -0.333333333333334,
+          "c": 24.66666666666668
+        },
+        "planeConvention": "z_ft = a*x_ft + b*y_ft + c"
+      },
+      {
+        "id": "F8",
+        "nodeIds": [
+          "E4",
+          "E3",
+          "B3",
+          "A3"
+        ],
+        "planAreaSquareFeet": 192.0,
+        "surfaceAreaSquareFeet": 202.38577025077626,
+        "fittedPlaneFeet": {
+          "a": 0.33333333333333315,
+          "b": 1.6653345369377348e-16,
+          "c": -4.666666666666659
+        },
+        "planeConvention": "z_ft = a*x_ft + b*y_ft + c"
+      },
+      {
+        "id": "F9",
+        "nodeIds": [
+          "E8",
+          "E7",
+          "A4",
+          "B4"
+        ],
+        "planAreaSquareFeet": 192.0,
+        "surfaceAreaSquareFeet": 202.38577025077586,
+        "fittedPlaneFeet": {
+          "a": 0.33333333333332665,
+          "b": 5.9674487573602164e-15,
+          "c": -4.666666666666631
+        },
+        "planeConvention": "z_ft = a*x_ft + b*y_ft + c"
+      },
+      {
+        "id": "F10",
+        "nodeIds": [
+          "E5",
+          "E4",
+          "A3"
+        ],
+        "planAreaSquareFeet": 144.0,
+        "surfaceAreaSquareFeet": 151.78932768808187,
+        "fittedPlaneFeet": {
+          "a": 1.294172944633467e-16,
+          "b": 0.33333333333332593,
+          "c": 10.000000000000004
+        },
+        "planeConvention": "z_ft = a*x_ft + b*y_ft + c"
+      },
+      {
+        "id": "F11",
+        "nodeIds": [
+          "E7",
+          "E6",
+          "A4"
+        ],
+        "planAreaSquareFeet": 144.0,
+        "surfaceAreaSquareFeet": 151.7893276880895,
+        "fittedPlaneFeet": {
+          "a": 1.6957813788028905e-13,
+          "b": -0.3333333333334928,
+          "c": 29.999999999999996
+        },
+        "planeConvention": "z_ft = a*x_ft + b*y_ft + c"
+      },
+      {
+        "id": "F12",
+        "nodeIds": [
+          "E6",
+          "E5",
+          "A3",
+          "B3",
+          "C2",
+          "B4",
+          "A4"
+        ],
+        "planAreaSquareFeet": 640.0,
+        "surfaceAreaSquareFeet": 674.6192341692504,
+        "fittedPlaneFeet": {
+          "a": -0.3333333333333136,
+          "b": -3.441691376337985e-14,
+          "c": 31.33333333333335
+        },
+        "planeConvention": "z_ft = a*x_ft + b*y_ft + c"
+      }
+    ],
+    "wallReferenceAreaSquareFeet": 3072.0,
+    "roofPlanAreaSquareFeet": 3712.0,
+    "roofSurfaceAreaSquareFeet": 3912.7915581816774,
+    "wingRidgeElevationInches": 160,
+    "mainRidgeElevationInches": 176,
+    "mainRidgeLengthFeet": 36,
+    "roofFaceCountBeforeTriangulation": 12,
+    "edgeCounts": {
+      "outer_hip": 8,
+      "rising_hip": 4,
+      "valley": 4,
+      "wing_ridge": 4,
+      "main_ridge": 1
+    }
+  }
+}

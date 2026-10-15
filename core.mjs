@@ -4,6 +4,12 @@ import {parseLength,parseAngle,formatLength,formatAngle,formatArea,UNIT_PRESETS,
 import {PAPER_SIZES,LINETYPES,modelUnitMillimeters,normalizePaper,normalizeLayouts,normalizePaperViewport,normalizePaperView,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible,viewportBoundaryPoints,viewportFrameFromPoints,normalizeViewportBoundary,viewportAsObject,compensateViewportResize} from './paper-space.mjs';
 import {presetUCS,normalizeUCS,ucsFromThreePoints,constructionPlane,planeToWorld,worldToPlane,intersectPlaneRay,planeCamera,spatialCurvePoint,spatialAngleOnArc,spatialCurveBounds,validateSpatialCurve,sampleSpatialCurve,spatialCurveOCS} from './drawing-plane.mjs';
 import {parseViewportZoomFactor} from './viewport-scales.mjs';
+import {normalizeArchitecture} from './architecture/model.mjs';
+import {applyArchitectureEdit,generateArchitecture} from './architecture/editor-adapter.mjs';
+export {roofBoundaryFromWalls} from './architecture/plan-topology.mjs';
+export {fromWorld as architectureWorldToLocal,toWorld as architectureLocalToWorld} from './architecture/units-adapter.mjs';
+const ARCHITECTURE_PREFIX='@architecture/';
+const architecturalEntity=entity=>typeof entity?.id==='string'&&entity.id.startsWith(ARCHITECTURE_PREFIX);
 export {PAPER_SIZES,LINETYPES,modelUnitMillimeters,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible,viewportBoundaryPoints,viewportFrameFromPoints,normalizeViewportBoundary,viewportAsObject,compensateViewportResize,presetUCS,normalizeUCS,ucsFromThreePoints,constructionPlane,planeToWorld,worldToPlane,intersectPlaneRay,planeCamera};
 export {spatialCurvePoint,spatialCurveBounds,validateSpatialCurve,sampleSpatialCurve};
 export {parseLength,parseAngle,formatLength,formatAngle,formatArea,UNIT_PRESETS,dxfUnitFormat};
@@ -1030,7 +1036,8 @@ function validateInsert(entity,document){
 
 function normalizeDocument(input = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Invalid drawing document.');
-  if (input.format != null && input.format !== 'Linecraft/1') throw new Error('Unsupported drawing format.');
+  if (input.format != null && !['Linecraft/1','Linecraft/2'].includes(input.format)) throw new Error('Unsupported drawing format.');
+  if(input.format==='Linecraft/2'&&input.architecture==null)throw new Error('Linecraft/2 requires a versioned architectural source section.');
   const layers = (input.layers ?? [{ name: '0' }]).map(normalizeLayer);
   if (!layers.some(layer => layer.name === '0')) layers.unshift(normalizeLayer({ name: '0' }));
   if (new Set(layers.map(layer => layer.name)).size !== layers.length) throw new Error('Duplicate layer names.');
@@ -1047,6 +1054,11 @@ function normalizeDocument(input = {}) {
   if(!dimStyles.some(style=>style.name==='Standard'))dimStyles.unshift(normalizeDimStyle(DEFAULT_DIM_STYLE,textStyles));
   if(new Set(dimStyles.map(style=>style.name)).size!==dimStyles.length)throw new Error('Duplicate dimension style names.');
   const settings=normalizeSettings(input.settings===undefined?{}:input.settings),currentTextStyle=input.currentTextStyle===undefined?'Standard':input.currentTextStyle,currentDimStyle=input.currentDimStyle===undefined?'Standard':input.currentDimStyle;
+  if(rawEntities.some(architecturalEntity))throw new Error('Generated architectural IDs are reserved. Native files must contain architectural source, not derived caches.');
+  const architecture=input.architecture==null?null:normalizeArchitecture(input.architecture,settings);
+  const architectureDerived=architecture?generateArchitecture(architecture,settings):{entities:[],owners:{},diagnostics:[],rooms:[],roofs:[],quantities:{},validation:{}};
+  rawEntities.push(...architectureDerived.entities);
+  if(rawEntities.length>100000)throw new Error('Drawing and architectural derivatives exceed the 100000 entity limit.');
   if(!textStyles.some(style=>style.name===currentTextStyle)||!dimStyles.some(style=>style.name===currentDimStyle))throw new Error('Current annotation style does not exist.');
   const rawBlocks=input.blocks===undefined?[]:input.blocks;if(!Array.isArray(rawBlocks)||rawBlocks.length>64)throw new Error('Drawing supports up to 64 flat block definitions.');const names=new Set();
   if(!Array.isArray(input.entities??[]))throw new Error('Entities must be an array.');
@@ -1128,7 +1140,7 @@ function normalizeDocument(input = {}) {
   const activeSpace=input.activeSpace===undefined?'model':input.activeSpace,activeLayoutId=input.activeLayoutId??null,activeViewportId=input.activeViewportId??null;
   if(!['model','paper'].includes(activeSpace)||activeLayoutId!==null&&!layouts.some(layout=>layout.id===activeLayoutId)||activeLayoutId===null&&(activeSpace==='paper'||activeViewportId!==null)||activeSpace==='paper'&&activeViewportId!==null||activeViewportId!==null&&!layouts.find(layout=>layout.id===activeLayoutId)?.viewports.some(view=>view.id===activeViewportId))throw new Error('Active paper/model space or viewport reference is invalid.');
   const paperViewport=normalizePaperView(input.paperViewport===undefined?{center:{x:210,y:148.5},scale:2}:input.paperViewport);
-  return { entities, layers, currentLayer, viewport,textStyles,dimStyles,currentTextStyle,currentDimStyle,settings,blocks,workspace,camera3d,layouts,activeSpace,activeLayoutId,activeViewportId,paperViewport,ucs };
+  return { entities, layers, currentLayer, viewport,textStyles,dimStyles,currentTextStyle,currentDimStyle,settings,blocks,workspace,camera3d,layouts,activeSpace,activeLayoutId,activeViewportId,paperViewport,ucs,architecture,architectureDerived };
 }
 
 function normalizeClipboard(input) {
@@ -1394,16 +1406,17 @@ export function createEditor(initialState = {}) {
   const entityScopes=new Map();
   const stampScopes=()=>{for(const entity of state.entities)if(entityScopes.has(entity.id)){const layoutId=entityScopes.get(entity.id);if(layoutId)entity.layoutId=layoutId;else delete entity.layoutId;entityScopes.delete(entity.id);}};
   const undoStack = [], redoStack = [];
-  const snapshot = () => {stampScopes();return clone({ entities: state.entities, layers: state.layers, currentLayer: state.currentLayer,textStyles:state.textStyles,dimStyles:state.dimStyles,currentTextStyle:state.currentTextStyle,currentDimStyle:state.currentDimStyle,settings:state.settings,blocks:state.blocks,layouts:state.layouts,ucs:state.ucs });};
+  const snapshot = () => {stampScopes();return clone({ entities: state.entities.filter(entity=>!architecturalEntity(entity)), layers: state.layers, currentLayer: state.currentLayer,textStyles:state.textStyles,dimStyles:state.dimStyles,currentTextStyle:state.currentTextStyle,currentDimStyle:state.currentDimStyle,settings:state.settings,blocks:state.blocks,layouts:state.layouts,ucs:state.ucs,architecture:state.architecture });};
   const layerOf = entity => state.layers.find(layer => layer.name === entity.layer);
   const activeContext=()=>({space:state.activeLayoutId?'paper':'model',layoutId:state.activeLayoutId,viewportId:state.activeViewportId});
   const activeOwned=entity=>state.activeSpace==='paper'?entity.layoutId===state.activeLayoutId:!entity.layoutId;
   const visible=entity=>activeOwned(entity)&&isEntityVisible(entity,state,activeContext());
-  const editable = entity => { const layer = layerOf(entity); return layer && visible(entity) && !layer.locked; };
+  const selectable = entity => { const layer = layerOf(entity); return layer && visible(entity) && !layer.locked; };
+  const editable = entity => selectable(entity)&&!architecturalEntity(entity);
   const viewportProxy=(view,layoutId)=>viewportAsObject(view,layoutId,{entityIds:allocatedIds,settings:state.settings});
   const allObjects=()=>{stampScopes();const objects=[...state.entities,...state.layouts.flatMap(layout=>layout.viewports.map(view=>viewportProxy(view,layout.id)))];for(const object of objects)if(!objectOrder.has(object.id))objectOrder.set(object.id,nextObjectOrder++);return objects.sort((a,b)=>objectOrder.get(a.id)-objectOrder.get(b.id));};
   const objectById=value=>{const objects=allObjects();return objects.find(object=>object.id===value)??objects.find(object=>object.type==='VIEWPORT'&&object.viewportId===value&&activeOwned(object));};
-  const validateSelection = () => {const objects=new Map(allObjects().map(object=>[object.id,object]));state.selectionIds=state.selectionIds.filter(id=>objects.has(id)&&editable(objects.get(id)));};
+  const validateSelection = () => {const objects=new Map(allObjects().map(object=>[object.id,object]));state.selectionIds=state.selectionIds.filter(id=>objects.has(id)&&selectable(objects.get(id)));};
   allObjects();
   const result = (ok, message, changed = false) => {
     stampScopes();
@@ -1412,7 +1425,7 @@ export function createEditor(initialState = {}) {
     return { ok, message, changed };
   };
   const reconcileSpaces=()=>{const priorLayoutId=state.activeLayoutId;if(state.activeLayoutId&&!state.layouts.some(layout=>layout.id===state.activeLayoutId)){state.activeLayoutId=null;state.activeViewportId=null;state.activeSpace='model';}if(state.activeViewportId&&!state.layouts.find(layout=>layout.id===state.activeLayoutId)?.viewports.some(view=>view.id===state.activeViewportId)){state.activeViewportId=null;state.activeSpace=state.activeLayoutId?'paper':'model';}if(state.activeLayoutId||priorLayoutId)applyActiveView();};
-  const restore = data => { Object.assign(state, clone(data));state.entities.forEach(entity=>allocatedIds.add(entity.id));state.layouts.forEach(layout=>layout.viewports.forEach(view=>allocatedViewportIds.add(view.id)));reconcileSpaces();validateSelection(); };
+  const restore = data => { Object.assign(state, clone(data));state.architectureDerived=state.architecture?generateArchitecture(state.architecture,state.settings):{entities:[],owners:{},diagnostics:[],rooms:[],roofs:[],quantities:{},validation:{}};state.entities.push(...state.architectureDerived.entities);state.entities.forEach(entity=>allocatedIds.add(entity.id));state.layouts.forEach(layout=>layout.viewports.forEach(view=>allocatedViewportIds.add(view.id)));reconcileSpaces();validateSelection(); };
   const record = before => {
     const after = snapshot();
     const beforeJSON=JSON.stringify(before),afterJSON=JSON.stringify(after);if(beforeJSON===afterJSON)return false;
@@ -1432,6 +1445,7 @@ export function createEditor(initialState = {}) {
   const id = () => { let value; do { value = `e${nextId++}`; } while (allocatedIds.has(value));allocatedIds.add(value);entityScopes.set(value,state.activeSpace==='paper'?state.activeLayoutId:null);return value; };
   const nextViewportId=(reserved=allocatedViewportIds)=>{let n=1;while(reserved.has(`vp${n}`))n++;return`vp${n}`;};
   const planObjects=(objects,replaced=[],copyObjects=false)=>{
+    if(objects.some(architecturalEntity)||replaced.some(id=>id.startsWith(ARCHITECTURE_PREFIX)))throw Error('Edit the architectural owner in Architecture, or detach it deliberately before ordinary geometry editing.');
     const frames=objects.filter(object=>object.type==='VIEWPORT'),geometry=objects.filter(object=>object.type!=='VIEWPORT'),removed=new Set(replaced),layouts=clone(state.layouts),reserved=new Set(allocatedViewportIds),created=[];
     for(const object of frames){if(state.activeSpace!=='paper'||object.layoutId!==state.activeLayoutId)throw Error('Viewport frames are edited in their paper layout.');const layout=layouts.find(layout=>layout.id===object.layoutId);if(!layout)throw Error('Viewport layout does not exist.');const viewportId=copyObjects?nextViewportId(reserved):object.viewportId;if(copyObjects){reserved.add(viewportId);created.push(viewportId);}const{type,id:selectionId,viewportId:discard,points,closed,layoutId,...definition}=object,newView={...definition,id:viewportId};if(copyObjects)layout.viewports.push(newView);else{const index=layout.viewports.findIndex(view=>view.id===viewportId);if(index<0||!removed.has(object.id))throw Error('Viewport replacement source is unavailable.');layout.viewports[index]=newView;}}
     const geometryIds=new Set(state.entities.map(entity=>entity.id)),normalizedLayouts=normalizeLayouts(layouts,state.layers,normalizeCamera3D);check3DResources(geometry,replaced.filter(value=>geometryIds.has(value)));
@@ -1441,6 +1455,7 @@ export function createEditor(initialState = {}) {
   const removeObjects=ids=>{const removed=new Set(ids),retainedFrames=new Map(state.layouts.map(layout=>[layout.id,layout.viewports.filter(view=>!removed.has(viewportProxy(view,layout.id).id))]));state.entities=state.entities.filter(entity=>!removed.has(entity.id));for(const layout of state.layouts)layout.viewports=retainedFrames.get(layout.id);reconcileSpaces();};
   const acceptTransformSelection = () => {
     validateSelection();
+    if(state.selectionIds.some(id=>id.startsWith(ARCHITECTURE_PREFIX)))return result(false,'Generated architectural objects select their owner. Use Architecture to edit the source, or ROOFDETACH to copy ordinary geometry.');
     if (!state.selectionIds.length) return result(false, 'No objects selected. Select objects and press Enter.');
     state.commandSelectionIds = [...state.selectionIds];
     const selected = new Set(state.commandSelectionIds);
@@ -1457,7 +1472,7 @@ export function createEditor(initialState = {}) {
       if(!state.commandData.blockName||!state.commandPoints.length)throw new Error('BLOCK requires a name and base point first.');if(transformSources.some(entity=>TYPES3D.has(entity.type)||entity.type==='INSERT'))throw new Error('BLOCK supports flat planar geometry; nested references and 3D content are not supported.');
       const base=state.commandPoints[0],entities=transformSources.map(source=>{const{id:discard,layoutId:discardOwner,...local}=translateEntity(source,{x:-base.x,y:-base.y},state);return local;}),block={name:state.commandData.blockName,base:{...base},entities};
       const reference={id:id(),type:'INSERT',blockName:block.name,position:{...base},scale:1,rotation:0,layer:state.currentLayer};drawingLayerReady();
-      const proposed=normalizeDocument({...snapshot(),blocks:[...state.blocks,block],entities:[...state.entities.filter(entity=>!selected.has(entity.id)),reference],viewport:state.viewport,camera3d:state.camera3d,workspace:state.workspace});state.blocks=proposed.blocks;state.entities=proposed.entities;state.selectionIds=[reference.id];return finish(`Block ${block.name} created and source geometry converted to one INSERT.`);
+      const proposed=normalizeDocument({...snapshot(),blocks:[...state.blocks,block],entities:[...state.entities.filter(entity=>!selected.has(entity.id)&&!architecturalEntity(entity)),reference],viewport:state.viewport,camera3d:state.camera3d,workspace:state.workspace});state.blocks=proposed.blocks;state.entities=proposed.entities;state.selectionIds=[reference.id];return finish(`Block ${block.name} created and source geometry converted to one INSERT.`);
     }
     if(state.command==='EXTRUDE'){
       for(const entity of transformSources){if(entity.type==='POLY3D')spatialProfilePlane(entity);else if(entity.type==='CIRCLE3D')validateSpatialCurve(entity);else if(entity.type==='CIRCLE')validateCircle(entity.center,entity.radius);else{if(!['RECTANG','PLINE'].includes(entity.type)||entity.type==='PLINE'&&!entity.closed)throw new Error('EXTRUDE requires closed planar paths or circles.');triangulatePolygon(entity.points);}}
@@ -1512,6 +1527,7 @@ export function createEditor(initialState = {}) {
     return result(true, `${transformSources.length} objects accepted.`);
   };
   const captureClipboard = rawBase => {
+    if(state.selectionIds.some(value=>value.startsWith(ARCHITECTURE_PREFIX)))throw Error('Generated architectural objects require deliberate detachment before ordinary clipboard copy; the whole selection was preserved.');
     const sources=(transformSources.length?transformSources:allObjects().filter(entity=>state.selectionIds.includes(entity.id)&&editable(entity))).map(({layoutId,...entity})=>entity);
     if(sources.some(entity=>entity.type==='VIEWPORT'))throw Error('Viewport frames use ordinary COPY inside paper space; geometry clipboard cannot carry layout view definitions.');
     if (!sources.length) throw new Error('Select objects to copy to the clipboard.');
@@ -1789,6 +1805,24 @@ export function createEditor(initialState = {}) {
 
   const editor = {
     state,
+    applyArchitecture(operation){
+      if(state.command)return result(false,'Finish or cancel the active command before editing Architecture.');
+      if(state.activeSpace==='paper')return result(false,'Architectural source is edited in model space.');
+      try{
+        const source=operation?.type==='regenerate'?state.architecture:applyArchitectureEdit(state.architecture,operation,state.settings);
+        const before=snapshot(),normalized=normalizeDocument({...state,...before,architecture:source});
+        Object.assign(state,normalized);normalized.entities.forEach(entity=>allocatedIds.add(entity.id));validateSelection();
+        return result(true,normalized.architectureDerived.diagnostics?.length?'Architectural source accepted. Review generation diagnostics in Architecture.':'Architectural model updated.',record(before));
+      }catch(error){return result(false,`Architecture rejected: ${error.message}`);}
+    },
+    getArchitectureOwner(entityId){return clone(state.architectureDerived?.owners?.[entityId]??null);},
+    getArchitectureReport(){return clone({schemaVersion:1,modelUnits:state.settings.units,source:state.architecture,derived:state.architectureDerived,framingStatus:'unverified',trussDesignManufacturingComplexitySurcharge:0});},
+    detachArchitectureSelection(){
+      if(state.command)return result(false,'Finish or cancel the active command before detaching.');
+      const selected=state.entities.filter(entity=>state.selectionIds.includes(entity.id)&&architecturalEntity(entity)&&selectable(entity));
+      if(!selected.length)return result(false,'Select generated architectural objects to copy to ordinary geometry.');
+      try{const copies=selected.map(entity=>({...clone(entity),id:id()}));check3DResources(copies);const before=snapshot();state.entities.push(...copies);state.selectionIds=copies.map(entity=>entity.id);return result(true,'Detached ordinary copies created; the architectural source remains authoritative.',record(before));}catch(error){return result(false,error.message);}
+    },
     execute(input,options={}) {
       const inputText = typeof input === 'string' ? state.commandPhase==='text'?input:input.trim() : input;
       const priorPrompt = state.prompt;
@@ -1796,6 +1830,13 @@ export function createEditor(initialState = {}) {
       try {
         const token = typeof inputText === 'string' ? inputText.toUpperCase().replace(/^[_.]+/, '') : '';
         if (['ESC', 'ESCAPE', 'CANCEL'].includes(token)) response = editor.cancel();
+        else if(state.command==='WALL'){
+          if(inputText===''||['C','CLOSE'].includes(token)){
+            const points=clone(state.commandPoints),closed=['C','CLOSE'].includes(token);if(points.length<(closed?3:2))throw Error('WALL requires at least two points, or three to close.');
+            response=commandAPI(()=>editor.applyArchitecture({type:'addWalls',points,closed,thickness:parseLength('6"',state.settings),baseElevation:0,bearingElevation:parseLength("9'",state.settings),referenceFace:'center',role:'unknown'}));
+          }else if(['U','UNDO'].includes(token)){state.commandPoints.pop();response=result(true,'Last wall point removed.');}
+          else response=editor.submitPoint(parsePoint2D(inputText,state.commandPoints.at(-1)??{x:0,y:0},state.settings));
+        }
         else if(state.commandPhase==='text')response=editor.submitText(typeof input==='string'?input:String(input));
         else if(state.command==='MVIEW'){
           if(state.commandPhase==='viewport-first'&&['P','POLYGONAL'].includes(token)){state.commandPhase='viewport-polygon';state.commandPoints=[];state.commandData.targetKind='point';state.prompt='MVIEW Specify polygon vertex (mm), then Close:';response=result(true,'Collect a simple closed straight viewport boundary.');}
@@ -2033,7 +2074,15 @@ export function createEditor(initialState = {}) {
             }
           } else if(['LINE','PLINE'].includes(state.command)&&state.commandPoints.length&&scalarInput(inputText))response=editor.submitPoint(distancePoint(inputText,options));
           else response = editor.submitPoint(parseCoordinate(inputText, state.commandPoints.at(-1) ?? state.lastPoint));
-        } else if (['L', 'LINE'].includes(token)) response = startCommand('LINE');
+        } else if(token==='WALL'){
+          if(state.activeSpace==='paper'||state.settings.units==='unitless')throw Error('Assign physical drawing units and enter model space before WALL.');
+          state.command='WALL';state.commandPhase='wall-points';state.commandData={targetKind:'point'};state.commandPoints=[];state.prompt='WALL Building-local XY first point (6 inch centered wall, unknown support, bearing 9 feet):';response=result(true,'Enter local XY coordinates; Enter completes, Close closes the path. Architecture provides full wall properties.');
+        }
+        else if(token==='ROOFUPDATE')response=editor.applyArchitecture({type:'regenerate'});
+        else if(token==='ROOFREPORT')response={...result(true,'Architectural source, geometric quantities and unverified framing status.'),report:editor.getArchitectureReport()};
+        else if(token==='ROOFDETACH')response=editor.detachArchitectureSelection();
+        else if(['ROOFSPACE','ROOFOPTIMIZE','ROOFSECTION'].includes(token))response=result(false,`${token} is a subsequent Roof + Space milestone; no ceiling clearance, optimization or section is computed in R0–R2.`);
+        else if (['L', 'LINE'].includes(token)) response = startCommand('LINE');
         else if(['ELLIPSE','EL','SPLINE','SPL','HATCH','H','FILLET','F','CHAMFER','CHA','ARRAYRECT','AR','STRETCH','S','PEDIT','PE','BLOCK','B','INSERT','I'].includes(token))response=startCommand(({EL:'ELLIPSE',SPL:'SPLINE',H:'HATCH',F:'FILLET',CHA:'CHAMFER',AR:'ARRAYRECT',S:'STRETCH',PE:'PEDIT',B:'BLOCK',I:'INSERT'})[token]??token);
         else if(['PSPACE','PS'].includes(token)){if(!state.layouts.length){const created=editor.addLayout('Layout1');if(!created.ok)response=created;else response=editor.setSpace('paper',created.layoutId);}else response=editor.setSpace('paper');}
         else if(['MSPACE','MS'].includes(token))response=editor.setSpace('model');
@@ -2080,6 +2129,7 @@ export function createEditor(initialState = {}) {
     submitPoint(raw) {
       try {
         const p = threeDPointMode()?point3(raw):point(raw);
+        if(state.command==='WALL'){if(state.commandPoints.length>=64)throw Error('WALL path is limited to 64 points.');if(state.commandPoints.length&&samePoint(state.commandPoints.at(-1),p))throw Error('Wall points must differ.');state.commandPoints.push(p);state.lastPoint={...p};state.prompt='WALL Next building-local XY point or [Close/Undo] <finish>:';return result(true,'Wall source point accepted.');}
         if(state.command==='UCS'){
           if(state.commandPhase==='ucs-choice')return result(false,'Choose a UCS option in the command line.');
           const points=[...state.commandPoints,p];if(points.length===3){const ucs=ucsFromThreePoints(...points);return commandAPI(()=>editor.setUCS(ucs));}
@@ -2355,7 +2405,7 @@ export function createEditor(initialState = {}) {
       restore(entry.after); undoStack.push(entry); return result(true, 'Redo completed.', true);
     },
     select(ids, options = {}) {
-      const objects=allObjects(),byId=new Map(objects.map(object=>[object.id,object])),aliases=new Map(objects.filter(object=>object.type==='VIEWPORT'&&activeOwned(object)).map(object=>[object.viewportId,object]));const valid=[...new Set(ids.map(value=>byId.get(value)??aliases.get(value)).filter(object=>object&&editable(object)).map(object=>object.id))];
+      const objects=allObjects(),byId=new Map(objects.map(object=>[object.id,object])),aliases=new Map(objects.filter(object=>object.type==='VIEWPORT'&&activeOwned(object)).map(object=>[object.viewportId,object]));const valid=[...new Set(ids.map(value=>byId.get(value)??aliases.get(value)).filter(object=>object&&selectable(object)).map(object=>object.id))];
       const selected = new Set(options.add || options.toggle ? state.selectionIds : []);
       for (const id of valid) { if (options.toggle && selected.has(id)) selected.delete(id); else selected.add(id); }
       state.selectionIds = [...selected];
@@ -2445,7 +2495,7 @@ export function createEditor(initialState = {}) {
       if(state.command)return result(false,'Finish or cancel the active command before editing geometry properties.');
       try{const source=state.entities.find(entity=>entity.id===entityId);if(!source||!editable(source)||!['ELLIPSE','SPLINE','HATCH','INSERT'].includes(source.type))throw new Error('Choose an editable ellipse, spline, hatch or block reference.');
         const allowed=({ELLIPSE:['center','major','ratio'],SPLINE:['controlPoints'],HATCH:['pattern','angle','spacing','origin','boundary'],INSERT:['blockName','position','scale','rotation']})[source.type];if(!patch||typeof patch!=='object'||Array.isArray(patch)||Object.keys(patch).some(key=>!allowed.includes(key)))throw new Error('Unsupported advanced geometry property.');
-        const proposal={...clone(source),...patch},proposedEntities=state.entities.map(entity=>entity.id===entityId?proposal:entity);validateExpandedResources({entities:proposedEntities,blocks:state.blocks,dimStyles:state.dimStyles});const normalized=normalizeDocument({...snapshot(),entities:proposedEntities,viewport:state.viewport,camera3d:state.camera3d,workspace:state.workspace}).entities.find(entity=>entity.id===entityId),before=snapshot();state.entities=state.entities.map(entity=>entity.id===entityId?normalized:entity);return result(true,'Geometry properties updated.',record(before));
+        const proposal={...clone(source),...patch},proposedEntities=state.entities.map(entity=>entity.id===entityId?proposal:entity);validateExpandedResources({entities:proposedEntities,blocks:state.blocks,dimStyles:state.dimStyles});const normalized=normalizeDocument({...snapshot(),entities:proposedEntities.filter(entity=>!architecturalEntity(entity)),viewport:state.viewport,camera3d:state.camera3d,workspace:state.workspace}).entities.find(entity=>entity.id===entityId),before=snapshot();state.entities=state.entities.map(entity=>entity.id===entityId?normalized:entity);return result(true,'Geometry properties updated.',record(before));
       }catch(error){return result(false,error.message);}
     },
     getClipboard() { return clipboard ? clone(clipboard) : null; },
@@ -2483,6 +2533,7 @@ export function createEditor(initialState = {}) {
       if (state.command) return result(false, 'Finish or cancel the active command before erasing.');
       validateSelection();
       if (!state.selectionIds.length) return result(false, 'Select objects to erase.');
+      if(state.selectionIds.some(value=>value.startsWith(ARCHITECTURE_PREFIX)))return result(false,'Use Architecture to remove the semantic owner. Generated geometry cannot be erased independently.');
       const before = snapshot(), count = state.selectionIds.length, selected = new Set(state.selectionIds);
       removeObjects(selected);state.selectionIds = [];
       record(before); return result(true, `${count} objects erased.`, true);
@@ -2513,6 +2564,7 @@ export function createEditor(initialState = {}) {
       try {
         validateSelection();
         if (!state.selectionIds.length) return result(false, 'Select objects to change properties.');
+        if(state.selectionIds.some(value=>value.startsWith(ARCHITECTURE_PREFIX)))throw Error('Generated objects use architectural source properties. Edit the owner or detach ordinary copies.');
         if (properties.layer != null && !state.layers.some(layer => layer.name === properties.layer)) return result(false, 'Target layer does not exist.');
         if (properties.color != null && properties.color !== 'BYLAYER' && !/^#[0-9a-f]{6}$/i.test(properties.color)) return result(false, 'Color must be a six-digit hex value or BYLAYER.');
         if (properties.lineweight != null && properties.lineweight !== 'BYLAYER' && (!finite(properties.lineweight) || properties.lineweight < 0 || properties.lineweight > 10)) return result(false, 'Lineweight must be between 0 and 10 mm or BYLAYER.');
@@ -2630,7 +2682,7 @@ export function createEditor(initialState = {}) {
     setWorkspace(mode){if(!['2d','3d'].includes(mode))return result(false,'Workspace must be 2d or 3d.');if(state.activeSpace==='paper'&&mode==='3d')return result(false,'Paper geometry uses 2D sheet coordinates; choose a model viewport for 3D.');if(state.activeViewportId)return editor.updateViewport(state.activeLayoutId,state.activeViewportId,{workspace:mode});state.workspace=mode;return result(true,`${mode.toUpperCase()} workspace active.`);},
     set3DView(patch){try{if(!patch||typeof patch!=='object'||Array.isArray(patch)||Object.keys(patch).some(key=>!Object.hasOwn(DEFAULT_CAMERA3D,key)))throw new Error('Unsupported 3D view property.');const camera3d=normalizeCamera3D({...state.camera3d,...patch});if(state.activeViewportId)return editor.updateViewport(state.activeLayoutId,state.activeViewportId,{camera3d,modelCenter:camera3d.target},{navigation:true});state.camera3d=camera3d;return result(true,'3D view updated.');}catch(error){return result(false,error.message);}},
     getModelView(){return clone(state.activeLayoutId?modelView:{viewport:state.viewport,workspace:state.workspace,camera3d:state.camera3d});},
-    serialize() { const data=snapshot(),view=editor.getModelView();data.layouts=data.layouts.map(layout=>({...layout,entities:data.entities.filter(entity=>entity.layoutId===layout.id).map(({layoutId,...entity})=>entity)}));data.entities=data.entities.filter(entity=>!entity.layoutId);return JSON.stringify({ format: 'Linecraft/1', ...data, ...view,activeSpace:state.activeSpace,activeLayoutId:state.activeLayoutId,activeViewportId:state.activeViewportId,paperViewport:clone(state.paperViewport) }, null, 2); },
+    serialize() { const data=snapshot(),view=editor.getModelView();data.layouts=data.layouts.map(layout=>({...layout,entities:data.entities.filter(entity=>entity.layoutId===layout.id).map(({layoutId,...entity})=>entity)}));data.entities=data.entities.filter(entity=>!entity.layoutId);return JSON.stringify({ format: state.architecture?'Linecraft/2':'Linecraft/1', ...data, ...view,activeSpace:state.activeSpace,activeLayoutId:state.activeLayoutId,activeViewportId:state.activeViewportId,paperViewport:clone(state.paperViewport) }, null, 2); },
     importJSON(source) {
       if (state.command) return result(false, 'Finish or cancel the active command before importing.');
       try {
@@ -2644,7 +2696,7 @@ export function createEditor(initialState = {}) {
     exportDXF() {
       return writeDXF(state);
     },
-    getExportWarnings(){const warnings=[...dxfUnitFormat(state.settings).warnings];if(state.settings.angularFormat==='dms'&&state.dimStyles.some(style=>(style.angularPrecision??style.precision)>4)&&!warnings.some(warning=>warning.includes('four decimal places')))warnings.push('Native DXF DMS dimension precision is limited to four decimal places of seconds; original labels retain the selected precision as explicit text.');if(state.layers.some(layer=>layer.modelVisible===false))warnings.push('DXF preserves global layer visibility; independent Model-tab visibility is retained in Linecraft and PDF.');if(state.layouts.some(layout=>layout.viewports.some(view=>view.plotBorder)&&layout.viewports.some(view=>!view.plotBorder)))warnings.push('DXF maps mixed viewport-border plotting choices to one layout border flag; Linecraft and PDF retain each viewport choice.');return warnings;},
+    getExportWarnings(){const warnings=[...dxfUnitFormat(state.settings).warnings];if(state.architecture)warnings.push('DXF flattens current architectural derivatives to ordinary geometry and does not retain walls, rooms, roof associations or constraints. Invalid roofs are excluded.');if(state.settings.angularFormat==='dms'&&state.dimStyles.some(style=>(style.angularPrecision??style.precision)>4)&&!warnings.some(warning=>warning.includes('four decimal places')))warnings.push('Native DXF DMS dimension precision is limited to four decimal places of seconds; original labels retain the selected precision as explicit text.');if(state.layers.some(layer=>layer.modelVisible===false))warnings.push('DXF preserves global layer visibility; independent Model-tab visibility is retained in Linecraft and PDF.');if(state.layouts.some(layout=>layout.viewports.some(view=>view.plotBorder)&&layout.viewports.some(view=>!view.plotBorder)))warnings.push('DXF maps mixed viewport-border plotting choices to one layout border flag; Linecraft and PDF retain each viewport choice.');return warnings;},
     get canUndo() {
       if(state.command==='SPLINE')return state.commandPoints.length>0;
       if(state.command==='PEDIT')return editingSteps.length>0;

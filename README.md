@@ -4,6 +4,20 @@ Linecraft is an independent offline Windows CAD application for 2D drafting, pap
 
 Download the Windows x64 installer from [GitHub Releases](https://github.com/MrOweItAll/linecraft-cad/releases/latest). The unsigned installer includes its own Electron runtime; a browser, Node.js and Autodesk installation are unnecessary for using the application.
 
+## Roof + Space preview (R0–R2)
+
+Version 1.9 extends this same application with semantic walls, hosted openings, rooms, roof groups, assemblies and bounded source constraints. Open Architecture in the existing interface. Convert a selected orthogonal closed path into face-referenced walls, recognize rooms, edit an axis span, and generate an equal-eave hip roof from the exterior wall loop or a captured footprint. Rectangle, L, T and H starters provide footprint vertices only; the original kernel generates the roof vertices. Existing camera, picking, drafting units, layouts and grouped Undo/Redo remain in use.
+
+The [original H example](samples/roof-space-H-v19.linecraft) includes walls, a hosted door, room ceiling intent, a generated 4:12 hip roof and two scaled A3 review viewports. The analytical fixture is an independently supplied expected graph; regression tests run the actual generator and independently check face coverage, topology, area, shared edges and runoff. The handoff's earlier self-consistency check is not a runtime test.
+
+Architectural drawings save authoritative source as `Linecraft/2`, with `architecture.schemaVersion=1`; generated meshes are rebuilt on Open and Undo/Redo. Version 1.9 also reads ordinary `Linecraft/1` files. Older releases reject the new format instead of silently dropping semantic source. Keep an original copy when using this preview. Generated meshes select their semantic owner and reject ordinary direct edits. `ROOFDETACH` explicitly copies selected generated geometry into ordinary editable objects while retaining authoritative source; the copies are excluded from architectural quantities.
+
+R0–R2 is bounded to simple orthogonal plans with open recesses and no enclosed holes, equal eave and common pitch. The kernel permits at most 48 roof edges plus explicit event/patch/validation budgets. Closing recesses through overhangs and overlapping unresolved roof groups require a coverage decision. Wall quantities are nominal at butt-overlapping T junctions. Semantic building-frame rotation is supported; converting already rotated drafting paths can reject tiny floating-point departures from exact local orthogonality. Accepted coordinates are not silently snapped. The existing shaded painter renderer can show internal or behind-surface mesh edges; hidden-line display has not been added.
+
+Ceiling elevation, bearing elevation and declared heel offsets are distinct. Room ceiling values express intent and do not establish available roof clearance. Geometric surface/wall quantities remain physical; prefabricated-truss design and manufacturing-complexity surcharges are exactly zero. Framing lumber, connectors, load paths and physical feasibility remain unverified or unknown, and clearance reservations are retained. This preview does not certify framing or code compliance.
+
+Fixed-roof ceiling-space recovery, gable assignments, variable bearing heights, section tools and bounded material/space alternatives remain subsequent milestones. Source models retain their intent and constraints, but no unimplemented analysis is presented as a result. See the [implementation handoff](docs/roof-space/IMPLEMENTATION_HANDOFF.md) and [integration decision](docs/roof-space/ADR-001-integration.md).
+
 ## Paper layouts and physical scales
 
 
@@ -84,17 +98,20 @@ npm run test:viewport-pdf
 npm run test:scale-math
 npm run test:scales
 npm run test:scale-pdf
+npm run test:architecture
+npm run test:architecture-ipc
+npm run test:architecture-desktop
 npm run unpacked
 npm run build
 ```
 
-The public gate has 25 pure synthetic stages, including the immutable scale catalog, independent physical arithmetic, XP notation and native-file validation. The desktop gate adds reader identity, five hidden unit/layout/viewport/navigation/scale GUI suites and three actual PDF producers: 34 stages. Unpacked adds one build, five hidden executable suites and resource identities: 41 stages. Build adds NSIS compilation from the tested application: 42 stages. These are required stages, not an automatic passing claim. Read completed reports under `work/`.
+The public gate has 28 pure synthetic stages, including the Roof + Space engine/geometry runner, production native-file contracts and regenerated H example. The desktop gate adds fixed reader identity, six hidden GUI suites, three real PDF producers and two live development reload/validator checks: 40 stages. Unpacked adds a build, six hidden executable suites and resource identities: 48 stages. Build adds NSIS compilation from the tested application: 49 stages. These are required stages, not an automatic passing claim. Read completed reports under `work/`.
 
 Automated application windows stay hidden and offscreen, with visibility/show-event assertions. Native choices use owned-file stubs; no unrelated OS clipboard data is read. Synthetic events, visible UI and physical gestures are distinct evidence. Optional external Python PDF/DXF readers are not application or build dependencies. See [tests](tests/README.md) for those independently measured audits.
 
 ## Automated releases
 
-A version tag matching `package.json`, such as `v1.8.0`, triggers Windows CI. The workflow can also be dispatched manually for an existing immutable version tag. It installs locked dependencies and the pinned Electron binary, runs the public gate, tests the unpacked executable, builds NSIS and publishes the installer plus SHA-256 checksum using the repository's `GITHUB_TOKEN`. No stored user credentials or manual browser upload are required. Failed checks prevent publication. The workflow must complete before a release outcome is claimed. See [GitHub tag triggers](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow) and [CLI release creation](https://cli.github.com/manual/gh_release_create).
+A version tag matching `package.json`, such as `v1.9.0`, triggers Windows CI. The workflow can also be dispatched manually for an existing immutable version tag. It installs locked dependencies and the pinned Electron binary, runs the public gate, tests the unpacked executable, builds NSIS and publishes the installer plus SHA-256 checksum using the repository's `GITHUB_TOKEN`. No stored user credentials or manual browser upload are required. Failed checks prevent publication. The workflow must complete before a release outcome is claimed. See [GitHub tag triggers](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow) and [CLI release creation](https://cli.github.com/manual/gh_release_create).
 
 ## Tests, privacy and licenses
 
