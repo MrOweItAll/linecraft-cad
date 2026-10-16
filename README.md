@@ -4,6 +4,14 @@ Linecraft is an independent offline Windows CAD application for 2D drafting, pap
 
 Download the Windows x64 installer from [GitHub Releases](https://github.com/MrOweItAll/linecraft-cad/releases/latest). The unsigned installer includes its own Electron runtime; a browser, Node.js and Autodesk installation are unnecessary for using the application.
 
+## Generated roof and closure PDF output
+
+Version 1.12.2 plots the freshly validated architectural geometry rebuilt from native source. Generated hip/gable roof skins and separate vertical gable closures now enter model-space plots and scaled paper viewports through the existing vector pipeline. Native files continue to store authoritative source rather than cached mesh vertices. Plotting preserves the saved model view, camera, layouts, viewport scales and drawing history.
+
+Layer plot flags, model/paper visibility, per-viewport frozen layers, clipping, color, linetype and paper lineweight still apply. Pending or infeasible roof groups are excluded with an explicit plot warning. The [original analytical fixture](samples/roof-plot-v1122.linecraft) has no ordinary model geometry: its generated 40-by-20-foot gable is shown at 1:96 and 1:48 in A3 plan/elevation sheets, with a separate frozen-layer negative sheet. The independent optional PDF reader measures actual vector positions and lengths rather than accepting preview metadata.
+
+3D PDF output remains vector wireframe; shaded faces and hidden-line removal are unsupported. Zero-thickness mathematical surfaces, separate ceiling/bearing elevations, explicit reservations and both zero truss surcharges remain unchanged. Geometry/PDF checks do not certify framing or structural feasibility.
+
 ## Structured scripting of the open drawing
 
 Version 1.12.1 adds opt-in local scripting to this same R4 application. Read copied object IDs and a drawing/session token, preview a bounded structured revision, then Apply once to the existing editor. Atomic validation, grouped Undo/Redo, existing units, layouts and semantic roof ownership remain in use. Rejected or unfinished steps leave the current drawing unchanged. Retries use a bounded in-memory request-ID cache; stale drawing/session tokens require a fresh review.
@@ -112,6 +120,7 @@ npm run test:viewport-pdf
 npm run test:scale-math
 npm run test:scales
 npm run test:scale-pdf
+npm run test:roof-plot
 npm run test:architecture
 npm run test:architecture-ipc
 npm run test:architecture-desktop
@@ -123,13 +132,13 @@ npm run unpacked
 npm run build
 ```
 
-The public gate has 32 pure synthetic stages, including Roof + Space geometry, exact flat/tray ceiling analysis and sections, production native-file contracts and regenerated source-only H/space/tray examples. The desktop gate adds fixed reader identity, eight hidden GUI suites, three real PDF producers and two live development reload/validator checks: 46 stages. Unpacked adds a build, eight hidden executable suites and resource identities: 56 stages. Build adds NSIS compilation from the tested application: 57 stages. These are required stages, not an automatic passing claim. Read completed reports under `work/`.
+The public gate requires 37 pure synthetic stages, including Roof + Space, structured scripting, generated roof/closure plotting and source-only analytical examples. The desktop gate adds 17 stages for fixed reader identity, hidden application/native PDF workflows and live development reload/validator checks: 54 source stages. Unpacked adds one build, 11 hidden executable suites and resource identities: 67 stages. Build adds NSIS compilation from the tested application: 68 stages. These counts describe required checks; they are not a claim that a run passed. Read completed reports under `work/`.
 
 Automated application windows stay hidden and offscreen, with visibility/show-event assertions. Native choices use owned-file stubs; no unrelated OS clipboard data is read. Synthetic events, visible UI and physical gestures are distinct evidence. Optional external Python PDF/DXF readers are not application or build dependencies. See [tests](tests/README.md) for those independently measured audits.
 
 ## Automated releases
 
-A version tag matching `package.json`, such as `v1.12.0`, triggers Windows CI. The workflow can also be dispatched manually for an existing immutable version tag. It installs locked dependencies and the pinned Electron binary, runs the public gate, tests the unpacked executable, builds NSIS and publishes the installer plus SHA-256 checksum using the repository's `GITHUB_TOKEN`. No stored user credentials or manual browser upload are required. Failed checks prevent publication. The workflow must complete before a release outcome is claimed. See [GitHub tag triggers](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow) and [CLI release creation](https://cli.github.com/manual/gh_release_create).
+A version tag matching `package.json`, such as `v1.12.2`, triggers Windows CI. The workflow can also be dispatched manually for an existing immutable version tag. It installs locked dependencies and the pinned Electron binary, runs the public gate, tests the unpacked executable, builds NSIS and publishes the installer plus SHA-256 checksum using the repository's `GITHUB_TOKEN`. No stored user credentials or manual browser upload are required. Failed checks prevent publication. The workflow must complete before a release outcome is claimed. See [GitHub tag triggers](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow) and [CLI release creation](https://cli.github.com/manual/gh_release_create).
 
 ## Tests, privacy and licenses
 

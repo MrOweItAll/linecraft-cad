@@ -1,5 +1,14 @@
 # Changes
 
+## 1.12.2 — generated roof and closure vector PDF
+
+- Plot freshly validated architectural entities rather than source-only serialization that intentionally omits derived meshes; preserve authoritative native source and saved model view.
+- Include generated hip/gable roof skins and separate gable closures in model and paper viewport vector plots, retaining visibility, per-viewport freeze, clipping, line color/type/weight and physical scales.
+- Exclude pending/infeasible roofs with explicit diagnostics. Keep 3D output wireframe, without shaded-face or hidden-line claims.
+- Extend pure plot regression and add an original source-only analytical gable, actual hidden source/unpacked native Save/Open/PDF acceptance and an optional independent physical-vector/raster audit. Visible installed review remains a separate evidence class.
+- Preserve drafting, units, camera/picking, scripting, layouts, grouped history, semantic model, separate bearing/ceiling elevations, zero thickness, reservations and both zero truss surcharges.
+
+
 ## 1.12.1 — structured scripting integrated with R4
 
 - Preview and atomically apply bounded structured revisions to the open drawing using explicit object IDs and current session/document tokens; retain one grouped Undo record and preexisting history.

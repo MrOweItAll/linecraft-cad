@@ -223,11 +223,17 @@ export function buildPlotHTML(sources,{options:rawOptions={},createEditor=core.c
   const sheets=sources.map((source,index)=>{
     if(!source||typeof source.title!=='string'||source.title.length>512||typeof source.text!=='string'||BufferlessBytes(source.text)>25*1024*1024)throw Error('Plot source title or document is invalid or too large.');
     const editor=createEditor(),accepted=editor.importJSON(source.text);if(!accepted.ok)throw Error(accepted.message);
-    const document=JSON.parse(editor.serialize());
+    // Native serialization intentionally saves architectural source, not generated
+    // caches. Plot the freshly validated model entities (including roof skins and
+    // separate gable closures), while keeping canonical paper ownership and the
+    // saved model view rather than the currently active paper viewport's camera.
+    const document={...JSON.parse(editor.serialize()),entities:editor.state.entities.filter(entity=>!entity.layoutId)};
     const wanted=options.space==='model'?null:options.space==='layout'?(options.layoutId??document.activeLayoutId):document.activeLayoutId;
     const layout=wanted?document.layouts?.find(item=>item.id===wanted):null;
     if(options.space==='layout'&&!layout)throw Error('Choose an existing layout to plot.');
-    return layout?layoutPage(source,document,layout,options,index):drawingPage(source,document,options,width,height,index);
+    const sheet=layout?layoutPage(source,document,layout,options,index):drawingPage(source,document,options,width,height,index);
+    for(const roof of editor.state.architectureDerived?.roofs??[])if(roof.status!=='ok')sheet.warnings.push(`Architectural roof ${roof.id} is ${roof.status}; its roof and closure geometry is excluded. Review the Architecture diagnostics.`);
+    return sheet;
   });
   const sheetReport=(s,i)=>({title:sources[i].title,space:s.space,layoutId:s.layoutId,layoutName:s.layoutName??null,paper:s.paper,orientation:s.orientation,widthMm:s.width,heightMm:s.height,plotScaleMmPerUnit:s.plotScaleMmPerUnit,worldBounds:s.worldBounds,clipped:s.clipped,warnings:s.warnings,...(s.viewports?{viewports:s.viewports}:{})});
   const report={pages:sheets.length,paper:sheets[0].paper,orientation:sheets[0].orientation,space:sheets[0].space,layoutId:sheets[0].layoutId,scaleMode:sheets[0].space==='layout'?'layout':options.scaleMode,ratio:sheets[0].space==='layout'?1:options.ratio,plotScaleMmPerUnit:sheets[0].plotScaleMmPerUnit,worldBounds:sheets[0].worldBounds,clipped:sheets.some(s=>s.clipped),warnings:[...new Set(sheets.flatMap(s=>s.warnings))],sheets:sheets.map(sheetReport)};

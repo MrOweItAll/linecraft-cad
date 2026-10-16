@@ -1,5 +1,5 @@
 {
-  "version": "1.12.1",
+  "version": "1.12.2",
   "scope": "Original public runtime and synthetic regression suite; private native drawings and evidence excluded.",
   "runtimeFiles": [
     {
@@ -52,8 +52,8 @@
     },
     {
       "file": "plot-document.mjs",
-      "bytes": 22589,
-      "sha256": "031b925590a798a90e6d80e590c4bed3ced3307c56dd5687c58a45257d359400",
+      "bytes": 23258,
+      "sha256": "d9579077df0e953ceeeaf4a1b4d86b03d466f247d27649391df4da203aaa0415",
       "matchesInternalRuntime": true
     },
     {
@@ -232,7 +232,10 @@
     "gable-desktop.cjs": "Require local pinned Playwright without personal runtime-cache paths; preserve explicit confirmation and hidden-window checks.",
     "samples/gable-v112.linecraft": "Original schema-4 confirmed terminal-gable example, authoritative source only with no cached mesh vertices.",
     "scripting-desktop.cjs": "Use local pinned Playwright without a private dependency environment fallback. Preserve all hidden-window, real CLI, R4, Save/Open and actual PDF assertions.",
-    "samples/scripting-v1121.linecraft": "Separate original schema-4 scripting review fixture; all four historical architectural samples remain immutable."
+    "samples/scripting-v1121.linecraft": "Separate original schema-4 scripting review fixture; all four historical architectural samples remain immutable.",
+    "roof-plot-desktop.cjs": "Require local pinned Playwright without an environment fallback; preserve actual hidden native Open/Save/Plot, source/derivative stability, locked physical scales, separate closures and frozen-layer checks.",
+    "samples/roof-plot-v1122.linecraft": "Original analytical source-only schema-4 gable with zero ordinary model objects, distinct bearing/ceiling elevations, locked A3 plan/elevation physical scales and a frozen-layer negative sheet.",
+    "audit-roof-plot-pdf.py": "Copy the independent reader unchanged. Use --output-root work/roof-pdf-audit to keep optional generated native/PDF measurements and raster evidence under ignored work."
   },
   "removedPrivateTestCount": {
     "core.test.mjs": 12,

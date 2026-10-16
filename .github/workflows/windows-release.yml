@@ -8,7 +8,7 @@ on:
       release_tag:
         description: Immutable version tag to build and publish
         required: true
-        default: v1.12.1
+        default: v1.12.2
         type: string
 permissions:
   contents: write
@@ -27,7 +27,7 @@ jobs:
     steps:
       - name: Validate release tag input
         run: |
-          if ($env:RELEASE_TAG -notmatch '\Av[0-9]+\.[0-9]+\.[0-9]+\z') { throw 'Use a version tag such as v1.12.1.' }
+          if ($env:RELEASE_TAG -notmatch '\Av[0-9]+\.[0-9]+\.[0-9]+\z') { throw 'Use a version tag such as v1.12.2.' }
       - name: Preserve canonical repository bytes on checkout
         run: |
           git config --global core.autocrlf false
@@ -96,6 +96,8 @@ jobs:
           Roof + Space R0–R4 adds semantic walls/rooms, generated equal-eave hip roofs, flat-ceiling analysis and one bounded rectangular stepped tray beneath a fixed roof. Exact declared cells and reservations bound volume, headroom and closed return interfaces; dimensioned section snapshots follow the actual accepted profile and exclude unaccepted proposals. Ceiling and bearing elevations remain separate, and ceiling edits do not alter exterior roof geometry. Both requested truss surcharges remain zero. Roofs, ceilings and tray returns use an explicit zero-thickness mathematical surface model by default; return material volume is zero and return area is retained. Optional physical offsets and reservation boxes remain supported. Existing entered offsets are preserved until an explicit grouped zero-thickness action. Physical framing and structural verification are separate from mathematical feasibility. Confirmed terminal gable assignments generate equal-bearing gable skins with separate eave/rake overhangs and zero-thickness closure surfaces. Candidate alternatives require explicit confirmation; mixed outer hip caps are not substituted. Sloping and closure areas are reported separately, and only sloping faces bound ceiling space. Schema 4 explicitly migrates prior source; archived schema 1/2/3 examples remain unchanged. Variable bearings, vaulted ceilings and bounded alternatives remain future milestones.
 
           Opt-in structured scripting uses copied object IDs and session/drawing tokens, private staging, one grouped Undo record and authenticated ephemeral loopback control. Ordinary launches keep local control disabled; supplied JavaScript, shell and arbitrary file operations are not exposed. Source and unpacked gates include real CLI edits, native Save/Open and vector PDF output while retaining current R4 architecture.
+
+          Generated roof skins and separate gable closures are regenerated from validated native source before vector plotting. Source and unpacked acceptance include analytical A3 plan/elevation sheets at locked physical 1:96/1:48 scales and a frozen-layer negative sheet. Layer visibility, color, weight and clipping retain the established plot path. Pending/infeasible roofs issue warnings; 3D PDF remains wireframe without shaded faces or hidden-line removal. Native files retain authoritative source, distinct ceiling/bearing elevations and the zero-thickness mathematical model.
 
           Viewport frame resize retains its physical model scale; MOVE translates the window and content. DWG input remains bounded model-space import; DWG writing, full native drawing fidelity and ACIS solids are unsupported.
 
