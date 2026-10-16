@@ -38,10 +38,10 @@
     "test:space-desktop": "node dev-tools.cjs test-space",
     "test:tray": "node ../tests/run-tray-tests.mjs",
     "test:tray-desktop": "node dev-tools.cjs test-tray",
-    "test:gable": "node tests/run-gable-tests.mjs",
-    "test:gable-desktop": "node desktop/dev-tools.cjs test-gable",
-    "test:scripting": "node tests/run-scripting-tests.mjs",
-    "test:scripting-desktop": "node desktop/dev-tools.cjs test-scripting"
+    "test:gable": "node ../tests/run-gable-tests.mjs",
+    "test:gable-desktop": "node dev-tools.cjs test-gable",
+    "test:scripting": "node ../tests/run-scripting-tests.mjs",
+    "test:scripting-desktop": "node dev-tools.cjs test-scripting"
   },
   "devDependencies": {
     "electron": "44.7.0",
