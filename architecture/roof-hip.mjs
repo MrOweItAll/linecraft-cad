@@ -31,12 +31,12 @@ function eventTimes(xLines,yLines,maxTime,tolerance){
 }
 function ordered(lines,t,tolerance){const out=[];for(const line of [...lines].sort((a,b)=>a.c+a.v*t-b.c-b.v*t||a.v-b.v))if(!out.length||line.c+line.v*t-(out.at(-1).c+out.at(-1).v*t)>tolerance)out.push(line);return out;}
 function segmentDistance(p,a,b){return Math.max(Math.abs(a.x===b.x?p.x-a.x:p.y-a.y),a.x===b.x?Math.max(Math.min(a.y,b.y)-p.y,0,p.y-Math.max(a.y,b.y)):Math.max(Math.min(a.x,b.x)-p.x,0,p.x-Math.max(a.x,b.x)));}
-function wavefront(loop,xLines,yLines,t,tolerance){
+function wavefront(loop,xLines,yLines,t,tolerance,activeEdges=null){
   const xs=ordered(xLines,t,tolerance),ys=ordered(yLines,t,tolerance),nx=xs.length-1,ny=ys.length-1,grid=new Uint8Array(nx*ny);
   const coords=(ix,iy)=>({x:xs[ix].c+xs[ix].v*t,y:ys[iy].c+ys[iy].v*t});
   for(let y=0;y<ny;y++)for(let x=0;x<nx;x++){
     const p=midpoint(coords(x,y),coords(x+1,y+1));if(!pointInLoop(p,loop))continue;
-    let blocked=false;for(let i=0;i<loop.length;i++)if(segmentDistance(p,loop[i],loop[(i+1)%loop.length])<t){blocked=true;break;}if(!blocked)grid[y*nx+x]=1;
+    let blocked=false;for(let i=0;i<loop.length;i++)if((!activeEdges||activeEdges.has(i))&&segmentDistance(p,loop[i],loop[(i+1)%loop.length])<t){blocked=true;break;}if(!blocked)grid[y*nx+x]=1;
   }
   const has=(x,y)=>x>=0&&y>=0&&x<nx&&y<ny&&grid[y*nx+x];
   const fronts=[];
@@ -44,12 +44,16 @@ function wavefront(loop,xLines,yLines,t,tolerance){
     const a={x:xs[x0],y:ys[y0]},b={x:xs[x1],y:ys[y1]},aa=at(a,t),bb=at(b,t),p=midpoint(aa,bb);
     let best=-1,bestDistance=Infinity;
     for(let i=0;i<loop.length;i++){
+      if(activeEdges&&!activeEdges.has(i))continue;
       const q=loop[i],r=loop[(i+1)%loop.length],len=Math.hypot(r.x-q.x,r.y-q.y),inward={x:-(r.y-q.y)/len,y:(r.x-q.x)/len};
       if(inward.x!==n.x||inward.y!==n.y)continue;
       const d=n.x*(p.x-q.x)+n.y*(p.y-q.y);if(Math.abs(d-t)>tolerance*8)continue;
       const tangent=n.x?Math.max(Math.min(q.y,r.y)-p.y,0,p.y-Math.max(q.y,r.y)):Math.max(Math.min(q.x,r.x)-p.x,0,p.x-Math.max(q.x,r.x));
       if(tangent<bestDistance){best=i;bestDistance=tangent;}
     }
+    // A confirmed gable clips the occupied domain but never advances and
+    // never sweeps a sloping face. Preserve it only as a stationary boundary.
+    if(best<0&&activeEdges&&loop.some((q,i)=>{if(activeEdges.has(i))return false;const r=loop[(i+1)%loop.length],len=Math.hypot(r.x-q.x,r.y-q.y),inward={x:-(r.y-q.y)/len,y:(r.x-q.x)/len};return inward.x===n.x&&inward.y===n.y&&Math.abs(n.x*(p.x-q.x)+n.y*(p.y-q.y))<=tolerance*8;}))return;
     if(best<0)throw new Error('Wavefront provenance could not be resolved.');
     fronts.push({a,b,sourceEdge:best,n});
   }
@@ -69,6 +73,9 @@ function wavefront(loop,xLines,yLines,t,tolerance){
   }
   return merged;
 }
+
+// Shared finite-front primitives. The public HIP path retains its defaults.
+export {simplify,affineLines,eventTimes,wavefront,pointKey,mergePatches,makeEdges,geometricEvents};
 function pointKey(p,tolerance){return`${Math.round(p.x/tolerance)},${Math.round(p.y/tolerance)}`;}
 function segmentPieces(segments,tolerance){
   const directions=new Map(),groups=[];

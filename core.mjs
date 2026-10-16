@@ -4,7 +4,7 @@ import {parseLength,parseAngle,formatLength,formatAngle,formatArea,UNIT_PRESETS,
 import {PAPER_SIZES,LINETYPES,modelUnitMillimeters,normalizePaper,normalizeLayouts,normalizePaperViewport,normalizePaperView,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible,viewportBoundaryPoints,viewportFrameFromPoints,normalizeViewportBoundary,viewportAsObject,compensateViewportResize} from './paper-space.mjs';
 import {presetUCS,normalizeUCS,ucsFromThreePoints,constructionPlane,planeToWorld,worldToPlane,intersectPlaneRay,planeCamera,spatialCurvePoint,spatialAngleOnArc,spatialCurveBounds,validateSpatialCurve,sampleSpatialCurve,spatialCurveOCS} from './drawing-plane.mjs';
 import {parseViewportZoomFactor} from './viewport-scales.mjs';
-import {normalizeArchitecture} from './architecture/model.mjs';
+import {normalizeArchitecture,ARCHITECTURE_SCHEMA_VERSION} from './architecture/model.mjs';
 import {applyArchitectureEdit,generateArchitecture} from './architecture/editor-adapter.mjs';
 import {buildRoomSection} from './architecture/sections.mjs';
 import {physicalScale} from './architecture/units-adapter.mjs';
@@ -1819,7 +1819,7 @@ export function createEditor(initialState = {}) {
       }catch(error){return result(false,`Architecture rejected: ${error.message}`);}
     },
     getArchitectureOwner(entityId){return clone(state.architectureDerived?.owners?.[entityId]??null);},
-    getArchitectureReport(){return clone({schemaVersion:3,modelUnits:state.settings.units,source:state.architecture,derived:state.architectureDerived,spaces:state.architectureDerived?.spaces??[],roofGeometryFingerprint:state.architectureDerived?.roofGeometryFingerprint??null,framingStatus:'unverified',trussDesignManufacturingComplexitySurcharge:0});},
+    getArchitectureReport(){return clone({schemaVersion:ARCHITECTURE_SCHEMA_VERSION,modelUnits:state.settings.units,source:state.architecture,derived:state.architectureDerived,spaces:state.architectureDerived?.spaces??[],roofGeometryFingerprint:state.architectureDerived?.roofGeometryFingerprint??null,framingStatus:'unverified',trussDesignManufacturingComplexitySurcharge:0});},
     addRoomSection(options={}){
       if(state.command)return result(false,'Finish or cancel the active command before exporting a room section.');
       if(state.activeSpace==='paper')return result(false,'Export architectural sections in model space.');

@@ -14,13 +14,13 @@ function triangles(poly,tol){
 }
 function clipTriangle(subject,clip,tol){let points=subject;for(let i=0;i<3&&points.length;i++){const a=clip[i],b=clip[(i+1)%3],out=[];for(let j=0;j<points.length;j++){const p=points[j],q=points[(j+1)%points.length],u=cross(a,b,p),v=cross(a,b,q);if(u>=-tol*tol)out.push(p);if(u>tol*tol&&v<-tol*tol||u<-tol*tol&&v>tol*tol){const t=u/(u-v);out.push({x:p.x+t*(q.x-p.x),y:p.y+t*(q.y-p.y)});}}points=out;}return points;}
 function uniq(values,tol){const out=[];for(const x of values.sort((a,b)=>a-b))if(!out.length||x-out.at(-1)>tol)out.push(x);return out;}
-function topologyCoverage(faces,edges,boundary,tolerance){
+function topologyCoverage(faces,edges,boundary,tolerance,rakeBoundary=[]){
   const origin=boundary[0],local=p=>({...p,x:p.x-origin.x,y:p.y-origin.y}),loop=boundary.map(local),domain=triangles(loop,tolerance),skin=faces.flatMap(f=>triangles(f.vertices.map(local),tolerance));
   if(skin.length>1024)throw new Error('Runtime roof-validation triangle budget exceeded.');
   const extent=Math.max(...loop.map(p=>Math.max(Math.abs(p.x),Math.abs(p.y))),1),areaTolerance=tolerance*extent*16;
   let covered=0,outside=0,overlap=0;for(const t of skin){const a=area(t);covered+=a;const clipped=domain.reduce((s,d)=>s+area(clipTriangle(t,d,tolerance)),0);outside+=Math.max(0,a-clipped);}
   for(let i=0;i<skin.length;i++)for(let j=0;j<i;j++)overlap+=area(clipTriangle(skin[i],skin[j],tolerance));
-  let eaveLength=0;for(const e of edges){if(e.faceIds.length!==(e.kind==='eave'?1:2))throw new Error('Roof edge adjacency is nonmanifold.');if(e.kind==='eave'){if(!boundary.some((a,i)=>onSegment(e.a,a,boundary[(i+1)%boundary.length],tolerance)&&onSegment(e.b,a,boundary[(i+1)%boundary.length],tolerance)))throw new Error('Open roof edge is not on the declared eave boundary.');eaveLength+=distance(e.a,e.b);}}
+  let eaveLength=0;for(const e of edges){const open=e.kind==='eave'||e.kind==='rake';if(e.faceIds.length!==(open?1:2))throw new Error('Roof edge adjacency is nonmanifold.');if(open){if(!boundary.some((a,i)=>onSegment(e.a,a,boundary[(i+1)%boundary.length],tolerance)&&onSegment(e.b,a,boundary[(i+1)%boundary.length],tolerance)))throw new Error('Open roof edge is not on the declared boundary.');const isRake=rakeBoundary.some(s=>onSegment(e.a,s.a,s.b,tolerance)&&onSegment(e.b,s.a,s.b,tolerance));if(isRake!==(e.kind==='rake'))throw new Error('Open roof edge disagrees with its confirmed eave/rake assignment.');eaveLength+=distance(e.a,e.b);}}
   const perimeter=boundary.reduce((s,a,i)=>s+distance(a,boundary[(i+1)%boundary.length]),0),perimeterResidual=Math.abs(eaveLength-perimeter),areaResidual=Math.abs(covered-area(loop));
   return{valid:areaResidual<=areaTolerance&&outside<=areaTolerance&&overlap<=areaTolerance&&perimeterResidual<=tolerance*boundary.length*8,projectedArea:covered,expectedProjectedArea:area(loop),areaResidual,outsideArea:outside,overlapArea:overlap,perimeterResidual,triangleCount:skin.length};
 }
@@ -33,7 +33,8 @@ function topologyCoverage(faces,edges,boundary,tolerance){
 function runoff(faces,edges,boundary,tolerance){
   const byFace=new Map(faces.map(f=>[f.id,f])),faceEdges=new Map(faces.map(f=>[f.id,edges.filter(e=>e.faceIds.includes(f.id))]));
   const origin=boundary[0],pointKey=p=>`${Math.round((p.x-origin.x)/tolerance)},${Math.round((p.y-origin.y)/tolerance)}`;
-  const boundaryPoint=p=>boundary.some((a,i)=>onSegment(p,a,boundary[(i+1)%boundary.length],tolerance));
+  // Stationary gable/rake boundaries are never accepted as drainage outlets.
+  const boundaryPoint=p=>edges.some(e=>e.kind==='eave'&&onSegment(p,e.a,e.b,tolerance));
   const edgeAt=(face,p)=>faceEdges.get(face.id).filter(e=>onSegment(p,e.a,e.b,tolerance));
   const flow=f=>{const x=f.plane.a/f.plane.c,y=f.plane.b/f.plane.c;if(Math.min(Math.abs(x),Math.abs(y))>1e-10)throw new Error('R2 drainage validator requires orthogonal facet gradients.');return Math.abs(x)>Math.abs(y)?{axis:'x',perp:'y',sign:Math.sign(x)}:{axis:'y',perp:'x',sign:Math.sign(y)};};
   const faceFlow=new Map(faces.map(f=>[f.id,flow(f)])),ordinates={x:uniq(faces.flatMap(f=>f.vertices.map(p=>p.y)),tolerance),y:uniq(faces.flatMap(f=>f.vertices.map(p=>p.x)),tolerance)},cells=[],cellsByFace=new Map(faces.map(f=>[f.id,[]]));
@@ -76,7 +77,7 @@ function runoff(faces,edges,boundary,tolerance){
   }
   return{valid:diagnostics.length===0,unresolved:diagnostics,catchmentCells:cells.length,method:'exact constant-gradient characteristic bands; every positive-area band reaches an approved eave via validated interfaces'};
 }
-export function validateRoofSkin({faces,edges,eaveBoundary,pitch,eaveSurfaceElevation,tolerance=1e-8}){
+export function validateRoofSkin({faces,edges,eaveBoundary,pitch,eaveSurfaceElevation,tolerance=1e-8,rakeBoundary=[]}){
   const validation={geometry:'failed',drainage:'not-run',clearance:'not-analyzed',structural:'unverified',supplier:'unverified',diagnostics:[]};
   try{
     if(!Number.isFinite(pitch)||pitch<=0||pitch>1||!Number.isFinite(eaveSurfaceElevation)||!Number.isFinite(tolerance)||tolerance<=0)throw new Error('Roof validation requires finite positive pitch/tolerance and a finite eave datum.');
@@ -84,8 +85,8 @@ export function validateRoofSkin({faces,edges,eaveBoundary,pitch,eaveSurfaceElev
     if(new Set(faces.map(f=>f.id)).size!==faces.length||new Set(edges.map(e=>e.id)).size!==edges.length)throw new Error('Roof face/edge IDs must be unique.');
     let maxPlaneResidual=0,maxPitchResidual=0;const ids=new Set(faces.map(f=>f.id));
     for(const face of faces){if(!face.plane||!['a','b','c','d'].every(k=>Number.isFinite(face.plane[k]))||face.plane.c===0||!Array.isArray(face.vertices)||face.vertices.length<3||face.vertices.length>1024)throw new Error('Roof face plane or loop is invalid.');if(signedArea(face.vertices)<=tolerance*tolerance)throw new Error('Roof face must have positive plan area and consistent winding.');for(const p of face.vertices){if(!['x','y','z'].every(k=>Number.isFinite(p[k])))throw new Error('Roof vertex must be finite.');maxPlaneResidual=Math.max(maxPlaneResidual,Math.abs(face.plane.a*p.x+face.plane.b*p.y+face.plane.c*p.z+face.plane.d)/Math.abs(face.plane.c));}maxPitchResidual=Math.max(maxPitchResidual,Math.abs(Math.hypot(face.plane.a,face.plane.b)/Math.abs(face.plane.c)-pitch));}
-    for(const e of edges){if(![e.a,e.b].every(p=>p&&['x','y','z'].every(k=>Number.isFinite(p[k])))||!['eave','hip','ridge','valley','coplanar'].includes(e.kind)||!Array.isArray(e.faceIds)||!e.faceIds.every(id=>ids.has(id))||new Set(e.faceIds).size!==e.faceIds.length||distance(e.a,e.b)<=tolerance)throw new Error('Roof edge has invalid coordinates, classification, owner, incidence or length.');for(const id of e.faceIds){const f=faces.find(f=>f.id===id);for(const p of[e.a,e.b])if(Math.abs(f.plane.a*p.x+f.plane.b*p.y+f.plane.c*p.z+f.plane.d)/Math.abs(f.plane.c)>tolerance*16)throw new Error('Shared roof edge has an XYZ gap.');}if(e.kind==='eave'&&(Math.abs(e.a.z-eaveSurfaceElevation)>tolerance*16||Math.abs(e.b.z-eaveSurfaceElevation)>tolerance*16))throw new Error('Eave edge elevation disagrees with eave datum.');}
-    const coverage=topologyCoverage(faces,edges,boundary,tolerance);Object.assign(validation,coverage,{maxPlaneResidual,maxPitchResidual});delete validation.valid;
+    for(const e of edges){if(![e.a,e.b].every(p=>p&&['x','y','z'].every(k=>Number.isFinite(p[k])))||!['eave','rake','hip','ridge','valley','coplanar'].includes(e.kind)||!Array.isArray(e.faceIds)||!e.faceIds.every(id=>ids.has(id))||new Set(e.faceIds).size!==e.faceIds.length||distance(e.a,e.b)<=tolerance)throw new Error('Roof edge has invalid coordinates, classification, owner, incidence or length.');for(const id of e.faceIds){const f=faces.find(f=>f.id===id);for(const p of[e.a,e.b])if(Math.abs(f.plane.a*p.x+f.plane.b*p.y+f.plane.c*p.z+f.plane.d)/Math.abs(f.plane.c)>tolerance*16)throw new Error('Shared roof edge has an XYZ gap.');}if(e.kind==='eave'&&(Math.abs(e.a.z-eaveSurfaceElevation)>tolerance*16||Math.abs(e.b.z-eaveSurfaceElevation)>tolerance*16))throw new Error('Eave edge elevation disagrees with eave datum.');}
+    const coverage=topologyCoverage(faces,edges,boundary,tolerance,rakeBoundary);Object.assign(validation,coverage,{maxPlaneResidual,maxPitchResidual});delete validation.valid;
     if(!coverage.valid||maxPlaneResidual>tolerance*16||maxPitchResidual>1e-10)throw new Error('Roof coverage, topology, pitch or plane residual exceeds tolerance.');validation.geometry='valid';
     const drainage=runoff(faces,edges,boundary,tolerance);validation.drainage=drainage.valid?'valid':'failed';validation.unresolvedDrainage=drainage.unresolved;validation.catchmentCells=drainage.catchmentCells;validation.method=drainage.method;if(!drainage.valid)validation.diagnostics.push('A collecting seam, outlet or positive-area runoff catchment fails drainage validation.');
   }catch(error){validation.diagnostics.push(error.message);}return validation;

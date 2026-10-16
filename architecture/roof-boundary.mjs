@@ -49,3 +49,23 @@ export function deriveEaveBoundary(boundary,eaveOverhang=0,options={}){
     return{status:'ok',boundary:loop,sourceBoundary:source,sourceEdgeMap:edges.map((_,i)=>i),diagnostics:[]};
   }catch(error){return{status:error.status??'failed',boundary:[],diagnostics:[error.message]};}
 }
+/** Geometry identity survives winding and cyclic index changes, not edits. */
+export function roofBoundaryEdgeKey(a,b){
+  const key=p=>`${Object.is(p.x,-0)?0:p.x},${Object.is(p.y,-0)?0:p.y}`,ka=key(a),kb=key(b);
+  return ka<kb?`edge:${ka}|${kb}`:`edge:${kb}|${ka}`;
+}
+/** Separate eave and rake offsets, with an unchanged source-edge identity. */
+export function deriveGableBoundary(boundary,{eaveOverhang=0,rakeOverhang=0,gableAssignments=[]}={},options={}){
+  try{
+    const tolerance=options.tolerance??1e-8,source=normalizeRoofBoundary(boundary,options);
+    if(![eaveOverhang,rakeOverhang].every(v=>Number.isFinite(v)&&v>=0&&v<=1e8))fail('Eave and rake overhangs must be finite and nonnegative.','infeasible');
+    if(!Array.isArray(gableAssignments)||new Set(gableAssignments).size!==gableAssignments.length)fail('Confirmed gable edge keys must be a unique array.','infeasible');
+    const keys=source.map((a,i)=>roofBoundaryEdgeKey(a,source[(i+1)%source.length])),selected=new Set(gableAssignments);
+    if(gableAssignments.some(k=>!keys.includes(k)))fail('A confirmed gable edge no longer matches the boundary; review the assignment.','needs-decision');
+    const edges=source.map((a,i)=>{const b=source[(i+1)%source.length],len=Math.hypot(b.x-a.x,b.y-a.y);return{a,b,key:keys[i],gable:selected.has(keys[i]),offset:selected.has(keys[i])?rakeOverhang:eaveOverhang,n:{x:-(b.y-a.y)/len,y:(b.x-a.x)/len}};});
+    const loop=source.map((a,i)=>{const p=edges[(i+edges.length-1)%edges.length],n=edges[i];return{x:a.x-p.offset*p.n.x-n.offset*n.n.x,y:a.y-p.offset*p.n.y-n.offset*n.n.y};});
+    try{normalizeRoofBoundary(loop,options);}catch(error){if(eaveOverhang||rakeOverhang)fail('Overhang closes a recess or changes coverage topology; choose coverage explicitly.','needs-decision');throw error;}
+    for(let i=0;i<loop.length;i++){const a=loop[i],b=loop[(i+1)%loop.length],old=edges[i];if((b.x-a.x)*(old.b.x-old.a.x)+(b.y-a.y)*(old.b.y-old.a.y)<=tolerance*tolerance)fail('Overhang consumes a boundary edge; choose coverage explicitly.','needs-decision');}
+    return{status:'ok',boundary:loop,sourceBoundary:source,sourceEdgeMap:edges.map((_,i)=>i),edgeKeys:keys,gableEdgeIndices:edges.flatMap((e,i)=>e.gable?[i]:[]),diagnostics:[]};
+  }catch(error){return{status:error.status??'failed',boundary:[],diagnostics:[error.message]};}
+}

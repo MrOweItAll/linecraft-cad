@@ -1,4 +1,4 @@
-import {readFileSync,writeFileSync} from 'node:fs';
+import {readFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
 import {createEditor,UNIT_PRESETS} from '../core.mjs';
 
@@ -21,6 +21,6 @@ const layout=editor.addLayout('Fixed-roof tray study — A3',{size:'A3',orientat
 accept(editor.addViewport(layout.layoutId,{x:15,y:25,width:210,height:245},{workspace:'2d',modelCenter:{x:120,y:72,z:0},scaleDenominator:48,locked:true}));
 accept(editor.addViewport(layout.layoutId,{x:240,y:65,width:160,height:160},{workspace:'3d',modelCenter:{x:120,y:72,z:65},scaleDenominator:96,locked:true,camera3d:{yaw:45,pitch:35.264389682754654,target:{x:120,y:72,z:65},projection:'orthographic'}}));
 accept(editor.setWorkspace('3d'));accept(editor.set3DView({target:{x:120,y:72,z:65},scale:1.5,yaw:45,pitch:35.264389682754654,autoTarget:false}));
-const file=new URL('../samples/tray-ceiling-v111.linecraft',import.meta.url);writeFileSync(file,editor.serialize(),'utf8');
+const file=new URL('../samples/tray-ceiling-v111.linecraft',import.meta.url),canonical=readFileSync(file,'utf8'),legacy=JSON.parse(editor.serialize());legacy.architecture.schemaVersion=3;for(const group of legacy.architecture.roofGroups)for(const key of ['gablePolicy','gableAssignments','rakeOverhang'])delete group[key];assert.equal(canonical,JSON.stringify(legacy,null,2),'Historical schema-3 tray sample changed; do not overwrite it.');
 const raw=JSON.parse(readFileSync(file,'utf8')),restored=createEditor(raw);assert.equal(raw.format,'Linecraft/2');assert.equal(raw.architecture.schemaVersion,3);assert.ok(!raw.entities.some(entity=>entity.id.startsWith('@architecture/')));assert.deepEqual(restored.state.architecture,editor.state.architecture);assert.deepEqual(restored.state.entities,editor.state.entities);
-console.log('Created source-only tray proposal: 240 ft² room, accepted flat 8 ft / 1920 ft³, 72 ft² plateau at 9 ft, feasible tray 1992 ft³ / +72 ft³. Roof and 10 ft bearings fixed; framing remains unverified.');
+console.log('Validated unchanged source-only schema-3 tray proposal: 240 ft² room, accepted flat 8 ft / 1920 ft³, 72 ft² plateau at 9 ft, feasible tray 1992 ft³ / +72 ft³. Roof and 10 ft bearings fixed; framing remains unverified.');

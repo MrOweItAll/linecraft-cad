@@ -1,0 +1,395 @@
+{
+  "format": "Linecraft/2",
+  "entities": [],
+  "layers": [
+    {
+      "name": "0",
+      "color": "#e5e7eb",
+      "visible": true,
+      "locked": false,
+      "lineweight": 0.25,
+      "modelVisible": true,
+      "paperVisible": true,
+      "plot": true,
+      "linetype": "continuous"
+    }
+  ],
+  "currentLayer": "0",
+  "textStyles": [
+    {
+      "name": "Standard",
+      "fontFamily": "Arial",
+      "defaultHeight": 2.5,
+      "defaultRotation": 0,
+      "widthFactor": 1
+    }
+  ],
+  "dimStyles": [
+    {
+      "name": "Standard",
+      "textStyle": "Standard",
+      "textHeight": 2.5,
+      "arrowSize": 2.5,
+      "gap": 1,
+      "extensionOffset": 1,
+      "extensionOvershoot": 1.25,
+      "precision": 2,
+      "scale": 1,
+      "prefix": "",
+      "suffix": ""
+    }
+  ],
+  "currentTextStyle": "Standard",
+  "currentDimStyle": "Standard",
+  "settings": {
+    "units": "in",
+    "precision": 4,
+    "linearFormat": "architectural",
+    "fractionPrecision": 4,
+    "angularInputUnit": "degrees",
+    "angularFormat": "decimal-degrees",
+    "angularPrecision": 4,
+    "gridEnabled": true,
+    "snapEnabled": true,
+    "orthoEnabled": false,
+    "snapModes": [
+      "endpoint",
+      "midpoint",
+      "center",
+      "quadrant"
+    ],
+    "gridAdaptive": true,
+    "gridSpacing": 10,
+    "constructionElevation": 0,
+    "constructionPlane": "XY"
+  },
+  "blocks": [],
+  "layouts": [
+    {
+      "id": "layout1",
+      "name": "R4 gable study — A3",
+      "paper": {
+        "size": "A3",
+        "orientation": "landscape",
+        "widthMm": 420,
+        "heightMm": 297
+      },
+      "viewports": [
+        {
+          "id": "vp1",
+          "frame": {
+            "x": 15,
+            "y": 25,
+            "width": 210,
+            "height": 245
+          },
+          "modelCenter": {
+            "x": 240,
+            "y": 120,
+            "z": 0
+          },
+          "scaleDenominator": 48,
+          "locked": true,
+          "frozenLayers": [],
+          "workspace": "2d",
+          "camera3d": {
+            "target": {
+              "x": 240,
+              "y": 120,
+              "z": 0
+            },
+            "orbitCenter": null,
+            "scale": 10,
+            "yaw": -90,
+            "pitch": 90,
+            "roll": 0,
+            "mode": "top",
+            "renderMode": "shaded",
+            "projection": "orthographic",
+            "distance": 200,
+            "fov": 45,
+            "autoTarget": true
+          },
+          "plotBorder": false,
+          "layer": "0"
+        },
+        {
+          "id": "vp2",
+          "frame": {
+            "x": 240,
+            "y": 65,
+            "width": 160,
+            "height": 160
+          },
+          "modelCenter": {
+            "x": 240,
+            "y": 120,
+            "z": 100
+          },
+          "scaleDenominator": 96,
+          "locked": true,
+          "frozenLayers": [],
+          "workspace": "3d",
+          "camera3d": {
+            "target": {
+              "x": 240,
+              "y": 120,
+              "z": 100
+            },
+            "orbitCenter": null,
+            "scale": 10,
+            "yaw": 45,
+            "pitch": 35.264389682754654,
+            "roll": 0,
+            "mode": "iso",
+            "renderMode": "shaded",
+            "projection": "orthographic",
+            "distance": 200,
+            "fov": 45,
+            "autoTarget": true
+          },
+          "plotBorder": false,
+          "layer": "0"
+        }
+      ],
+      "entities": []
+    }
+  ],
+  "ucs": {
+    "origin": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "xAxis": {
+      "x": 1,
+      "y": 0,
+      "z": 0
+    },
+    "yAxis": {
+      "x": 0,
+      "y": 1,
+      "z": 0
+    },
+    "zAxis": {
+      "x": 0,
+      "y": 0,
+      "z": 1
+    }
+  },
+  "architecture": {
+    "schemaVersion": 4,
+    "modelUnits": "in",
+    "revision": 5,
+    "buildingFrame": {
+      "origin": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "rotationDegrees": 0
+    },
+    "levels": [
+      {
+        "id": "level-1",
+        "name": "Ground floor",
+        "floorElevation": 0,
+        "defaultBearingElevation": 96.00000000000001,
+        "defaultCeilingElevation": 96.00000000000001
+      }
+    ],
+    "wallNodes": [
+      {
+        "id": "node-1",
+        "x": 0,
+        "y": 0
+      },
+      {
+        "id": "node-2",
+        "x": 480,
+        "y": 0
+      },
+      {
+        "id": "node-3",
+        "x": 480,
+        "y": 240
+      },
+      {
+        "id": "node-4",
+        "x": 0,
+        "y": 240
+      }
+    ],
+    "walls": [
+      {
+        "id": "wall-1",
+        "startNodeId": "node-1",
+        "endNodeId": "node-2",
+        "referenceFace": "left",
+        "thickness": 6,
+        "baseElevation": 0,
+        "bearingElevation": 120,
+        "role": "exterior",
+        "levelId": "level-1",
+        "roofGroupId": null,
+        "heightLocked": false
+      },
+      {
+        "id": "wall-2",
+        "startNodeId": "node-2",
+        "endNodeId": "node-3",
+        "referenceFace": "left",
+        "thickness": 6,
+        "baseElevation": 0,
+        "bearingElevation": 120,
+        "role": "exterior",
+        "levelId": "level-1",
+        "roofGroupId": null,
+        "heightLocked": false
+      },
+      {
+        "id": "wall-3",
+        "startNodeId": "node-3",
+        "endNodeId": "node-4",
+        "referenceFace": "left",
+        "thickness": 6,
+        "baseElevation": 0,
+        "bearingElevation": 120,
+        "role": "exterior",
+        "levelId": "level-1",
+        "roofGroupId": null,
+        "heightLocked": false
+      },
+      {
+        "id": "wall-4",
+        "startNodeId": "node-4",
+        "endNodeId": "node-1",
+        "referenceFace": "left",
+        "thickness": 6,
+        "baseElevation": 0,
+        "bearingElevation": 120,
+        "role": "exterior",
+        "levelId": "level-1",
+        "roofGroupId": null,
+        "heightLocked": false
+      }
+    ],
+    "openings": [],
+    "rooms": [
+      {
+        "id": "room-1",
+        "label": "R4 mathematical gable study · 40 × 20 ft",
+        "anchor": {
+          "x": 240,
+          "y": 120
+        },
+        "levelId": "level-1",
+        "floorElevation": 0,
+        "ceilingElevation": 96,
+        "targetCeilingElevation": 108,
+        "ceilingType": "flat",
+        "trayCandidate": null,
+        "trayCeiling": null,
+        "allowCeilingChange": true,
+        "priority": 1,
+        "minimumClearHeight": 84,
+        "headroomThreshold": 108,
+        "ceilingFinishThickness": 0
+      }
+    ],
+    "roofGroups": [
+      {
+        "id": "roof-1",
+        "name": "4:12 GABLE · X ridge · explicit terminal ends",
+        "boundary": [
+          {
+            "x": 480,
+            "y": 240
+          },
+          {
+            "x": 0,
+            "y": 240
+          },
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 480,
+            "y": 0
+          }
+        ],
+        "boundarySource": "walls",
+        "boundaryWallIds": [
+          "wall-1",
+          "wall-2",
+          "wall-3",
+          "wall-4"
+        ],
+        "riseTwice": 8,
+        "overhang": 24,
+        "bearingElevation": 120,
+        "heelOffset": 0,
+        "eaveElevation": null,
+        "roofType": "GABLE",
+        "gablePolicy": "ALL_GABLE",
+        "gableAssignments": [
+          "edge:0,0|0,240",
+          "edge:480,0|480,240"
+        ],
+        "rakeOverhang": 36,
+        "assemblyId": null,
+        "supportWallIds": [
+          "wall-1",
+          "wall-2",
+          "wall-3",
+          "wall-4"
+        ],
+        "maxRidgeElevation": null
+      }
+    ],
+    "assemblies": [],
+    "constraints": [],
+    "acceptedAlternativeId": null,
+    "costAssumptions": {
+      "prefabricatedTrussDesignSurcharge": 0,
+      "manufacturingComplexitySurcharge": 0
+    }
+  },
+  "viewport": {
+    "center": {
+      "x": 0,
+      "y": 0
+    },
+    "scale": 10
+  },
+  "workspace": "3d",
+  "camera3d": {
+    "target": {
+      "x": 240,
+      "y": 120,
+      "z": 100
+    },
+    "orbitCenter": null,
+    "scale": 0.9,
+    "yaw": 45,
+    "pitch": 35.264389682754654,
+    "roll": 0,
+    "mode": "iso",
+    "renderMode": "shaded",
+    "projection": "orthographic",
+    "distance": 200,
+    "fov": 45,
+    "autoTarget": false
+  },
+  "activeSpace": "model",
+  "activeLayoutId": null,
+  "activeViewportId": null,
+  "paperViewport": {
+    "center": {
+      "x": 210,
+      "y": 148.5
+    },
+    "scale": 2
+  }
+}

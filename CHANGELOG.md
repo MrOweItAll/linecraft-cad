@@ -1,5 +1,14 @@
 # Changes
 
+## 1.12.0 — R4 confirmed terminal gable roofs
+
+- Generate bounded equal-bearing orthogonal gable roof skins from explicitly confirmed terminal-end alternatives, without manual roof vertices or automatic assignment acceptance.
+- Separate eave and rake overhangs, persist geometric source-edge identities and report stale decisions after footprint changes. Do not silently generate mixed outer hip caps.
+- Validate roof coverage, pitch, adjacency and approved-eave runoff; keep zero-thickness vertical gable closures separate from the sloping clearance skin and layer quantities.
+- Preserve source-only native persistence, architectural units, grouped Undo/Redo, camera, layouts and independent ceiling/bearing elevations. Migrate schemas 1/2/3 explicitly to schema 4 and retain all three archived examples byte-for-byte.
+- Retain the zero-thickness mathematical model, optional entered offsets, explicit reservations and both zero surcharges. Physical framing and variable bearing topology remain unverified or unsupported.
+
+
 ## 1.11.1 — Explicit zero-thickness mathematical space model
 
 - Default missing-assembly studies to zero-thickness roof/ceiling surfaces so flat/tray calculation and Apply do not require physical-framing declarations.

@@ -121,3 +121,5 @@ dialog{max-height:calc(100dvh - 40px);overflow:auto}
 .architecture-owner-note{font-size:10px;line-height:1.8;color:#8cb7a4;margin:12px 0}.architecture-owner-button{font-size:11px;padding:7px 10px;border:1px solid #486f61;border-radius:4px;color:#b8dfc9}
 @media(max-width:760px){.architecture-columns{grid-template-columns:1fr;gap:6px}#architecture-dialog{padding:20px}.architecture-launch{font-size:10px;padding:6px}.architecture-tabs button{font-size:10px;padding:7px}.architecture-context{font-size:9px}}
 @media(max-width:620px){.brand span{display:none}.architecture-launch{font-size:9px;padding:6px 4px}.architecture-summary{display:none}}
+
+#arch-gable-controls{min-width:0;border:1px solid #35594e;border-radius:4px;padding:12px;margin:12px 0}#arch-gable-controls legend{font-size:12px;color:#adc3b9;padding:0 4px}.architecture-gable-edges{display:grid;gap:5px;margin:10px 0;min-width:0}#architecture-dialog .architecture-gable-edge{display:flex;gap:9px;align-items:flex-start;font-size:11px;line-height:1.6;overflow-wrap:anywhere}.architecture-gable-edge input{flex:0 0 auto;margin-top:4px;width:auto}.architecture-gable-edge span{min-width:0}

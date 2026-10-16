@@ -1,11 +1,11 @@
 {
-  "version": "1.11.1",
+  "version": "1.12.0",
   "scope": "Original public runtime and synthetic regression suite; private native drawings and evidence excluded.",
   "runtimeFiles": [
     {
       "file": "core.mjs",
-      "bytes": 317021,
-      "sha256": "137c08c6303e801f9de360a6bcabbbcae7e78e21653df434ff23c6a5a1fea864",
+      "bytes": 319824,
+      "sha256": "f3fa39bd7e21d01be2720b4af82f1eeb0a05cec0f489749a0d121448d81b747f",
       "matchesInternalRuntime": true
     },
     {
@@ -58,20 +58,20 @@
     },
     {
       "file": "app.mjs",
-      "bytes": 289277,
-      "sha256": "69eef693567d13fd9aa48289d15544fecb8a222da6f434d232fba0016826ffa0",
+      "bytes": 297148,
+      "sha256": "918c908da35d35a7aa10511d0107b58ca2bf6bc1065314dfa084657f1cc452a4",
       "matchesInternalRuntime": true
     },
     {
       "file": "index.html",
-      "bytes": 59192,
-      "sha256": "3514c39d58d99533d34111d83d89061c6c6b4c8c246878575c9acf6ab064f5e2",
+      "bytes": 60709,
+      "sha256": "c7c6e5b052fca859fb443f05c99281f9cf10d0d80f883dc12ceef368dae30018",
       "matchesInternalRuntime": true
     },
     {
       "file": "styles.css",
-      "bytes": 39893,
-      "sha256": "989dcadfcccb87154ba99f35c8ab98c4607a6545564810a9467a73720783e240",
+      "bytes": 40401,
+      "sha256": "da35516d114121638afab69e9acfec74b0088cbd1229b5fb265b589307fe5be8",
       "matchesInternalRuntime": true
     },
     {
@@ -118,14 +118,14 @@
     },
     {
       "file": "architecture/editor-adapter.mjs",
-      "bytes": 32677,
-      "sha256": "eb4fc56bec26ddf3f4c2750c336f2710cab7d5132366872dc142a51290f97573",
+      "bytes": 35258,
+      "sha256": "9f13b7ada877583efff3e6fd3e3f6cedf6c9c96b8e4af6fe7273ef823ba3c745",
       "matchesInternalRuntime": true
     },
     {
       "file": "architecture/model.mjs",
-      "bytes": 16965,
-      "sha256": "07b1dfa0122438db448f281ccb306b8941093ffae071e17ca05e7645557bd7e8",
+      "bytes": 17857,
+      "sha256": "782f043d6205082ec36cb8c5a071aa1cbccb925ccae0e56d1f654ff0706d5509",
       "matchesInternalRuntime": true
     },
     {
@@ -136,20 +136,20 @@
     },
     {
       "file": "architecture/roof-boundary.mjs",
-      "bytes": 4430,
-      "sha256": "d9b84167971bff404d741873b643ceb09e1edf54d730358ae8615d48c730c1a4",
+      "bytes": 6766,
+      "sha256": "90788cade13cb1e0d06f64450cb35298a0adc9064618b5b3567346e8f3e78bcf",
       "matchesInternalRuntime": true
     },
     {
       "file": "architecture/roof-hip.mjs",
-      "bytes": 16907,
-      "sha256": "7721739ed0f61880b50f94b7c83f4f8c6c35604d7bc53acfcda368ace01392ed",
+      "bytes": 17638,
+      "sha256": "a3df79213e4cd85aed14a42dd8dee51c1312eec123053f0dfc914bbfc9cf4a74",
       "matchesInternalRuntime": true
     },
     {
       "file": "architecture/roof-validate.mjs",
-      "bytes": 13370,
-      "sha256": "5e85a95cf010453975b7616618a7ec3220d948d82de21029b581737a5677c735",
+      "bytes": 13718,
+      "sha256": "fd21c71e8e27c15065efed9bf5096f06f01b90a97de0244b51352afb913dc064",
       "matchesInternalRuntime": true
     },
     {
@@ -181,6 +181,12 @@
       "bytes": 19821,
       "sha256": "ebeed2e266b30a3d3f9223e1552532bfea78579a701b5807c72245b93b3f6bb3",
       "matchesInternalRuntime": true
+    },
+    {
+      "file": "architecture/roof-gable.mjs",
+      "bytes": 13922,
+      "sha256": "01ab42cc63fab2de8f57f0abad51faa8177ebf367e625b99ab4de11ec1ed6415",
+      "matchesInternalRuntime": true
     }
   ],
   "thirdPartyResources": [
@@ -210,7 +216,9 @@
     "samples/roof-space-H-v19.linecraft": "Retained original schema 1 bytes as a migration fixture; the updated exporter verifies the canonical archived file before migration.",
     "tray-desktop.cjs": "Require the local pinned Playwright dependency without a personal runtime-cache fallback. Preserve every hidden-window, layout and exact fixed-roof assertion.",
     "samples/ceiling-space-v110.linecraft": "Retain original schema 2 bytes as a migration fixture; publish schema 3 tray source as a separate example.",
-    "samples/tray-ceiling-v111.linecraft": "Retain original schema 3 example with its explicit optional nonzero clearance offsets; opening it must not silently switch saved values to zero."
+    "samples/tray-ceiling-v111.linecraft": "Retain original schema 3 example with its explicit optional nonzero clearance offsets; opening it must not silently switch saved values to zero.",
+    "gable-desktop.cjs": "Require local pinned Playwright without personal runtime-cache paths; preserve explicit confirmation and hidden-window checks.",
+    "samples/gable-v112.linecraft": "Original schema-4 confirmed terminal-gable example, authoritative source only with no cached mesh vertices."
   },
   "removedPrivateTestCount": {
     "core.test.mjs": 12,
