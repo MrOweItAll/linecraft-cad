@@ -6,7 +6,7 @@
 
 ## Context
 
-R3 already computes a complete convex arrangement of one room beneath an immutable roof. Each cell has an affine cap after declared roof-normal layers, vertical ceiling finish, and local-axis reservation boxes. A flat ceiling gives one whole-room limit, so it cannot describe extra space available in the middle of a room. Ceiling intent must remain independent of roof geometry and bearing elevations. A preview must not imply that truss framing or supplier approval has been verified.
+R3 already computes a complete convex arrangement of one room beneath an immutable roof. Each cell has an affine cap after declared roof-normal layers, vertical ceiling finish, and local-axis reservation boxes. A flat ceiling gives one whole-room limit, so it cannot describe extra space available in the middle of a room. Ceiling intent must remain independent of roof geometry and bearing elevations. The user explicitly defines this as a mathematical model with zero thickness; optional thickness can be added later.
 
 ## Decision
 
@@ -30,9 +30,9 @@ The kernel returns all room-area profile cells and four exact return quads for o
 
 ## Physical assumptions and limits
 
-- The vertical return is an ideal zero-thickness finished surface. Its area is a real geometric quantity. Its horizontal construction thickness and resulting material volume remain unknown; no thickness is invented.
+- The vertical return is an ideal zero-thickness finished surface. Its area is a real geometric quantity. Its thickness and material volume are exactly zero.
 - Existing R3 vertical ceiling-finish deduction remains applied at the closed return interface. It is not reinterpreted as the horizontal thickness of return construction.
-- A candidate is usable only conditionally on complete declared roof layers and reservations. Unknown framing, chords, webs, connections, loads, construction thickness and supplier approval remain explicitly unverified.
+- A candidate is evaluated against zero-thickness mathematical surfaces by default. Entered roof layers, ceiling finish and reservation boxes remain optional constraints; no declaration is required for usable-space metrics or ceiling adoption. Machine-readable framing status remains unverified without obstructing this mathematical workflow.
 - Prefabricated-truss design and manufacturing-complexity surcharges are exactly zero. Physical areas and clearance constraints remain active.
 - The roof, bearing elevations, room floor and source geometry are never modified by the kernel. Applying a profile belongs to the editor's grouped transaction.
 - Limits are 4,096 source cells, 20,480 output cells, 256 room vertices, and a charged work allowance no greater than 2,000,000. Work is charged by source polygon size, not only by cell count. Unsupported complexity fails visibly; there is no grid fallback.
@@ -44,7 +44,7 @@ The focused `tests/tray-candidates.test.mjs` suite exercises independent analyti
 
 The first rectangle fixture is 40 by 20 feet, with a 30 by 10 foot plateau. Base elevation is 10 feet, plateau elevation is 11 feet, and floor elevation is zero. The exact volume is 8,300 cubic feet; the 9-foot accepted flat ceiling is 7,200 cubic feet, giving 1,100 cubic feet recovered. The ideal vertical-return area is 80 square feet. These are geometric checks, not a construction certification.
 
-Adding multiple plateaus or physical return thickness requires a new profile contract, explicit material quantities, expanded collision tests, and new evidence. It must not silently reinterpret the present source schema.
+Adding multiple plateaus or physical return thickness requires a new profile contract, explicit material quantities, expanded collision tests, and new evidence. The current zero-thickness mathematical contract does not imply missing return volume. The atomic `useZeroThickness` editor operation clears roof layers and the selected room ceiling finish, retains reservations, and copies shared assemblies before editing. Optional thickness can be entered again later, and existing files are never cleared implicitly.
 
 ## Action items
 

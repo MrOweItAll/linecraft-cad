@@ -47,7 +47,7 @@ test('a fully interior rectangle in a concave arm succeeds without bridging the 
  const boundary=xy([[0,0],[40,0],[40,20],[25,20],[25,8],[15,8],[15,20],[0,20]]),room=sourceRoom({boundary}),r=analyze({room,candidate:candidate({min:{x:3,y:3},max:{x:12,y:15},raisedElevation:10.5})});assert.equal(r.status,'ok',JSON.stringify(r.diagnostics));close(r.area,680);close(r.plateauArea,108);close(r.candidate.requestedVolume,6854);
 });
 test('declared ceiling finish stays a vertical deduction and roof layers remain normal deductions',()=>{
- const r=analyze({room:sourceRoom({ceilingFinishThickness:.25}),candidate:candidate({baseElevation:9,raisedElevation:11}),assembly:assembly({layers:[{normalThickness:.5}]})});assert.equal(r.status,'infeasible');close(r.maximumRaisedElevation,35/3-.25-.5*Math.sqrt(10/9));close(r.assumptions.ceilingFinishThickness,.25);assert.equal(r.assumptions.verticalReturnMaterialVolume,null);assert.match(r.assumptions.verticalReturnGeometry,/zero-thickness/);
+ const r=analyze({room:sourceRoom({ceilingFinishThickness:.25}),candidate:candidate({baseElevation:9,raisedElevation:11}),assembly:assembly({layers:[{normalThickness:.5}]})});assert.equal(r.status,'infeasible');close(r.maximumRaisedElevation,35/3-.25-.5*Math.sqrt(10/9));close(r.assumptions.ceilingFinishThickness,.25);assert.equal(r.assumptions.verticalReturnMaterialVolume,0);assert.match(r.assumptions.verticalReturnGeometry,/zero-thickness/);
 });
 test('finished equality with the cap is allowed within physical tolerance',()=>{
  const r=analyze({candidate:candidate({raisedElevation:35/3})});assert.equal(r.status,'ok');close(r.candidate.usableVolume,8500);const tooHigh=analyze({candidate:candidate({raisedElevation:35/3+.01})});assert.equal(tooHigh.status,'infeasible');
@@ -70,7 +70,7 @@ test('a lower-volume proposal reports the signed difference and zero recovered v
 test('an infeasible actual ceiling does not turn geometric difference into recovered usable space',()=>{
  const r=analyze({room:sourceRoom({ceilingElevation:12})});assert.equal(r.status,'ok');assert.equal(r.current.feasible,false);assert.equal(r.current.usableVolume,null);assert.equal(r.volumeDifference,null);assert.equal(r.recoveryVolume,null);assert.equal(r.maximumRecoverableVolume,null);
 });
-test('missing assembly, incomplete coverage or foreign room identity refuse a usable declaration',()=>{
+test('incomplete coverage or foreign room identity refuse a usable mathematical analysis',()=>{
  const i=input();for(const analysis of[{...i.analysis,status:'unsupported'},{...i.analysis,declared:null},{...i.analysis,cells:[]},{...i.analysis,roomId:'other'},{...i.analysis,coverage:{...i.analysis.coverage,uncoveredArea:10}}]){const r=analyzeTrayCandidate({...i,analysis});assert.equal(r.status,'unsupported');assert.equal(r.candidate,null);assert.equal(r.recoveryVolume,null);}
 });
 test('invalid bounds, nonfinite elevations and malformed cap planes fail explicitly',()=>{

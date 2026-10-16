@@ -41,8 +41,12 @@ test('reservation crossing the floor is conservatively infeasible and never nega
 test('reservation floor cap also allows for vertical ceiling finish',()=>{
  const r=analyze({room:room(rectangle,{minClearHeight:7,ceilingFinishThickness:.5}),assembly:assembly({reservations:[box('chord',[8,5,8],[12,15,9])]})});assert.equal(r.status,'ok');close(r.maximumFlat.elevation,7.5);assert.equal(r.current.usableVolume,null);close(r.current.clippedEnvelopeVolume,7140);close(r.assumptions.ceilingFinishThickness,.5);
 });
-test('missing assembly returns roof potential but no declaration of usable space',()=>{
- const r=analyze({assembly:null});assert.equal(r.status,'unsupported');close(r.roofPotential.volumeAboveFloor,8000+10000/9);assert.equal(r.declared,null);assert.equal(r.maximumFlat,null);assert.equal(r.current,null);assert.equal(r.recoveryVolume,null);assert.deepEqual(r.cells,[]);assert.ok(r.diagnostics.some(d=>d.code==='ASSEMBLY_REQUIRED'));
+test('absent assembly is a complete zero-thickness mathematical surface without a declaration step',()=>{
+ const r=analyze({assembly:null});assert.equal(r.status,'ok');close(r.roofPotential.volumeAboveFloor,8000+10000/9);close(r.declared.volumeAboveFloor,r.roofPotential.volumeAboveFloor);close(r.maximumFlat.elevation,10);close(r.current.usableVolume,7200);close(r.recoveryVolume,800);assert.ok(r.cells.length>0);assert.equal(r.assumptions.analysisMode,'mathematical-zero-thickness');assert.equal(r.assumptions.roofAssemblyDeclared,false);assert.equal(r.assumptions.roofNormalThickness,0);assert.equal(r.assumptions.ceilingFinishThickness,0);assert.equal(r.limiting.obstacle.kind,'roof-surface');assert.ok(!r.diagnostics.some(d=>d.code==='ASSEMBLY_REQUIRED'));
+});
+
+test('optional ceiling finish still deducts vertically when no roof assembly is assigned',()=>{
+ const r=analyze({assembly:null,room:room(rectangle,{ceilingFinishThickness:.25})});assert.equal(r.status,'ok');close(r.maximumFlat.elevation,9.75);close(r.declared.volumeAboveFloor,r.roofPotential.volumeAboveFloor-200);assert.equal(r.assumptions.analysisMode,'declared-thickness');assert.equal(r.assumptions.roofAssemblyDeclared,false);close(r.assumptions.roofNormalThickness,0);close(r.assumptions.ceilingFinishThickness,.25);
 });
 test('incomplete or overlapping coverage refuses usable metrics',()=>{
  const incomplete=analyze({room:room(xy([[-1,0],[40,0],[40,20],[-1,20]]))});assert.equal(incomplete.status,'unsupported');assert.ok(incomplete.coverage.uncoveredArea>0);assert.equal(incomplete.declared,null);const duplicate=roof();duplicate.faces.push(structuredClone(duplicate.faces[0]));const overlapping=analyze({roof:duplicate});assert.equal(overlapping.status,'unsupported');assert.ok(overlapping.coverage.overlapArea>0);assert.equal(overlapping.maximumFlat,null);

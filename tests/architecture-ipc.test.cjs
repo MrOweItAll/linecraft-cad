@@ -48,15 +48,20 @@ async function main(){
  await check('bounded bad source rejects without touching the prior native document',async()=>{
   const before=await fs.readFile(filename,'utf8'),bad=structuredClone(doc);bad.architecture.wallNodes=Array.from({length:10001},(_,i)=>({id:`n${i}`,x:i,y:0}));assert.equal((await invoke('linecraft:save',JSON.stringify(bad),true)).ok,false);assert.equal(await fs.readFile(filename,'utf8'),before);
  });
- await check('accepted tray source survives actual native IPC and regenerates its stepped current profile without a cached mesh',async()=>{
+ await check('zero-thickness tray without an assembly survives actual native IPC and regenerates its stepped profile',async()=>{
   const trayEditor=createEditor(doc),accept=operation=>{const r=trayEditor.applyArchitecture(operation);assert.equal(r.ok,true,r.message);};
   accept({type:'setRoom',roomId:'room-1',values:{ceilingElevation:84,targetCeilingElevation:90,allowCeilingChange:true,minimumClearHeight:72}});
-  accept({type:'declareRoofAssembly',roofGroupId:'roof-1',assembly:{name:'Declared empty assembly',layers:[],reservations:[]}});
   accept({type:'setTrayCandidate',roomId:'room-1',candidate:{min:{x:48,y:36},max:{x:192,y:108},baseElevation:84,raisedElevation:96}});
   accept({type:'applyTrayCandidate',roomId:'room-1'});const current=trayEditor.state.architectureDerived.spaces[0].current;
   assert.equal(current.profileType,'tray');assert.equal(current.feasible,true);const text=trayEditor.serialize();assert.equal((await invoke('linecraft:save',text,true)).ok,true);
-  const saved=JSON.parse(await fs.readFile(filename,'utf8'));assert.equal(saved.architecture.schemaVersion,3);assert.equal(saved.architecture.rooms[0].trayCeiling.raisedElevation,96);assert.ok(saved.entities.every(v=>!v.id.startsWith('@architecture/')));
+  const saved=JSON.parse(await fs.readFile(filename,'utf8'));assert.equal(saved.architecture.schemaVersion,3);assert.equal(saved.architecture.rooms[0].trayCeiling.raisedElevation,96);assert.deepEqual(saved.architecture.assemblies,[]);assert.equal(saved.architecture.roofGroups[0].assemblyId,null);assert.ok(saved.entities.every(v=>!v.id.startsWith('@architecture/')));
   const opened=await invoke('linecraft:open');assert.equal(opened.ok,true);const restored=createEditor(JSON.parse(opened.text));assert.deepEqual(restored.state.architectureDerived.spaces[0].current,current);assert.deepEqual(restored.state.architecture,trayEditor.state.architecture);assert.ok(restored.state.entities.some(v=>v.id==='@architecture/room/room-1/ceiling'));
+ });
+ await check('atomic zero-thickness offsets and retained reservations persist through native Save/Open',async()=>{
+  const zeroEditor=createEditor(doc),accept=operation=>{const r=zeroEditor.applyArchitecture(operation);assert.equal(r.ok,true,r.message);},reservation={id:'retained',kind:'service',description:'Explicit mathematical reservation',min:{x:48,y:36,z:95},max:{x:96,y:72,z:108}};
+  accept({type:'setRoom',roomId:'room-1',values:{ceilingFinishThickness:.5}});accept({type:'declareRoofAssembly',roofGroupId:'roof-1',assembly:{layers:[{name:'Optional layer',material:'test',normalThickness:3}],reservations:[reservation]}});
+  accept({type:'useZeroThickness',roomId:'room-1',roofGroupId:'roof-1'});const text=zeroEditor.serialize(),study=zeroEditor.state.architectureDerived.spaces[0];assert.equal(study.assumptions.analysisMode,'mathematical-zero-thickness');assert.equal(study.assumptions.roofNormalThickness,0);assert.equal(study.assumptions.ceilingFinishThickness,0);assert.equal(study.maxFlatCeilingElevation,95);assert.equal((await invoke('linecraft:save',text,true)).ok,true);
+  const opened=await invoke('linecraft:open');assert.equal(opened.ok,true);const restored=createEditor(JSON.parse(opened.text));assert.equal(restored.serialize(),text);assert.deepEqual(restored.state.architectureDerived.spaces[0],study);assert.deepEqual(restored.state.architecture.assemblies[0].reservations,[reservation]);
  });
  const report={framework:'Roof + Space native IPC contracts',scope:'Mock Electron chooser/window and IPC transport; actual production main handlers, actual core, real owned filesystem. No visible application or OS clipboard.',completedAt:new Date().toISOString(),total:tests.length,passed:tests.filter(t=>t.status==='passed').length,failed:tests.filter(t=>t.status==='failed').length,tests};await fs.writeFile(path.join(__dirname,'architecture-ipc-results.json'),JSON.stringify(report,null,2)+'\n');console.log(`${report.passed}/${report.total} architectural IPC checks passed`);process.exitCode=report.failed?1:0;
 }

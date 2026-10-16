@@ -1,11 +1,11 @@
 {
-  "version": "1.11.0",
+  "version": "1.11.1",
   "scope": "Original public runtime and synthetic regression suite; private native drawings and evidence excluded.",
   "runtimeFiles": [
     {
       "file": "core.mjs",
-      "bytes": 316905,
-      "sha256": "358c259fc7bc48a596f9632a8652ca5e1e6948c2b583daa65b8e88a30d059806",
+      "bytes": 317021,
+      "sha256": "137c08c6303e801f9de360a6bcabbbcae7e78e21653df434ff23c6a5a1fea864",
       "matchesInternalRuntime": true
     },
     {
@@ -58,14 +58,14 @@
     },
     {
       "file": "app.mjs",
-      "bytes": 288541,
-      "sha256": "519e815f9743db3bee3b6ad0552b810c718d689cf091f41871dd79544cc6b05f",
+      "bytes": 289277,
+      "sha256": "69eef693567d13fd9aa48289d15544fecb8a222da6f434d232fba0016826ffa0",
       "matchesInternalRuntime": true
     },
     {
       "file": "index.html",
-      "bytes": 58971,
-      "sha256": "ff3b0374b5b866b81233d9108f18203730d37403890bbbca5b36ea1bb37b6d86",
+      "bytes": 59192,
+      "sha256": "3514c39d58d99533d34111d83d89061c6c6b4c8c246878575c9acf6ab064f5e2",
       "matchesInternalRuntime": true
     },
     {
@@ -118,8 +118,8 @@
     },
     {
       "file": "architecture/editor-adapter.mjs",
-      "bytes": 32046,
-      "sha256": "5a9ab5b8a9250c501f6aeb11b3f788d17a95405f64c3cead38031caf640db300",
+      "bytes": 32677,
+      "sha256": "eb4fc56bec26ddf3f4c2750c336f2710cab7d5132366872dc142a51290f97573",
       "matchesInternalRuntime": true
     },
     {
@@ -166,8 +166,8 @@
     },
     {
       "file": "architecture/clearance.mjs",
-      "bytes": 16540,
-      "sha256": "dc9aed4d7f916f4a103e6c2885ae682aa9b0eb19cdddeacb1b3fbe9ea071eda0",
+      "bytes": 16935,
+      "sha256": "d1b5ee02902a13e0878b8d82450233022979d0d8934591d155206ff87606a851",
       "matchesInternalRuntime": true
     },
     {
@@ -178,8 +178,8 @@
     },
     {
       "file": "architecture/ceiling-candidates.mjs",
-      "bytes": 19644,
-      "sha256": "8fa05319f89d3d9d81a1984d86c30fa0c330487380428f3075ee845faa4ead9b",
+      "bytes": 19821,
+      "sha256": "ebeed2e266b30a3d3f9223e1552532bfea78579a701b5807c72245b93b3f6bb3",
       "matchesInternalRuntime": true
     }
   ],
@@ -209,7 +209,8 @@
     "units-v15.cjs, layouts-v16.cjs, viewports-v17.cjs, viewport-scales-v18.cjs and viewport-regression-v17.cjs": "Use the corrected source fixtures: real native resize plus explicit CSS viewport sizing, avoiding Windows DPI rounding. Keep all exact-size and no-overflow assertions. Require local pinned Playwright without personal cache paths.",
     "samples/roof-space-H-v19.linecraft": "Retained original schema 1 bytes as a migration fixture; the updated exporter verifies the canonical archived file before migration.",
     "tray-desktop.cjs": "Require the local pinned Playwright dependency without a personal runtime-cache fallback. Preserve every hidden-window, layout and exact fixed-roof assertion.",
-    "samples/ceiling-space-v110.linecraft": "Retain original schema 2 bytes as a migration fixture; publish schema 3 tray source as a separate example."
+    "samples/ceiling-space-v110.linecraft": "Retain original schema 2 bytes as a migration fixture; publish schema 3 tray source as a separate example.",
+    "samples/tray-ceiling-v111.linecraft": "Retain original schema 3 example with its explicit optional nonzero clearance offsets; opening it must not silently switch saved values to zero."
   },
   "removedPrivateTestCount": {
     "core.test.mjs": 12,

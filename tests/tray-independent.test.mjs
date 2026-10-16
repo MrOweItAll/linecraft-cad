@@ -35,8 +35,8 @@ test('center section integrates to the same stepped volume and contains both ver
 test('source and envelope are read-only even through nested frozen objects',()=>{
  const f=fixture(),raw=JSON.stringify(f),freeze=o=>{if(o&&typeof o==='object'){Object.freeze(o);Object.values(o).forEach(freeze);}return o;};freeze(f);assert.equal(analyzeTrayCandidate(f).status,'ok');assert.equal(JSON.stringify(f),raw);
 });
-test('geometry quantities do not invent vertical return construction volume or a design surcharge',()=>{
- const r=analyzeTrayCandidate(fixture());close(r.candidate.horizontalFinishArea,200);close(r.candidate.verticalReturnArea,64);assert.equal(r.assumptions.verticalReturnMaterialVolume,null);assert.equal(r.framingVerification,'unverified');assert.equal(r.verified,null);assert.equal(r.assumptions.prefabricatedTrussDesignSurcharge,0);assert.equal(r.assumptions.manufacturingComplexitySurcharge,0);
+test('mathematical return quantities are zero while geometric area and surcharges stay explicit',()=>{
+ const r=analyzeTrayCandidate(fixture());close(r.candidate.horizontalFinishArea,200);close(r.candidate.verticalReturnArea,64);assert.equal(r.assumptions.verticalReturnMaterialVolume,0);assert.equal(r.framingVerification,'unverified');assert.equal(r.verified,null);assert.equal(r.assumptions.prefabricatedTrussDesignSurcharge,0);assert.equal(r.assumptions.manufacturingComplexitySurcharge,0);
 });
 test('a finite work limit stops the exact calculation with no partial usable result',()=>{
  const r=analyzeTrayCandidate({...fixture(),workLimit:1});assert.equal(r.status,'unsupported');assert.equal(r.candidate,null);assert.equal(r.recoveryVolume,null);assert.deepEqual(r.cells,[]);assert.ok(r.budget.work<=1);

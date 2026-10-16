@@ -1,5 +1,13 @@
 # Changes
 
+## 1.11.1 — Explicit zero-thickness mathematical space model
+
+- Default missing-assembly studies to zero-thickness roof/ceiling surfaces so flat/tray calculation and Apply do not require physical-framing declarations.
+- Set ideal return thickness and material volume to exactly zero while retaining return area and all geometric constraints.
+- Retain optional normal roof and vertical ceiling offsets; never clear stored values on Open. Add explicit **Use zero thickness** as one grouped transaction that preserves reservation boxes, fixed roof geometry, bearings, floor and accepted ceiling intent.
+- Keep physical framing verification as a separate report status. Keep both requested truss surcharges zero, schema 3 unchanged and all archived examples byte-for-byte preserved.
+
+
 ## 1.11.0 — R3 bounded tray-ceiling preview
 
 - Add one raised building-local rectangular plateau, lower band and ideal vertical returns beneath the same fixed roof.

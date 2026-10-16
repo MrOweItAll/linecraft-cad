@@ -29,9 +29,9 @@ test('rejected flat candidate reports no usable flat volume even when a clipped 
  assert.equal(s.target.feasible,false);assert.equal(s.target.usableVolume,null);close(s.target.requestedVolume,11000);
 });
 
-test('no declared assembly returns roof potential without invented usable space',()=>{
+test('no assembly uses analytical zero-thickness roof and ceiling surfaces',()=>{
  const s=analyzeRoomSpace({room:room(rectangle(0,0,10,10)),roof:planeRoof(rectangle(-5,-5,15,15)),modelUnits:'in'});
- assert.equal(s.status,'unsupported');assert.ok(s.roofPotential);assert.equal(s.declared,null);assert.equal(s.maximumFlat,null);assert.equal(s.verified,null);
+ assert.equal(s.status,'ok');close(s.declared.volumeAboveFloor,12000);close(s.maximumFlat.volume,12000);close(s.current.usableVolume,9000);close(s.target.usableVolume,9400);assert.equal(s.assumptions.analysisMode,'mathematical-zero-thickness');assert.equal(s.assumptions.roofAssemblyDeclared,false);assert.equal(s.verified,null);
 });
 
 test('reservations wholly below the floor or above the roof leave the envelope unchanged',()=>{
