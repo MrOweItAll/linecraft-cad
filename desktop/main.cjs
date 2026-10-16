@@ -68,12 +68,14 @@ function checkText(text) {
   return text;
 }
 
+async function architectureModuleNames(){return (await fs.readdir(path.join(APP_ROOT,'architecture'))).filter(name=>/^[a-z0-9-]+\.mjs$/.test(name)).sort().map(name=>`architecture/${name}`);}
+
 async function loadCore() {
   const corePath = path.join(APP_ROOT, 'core.mjs'), coreURL = pathToFileURL(corePath).href;
   if (app.isPackaged) corePromise ??= import(coreURL);
   else {
     const helpers=[];
-    for(const name of ['advanced-geometry.mjs','units.mjs','paper-space.mjs','drawing-plane.mjs','viewport-scales.mjs']){const helper=await fs.stat(path.join(APP_ROOT,name));helpers.push(`${name}:${helper.mtimeMs}:${helper.size}`);}
+    for(const name of ['advanced-geometry.mjs','units.mjs','paper-space.mjs','drawing-plane.mjs','viewport-scales.mjs',...await architectureModuleNames()]){const helper=await fs.stat(path.join(APP_ROOT,name));helpers.push(`${name}:${helper.mtimeMs}:${helper.size}`);}
     const helperVersion=helpers.join('|');
     if(developmentModelHelperVersion!==null&&developmentModelHelperVersion!==helperVersion)throw Error('A modeling, paper, plane or units helper changed. Restart launch-dev.cmd to refresh native validation; the drawing checkpoint is preserved.');
     developmentModelHelperVersion=helperVersion;
@@ -88,7 +90,7 @@ async function loadCore() {
 
 async function guardDevelopmentStaticGraph(){
   if(app.isPackaged)return;
-  const parts=[];for(const name of ['core.mjs','units.mjs','advanced-geometry.mjs','3d-view.mjs','paper-space.mjs','drawing-plane.mjs','viewport-scales.mjs']){const status=await fs.stat(path.join(APP_ROOT,name));parts.push(`${name}:${status.mtimeMs}:${status.size}`);}
+  const parts=[];for(const name of ['core.mjs','units.mjs','advanced-geometry.mjs','3d-view.mjs','paper-space.mjs','drawing-plane.mjs','viewport-scales.mjs',...await architectureModuleNames()]){const status=await fs.stat(path.join(APP_ROOT,name));parts.push(`${name}:${status.mtimeMs}:${status.size}`);}
   const version=parts.join('|');if(developmentStaticGraphVersion!==null&&developmentStaticGraphVersion!==version)throw Error('An imported DWG/PDF modeling dependency changed. Restart launch-dev.cmd to refresh its native module graph; the drawing checkpoint is preserved.');developmentStaticGraphVersion=version;
 }
 
@@ -98,7 +100,7 @@ async function loadPlotService(){
   if(app.isPackaged)plotPromise??=import(moduleURL);
   else{
     const status=await fs.stat(modulePath),version=`${status.mtimeMs}:${status.size}`,dependencies=[];
-    for(const name of ['core.mjs','units.mjs','advanced-geometry.mjs','3d-view.mjs','paper-space.mjs','drawing-plane.mjs','viewport-scales.mjs']){const item=await fs.stat(path.join(APP_ROOT,name));dependencies.push(`${name}:${item.mtimeMs}:${item.size}`);}
+    for(const name of ['core.mjs','units.mjs','advanced-geometry.mjs','3d-view.mjs','paper-space.mjs','drawing-plane.mjs','viewport-scales.mjs',...await architectureModuleNames()]){const item=await fs.stat(path.join(APP_ROOT,name));dependencies.push(`${name}:${item.mtimeMs}:${item.size}`);}
     const dependencyVersion=dependencies.join('|');if(developmentPlotDependencies!==null&&developmentPlotDependencies!==dependencyVersion)throw Error('A PDF modeling dependency changed. Restart launch-dev.cmd before plotting to refresh its native module graph; the drawing checkpoint is preserved.');
     developmentPlotDependencies=dependencyVersion;
     if(developmentPlotVersion!==version){plotPromise=import(`${moduleURL}?development=${encodeURIComponent(version)}`);developmentPlotVersion=version;}
@@ -484,6 +486,17 @@ function createWindow() {
 
 app.whenReady().then(async () => {
   await restoreDevelopmentPath(); configureSecurity(); registerIPC(); installMenu(); createWindow();
+  // Scripting is opt-in. An ordinary launch never creates a control endpoint.
+  const controlArgument=process.argv.find(argument=>argument.startsWith('--linecraft-control-file='));
+  if(controlArgument){
+    const {startScriptControl,createWindowDispatcher}=require('./script-control.cjs');
+    try{
+      const service=await startScriptControl({connectionFile:controlArgument.slice('--linecraft-control-file='.length),dispatch:createWindowDispatcher(()=>mainWindow)});
+      console.log(`[Linecraft] Local scripting enabled: ${service.connectionFile}`);
+      // close removes its owned descriptor synchronously before Electron can exit.
+      app.once('will-quit',()=>{void service.close();});
+    }catch(error){console.error(`[Linecraft] Local scripting unavailable: ${error.message}`);}
+  }
   if (!app.isPackaged && !process.argv.includes('--linecraft-no-watch')) {
     const watcher = require('./dev-watch.cjs').watchDevelopment(APP_ROOT, () => mainWindow);
     app.once('will-quit', () => watcher.close());

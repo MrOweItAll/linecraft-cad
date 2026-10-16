@@ -1,0 +1,11 @@
+import {spawnSync} from 'node:child_process';
+import {readFileSync,readdirSync,writeFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+const root=fileURLToPath(new URL('../',import.meta.url)),tests=['tests/alternatives-kernel.test.mjs','tests/alternatives-integration.test.mjs'];
+const files=['core.mjs',...readdirSync(path.join(root,'architecture')).filter(f=>f.endsWith('.mjs')).sort().map(f=>`architecture/${f}`),...tests,'tests/run-alternatives-tests.mjs'];
+const fingerprints=()=>Object.fromEntries(files.map(f=>[f,createHash('sha256').update(readFileSync(path.join(root,f))).digest('hex')]));
+const sourceSHA256=fingerprints(),startedAt=new Date().toISOString(),started=Date.now(),r=spawnSync(process.execPath,['--test','--test-reporter=tap',...tests],{cwd:root,encoding:'utf8',windowsHide:true,maxBuffer:8*1024*1024});
+const output=(r.stdout??'')+(r.stderr??'');process.stdout.write(output);const count=label=>Number([...output.matchAll(new RegExp(`^# ${label} (\\d+)$`,'gm'))].at(-1)?.[1]??0),after=fingerprints(),changed=files.filter(f=>sourceSHA256[f]!==after[f]);
+const report={framework:'R6 bounded alternatives, independent physical quantities and native editor integration',startedAt,completedAt:new Date().toISOString(),durationMs:Date.now()-started,total:count('tests'),passed:count('pass'),failed:count('fail'),exitCode:r.status,error:r.error?.message,sourceStable:changed.length===0,changedDuringRun:changed,sourceSHA256,output,scope:'Pure engine search, mathematical quantity ledger, source-only persistence, current source revalidation, grouped Apply/Undo and staged paper text. Native Windows interaction, packaged/installed behavior and actual PDF audit are separate.'};report.status=r.status===0&&report.total>0&&report.failed===0&&!changed.length?'passed':'failed';writeFileSync(path.join(root,'tests/alternatives-pure-results.json'),JSON.stringify(report,null,2)+'\n');process.exitCode=report.status==='passed'?0:1;

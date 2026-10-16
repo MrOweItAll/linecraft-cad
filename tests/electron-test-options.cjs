@@ -34,21 +34,32 @@ async function finalizeVisibility(app,report){
 }
 async function captureScreenshot(app,page,filename){
   if(visible)return page.screenshot({path:filename,timeout:20000});
-  const captured=await app.evaluate(async({BrowserWindow},url)=>{
+ let outerTimer;
+ try{
+  const captured=await Promise.race([
+   app.evaluate(async({BrowserWindow},url)=>{
     const window=BrowserWindow.getAllWindows().find(window=>window.webContents.getURL()===url);
     if(!window||window.isVisible())throw Error('Hidden screenshot requires the expected nonvisible native window.');
     const contents=window.webContents;
-    // DOM/Canvas calls finish before their compositor frame. Drain two frames
-    // before requesting a new paint so a queued previous-style frame cannot win.
-    await contents.executeJavaScript('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(resolve,30))))');
+    if(contents.isOffscreen()&&!contents.isPainting())contents.startPainting();
+    let readinessTimer;
+    try{
+     await Promise.race([
+      contents.executeJavaScript('new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(resolve,30))))'),
+      new Promise((_,reject)=>{readinessTimer=setTimeout(()=>reject(Error('Timed out draining fresh hidden animation frames.')),5000);})
+     ]);
+    }finally{clearTimeout(readinessTimer);}
     const image=contents.isOffscreen()?await new Promise((resolve,reject)=>{
-      const timer=setTimeout(()=>{contents.removeListener('paint',paint);reject(Error('Timed out waiting for a fresh hidden compositor frame.'));},10000);
-      const paint=(_event,_dirty,image)=>{clearTimeout(timer);resolve(image);};
-      contents.once('paint',paint);contents.invalidate();
+     const timer=setTimeout(()=>{contents.removeListener('paint',paint);reject(Error('Timed out waiting for a fresh hidden compositor frame.'));},10000);
+     const paint=(_event,_dirty,image)=>{clearTimeout(timer);resolve(image);};
+     contents.once('paint',paint);contents.invalidate();
     }):await contents.capturePage(undefined,{stayHidden:true,stayAwake:true});
     if(image.isEmpty())throw Error('The hidden native window returned an empty screenshot.');
     return image.toPNG().toString('base64');
-  },page.url());
+   },page.url()),
+   new Promise((_,reject)=>{outerTimer=setTimeout(()=>reject(Error('Timed out completing hidden screenshot capture RPC.')),20000);})
+  ]);
   await require('node:fs/promises').writeFile(filename,Buffer.from(captured,'base64'));
+ }finally{clearTimeout(outerTimer);}
 }
 module.exports={prepareLaunch,recordVisibility,verifyVisibility,finalizeVisibility,captureScreenshot};

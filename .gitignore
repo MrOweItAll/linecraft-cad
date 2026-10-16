@@ -13,3 +13,5 @@ tests/layout-pdf-v16/
 tests/viewport-pdf-v17/
 tests/viewport-scales-pdf-v18/
 __pycache__/
+standalone.html
+.linecraft-control*.json
