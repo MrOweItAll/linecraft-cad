@@ -4,9 +4,9 @@
   "runtimeFiles": [
     {
       "file": "core.mjs",
-      "bytes": 317021,
-      "sha256": "137c08c6303e801f9de360a6bcabbbcae7e78e21653df434ff23c6a5a1fea864",
-      "matchesInternalRuntime": true
+      "bytes": 321196,
+      "sha256": "01f8658e749a9cc0f857cff5fa873d16ef8893c5a683770c6dbeb7fa43e09ae6",
+      "matchesInternalRuntime": false
     },
     {
       "file": "viewport-scales.mjs",
@@ -58,9 +58,9 @@
     },
     {
       "file": "app.mjs",
-      "bytes": 289277,
-      "sha256": "69eef693567d13fd9aa48289d15544fecb8a222da6f434d232fba0016826ffa0",
-      "matchesInternalRuntime": true
+      "bytes": 289609,
+      "sha256": "956a454914d5db3991f8aa0078bce7c8277f22f3a15d10e0f47b21aea5c74fdb",
+      "matchesInternalRuntime": false
     },
     {
       "file": "index.html",
@@ -82,9 +82,9 @@
     },
     {
       "file": "desktop/main.cjs",
-      "bytes": 28055,
-      "sha256": "b7d6acefd2b07034efebd5e8072637c9b26b9cac1eff1a20f0a3ad05ec0e7900",
-      "matchesInternalRuntime": true
+      "bytes": 28585,
+      "sha256": "418cbff04eee2dc3882decbde7716e643e42b012a7c0f4cd68be4fe80b45fd57",
+      "matchesInternalRuntime": false
     },
     {
       "file": "desktop/preload.cjs",
@@ -181,6 +181,18 @@
       "bytes": 19821,
       "sha256": "ebeed2e266b30a3d3f9223e1552532bfea78579a701b5807c72245b93b3f6bb3",
       "matchesInternalRuntime": true
+    },
+    {
+      "file": "linecraft-scripting.mjs",
+      "bytes": 3961,
+      "sha256": "607363a38550114214d85289fa8c654b7eb00ab29e992d32b9eb9ba3b2a80f0a",
+      "matchesInternalRuntime": false
+    },
+    {
+      "file": "desktop/script-control.cjs",
+      "bytes": 3263,
+      "sha256": "145c1948dc79292c5eb8c60fd0aa1234ed45f3715dbf983f7970a705b08622ae",
+      "matchesInternalRuntime": false
     }
   ],
   "thirdPartyResources": [
@@ -223,5 +235,11 @@
   ],
   "publicDocumentationAdaptations": {
     "docs/roof-space/IMPLEMENTATION_HANDOFF.md": "Owner-provided implementation specification, with prepared-for personal name omitted and client drawing warning generalized. The independently supplied synthetic fixture and technical requirements are retained."
+  },
+  "scriptingExtension": {
+    "status": "development; Windows integration and installed validation pending",
+    "baseCommit": "aab4a767d184fa3fc060e82977179efab51ada42",
+    "provenance": "Original scripting extension authored against public Roof + Space R3, including the latest zero-thickness surface defaults. Changed runtime files are not claimed identical to the private Windows runtime.",
+    "verification": "10 scripting tests and 33 portable full-gate stages passed; no new Windows/installed/release outcome claimed."
   }
 }

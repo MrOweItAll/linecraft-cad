@@ -77,6 +77,10 @@ Command families include lines, rectangles, polylines, circles/arcs/ellipses, cu
 
 DWG reading uses a fixed separate GNU LibreDWG process. Model-space geometry is imported; native paper layouts, unsupported objects and approximations are not promoted to complete drawing fidelity. The source file stays unchanged. Save imported work as a new `.linecraft` file. DWG writing is not supported. JSON stores original layer/viewport/UCS preferences; native DXF can normalize some visibility, border and formatting choices, with warnings.
 
+## Structured scripting (development branch)
+
+The existing open drawing can be read and revised through a versioned JSON API and an opt-in authenticated local CLI. Object-ID edits stage privately and commit as one Undo operation, with preview, stale-document checks and before/after entity reports. See [scripting setup and Windows acceptance](docs/SCRIPTING.md). Portable tests pass; this extension still requires Windows source/unpacked/installed verification and integration before release. No remote ChatGPT connection is enabled automatically.
+
 ## Build and iterate on Windows
 
 Use Windows x64 and Node.js 24 or newer. Lockfile pins are Electron 44.7.0, electron-builder 26.15.3 and Playwright 1.62.1. From the repository root:
@@ -113,7 +117,7 @@ npm run unpacked
 npm run build
 ```
 
-The public gate has 32 pure synthetic stages, including Roof + Space geometry, exact flat/tray ceiling analysis and sections, production native-file contracts and regenerated source-only H/space/tray examples. The desktop gate adds fixed reader identity, eight hidden GUI suites, three real PDF producers and two live development reload/validator checks: 46 stages. Unpacked adds a build, eight hidden executable suites and resource identities: 56 stages. Build adds NSIS compilation from the tested application: 57 stages. These are required stages, not an automatic passing claim. Read completed reports under `work/`.
+The public gate has 33 pure synthetic stages, including Roof + Space geometry, exact flat/tray ceiling analysis and sections, production native-file contracts and regenerated source-only H/space/tray examples. The desktop gate adds fixed reader identity, eight hidden GUI suites, three real PDF producers and two live development reload/validator checks: 47 stages. Unpacked adds a build, eight hidden executable suites and resource identities: 57 stages. Build adds NSIS compilation from the tested application: 58 stages. These are required stages, not an automatic passing claim. Read completed reports under `work/`.
 
 Automated application windows stay hidden and offscreen, with visibility/show-event assertions. Native choices use owned-file stubs; no unrelated OS clipboard data is read. Synthetic events, visible UI and physical gestures are distinct evidence. Optional external Python PDF/DXF readers are not application or build dependencies. See [tests](tests/README.md) for those independently measured audits.
 

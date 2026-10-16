@@ -486,6 +486,13 @@ function createWindow() {
 
 app.whenReady().then(async () => {
   await restoreDevelopmentPath(); configureSecurity(); registerIPC(); installMenu(); createWindow();
+  const controlArgument=process.argv.find(argument=>argument.startsWith('--linecraft-control-file='));
+  if(controlArgument){
+    const {startScriptControl,createWindowDispatcher}=require('./script-control.cjs');
+    const service=await startScriptControl({connectionFile:controlArgument.slice('--linecraft-control-file='.length),dispatch:createWindowDispatcher(()=>mainWindow)});
+    console.log(`[Linecraft] Local scripting enabled: ${service.connectionFile}`);
+    app.once('will-quit',()=>{void service.close();});
+  }
   if (!app.isPackaged && !process.argv.includes('--linecraft-no-watch')) {
     const watcher = require('./dev-watch.cjs').watchDevelopment(APP_ROOT, () => mainWindow);
     app.once('will-quit', () => watcher.close());
