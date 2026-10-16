@@ -1,0 +1,18 @@
+import {spawnSync} from 'node:child_process';
+import {readFileSync,readdirSync,writeFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+const root=fileURLToPath(new URL('../',import.meta.url));
+const tests=['tests/scripting.test.mjs','tests/script-control.test.cjs'];
+const files=['linecraft-scripting.mjs','desktop/script-control.cjs','tools/linecraft-control.cjs','core.mjs',...readdirSync(path.join(root,'architecture')).filter(f=>f.endsWith('.mjs')).sort().map(f=>`architecture/${f}`),...tests,'tests/run-scripting-tests.mjs'];
+const fingerprints=()=>Object.fromEntries(files.map(f=>[f,createHash('sha256').update(readFileSync(path.join(root,f))).digest('hex')]));
+const sourceSHA256=fingerprints(),startedAt=new Date().toISOString(),started=Date.now();
+const result=spawnSync(process.execPath,['--test','--test-reporter=tap',...tests],{cwd:root,encoding:'utf8',windowsHide:true,maxBuffer:8*1024*1024});
+const output=(result.stdout??'')+(result.stderr??'');process.stdout.write(output);
+const number=label=>Number([...output.matchAll(new RegExp(`^# ${label} (\\d+)$`,'gm'))].at(-1)?.[1]??0);
+const after=fingerprints(),changed=files.filter(f=>sourceSHA256[f]!==after[f]);
+const report={framework:'Checked scripting engine, atomic history, session tokens and actual loopback CLI',startedAt,completedAt:new Date().toISOString(),durationMs:Date.now()-started,total:number('tests'),passed:number('pass'),failed:number('fail'),exitCode:result.status,error:result.error?.message,sourceStable:changed.length===0,changedDuringRun:changed,sourceSHA256,output,scope:'Actual engine transactions and authenticated loopback transport. Windows source, unpacked and installed interaction evidence is reported separately.'};
+report.status=result.status===0&&report.total>0&&report.failed===0&&!changed.length?'passed':'failed';
+writeFileSync(path.join(root,'tests/scripting-pure-results.json'),JSON.stringify(report,null,2)+'\n');
+process.exitCode=report.status==='passed'?0:1;

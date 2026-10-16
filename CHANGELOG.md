@@ -1,5 +1,13 @@
 # Changes
 
+## 1.12.1 — structured scripting integrated with R4
+
+- Preview and atomically apply bounded structured revisions to the open drawing using explicit object IDs and current session/document tokens; retain one grouped Undo record and preexisting history.
+- Add opt-in authenticated ephemeral loopback control and a Node CLI, with fixed structured dispatch, origin/host checks, bounded requests and retry protection. Normal launches keep the controller disabled.
+- Preserve current schema-4 gable source, separate closures, ceiling/bearing elevations, zero-thickness studies, drafting units, camera, layouts and source-only native persistence.
+- Add focused transaction/transport tests, a separate original scripting review drawing, and hidden Windows CLI/canvas/Properties/Undo/Save/PDF acceptance. Visible installed review is a separate evidence class.
+
+
 ## 1.12.0 — R4 confirmed terminal gable roofs
 
 - Generate bounded equal-bearing orthogonal gable roof skins from explicitly confirmed terminal-end alternatives, without manual roof vertices or automatic assignment acceptance.

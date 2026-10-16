@@ -4,6 +4,12 @@ Linecraft is an independent offline Windows CAD application for 2D drafting, pap
 
 Download the Windows x64 installer from [GitHub Releases](https://github.com/MrOweItAll/linecraft-cad/releases/latest). The unsigned installer includes its own Electron runtime; a browser, Node.js and Autodesk installation are unnecessary for using the application.
 
+## Structured scripting of the open drawing
+
+Version 1.12.1 adds opt-in local scripting to this same R4 application. Read copied object IDs and a drawing/session token, preview a bounded structured revision, then Apply once to the existing editor. Atomic validation, grouped Undo/Redo, existing units, layouts and semantic roof ownership remain in use. Rejected or unfinished steps leave the current drawing unchanged. Retries use a bounded in-memory request-ID cache; stale drawing/session tokens require a fresh review.
+
+Ordinary launches leave local control disabled. An explicit connection-file flag starts an authenticated ephemeral endpoint on 127.0.0.1; browser-origin requests and arbitrary JavaScript/shell evaluation are rejected. Native Save/Open/PDF keep the existing application controls and file validation. See the [scripting guide](docs/SCRIPTING.md) and [original schema-4 review fixture](samples/scripting-v1121.linecraft). The guide distinguishes engine/loopback checks, hidden Windows automation and visible installed review; pipeline configuration alone is not evidence that a release was tested.
+
 ## Roof + Space preview (R0–R4)
 
 Version 1.12 extends this same application with semantic walls, hosted openings, rooms, roof groups, assemblies and bounded source constraints. Open Architecture in the existing interface. Convert a selected orthogonal closed path into face-referenced walls, recognize rooms, edit an axis span, and generate an equal-eave hip roof from the exterior wall loop or a captured footprint. Rectangle, L, T and H starters provide footprint vertices only; the original kernel generates the roof vertices. Existing camera, picking, drafting units, layouts and grouped Undo/Redo remain in use.

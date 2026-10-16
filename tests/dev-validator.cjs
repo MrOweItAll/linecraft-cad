@@ -12,10 +12,10 @@ async function main() {
   const folder = path.join(workspace, 'work', 'validator-tests', `run-${Date.now()}`), source = path.join(folder, 'source');
   await fs.mkdir(source, {recursive: true});
   // Never modify the shared source during the main-process module-cache experiment.
-  for (const name of ['index.html', 'app.mjs', 'core.mjs', 'units.mjs', 'paper-space.mjs', 'drawing-plane.mjs', 'viewport-scales.mjs', 'advanced-geometry.mjs', '3d-view.mjs', 'dwg-import.mjs', 'plot-document.mjs', 'styles.css', 'favicon.svg', 'LICENSE']) await fs.copyFile(path.join(root, name), path.join(source, name));
+  for (const name of ['index.html', 'app.mjs', 'linecraft-scripting.mjs', 'core.mjs', 'units.mjs', 'paper-space.mjs', 'drawing-plane.mjs', 'viewport-scales.mjs', 'advanced-geometry.mjs', '3d-view.mjs', 'dwg-import.mjs', 'plot-document.mjs', 'styles.css', 'favicon.svg', 'LICENSE']) await fs.copyFile(path.join(root, name), path.join(source, name));
   await fs.cp(path.join(root,'architecture'),path.join(source,'architecture'),{recursive:true});
   await fs.cp(path.join(root, 'desktop'), path.join(source, 'desktop'), {recursive: true});
-  const sourceSHA256=Object.fromEntries(await Promise.all(['index.html','app.mjs','core.mjs','units.mjs','paper-space.mjs','drawing-plane.mjs','viewport-scales.mjs','advanced-geometry.mjs','3d-view.mjs','dwg-import.mjs','plot-document.mjs','desktop/main.cjs','desktop/preload.cjs','desktop/dev-watch.cjs'].map(async name=>[name,createHash('sha256').update(await fs.readFile(path.join(source,name))).digest('hex')])));
+  const sourceSHA256=Object.fromEntries(await Promise.all(['index.html','app.mjs','linecraft-scripting.mjs','core.mjs','units.mjs','paper-space.mjs','drawing-plane.mjs','viewport-scales.mjs','advanced-geometry.mjs','3d-view.mjs','dwg-import.mjs','plot-document.mjs','desktop/main.cjs','desktop/preload.cjs','desktop/dev-watch.cjs'].map(async name=>[name,createHash('sha256').update(await fs.readFile(path.join(source,name))).digest('hex')])));
   const corePath = path.join(source, 'core.mjs'), core = await fs.readFile(corePath, 'utf8');
   const probe = version => `${core}\nif(typeof process!=='undefined'&&process.versions?.electron)globalThis.__linecraftValidatorProbe=${version};\n`;
   await fs.writeFile(corePath, probe(1));

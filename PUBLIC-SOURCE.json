@@ -1,11 +1,11 @@
 {
-  "version": "1.12.0",
+  "version": "1.12.1",
   "scope": "Original public runtime and synthetic regression suite; private native drawings and evidence excluded.",
   "runtimeFiles": [
     {
       "file": "core.mjs",
-      "bytes": 319824,
-      "sha256": "f3fa39bd7e21d01be2720b4af82f1eeb0a05cec0f489749a0d121448d81b747f",
+      "bytes": 321250,
+      "sha256": "b65c28f015299d825ca615dd5770f1d2f9526732af65e616f6523c6ca11ea1ea",
       "matchesInternalRuntime": true
     },
     {
@@ -58,8 +58,8 @@
     },
     {
       "file": "app.mjs",
-      "bytes": 297148,
-      "sha256": "918c908da35d35a7aa10511d0107b58ca2bf6bc1065314dfa084657f1cc452a4",
+      "bytes": 297480,
+      "sha256": "b616ba42e301fd68cba6e53f6c52d488784023a7616d15c69e8b828fbe22e1f2",
       "matchesInternalRuntime": true
     },
     {
@@ -82,8 +82,8 @@
     },
     {
       "file": "desktop/main.cjs",
-      "bytes": 28055,
-      "sha256": "b7d6acefd2b07034efebd5e8072637c9b26b9cac1eff1a20f0a3ad05ec0e7900",
+      "bytes": 28357,
+      "sha256": "fece6c9d9cd35ae7aed415086f360fb5e3a77ab52bca388b1ecf34ae1a89a3e1",
       "matchesInternalRuntime": true
     },
     {
@@ -187,6 +187,18 @@
       "bytes": 13922,
       "sha256": "01ab42cc63fab2de8f57f0abad51faa8177ebf367e625b99ab4de11ec1ed6415",
       "matchesInternalRuntime": true
+    },
+    {
+      "file": "linecraft-scripting.mjs",
+      "bytes": 3961,
+      "sha256": "607363a38550114214d85289fa8c654b7eb00ab29e992d32b9eb9ba3b2a80f0a",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "desktop/script-control.cjs",
+      "bytes": 3977,
+      "sha256": "c4785f202d205fc0cdf60ccce860628d2119d1f4dc0e8b550797213942a15857",
+      "matchesInternalRuntime": true
     }
   ],
   "thirdPartyResources": [
@@ -218,7 +230,9 @@
     "samples/ceiling-space-v110.linecraft": "Retain original schema 2 bytes as a migration fixture; publish schema 3 tray source as a separate example.",
     "samples/tray-ceiling-v111.linecraft": "Retain original schema 3 example with its explicit optional nonzero clearance offsets; opening it must not silently switch saved values to zero.",
     "gable-desktop.cjs": "Require local pinned Playwright without personal runtime-cache paths; preserve explicit confirmation and hidden-window checks.",
-    "samples/gable-v112.linecraft": "Original schema-4 confirmed terminal-gable example, authoritative source only with no cached mesh vertices."
+    "samples/gable-v112.linecraft": "Original schema-4 confirmed terminal-gable example, authoritative source only with no cached mesh vertices.",
+    "scripting-desktop.cjs": "Use local pinned Playwright without a private dependency environment fallback. Preserve all hidden-window, real CLI, R4, Save/Open and actual PDF assertions.",
+    "samples/scripting-v1121.linecraft": "Separate original schema-4 scripting review fixture; all four historical architectural samples remain immutable."
   },
   "removedPrivateTestCount": {
     "core.test.mjs": 12,
@@ -230,6 +244,7 @@
     "Internal release driver/manifest/documentation; node_modules, build outputs and standalone bundle"
   ],
   "publicDocumentationAdaptations": {
-    "docs/roof-space/IMPLEMENTATION_HANDOFF.md": "Owner-provided implementation specification, with prepared-for personal name omitted and client drawing warning generalized. The independently supplied synthetic fixture and technical requirements are retained."
+    "docs/roof-space/IMPLEMENTATION_HANDOFF.md": "Owner-provided implementation specification, with prepared-for personal name omitted and client drawing warning generalized. The independently supplied synthetic fixture and technical requirements are retained.",
+    "docs/SCRIPTING.md": "Retain current integration and evidence boundaries; refer to the user generically."
   }
 }

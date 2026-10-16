@@ -486,6 +486,17 @@ function createWindow() {
 
 app.whenReady().then(async () => {
   await restoreDevelopmentPath(); configureSecurity(); registerIPC(); installMenu(); createWindow();
+  // Scripting is opt-in. An ordinary launch never creates a control endpoint.
+  const controlArgument=process.argv.find(argument=>argument.startsWith('--linecraft-control-file='));
+  if(controlArgument){
+    const {startScriptControl,createWindowDispatcher}=require('./script-control.cjs');
+    try{
+      const service=await startScriptControl({connectionFile:controlArgument.slice('--linecraft-control-file='.length),dispatch:createWindowDispatcher(()=>mainWindow)});
+      console.log(`[Linecraft] Local scripting enabled: ${service.connectionFile}`);
+      // close removes its owned descriptor synchronously before Electron can exit.
+      app.once('will-quit',()=>{void service.close();});
+    }catch(error){console.error(`[Linecraft] Local scripting unavailable: ${error.message}`);}
+  }
   if (!app.isPackaged && !process.argv.includes('--linecraft-no-watch')) {
     const watcher = require('./dev-watch.cjs').watchDevelopment(APP_ROOT, () => mainWindow);
     app.once('will-quit', () => watcher.close());
