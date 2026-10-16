@@ -1,5 +1,15 @@
 # Changes
 
+## 1.13.0 — R5 bounded different bearing heights
+
+- Add per-source-edge bearing elevations and same-pitch delayed activation with validated finite topology, support retention and approved runoff; preserve the exact established kernel for equal bearings.
+- Preview and explicitly confirm unit-aware edge heights in the existing Architecture pane; matched wall bearings govern their edges, conflicting/stale/impossible constraints reject atomically and Apply remains one grouped Undo record.
+- Persist source-only schema 5 edge-key/elevation assignments, migrate schemas 1–4 and retain every historical sample unchanged. Keep independent ceiling/bearing/eave datums, zero thickness, reservations and both zero surcharges.
+- Generate separate owned zero-thickness HIP step/interface and gable-closure meshes; retain physical surface quantities and the fixed sloping-skin ceiling envelope. Physical framing, attachments, loads and supplier feasibility remain unverified.
+- Add analytical kernel/integration cases, an original 40-by-20-foot sample, actual hidden source/unpacked controls/history/native Save/Open/four-PDF acceptance and an optional independent vector/raster audit. Visible installed review remains separate; stage declarations alone are not passing claims.
+- Retain the roof/closure vector PDF fix, locked common scales, drafting, units, camera/picking, scripting, layouts and grouped history. PDF is wireframe; arbitrary composed steps, general corner arrangements, courtyard holes and variable pitch remain unsupported.
+
+
 ## 1.12.2 — generated roof and closure vector PDF
 
 - Plot freshly validated architectural entities rather than source-only serialization that intentionally omits derived meshes; preserve authoritative native source and saved model view.

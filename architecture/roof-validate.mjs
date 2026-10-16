@@ -91,3 +91,6 @@ export function validateRoofSkin({faces,edges,eaveBoundary,pitch,eaveSurfaceElev
     const drainage=runoff(faces,edges,boundary,tolerance);validation.drainage=drainage.valid?'valid':'failed';validation.unresolvedDrainage=drainage.unresolved;validation.catchmentCells=drainage.catchmentCells;validation.method=drainage.method;if(!drainage.valid)validation.diagnostics.push('A collecting seam, outlet or positive-area runoff catchment fails drainage validation.');
   }catch(error){validation.diagnostics.push(error.message);}return validation;
 }
+
+// Pure validation disciplines reused by the R5 additive-height kernel.
+export {topologyCoverage,runoff};

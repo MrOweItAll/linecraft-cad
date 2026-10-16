@@ -32,7 +32,7 @@ def main():
  def native_check():
   arch=document['architecture'];roof=arch['roofGroups'][0]
   assert document['entities']==[],'No ordinary model geometry may substitute for roof/closures.'
-  assert arch['schemaVersion']==4 and len(arch['roofGroups'])==1 and arch['walls']==[]
+  assert arch['schemaVersion'] in (4,5) and len(arch['roofGroups'])==1 and arch['walls']==[]
   assert roof['roofType']=='GABLE' and roof['riseTwice']==8 and roof['bearingElevation']==120
   assert roof['overhang']==roof['rakeOverhang']==roof['heelOffset']==0
   assert arch['levels'][0]['defaultCeilingElevation']==96 and arch['levels'][0]['defaultBearingElevation']==120

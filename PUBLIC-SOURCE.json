@@ -1,5 +1,5 @@
 {
-  "version": "1.12.2",
+  "version": "1.13.0",
   "scope": "Original public runtime and synthetic regression suite; private native drawings and evidence excluded.",
   "runtimeFiles": [
     {
@@ -58,20 +58,20 @@
     },
     {
       "file": "app.mjs",
-      "bytes": 297480,
-      "sha256": "b616ba42e301fd68cba6e53f6c52d488784023a7616d15c69e8b828fbe22e1f2",
+      "bytes": 310008,
+      "sha256": "806ab4451dbe5ef8943fe8fcaa9f9347ca4c7aa022d8d6ca30533788db9dc289",
       "matchesInternalRuntime": true
     },
     {
       "file": "index.html",
-      "bytes": 60709,
-      "sha256": "c7c6e5b052fca859fb443f05c99281f9cf10d0d80f883dc12ceef368dae30018",
+      "bytes": 62153,
+      "sha256": "4a1233de5953178b1db784af389835d86aae62a702806bb78b5a6a363fe0c115",
       "matchesInternalRuntime": true
     },
     {
       "file": "styles.css",
-      "bytes": 40401,
-      "sha256": "da35516d114121638afab69e9acfec74b0088cbd1229b5fb265b589307fe5be8",
+      "bytes": 41356,
+      "sha256": "2268c9db84c6fda6b3dff3286c28f5ed00975fdc40c746ec464d7f69218dd13e",
       "matchesInternalRuntime": true
     },
     {
@@ -118,14 +118,14 @@
     },
     {
       "file": "architecture/editor-adapter.mjs",
-      "bytes": 35258,
-      "sha256": "9f13b7ada877583efff3e6fd3e3f6cedf6c9c96b8e4af6fe7273ef823ba3c745",
+      "bytes": 43712,
+      "sha256": "1b29582846b89dcdbc727cfb654deb61ea2dcc71d4a65cdd2f1e9363ff580402",
       "matchesInternalRuntime": true
     },
     {
       "file": "architecture/model.mjs",
-      "bytes": 17857,
-      "sha256": "782f043d6205082ec36cb8c5a071aa1cbccb925ccae0e56d1f654ff0706d5509",
+      "bytes": 18979,
+      "sha256": "22784f92a2e2ec10ad3722028d2e55e7ede10f1671b008c3eaea7f5065ae72e3",
       "matchesInternalRuntime": true
     },
     {
@@ -148,8 +148,8 @@
     },
     {
       "file": "architecture/roof-validate.mjs",
-      "bytes": 13718,
-      "sha256": "fd21c71e8e27c15065efed9bf5096f06f01b90a97de0244b51352afb913dc064",
+      "bytes": 13826,
+      "sha256": "1460c722f98326c1871102970b9895d7f16abe9df67d52b68e54b10a5d6f5395",
       "matchesInternalRuntime": true
     },
     {
@@ -199,6 +199,12 @@
       "bytes": 3977,
       "sha256": "c4785f202d205fc0cdf60ccce860628d2119d1f4dc0e8b550797213942a15857",
       "matchesInternalRuntime": true
+    },
+    {
+      "file": "architecture/roof-bearing.mjs",
+      "bytes": 29740,
+      "sha256": "c0451fd43daa287a69d6f7f452ba8391dc13d62fe2eea56719217753e28e3f56",
+      "matchesInternalRuntime": true
     }
   ],
   "thirdPartyResources": [
@@ -235,7 +241,11 @@
     "samples/scripting-v1121.linecraft": "Separate original schema-4 scripting review fixture; all four historical architectural samples remain immutable.",
     "roof-plot-desktop.cjs": "Require local pinned Playwright without an environment fallback; preserve actual hidden native Open/Save/Plot, source/derivative stability, locked physical scales, separate closures and frozen-layer checks.",
     "samples/roof-plot-v1122.linecraft": "Original analytical source-only schema-4 gable with zero ordinary model objects, distinct bearing/ceiling elevations, locked A3 plan/elevation physical scales and a frozen-layer negative sheet.",
-    "audit-roof-plot-pdf.py": "Copy the independent reader unchanged. Use --output-root work/roof-pdf-audit to keep optional generated native/PDF measurements and raster evidence under ignored work."
+    "audit-roof-plot-pdf.py": "Copy the independent reader unchanged. Use --output-root work/roof-pdf-audit to keep optional generated native/PDF measurements and raster evidence under ignored work.",
+    "bearing-desktop.cjs": "Require local pinned Playwright without environment/personal cache fallback. Preserve all actual hidden control, confirmation, grouped history, atomic rejection, native Save/Open, locked scale, gable/step/frozen PDF and source preservation checks.",
+    "samples/bearing-v113.linecraft": "Original source-only schema-5 analytical 40-by-20-foot unequal-bearing gable, with fixed independent ceiling, zero ordinary model geometry, locked A3 1:96/1:48 plan/elevation sheets and frozen-layer negative.",
+    "audit-bearing-pdf.py": "Copy the independent native/PDF reader unchanged. Optional --output-root work/bearing-pdf-audit keeps generated physical-vector measurements and rasters ignored.",
+    "R5 schema migration tests": "Copy current schema-5 assertions and explicit historical normalization checks. Archived schema-1/2/3/4 sample bytes remain unchanged; existing public privacy adaptations and desktop aliases are preserved."
   },
   "removedPrivateTestCount": {
     "core.test.mjs": 12,

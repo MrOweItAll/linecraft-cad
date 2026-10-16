@@ -22,7 +22,7 @@ accept(editor.addViewport(layout.layoutId,{x:240,y:65,width:160,height:160},{wor
 accept(editor.setWorkspace('3d'));accept(editor.set3DView({target:{x:120,y:72,z:65},scale:1.5,yaw:45,pitch:35.264389682754654,autoTarget:false}));
 // The 1.10/schema-2 sample is immutable migration evidence, not a generated output.
 const file=new URL('../samples/ceiling-space-v110.linecraft',import.meta.url),canonical=readFileSync(file,'utf8'),legacy=JSON.parse(editor.serialize());legacy.architecture.schemaVersion=2;for(const room of legacy.architecture.rooms)for(const key of ['trayCandidate','trayCeiling'])delete room[key];
-for(const group of legacy.architecture.roofGroups)for(const key of ['gablePolicy','gableAssignments','rakeOverhang'])delete group[key];
+for(const group of legacy.architecture.roofGroups)for(const key of ['gablePolicy','gableAssignments','rakeOverhang','bearingAssignments'])delete group[key];
 assert.equal(canonical,JSON.stringify(legacy,null,2),'Historical schema-2 clearance sample changed; do not overwrite it.');
 const raw=JSON.parse(canonical),restored=createEditor(raw);assert.equal(raw.format,'Linecraft/2');assert.equal(raw.architecture.schemaVersion,2);assert.ok(!raw.entities.some(entity=>entity.id.startsWith('@architecture/')));assert.deepEqual(restored.state.architecture,editor.state.architecture);assert.deepEqual(restored.state.entities,editor.state.entities);
 console.log('Validated unchanged schema-2 fixed-roof clearance sample and migration: 240 square feet, current 8 feet, maximum 9 feet 1.5 inches. Framing remains unverified.');

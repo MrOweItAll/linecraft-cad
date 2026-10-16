@@ -20,10 +20,10 @@ document.entities.push(
  {id:'script-titleblock',type:'RECTANG',layer:'0',layoutId:sheet.layoutId,points:[{x:10,y:8},{x:410,y:8},{x:410,y:32},{x:10,y:32}]},
  {id:'script-sheet-title',type:'TEXT',layer:'0',layoutId:sheet.layoutId,position:{x:15,y:16},text:'LINECRAFT SCRIPTING ACCEPTANCE | 1/8 IN = 1 FT | A3',height:4,rotation:0,style:'Standard'}
 );
-const final=createEditor(document),serialized=final.serialize(),file=new URL('../samples/scripting-v1121.linecraft',import.meta.url);
+const final=createEditor(document),legacy=JSON.parse(final.serialize());legacy.architecture.schemaVersion=4;for(const group of legacy.architecture.roofGroups)delete group.bearingAssignments;const serialized=JSON.stringify(legacy,null,2),file=new URL('../samples/scripting-v1121.linecraft',import.meta.url);
 if(!existsSync(file))writeFileSync(file,serialized,'utf8');else assert.deepEqual(JSON.parse(readFileSync(file,'utf8')),JSON.parse(serialized),'Scripting sample differs; never silently overwrite an established fixture.');
 const restored=createEditor(JSON.parse(readFileSync(file,'utf8')));
-assert.equal(restored.state.architecture.schemaVersion,4);
+assert.equal(restored.state.architecture.schemaVersion,5);
 assert.deepEqual(restored.state.architecture,editor.state.architecture);
 assert.deepEqual(restored.state.architectureDerived,editor.state.architectureDerived);
 assert.equal(restored.state.layouts.at(-1).viewports[0].scaleDenominator,96);
