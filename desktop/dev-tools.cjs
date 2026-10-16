@@ -6,6 +6,7 @@ function dependency(name,entry){const base=path.join(root,'node_modules',name),m
 function runtime(){if(process.platform!=='win32')throw Error('Desktop checks and installer builds require Windows x64. Pure npm test is portable.');return dependency('electron','dist/electron.exe');}
 function run(executable,args){return new Promise((resolve,reject)=>{const env={...process.env};delete env.ELECTRON_RUN_AS_NODE;const child=spawn(executable,args,{cwd:root,env,stdio:'inherit',windowsHide:true});child.once('error',reject);child.once('exit',(code,signal)=>code===0?resolve():reject(Error(`Check failed (${code??signal}): ${path.basename(executable)} ${args.join(' ')}`)));const stop=()=>child.kill();process.once('SIGINT',stop);process.once('SIGTERM',stop);child.once('exit',()=>{process.removeListener('SIGINT',stop);process.removeListener('SIGTERM',stop);});});}
 const pureStages=[
+ ['structured revision scripting and authenticated local control',['--test','tests/scripting.test.mjs','tests/script-control.test.cjs']],
  ['synthetic engine regression',['tests/run-tests.mjs']],
  ['Roof + Space source, exact rooms, independent roof topology and runoff',['tests/run-architecture-tests.mjs']],
  ['Fixed-roof ceiling envelope, analytic volume, headroom and independent sections',['tests/run-clearance-tests.mjs']],

@@ -37,7 +37,8 @@
     "test:space": "node ../tests/run-clearance-tests.mjs",
     "test:space-desktop": "node dev-tools.cjs test-space",
     "test:tray": "node ../tests/run-tray-tests.mjs",
-    "test:tray-desktop": "node dev-tools.cjs test-tray"
+    "test:tray-desktop": "node dev-tools.cjs test-tray",
+    "test:scripting": "node --test ../tests/scripting.test.mjs ../tests/script-control.test.cjs"
   },
   "devDependencies": {
     "electron": "44.7.0",
@@ -73,7 +74,9 @@
       "paper-space.mjs",
       "drawing-plane.mjs",
       "viewport-scales.mjs",
-      "architecture/*.mjs"
+      "architecture/*.mjs",
+      "linecraft-scripting.mjs",
+      "desktop/script-control.cjs"
     ],
     "win": {
       "target": "nsis",

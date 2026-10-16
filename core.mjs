@@ -1807,6 +1807,46 @@ export function createEditor(initialState = {}) {
 
   const editor = {
     state,
+    /** Stage a revision privately, validate it, then retain one ordinary Undo entry. */
+    applyRevision({label,steps,dryRun=false}={}) {
+      if(state.command)return result(false,'Finish or cancel the active command before scripting.');
+      try {
+        if(typeof label!=='string'||!label.trim()||label.length>200)throw Error('A revision label of 1–200 characters is required.');
+        if(!Array.isArray(steps)||!steps.length||steps.length>500)throw Error('A revision needs 1–500 steps.');
+        if(JSON.stringify(steps).length>1000000)throw Error('Revision steps exceed the one-million-character limit.');
+        const staged=createEditor(JSON.parse(editor.serialize()));
+        const select=ids=>{if(!Array.isArray(ids)||!ids.length||ids.length>10000||ids.some(value=>typeof value!=='string'))throw Error('Explicit object IDs are required.');staged.select(ids);if(ids.some(value=>!staged.state.selectionIds.includes(value)))throw Error('An object is missing, locked, hidden or outside the active space.');};
+        const keys={text:['op','id','patch'],dimension:['op','id','patch'],grip:['op','id','index','point'],radius:['op','id','radius'],properties:['op','ids','patch'],select:['op','ids'],commands:['op','tokens'],architecture:['op','operation'],space:['op','space','layoutId','viewportId']};
+        let index=0;
+        for(const step of steps){
+          index++;if(!step||typeof step!=='object'||Array.isArray(step)||!keys[step.op]||Object.keys(step).some(key=>!keys[step.op].includes(key)))throw Error(`Step ${index}: unsupported operation or field.`);
+          let response;
+          switch(step.op){
+            case 'text':response=staged.setTextProperties(step.id,step.patch);break;
+            case 'dimension':response=staged.setDimensionProperties(step.id,step.patch);break;
+            case 'grip':response=staged.moveGrip(step.id,step.index,step.point);break;
+            case 'radius':response=staged.setCircleRadius(step.id,step.radius);break;
+            case 'properties':select(step.ids);response=staged.setSelectionProperties(step.patch);break;
+            case 'select':select(step.ids);response={ok:true};break;
+            case 'space':response=staged.setSpace(step.space,step.layoutId,step.viewportId);break;
+            case 'architecture':response=staged.applyArchitecture(step.operation);break;
+            case 'commands':
+              if(!Array.isArray(step.tokens)||!step.tokens.length||step.tokens.length>1000||step.tokens.some(token=>typeof token!=='string'||token.length>10000))throw Error(`Step ${index}: bounded command text is required.`);
+              for(const token of step.tokens){response=staged.execute(token);if(!response.ok)break;}
+              break;
+          }
+          if(!response?.ok)throw Error(`Step ${index}: ${response?.message||'Operation rejected.'}`);
+        }
+        if(staged.state.command)throw Error('The revision left an unfinished command. No changes were applied.');
+        const before=snapshot(),after=clone(Object.fromEntries(Object.keys(before).map(key=>[key,key==='entities'?staged.state.entities.filter(entity=>!architecturalEntity(entity)):staged.state[key]])));
+        const changes={entities:[],documentFields:[]},oldObjects=new Map(before.entities.map(entity=>[entity.id,entity])),newObjects=new Map(after.entities.map(entity=>[entity.id,entity]));
+        for(const value of new Set([...oldObjects.keys(),...newObjects.keys()])){const old=oldObjects.get(value),next=newObjects.get(value);if(JSON.stringify(old)!==JSON.stringify(next))changes.entities.push({id:value,kind:old?next?'updated':'deleted':'added',before:clone(old??null),after:clone(next??null)});}
+        for(const key of Object.keys(before).filter(key=>key!=='entities'))if(JSON.stringify(before[key])!==JSON.stringify(after[key]))changes.documentFields.push(key);
+        const changed=JSON.stringify(before)!==JSON.stringify(after);
+        if(!dryRun&&changed){restore(after);record(before);}
+        return {...result(true,dryRun?`Preview: ${label}`:`Revision: ${label}`,!dryRun&&changed),label,dryRun,changes,wouldChange:changed};
+      }catch(error){return result(false,error.message);}
+    },
     applyArchitecture(operation){
       if(operation?.type==='exportSection')return editor.addRoomSection(operation);
       if(state.command)return result(false,'Finish or cancel the active command before editing Architecture.');
