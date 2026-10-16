@@ -16,7 +16,7 @@ accept(e.addViewport(layout.layoutId,{x:245,y:70,width:160,height:160},{workspac
 accept(e.setWorkspace('3d'));accept(e.set3DView({target:{x:384,y:360,z:80},scale:.7,yaw:45,pitch:35.264389682754654,autoTarget:false}));
 // This file is an immutable 1.9/schema-1 migration fixture. R3 writes a separate
 // clearance sample and must never upgrade the historical fixture in place.
-const file=new URL('../samples/roof-space-H-v19.linecraft',import.meta.url),canonical=readFileSync(file,'utf8'),legacy=JSON.parse(e.serialize());legacy.architecture.schemaVersion=1;for(const room of legacy.architecture.rooms)for(const key of ['minimumClearHeight','headroomThreshold','ceilingFinishThickness'])delete room[key];
+const file=new URL('../samples/roof-space-H-v19.linecraft',import.meta.url),canonical=readFileSync(file,'utf8'),legacy=JSON.parse(e.serialize());legacy.architecture.schemaVersion=1;for(const room of legacy.architecture.rooms)for(const key of ['minimumClearHeight','headroomThreshold','ceilingFinishThickness','trayCandidate','trayCeiling'])delete room[key];
 assert.equal(canonical,JSON.stringify(legacy,null,2),'The historical schema-1 H sample changed; do not overwrite this migration fixture.');
 const restored=createEditor(JSON.parse(canonical));assert.deepEqual(restored.state.architecture,e.state.architecture);assert.deepEqual(restored.state.entities,e.state.entities);
 console.log(`Validated unchanged legacy source-only H sample and schema-1 migration: ${file.pathname}`);

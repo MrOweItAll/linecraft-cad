@@ -1,5 +1,15 @@
 # Changes
 
+## 1.11.0 — R3 bounded tray-ceiling preview
+
+- Add one raised building-local rectangular plateau, lower band and ideal vertical returns beneath the same fixed roof.
+- Clip existing affine clearance cells analytically; reject concave recess bridges, boundary contact, incomplete coverage and closed return conflicts, including point contacts.
+- Keep proposals separate from accepted source profiles. Compare signed volume change against the actual accepted flat or tray ceiling; report conditional headroom, finish areas and limiting coordinates.
+- Apply accepted profiles through grouped Undo/Redo and source-only schema 3 persistence without changing roof vertices/faces, wall bearings, room floor, camera or layouts. Keep archived schema 1 and 2 examples unchanged.
+- Add actual accepted-profile stepped section snapshots and a synthetic tray example. Return construction thickness, material volume and framing remain unverified; both requested truss surcharges remain zero.
+
+The first tray supports one strictly interior building-local axis rectangle. General polygons, multiple plateaus, slopes, gables, variable bearings and certified framing remain outside this preview. Section snapshots require regeneration after source changes.
+
 ## 1.10.0 — R3 fixed-roof ceiling-space preview
 
 - Calculate exact clipped flat-ceiling envelopes beneath accepted roof facets, including normal roof layers, vertical ceiling finish and bounded local reservation boxes.

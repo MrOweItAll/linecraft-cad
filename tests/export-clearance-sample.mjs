@@ -1,4 +1,4 @@
-import {readFileSync,writeFileSync} from 'node:fs';
+import {readFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
 import {createEditor,UNIT_PRESETS} from '../core.mjs';
 
@@ -20,6 +20,8 @@ const layout=editor.addLayout('Fixed-roof clearance — A3',{size:'A3',orientati
 accept(editor.addViewport(layout.layoutId,{x:15,y:25,width:210,height:245},{workspace:'2d',modelCenter:{x:120,y:72,z:0},scaleDenominator:48,locked:true}));
 accept(editor.addViewport(layout.layoutId,{x:240,y:65,width:160,height:160},{workspace:'3d',modelCenter:{x:120,y:72,z:65},scaleDenominator:96,locked:true,camera3d:{yaw:45,pitch:35.264389682754654,target:{x:120,y:72,z:65},projection:'orthographic'}}));
 accept(editor.setWorkspace('3d'));accept(editor.set3DView({target:{x:120,y:72,z:65},scale:1.5,yaw:45,pitch:35.264389682754654,autoTarget:false}));
-const file=new URL('../samples/ceiling-space-v110.linecraft',import.meta.url);writeFileSync(file,editor.serialize(),'utf8');
-const raw=JSON.parse(readFileSync(file,'utf8')),restored=createEditor(raw);assert.equal(raw.format,'Linecraft/2');assert.equal(raw.architecture.schemaVersion,2);assert.ok(!raw.entities.some(entity=>entity.id.startsWith('@architecture/')));assert.deepEqual(restored.state.architecture,editor.state.architecture);assert.deepEqual(restored.state.entities,editor.state.entities);
-console.log('Created source-only fixed-roof clearance sample: 240 ft² room, current 8 ft, target 9 ft, maximum 9 ft 1½ in, recoverable flat volume 270 ft³. Declared framing remains unverified.');
+// The 1.10/schema-2 sample is immutable migration evidence, not a generated output.
+const file=new URL('../samples/ceiling-space-v110.linecraft',import.meta.url),canonical=readFileSync(file,'utf8'),legacy=JSON.parse(editor.serialize());legacy.architecture.schemaVersion=2;for(const room of legacy.architecture.rooms)for(const key of ['trayCandidate','trayCeiling'])delete room[key];
+assert.equal(canonical,JSON.stringify(legacy,null,2),'Historical schema-2 clearance sample changed; do not overwrite it.');
+const raw=JSON.parse(canonical),restored=createEditor(raw);assert.equal(raw.format,'Linecraft/2');assert.equal(raw.architecture.schemaVersion,2);assert.ok(!raw.entities.some(entity=>entity.id.startsWith('@architecture/')));assert.deepEqual(restored.state.architecture,editor.state.architecture);assert.deepEqual(restored.state.entities,editor.state.entities);
+console.log('Validated unchanged schema-2 fixed-roof clearance sample and migration: 240 square feet, current 8 feet, maximum 9 feet 1.5 inches. Framing remains unverified.');

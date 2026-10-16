@@ -1819,7 +1819,7 @@ export function createEditor(initialState = {}) {
       }catch(error){return result(false,`Architecture rejected: ${error.message}`);}
     },
     getArchitectureOwner(entityId){return clone(state.architectureDerived?.owners?.[entityId]??null);},
-    getArchitectureReport(){return clone({schemaVersion:2,modelUnits:state.settings.units,source:state.architecture,derived:state.architectureDerived,spaces:state.architectureDerived?.spaces??[],roofGeometryFingerprint:state.architectureDerived?.roofGeometryFingerprint??null,framingStatus:'unverified',trussDesignManufacturingComplexitySurcharge:0});},
+    getArchitectureReport(){return clone({schemaVersion:3,modelUnits:state.settings.units,source:state.architecture,derived:state.architectureDerived,spaces:state.architectureDerived?.spaces??[],roofGeometryFingerprint:state.architectureDerived?.roofGeometryFingerprint??null,framingStatus:'unverified',trussDesignManufacturingComplexitySurcharge:0});},
     addRoomSection(options={}){
       if(state.command)return result(false,'Finish or cancel the active command before exporting a room section.');
       if(state.activeSpace==='paper')return result(false,'Export architectural sections in model space.');
@@ -1836,10 +1836,10 @@ export function createEditor(initialState = {}) {
         for(const segment of section.segments??[])line(segment.start,segment.end);
         for(const segment of section.roofSegments??[])line(segment.start,segment.end);
         const profiles=section.profileSegments??section.profiles??{};for(const profile of Object.values(profiles)){if(Array.isArray(profile)&&profile.length===2&&profile[0]?.x!==undefined)line(profile[0],profile[1]);else if(Array.isArray(profile))for(const interval of profile)if(Array.isArray(interval)&&interval.length===2)line(interval[0],interval[1]);}
-        const title=`${room.label} | ${section.axis.toUpperCase()} section | ${analysis.status==='infeasible'?'INFEASIBLE declared clearance | ':''}fixed-roof geometry, framing unverified`;
+        const title=`${room.label} | ${section.axis.toUpperCase()} section | ${room.ceilingType==='tray'&&section.acceptedCeilingFeasible===false?'INFEASIBLE accepted tray | ':analysis.status==='infeasible'?'INFEASIBLE declared clearance | ':''}fixed-roof geometry, framing unverified`;
         generated.push({id:id(),type:'TEXT',layer:state.currentLayer,position:{x:origin.x,y:origin.y-gap},text:title,height,rotation:0,style:state.currentTextStyle});
         const dimension=(value,index,label)=>{if(!finite(value)||value<=floor)return;generated.push({id:id(),type:'DIMENSION',kind:'aligned',layer:state.currentLayer,p1:{x:origin.x,y:origin.y},p2:{x:origin.x,y:origin.y+value-floor},placement:{x:origin.x-gap*(index+1),y:origin.y+(value-floor)/2},style:state.currentDimStyle,scale:1,textOverride:`${label}: <>`});};
-        dimension(room.ceilingElevation,0,'Current');dimension(room.targetCeilingElevation,1,'Target');dimension(analysis.maxFlatCeilingElevation,2,'Maximum');
+        dimension(room.ceilingElevation,0,room.ceilingType==='tray'?'Tray base':'Current');if(section.dimensions.currentRaisedCeilingElevation!=null){dimension(section.dimensions.currentRaisedCeilingElevation,1,'Tray raised');dimension(room.targetCeilingElevation,2,'Flat target');dimension(analysis.maxFlatCeilingElevation,3,'Maximum flat');}else{dimension(room.targetCeilingElevation,1,'Target');dimension(analysis.maxFlatCeilingElevation,2,'Maximum');}
         if(!(section.length>0)||!generated.length)throw Error('The requested section contains no drawable interval.');
         generated.push({id:id(),type:'DIMENSION',kind:'aligned',layer:state.currentLayer,p1:{x:origin.x,y:origin.y},p2:{x:origin.x+section.length,y:origin.y},placement:{x:origin.x+section.length/2,y:origin.y-gap*2},style:state.currentDimStyle,scale:1});
         const before=snapshot(),normalized=normalizeDocument({...state,...before,entities:[...before.entities,...generated]});Object.assign(state,normalized);normalized.entities.forEach(entity=>allocatedIds.add(entity.id));state.selectionIds=generated.map(entity=>entity.id);validateSelection();
