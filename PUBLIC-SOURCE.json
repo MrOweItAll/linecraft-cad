@@ -1,11 +1,11 @@
 {
-  "version": "1.13.0",
+  "version": "1.14.0",
   "scope": "Original public runtime and synthetic regression suite; private native drawings and evidence excluded.",
   "runtimeFiles": [
     {
       "file": "core.mjs",
-      "bytes": 321250,
-      "sha256": "b65c28f015299d825ca615dd5770f1d2f9526732af65e616f6523c6ca11ea1ea",
+      "bytes": 321429,
+      "sha256": "fdc6d585b66d853dba2d7c16404e967263c46289ee66770eeb861a169a197722",
       "matchesInternalRuntime": true
     },
     {
@@ -58,20 +58,20 @@
     },
     {
       "file": "app.mjs",
-      "bytes": 310008,
-      "sha256": "806ab4451dbe5ef8943fe8fcaa9f9347ca4c7aa022d8d6ca30533788db9dc289",
+      "bytes": 337537,
+      "sha256": "71faca31cc9b63a0bbbefb2bf32d013893657568a4ecad9f6186b4ec6a2be553",
       "matchesInternalRuntime": true
     },
     {
       "file": "index.html",
-      "bytes": 62153,
-      "sha256": "4a1233de5953178b1db784af389835d86aae62a702806bb78b5a6a363fe0c115",
+      "bytes": 68564,
+      "sha256": "78dc1e4f5af4571c62adfcc0f9984994f6a36ba5268a4c06e0e39b4deb9f42d6",
       "matchesInternalRuntime": true
     },
     {
       "file": "styles.css",
-      "bytes": 41356,
-      "sha256": "2268c9db84c6fda6b3dff3286c28f5ed00975fdc40c746ec464d7f69218dd13e",
+      "bytes": 43343,
+      "sha256": "1f161bdd50b94b99c6a7033a27741bfd04bbb214ddecb9e4604fa0db5c9395c0",
       "matchesInternalRuntime": true
     },
     {
@@ -118,14 +118,14 @@
     },
     {
       "file": "architecture/editor-adapter.mjs",
-      "bytes": 43712,
-      "sha256": "1b29582846b89dcdbc727cfb654deb61ea2dcc71d4a65cdd2f1e9363ff580402",
+      "bytes": 45902,
+      "sha256": "866549a47936d0b0739ae67af994f31f43abb829c6abea48a9e4af1e4442b4ce",
       "matchesInternalRuntime": true
     },
     {
       "file": "architecture/model.mjs",
-      "bytes": 18979,
-      "sha256": "22784f92a2e2ec10ad3722028d2e55e7ede10f1671b008c3eaea7f5065ae72e3",
+      "bytes": 19166,
+      "sha256": "62ad5200add55fb069ea3f99008c3b25488f6e34c50e36dda863185947938c93",
       "matchesInternalRuntime": true
     },
     {
@@ -205,6 +205,24 @@
       "bytes": 29740,
       "sha256": "c0451fd43daa287a69d6f7f452ba8391dc13d62fe2eea56719217753e28e3f56",
       "matchesInternalRuntime": true
+    },
+    {
+      "file": "architecture/alternatives.mjs",
+      "bytes": 24481,
+      "sha256": "dc7fd32696c16845e3ee13c2469bb0ef3b92ed8cb25656e167521000ecb21027",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "architecture/quantities.mjs",
+      "bytes": 10826,
+      "sha256": "7cebb61fc92e8f9cebc841299b5b44a010c6314145211a4d486103c4450f678d",
+      "matchesInternalRuntime": true
+    },
+    {
+      "file": "architecture/alternative-report.mjs",
+      "bytes": 4902,
+      "sha256": "2b628dcc4dacedb1138a5ab91e07f1ee1be5f7696ab55b7cf60f680071df0567",
+      "matchesInternalRuntime": true
     }
   ],
   "thirdPartyResources": [
@@ -245,7 +263,10 @@
     "bearing-desktop.cjs": "Require local pinned Playwright without environment/personal cache fallback. Preserve all actual hidden control, confirmation, grouped history, atomic rejection, native Save/Open, locked scale, gable/step/frozen PDF and source preservation checks.",
     "samples/bearing-v113.linecraft": "Original source-only schema-5 analytical 40-by-20-foot unequal-bearing gable, with fixed independent ceiling, zero ordinary model geometry, locked A3 1:96/1:48 plan/elevation sheets and frozen-layer negative.",
     "audit-bearing-pdf.py": "Copy the independent native/PDF reader unchanged. Optional --output-root work/bearing-pdf-audit keeps generated physical-vector measurements and rasters ignored.",
-    "R5 schema migration tests": "Copy current schema-5 assertions and explicit historical normalization checks. Archived schema-1/2/3/4 sample bytes remain unchanged; existing public privacy adaptations and desktop aliases are preserved."
+    "R5 schema migration tests": "Copy current schema-5 assertions and explicit historical normalization checks. Archived schema-1/2/3/4 sample bytes remain unchanged; existing public privacy adaptations and desktop aliases are preserved.",
+    "R6 schema migration tests": "Focused current schema-6 assertion deltas retain every existing public adaptation and all seven original historical sample bytes. New alternative and quantity tests use original synthetic data.",
+    "alternatives-desktop.cjs": "Require the local pinned Playwright dependency without personal/environment cache fallback; preserve actual hidden controls, cancellation/stale guards, grouped Apply/report history, native files and real PDF assertions.",
+    "audit-alternatives-pdf.py": "Independent actual PDF vector/text reader. Optional --output-root work/alternatives-pdf-audit retains generated measurement/raster evidence under ignored work."
   },
   "removedPrivateTestCount": {
     "core.test.mjs": 12,

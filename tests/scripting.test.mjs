@@ -77,7 +77,7 @@ const gableFixture=async()=>{
 };
 test('schema-4 gables, separate closures, zero thickness, camera and layouts survive Apply, Undo/Redo and native reopen',async()=>{
   const editor=await gableFixture(),before=editor.serialize(),source=JSON.parse(before),derived=structuredClone(editor.state.architectureDerived);
-  assert.equal(source.architecture.schemaVersion,5);
+  assert.equal(source.architecture.schemaVersion,6);
   assert.equal(source.architecture.roofGroups[0].roofType,'GABLE');
   assert.ok(editor.state.entities.some(entity=>editor.getArchitectureOwner(entity.id)?.part==='gable'));
   assert.equal(derived.spaces[0].assumptions.analysisMode,'mathematical-zero-thickness');

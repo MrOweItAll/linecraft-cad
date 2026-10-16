@@ -8,7 +8,7 @@ on:
       release_tag:
         description: Immutable version tag to build and publish
         required: true
-        default: v1.13.0
+        default: v1.14.0
         type: string
 permissions:
   contents: write
@@ -27,7 +27,7 @@ jobs:
     steps:
       - name: Validate release tag input
         run: |
-          if ($env:RELEASE_TAG -notmatch '\Av[0-9]+\.[0-9]+\.[0-9]+\z') { throw 'Use a version tag such as v1.13.0.' }
+          if ($env:RELEASE_TAG -notmatch '\Av[0-9]+\.[0-9]+\.[0-9]+\z') { throw 'Use a version tag such as v1.14.0.' }
       - name: Preserve canonical repository bytes on checkout
         run: |
           git config --global core.autocrlf false
@@ -66,7 +66,7 @@ jobs:
           'use strict';
           const fs=require('node:fs'),{createHash}=require('node:crypto');
           const manifest=JSON.parse(fs.readFileSync('PUBLIC-SOURCE.json','utf8'));
-          if(manifest.version!==require('./package.json').version||manifest.runtimeFiles.length!==34)throw Error('Public runtime manifest does not match this release.');
+          if(manifest.version!==require('./package.json').version||manifest.runtimeFiles.length!==37)throw Error('Public runtime manifest does not match this release.');
           for(const file of manifest.runtimeFiles){const actual=createHash('sha256').update(fs.readFileSync(file.file)).digest('hex');if(actual!==file.sha256)throw Error('Canonical runtime bytes changed: '+file.file);}
           const driver=fs.readFileSync('desktop/dev-tools.cjs','utf8');
           if((driver.match(/\[builder,'--publish','never','--win'/g)||[]).length!==2)throw Error('Both builder stages must explicitly disable automatic publication.');
@@ -77,7 +77,8 @@ jobs:
           if(!fs.readFileSync('tests/gable-desktop.cjs','utf8').includes('setContentSize(1280,900)'))throw Error('Gable hidden fixture lacks its deterministic content size.');
           if(!fs.readFileSync('tests/scripting-desktop.cjs','utf8').includes('setContentSize(1280,900)'))throw Error('Scripting hidden fixture lacks its deterministic content size.');
           if(!fs.readFileSync('tests/bearing-desktop.cjs','utf8').includes('setContentSize(1280,900)'))throw Error('Bearing hidden fixture lacks its deterministic content size.');
-          console.log('Canonical runtime identities: 34/34; build-only policy and deterministic hidden fixtures verified.');
+          if(!fs.readFileSync('tests/alternatives-desktop.cjs','utf8').includes('setContentSize(1280,900)'))throw Error('R6 hidden fixture lacks its deterministic content size.');
+          console.log('Canonical runtime identities: 37/37; build-only policy and deterministic hidden fixtures verified.');
           '@ | node
           if ($LASTEXITCODE -ne 0) { throw 'Canonical runtime or build fixture policy verification failed.' }
       - name: Test source, test unpacked application, compile NSIS
@@ -94,7 +95,9 @@ jobs:
 
           Built from this tag after the public synthetic source and hidden desktop gates, including editable rectangular and simple closed polygon viewports, cursor-anchored model navigation, physical architectural/engineering/ratio presets, exact custom scales, protected scale controls, UCS construction and vector PDF clipping. The unsigned installer includes the pinned standalone Electron runtime. GNU LibreDWG and libiconv retain their separate licenses and matching source archives.
 
-          Roof + Space R0–R5 adds semantic walls/rooms, generated equal-eave hip roofs, flat-ceiling analysis and one bounded rectangular stepped tray beneath a fixed roof. Exact declared cells and reservations bound volume, headroom and closed return interfaces; dimensioned section snapshots follow the actual accepted profile and exclude unaccepted proposals. Ceiling and bearing elevations remain separate, and ceiling edits do not alter exterior roof geometry. Both requested truss surcharges remain zero. Roofs, ceilings and tray returns use an explicit zero-thickness mathematical surface model by default; return material volume is zero and return area is retained. Optional physical offsets and reservation boxes remain supported. Existing entered offsets are preserved until an explicit grouped zero-thickness action. Physical framing and structural verification are separate from mathematical feasibility. Confirmed terminal gable assignments generate equal-bearing gable skins with separate eave/rake overhangs and zero-thickness closure surfaces. Candidate alternatives require explicit confirmation; mixed outer hip caps are not substituted. Sloping and closure areas are reported separately, and only sloping faces bound ceiling space. Schema 5 explicitly migrates schemas 1–4; all six archived architectural examples remain unchanged. Bounded equal-pitch unequal-bearing fronts use explicit geometric-edge heights, confirmed drafts, same support normalization as Apply, source support/coverage/runoff checks and separate zero-thickness step interfaces. The 20-foot 4:12 analytical case raises one bearing from 10 to 12 feet, moving the ridge 3 feet toward it, to elevation 14 feet 4 inches. Conflicting walls, consumed supports and unsupported transitions fail atomically. Physical framing, variable pitch, arbitrary composed steps, vaulted ceilings and bounded alternatives remain outside verified scope.
+          Roof + Space R0–R6 adds semantic walls/rooms, generated equal-eave hip roofs, flat-ceiling analysis and one bounded rectangular stepped tray beneath a fixed roof. Exact declared cells and reservations bound volume, headroom and closed return interfaces; dimensioned section snapshots follow the actual accepted profile and exclude unaccepted proposals. Ceiling and bearing elevations remain separate, and ceiling edits do not alter exterior roof geometry. Both requested truss surcharges remain zero. Roofs, ceilings and tray returns use an explicit zero-thickness mathematical surface model by default; return material volume is zero and return area is retained. Optional physical offsets and reservation boxes remain supported. Existing entered offsets are preserved until an explicit grouped zero-thickness action. Physical framing and structural verification are separate from mathematical feasibility. Confirmed terminal gable assignments generate equal-bearing gable skins with separate eave/rake overhangs and zero-thickness closure surfaces. Candidate alternatives require explicit confirmation; mixed outer hip caps are not substituted. Sloping and closure areas are reported separately, and only sloping faces bound ceiling space. Schema 6 explicitly migrates schemas 1–5; all seven archived architectural examples remain unchanged. Bounded equal-pitch unequal-bearing fronts use explicit geometric-edge heights, confirmed drafts, same support normalization as Apply, source support/coverage/runoff checks and separate zero-thickness step interfaces. The 20-foot 4:12 analytical case raises one bearing from 10 to 12 feet, moving the ridge 3 feet toward it, to elevation 14 feet 4 inches. Conflicting walls, consumed supports and unsupported transitions fail atomically. Physical framing, variable pitch, arbitrary composed steps, vaulted ceilings remain outside verified scope.
+
+          R6 compares a bounded stated grid of flat/tray ceilings beneath a fixed roof, with explicit optional permitted-pitch and uniform-bearing co-design. Target-capped benefit, raw usable volume, physical roof/closure/return/gross boundary quantities and declared nominal materials stay separate. Progress/cancel and work/time/configuration limits prevent incomplete recommendations. A reviewed feasible row is regenerated before one grouped Apply; source-only schema 6 stores its accepted ID. Static ordinary paper-text reports and actual PDF tests retain partial material confidence, unverified framing, zero surcharges and no global/cost optimum claim.
 
           Opt-in structured scripting uses copied object IDs and session/drawing tokens, private staging, one grouped Undo record and authenticated ephemeral loopback control. Ordinary launches keep local control disabled; supplied JavaScript, shell and arbitrary file operations are not exposed. Source and unpacked gates include real CLI edits, native Save/Open and vector PDF output while retaining current R4 architecture.
 

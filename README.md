@@ -4,6 +4,14 @@ Linecraft is an independent offline Windows CAD application for 2D drafting, pap
 
 Download the Windows x64 installer from [GitHub Releases](https://github.com/MrOweItAll/linecraft-cad/releases/latest). The unsigned installer includes its own Electron runtime; a browser, Node.js and Autodesk installation are unnecessary for using the application.
 
+## Bounded material and ceiling-space alternatives (R6)
+
+Version 1.14 extends the existing application with **Architecture → Alternatives** and `ROOFOPTIMIZE`. Fixed-roof ceiling search is the default; explicit co-design permits only listed pitches and uniform bearing offsets. Unit-aware finite choices, automatic target-capped maximum-fit proposals, work/time/configuration limits and cancellation retain every accepted room's physical feasibility. Search operates on copied source. Incomplete searches have no Pareto ranking or Apply.
+
+The partial ledger separates roof skin, projected coverage, gable/step closure areas, roof edges, ceiling horizontal/return areas, gross room-boundary finish and nominal declared material volumes. Raw usable volume and target-capped benefit remain distinct. An explicit reviewed row is re-evaluated before one grouped source edit. Schema 6 stores only its accepted ID; all seven earlier architectural samples remain unchanged. A separately reviewed static configuration report inserts ordinary paper text for native Save and PDF output. See the [R6 guide](docs/roof-space/R6-ALTERNATIVES.md), [decision](docs/roof-space/ADR-006-alternatives.md) and [original example](samples/alternatives-v114.linecraft).
+
+The roof/ceiling/closure model remains zero thickness by default; entered layers and reservations remain effective. Both truss surcharges stay zero. Framing, suppliers, purchases, waste, prices and total cost remain unverified or unknown. Pareto is limited to the stated grid and physical objectives; no global optimum or complete cost optimum is claimed. Required checks, hidden desktop tests and visible installed review are separate evidence classes.
+
 ## Different bearing heights (R5)
 
 Version 1.13 extends the same Roof + Space model with bounded per-source-edge bearing elevations. In **Architecture → Roofs**, inspect the geometric source edges, enable the desired overrides and enter heights in the drawing's assigned length units. Preview calls the same normalized support resolution as Apply. Explicit confirmation is required; invalid or stale constraints leave the accepted roof and grouped history intact. A matched boundary wall governs its support height, and conflicting overrides require review.
@@ -133,6 +141,8 @@ npm run test:scale-pdf
 npm run test:roof-plot
 npm run test:bearing
 npm run test:bearing-desktop
+npm run test:alternatives
+npm run test:alternatives-desktop
 npm run test:architecture
 npm run test:architecture-ipc
 npm run test:architecture-desktop
@@ -144,13 +154,13 @@ npm run unpacked
 npm run build
 ```
 
-The public gate requires 39 pure synthetic stages, including Roof + Space, R5 bearing geometry/integration, structured scripting, generated roof/closure plotting and source-only analytical examples. The desktop gate adds 18 stages for fixed reader identity, hidden application/native PDF workflows and live development reload/validator checks: 57 source stages. Unpacked adds one build, 12 hidden executable suites and resource identities: 71 stages. Build adds NSIS compilation from the tested application: 72 stages. These counts describe required checks; they are not a claim that a run passed. Read completed reports under `work/`.
+The public gate requires 41 pure synthetic stages, including R6 bounded alternatives and its original source-only example, retained Roof + Space/R5/scripting/plotting checks and independent mathematics. The desktop gate adds 19 stages for fixed reader identity, hidden application/native PDF workflows and live development reload/validator checks: 60 source stages. Unpacked adds one build, 13 hidden executable suites and resource identities: 75 stages. Build adds NSIS compilation from the tested application: 76 stages. These counts describe required checks; they are not a claim that a run passed. Read completed reports under `work/`.
 
 Automated application windows stay hidden and offscreen, with visibility/show-event assertions. Native choices use owned-file stubs; no unrelated OS clipboard data is read. Synthetic events, visible UI and physical gestures are distinct evidence. Optional external Python PDF/DXF readers are not application or build dependencies. See [tests](tests/README.md) for those independently measured audits.
 
 ## Automated releases
 
-A version tag matching `package.json`, such as `v1.13.0`, triggers Windows CI. The workflow can also be dispatched manually for an existing immutable version tag. It installs locked dependencies and the pinned Electron binary, runs the public gate, tests the unpacked executable, builds NSIS and publishes the installer plus SHA-256 checksum using the repository's `GITHUB_TOKEN`. No stored user credentials or manual browser upload are required. Failed checks prevent publication. The workflow must complete before a release outcome is claimed. See [GitHub tag triggers](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow) and [CLI release creation](https://cli.github.com/manual/gh_release_create).
+A version tag matching `package.json`, such as `v1.14.0`, triggers Windows CI. The workflow can also be dispatched manually for an existing immutable version tag. It installs locked dependencies and the pinned Electron binary, runs the public gate, tests the unpacked executable, builds NSIS and publishes the installer plus SHA-256 checksum using the repository's `GITHUB_TOKEN`. No stored user credentials or manual browser upload are required. Failed checks prevent publication. The workflow must complete before a release outcome is claimed. See [GitHub tag triggers](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow) and [CLI release creation](https://cli.github.com/manual/gh_release_create).
 
 ## Tests, privacy and licenses
 

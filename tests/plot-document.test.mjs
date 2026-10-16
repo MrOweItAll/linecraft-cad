@@ -98,7 +98,7 @@ function addRoofLayout(editor,viewports){
 
 test('source-only HIP regenerates one plotted skin and accurate fit extents without native caches',()=>{
  const editor=architecturalRoof(),text=editor.serialize(),raw=JSON.parse(text),before=JSON.stringify(editor.state),result=buildPlotHTML(source(text));
- assert.deepEqual(raw.entities,[]);assert.equal(raw.architecture.schemaVersion,5);assert.equal((result.previewSVG.match(/data-entity=/g)??[]).length,1);
+ assert.deepEqual(raw.entities,[]);assert.equal(raw.architecture.schemaVersion,6);assert.equal((result.previewSVG.match(/data-entity=/g)??[]).length,1);
  assert.ok(entityBody(result.previewSVG,roofPrefix+'surface'));assert.deepEqual(result.report.worldBounds,{minX:0,minY:0,minZ:120,maxX:480,maxY:240,maxZ:160});
  assert.equal(result.report.clipped,false);assert.doesNotMatch(result.previewSVG,/NaN|Infinity/);
  for(const [a,b]of segments(result.previewSVG))for(const point of[a,b]){assert.ok(point.x>=10&&point.x<=287);assert.ok(point.y>=10&&point.y<=200);}

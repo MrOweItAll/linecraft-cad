@@ -1,5 +1,13 @@
 # Changes
 
+## 1.14.0 — R6 bounded material and ceiling-space alternatives
+
+- Add copied-source fixed-roof and explicitly permitted pitch/uniform-bearing co-design searches, target-capped maximum-fit proposals, bounded progress/cancel and Pareto comparisons limited to the stated grid.
+- Keep raw usable volume, capped target benefit and priority separate from the partial physical material ledger, gross boundary finish, nominal volumes and explicit unknown quantities.
+- Re-evaluate reviewed configurations before one grouped Apply; persist only schema-6 accepted identity, preserve seven immutable older samples and retain units, drafting, camera/picking, native layouts, plotting and scripting.
+- Add reviewed ordinary paper-text reports, original synthetic examples, source/unpacked hidden acceptance and optional independent PDF audits. Required stages are not execution claims; visible installed review is separate.
+- Keep zero-thickness mathematical surfaces and zero truss surcharges; preserve declared offsets/reservations. Framing, supplier feasibility, purchasing, waste, prices and complete cost remain unverified or unknown.
+
 ## 1.13.0 — R5 bounded different bearing heights
 
 - Add per-source-edge bearing elevations and same-pitch delayed activation with validated finite topology, support retention and approved runoff; preserve the exact established kernel for equal bearings.

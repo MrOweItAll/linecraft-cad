@@ -83,7 +83,7 @@ test('R5 HIP generates separate selectable guarded step interfaces with independ
 });
 
 test('R5 native persistence stores source overrides only and regenerates all roof/closure/step geometry',()=>{
- for(const type of ['HIP','GABLE']){const e=setup({type});change(e);const text=e.serialize(),raw=JSON.parse(text);assert.equal(raw.architecture.schemaVersion,5);assert.deepEqual(raw.entities,[]);assert.deepEqual(raw.architecture.roofGroups[0].bearingAssignments,[{edgeKey:north,elevation:144}]);for(const key of ['faces','stepClosures','supportChecks','events'])assert.ok(!(key in raw.architecture.roofGroups[0]));const restored=createEditor(raw);assert.equal(restored.serialize(),text);assert.deepEqual(mesh(restored),mesh(e));assert.deepEqual(roof(restored),roof(e));}
+ for(const type of ['HIP','GABLE']){const e=setup({type});change(e);const text=e.serialize(),raw=JSON.parse(text);assert.equal(raw.architecture.schemaVersion,6);assert.deepEqual(raw.entities,[]);assert.deepEqual(raw.architecture.roofGroups[0].bearingAssignments,[{edgeKey:north,elevation:144}]);for(const key of ['faces','stepClosures','supportChecks','events'])assert.ok(!(key in raw.architecture.roofGroups[0]));const restored=createEditor(raw);assert.equal(restored.serialize(),text);assert.deepEqual(mesh(restored),mesh(e));assert.deepEqual(roof(restored),roof(e));}
 });
 
 test('R5 geometric edge assignment survives winding/cyclic order, while source changes require renewed decisions',()=>{

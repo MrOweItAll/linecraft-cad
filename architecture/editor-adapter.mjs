@@ -9,9 +9,11 @@ import {normalizeRoofBoundary,roofBoundaryEdgeKey} from './roof-boundary.mjs';
 import {solveGableRoof,inferGableCandidates} from './roof-gable.mjs';
 import {analyzeRoomSpace} from './clearance.mjs';
 import {analyzeTrayCandidate} from './ceiling-candidates.mjs';
+import {createAlternativeSearch,evaluateAlternative,alternativeConfigurationId} from './alternatives.mjs';
+import {formatAlternativeReport} from './alternative-report.mjs';
 export {createArchitecture,normalizeArchitecture,roofBoundaryFromWalls};
 export const ARCHITECTURE_ENTITY_PREFIX='@architecture/';
-export const ARCHITECTURE_ADAPTER_VERSION='architecture-r5-bearing-1';
+export const ARCHITECTURE_ADAPTER_VERSION='architecture-r6-alternatives-1';
 export const ARCHITECTURE_CLEARANCE_LIMITS=Object.freeze({rooms:64,work:4000000});
 const clone=x=>JSON.parse(JSON.stringify(x));
 const nextId=(items,prefix)=>{const taken=new Set(items.map(x=>x.id));for(let n=1;n<=100000;n++)if(!taken.has(`${prefix}-${n}`))return`${prefix}-${n}`;throw Error('Architectural ID namespace exhausted.');};
@@ -69,8 +71,12 @@ export function previewRoofGroup(rawArchitecture,draftGroup,settings={}){
  try{const source=clone(normalizeArchitecture(rawArchitecture??createArchitecture(settings),settings)),index=source.roofGroups.findIndex(g=>g.id===draftGroup?.id);if(index>=0)source.roofGroups[index]=clone(draftGroup);else source.roofGroups.push(clone(draftGroup));const normalized=normalizeArchitecture(source,settings),group=normalized.roofGroups.find(g=>g.id===draftGroup.id);const result=solveGroup(normalized,group);if(result.status==='ok'&&group.maxRidgeElevation!==null&&result.quantities?.maxRoofElevation>group.maxRidgeElevation+geometryTolerance({units:normalized.modelUnits}))return{...result,status:'infeasible',diagnostics:['The proposed roof exceeds its maximum ridge elevation.']};return result;}catch(error){return{status:'infeasible',faces:[],edges:[],gableClosures:[],stepClosures:[],diagnostics:[error.message]};}
 }
 export function architectureInputHash(source){const s=JSON.stringify(source);let a=2166136261,b=0x9e3779b9;for(let i=0;i<s.length;i++){a=Math.imul(a^s.charCodeAt(i),16777619);b=Math.imul(b+s.charCodeAt(i),2246822519);}return`${(a>>>0).toString(16).padStart(8,'0')}${(b>>>0).toString(16).padStart(8,'0')}`;}
+/** Read-only bounded proposals. The existing generator is the geometry authority. */
+export function createArchitectureAlternativeSearch(raw,settings={},options={}){return createAlternativeSearch(raw,settings,options,{derive:generateArchitecture});}
+export function evaluateArchitectureAlternative(raw,settings={},configuration){return evaluateAlternative(raw,settings,configuration,{derive:generateArchitecture});}
+export function buildArchitectureAlternativeReport(raw,settings={},configuration){const source=normalizeArchitecture(raw,settings),evaluated=evaluateArchitectureAlternative(source,settings,configuration);if(evaluated.status!=='ok')throw Error(evaluated.report?.diagnostics?.join(' ')||'A complete feasible alternative is required.');return formatAlternativeReport(source,settings,evaluated.report);}
 export function applyArchitectureEdit(raw,operation,settings={}){
- const source=clone(normalizeArchitecture(raw??createArchitecture(settings),settings));if(!operation||typeof operation!=='object'||Array.isArray(operation))throw Error('Architecture operation must be an object.');physicalScale({units:source.modelUnits});const tol=geometryTolerance({units:source.modelUnits});
+ let source=clone(normalizeArchitecture(raw??createArchitecture(settings),settings));if(!operation||typeof operation!=='object'||Array.isArray(operation))throw Error('Architecture operation must be an object.');physicalScale({units:source.modelUnits});const tol=geometryTolerance({units:source.modelUnits});
  const find=(items,id,label)=>{const item=items.find(i=>i.id===id);if(!item)throw Error(`${label} ${id} does not exist.`);return item;};
  const hasBearingConstraints=group=>{
   if(!group)return false;if(group.bearingAssignments?.length)return true;
@@ -85,6 +91,16 @@ export function applyArchitectureEdit(raw,operation,settings={}){
  const bearingGroupsBefore=new Set(source.roofGroups.filter(hasBearingConstraints).map(g=>g.id));
  const validateBearingProposal=(accepted,group)=>{const result=solveGroup(accepted,group);if(result.status!=='ok')throw Error((result.diagnostics??[]).map(d=>typeof d==='string'?d:d.message).join(' ')||'The proposed bearing constraints are infeasible.');if(group.maxRidgeElevation!==null&&result.quantities?.maxRoofElevation>group.maxRidgeElevation+tol)throw Error('The proposed roof exceeds its maximum ridge elevation.');};
  switch(operation.type){
+  case 'applyAlternative':{
+   const fields=['type','configuration','candidateId','sourceRevision','sourceHash'];
+   if(![Object.prototype,null].includes(Object.getPrototypeOf(operation))||Object.keys(operation).some(key=>!fields.includes(key)))throw Error('Alternative Apply accepts only a reviewed configuration, identity and current source token.');
+   if(operation.sourceRevision!==source.revision||operation.sourceHash!==architectureInputHash(source))throw Error('The alternative study is stale; search and review the current drawing again.');
+   const result=evaluateArchitectureAlternative(source,settings,operation.configuration);
+   if(result.status!=='ok'||!result.source)throw Error(result.report?.diagnostics?.map(d=>d.message).filter(Boolean).join(' ')||'The alternative is unsupported or infeasible.');
+   const identity=alternativeConfigurationId(result.configuration);
+   if(operation.candidateId!==identity)throw Error('The reviewed alternative identity does not match its configuration.');
+   source=result.source;source.acceptedAlternativeId=identity;break;
+  }
   case 'addWalls':{if(!Array.isArray(operation.points)||operation.points.length<2||operation.points.length>200)throw Error('WALL requires 2..200 confirmed points.');const points=operation.points.map(p=>({x:p.x,y:p.y}));if(operation.closed&&Math.hypot(points[0].x-points.at(-1).x,points[0].y-points.at(-1).y)<=tol)points.pop();const nodeIds=points.map(p=>{let node=source.wallNodes.find(n=>Math.hypot(n.x-p.x,n.y-p.y)<=tol&&(!source.walls.some(w=>w.startNodeId===n.id||w.endNodeId===n.id)||source.walls.some(w=>w.levelId===(operation.levelId??source.levels[0].id)&&(w.startNodeId===n.id||w.endNodeId===n.id))));if(node&&(node.x!==p.x||node.y!==p.y))throw Error('Wall endpoint is near an existing junction but differs from it; use an exact object snap.');if(!node){node={id:nextId(source.wallNodes,'node'),...p};source.wallNodes.push(node);}return node.id;});for(let i=0;i<nodeIds.length-(operation.closed?0:1);i++){const startNodeId=nodeIds[i],endNodeId=nodeIds[(i+1)%nodeIds.length];if(source.walls.some(w=>w.levelId===(operation.levelId??source.levels[0].id)&&(w.startNodeId===startNodeId&&w.endNodeId===endNodeId||w.startNodeId===endNodeId&&w.endNodeId===startNodeId)))throw Error('This wall reference segment already exists.');source.walls.push({id:nextId(source.walls,'wall'),startNodeId,endNodeId,referenceFace:operation.referenceFace??'center',thickness:operation.thickness,baseElevation:operation.baseElevation,bearingElevation:operation.bearingElevation,role:operation.role??'unknown',levelId:operation.levelId??source.levels[0].id,roofGroupId:null,heightLocked:false});}break;}
   case 'moveNode':{const node=find(source.wallNodes,operation.nodeId,'Wall node');if(source.walls.some(w=>w.heightLocked&&(w.startNodeId===node.id||w.endNodeId===node.id))&&operation.respectHeightLock===false)throw Error('Height locks cannot be bypassed.');node.x=operation.point?.x;node.y=operation.point?.y;break;}
   case 'setWall':{const wall=find(source.walls,operation.wallId,'Wall');if(wall.heightLocked&&operation.values?.bearingElevation!==undefined&&operation.values.bearingElevation!==wall.bearingElevation)throw Error(`Wall ${wall.id} height is locked.`);updateKnown(wall,operation.values,['thickness','referenceFace','baseElevation','bearingElevation','role','roofGroupId','heightLocked']);break;}
@@ -108,6 +124,7 @@ export function applyArchitectureEdit(raw,operation,settings={}){
   case 'regenerate':break;
   default:throw Error(`Unsupported architecture operation ${operation.type}.`);
  }
+ if(!['applyAlternative','regenerate'].includes(operation.type))source.acceptedAlternativeId=null;
  source.revision++;const accepted=normalizeArchitecture(source,settings);derivePlanRegions(accepted);
  const editedRoof=operation.type==='addRoof'?accepted.roofGroups.at(-1):operation.type==='setRoof'?accepted.roofGroups.find(g=>g.id===operation.roofGroupId):null;
  const assignmentEdit=operation.type==='addRoof'||operation.type==='setRoof'&&['roofType','gablePolicy','gableAssignments','rakeOverhang','boundary','boundarySource','boundaryWallIds'].some(key=>Object.hasOwn(operation.values??{},key));

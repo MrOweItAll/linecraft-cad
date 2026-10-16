@@ -31,10 +31,11 @@ for(const layout of raw.layouts){
  for(let i=0;i<titles.length;i++)layout.entities.push({id:`bearing-label-${layout.id}-${i}`,type:'TEXT',layer:'0',position:{x:layout.viewports[i]?.frame.x??20,y:40},text:titles[i],height:3.5,rotation:0,style:'Standard'});
 }
 const final=createEditor(raw),saved=final.serialize(),roof=final.state.architectureDerived.roofs[0];
-assert.equal(roof.status,'ok',JSON.stringify(roof.diagnostics));assert.equal(JSON.parse(saved).entities.length,0);assert.equal(final.state.architecture.schemaVersion,5);
+assert.equal(roof.status,'ok',JSON.stringify(roof.diagnostics));assert.equal(JSON.parse(saved).entities.length,0);assert.equal(final.state.architecture.schemaVersion,6);
 assert.equal(Math.max(...roof.faces.flatMap(f=>f.vertices.map(p=>p.z))),equal?160:172);
 const top=roof.faces.flatMap(f=>f.vertices).filter(p=>Math.abs(p.z-(equal?160:172))<1e-7);assert.ok(top.length);assert.ok(top.every(p=>Math.abs(p.y-(equal?120:156))<1e-7));
 if(hip&&!equal){assert.equal(roof.stepClosures.length,2);assert.ok(roof.stepClosures.every(c=>c.thickness===0));assert.ok(Math.abs(roof.stepClosures.reduce((s,c)=>s+c.area,0)-1728)<1e-7);}else if(!hip){assert.ok(roof.gableClosures.length>=2);assert.ok(roof.gableClosures.every(c=>c.thickness===0));}assert.equal(final.state.architecture.levels[0].defaultCeilingElevation,96);
 assert.equal(createEditor(JSON.parse(saved)).serialize(),saved);assert.ok(final.state.layouts.every(l=>l.viewports.every(v=>v.locked)));
-if(!existsSync(file))writeFileSync(file,saved,'utf8');else assert.equal(readFileSync(file,'utf8'),saved,'Established R5 source fixture must not be silently overwritten.');
+const historical=JSON.parse(saved);historical.architecture.schemaVersion=5;const fixtureText=outputIndex<0?JSON.stringify(historical,null,2):saved;
+if(!existsSync(file))writeFileSync(file,fixtureText,'utf8');else assert.equal(readFileSync(file,'utf8'),fixtureText,'Established R5 source fixture must not be silently overwritten.');
 console.log(`Validated schema5 source-only 40x20ft 4:12 ${hip?'HIP':'GABLE'}: bearing120/${equal?120:144}in, independent ceiling96in, ridge y${equal?120:156}/z${equal?160:172}in; locked A3 1:96 and 1:48 plus frozen negative sheet.`);

@@ -26,7 +26,7 @@ for(const layout of raw.layouts){
 }
 const final=createEditor(raw),saved=final.serialize(),legacy=JSON.parse(saved);legacy.architecture.schemaVersion=4;for(const group of legacy.architecture.roofGroups)delete group.bearingAssignments;const historicalText=JSON.stringify(legacy,null,2),file=new URL('../samples/roof-plot-v1122.linecraft',import.meta.url);
 if(!existsSync(file))writeFileSync(file,historicalText,'utf8');else assert.equal(readFileSync(file,'utf8'),historicalText,'Established analytical fixture must not be silently overwritten.');
-assert.equal(JSON.parse(saved).entities.length,0);assert.equal(final.state.architecture.schemaVersion,5);assert.equal(final.state.architectureDerived.roofs[0].status,'ok');
+assert.equal(JSON.parse(saved).entities.length,0);assert.equal(final.state.architecture.schemaVersion,6);assert.equal(final.state.architectureDerived.roofs[0].status,'ok');
 assert.equal(Math.max(...final.state.architectureDerived.roofs[0].faces.flatMap(f=>f.vertices.map(p=>p.z))),160);
 assert.ok(final.state.entities.some(e=>final.getArchitectureOwner(e.id)?.part==='gable'));
 assert.ok(final.state.layouts.every(l=>l.viewports.every(v=>v.locked)));

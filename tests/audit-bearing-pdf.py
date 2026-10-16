@@ -34,7 +34,7 @@ def main():
   native=Path(job.get('native',default_native));document=json.loads(native.read_text(encoding='utf-8'));native_hash=digest(native);roof=document['architecture']['roofGroups'][0];hip=roof['roofType']=='HIP'
   if str(native) not in checked_natives:
    def source_check():
-    arch=document['architecture'];assert arch['schemaVersion']==5
+    arch=document['architecture'];assert arch['schemaVersion'] in (5,6)
     assert document['entities']==[] and arch['walls']==[] and len(arch['roofGroups'])==1,'No ordinary geometry or walls may substitute for generated roof interfaces.'
     assert roof['roofType'] in ('GABLE','HIP') and roof['riseTwice']==8 and roof['bearingElevation']==120
     assert roof['bearingAssignments']==[{'edgeKey':'edge:0,240|480,240','elevation':144}]

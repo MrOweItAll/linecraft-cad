@@ -23,7 +23,7 @@ document.entities.push(
 const final=createEditor(document),legacy=JSON.parse(final.serialize());legacy.architecture.schemaVersion=4;for(const group of legacy.architecture.roofGroups)delete group.bearingAssignments;const serialized=JSON.stringify(legacy,null,2),file=new URL('../samples/scripting-v1121.linecraft',import.meta.url);
 if(!existsSync(file))writeFileSync(file,serialized,'utf8');else assert.deepEqual(JSON.parse(readFileSync(file,'utf8')),JSON.parse(serialized),'Scripting sample differs; never silently overwrite an established fixture.');
 const restored=createEditor(JSON.parse(readFileSync(file,'utf8')));
-assert.equal(restored.state.architecture.schemaVersion,5);
+assert.equal(restored.state.architecture.schemaVersion,6);
 assert.deepEqual(restored.state.architecture,editor.state.architecture);
 assert.deepEqual(restored.state.architectureDerived,editor.state.architectureDerived);
 assert.equal(restored.state.layouts.at(-1).viewports[0].scaleDenominator,96);

@@ -1,7 +1,7 @@
 /* Versioned architectural source only. No cached mesh, code expressions, or engineering approval. */
 import {MILLIMETERS_PER_UNIT,geometryTolerance} from './units-adapter.mjs';
 import {roofBoundaryEdgeKey} from './roof-boundary.mjs';
-export const ARCHITECTURE_SCHEMA_VERSION=5;
+export const ARCHITECTURE_SCHEMA_VERSION=6;
 export const ARCHITECTURE_LIMITS=Object.freeze({nodes:2048,walls:1024,rooms:256,openings:1024,roofGroups:16,boundaryVertices:200,assemblies:64,constraints:1024});
 const finite=n=>typeof n==='number'&&Number.isFinite(n)&&Math.abs(n)<=1e9;
 const object=(x,label)=>{if(!x||typeof x!=='object'||Array.isArray(x)||![Object.prototype,null].includes(Object.getPrototypeOf(x)))throw Error(`${label} must be a plain object.`);return x;};
@@ -20,9 +20,9 @@ export function createArchitecture(settings={}){const units=settings.units??'uni
 export function normalizeArchitecture(raw,settings={}){
   if(raw==null)return null;
   keys(raw,['schemaVersion','modelUnits','revision','buildingFrame','levels','wallNodes','walls','openings','rooms','roofGroups','assemblies','constraints','acceptedAlternativeId','costAssumptions'],'architecture');
-  // Schemas 1 through 4 migrate with no bearing overrides; physical source values stay unchanged.
+  // Schemas 1 through 5 migrate without inventing a comparison acceptance receipt.
   // No roof geometry, elevation, or framing allowance is inferred during migration.
-  if(![1,2,3,4,ARCHITECTURE_SCHEMA_VERSION].includes(raw.schemaVersion))throw Error('Unsupported architecture schema; architectural source must not be discarded.');
+  if(![1,2,3,4,5,ARCHITECTURE_SCHEMA_VERSION].includes(raw.schemaVersion))throw Error('Unsupported architecture schema; architectural source must not be discarded.');
   const modelUnits=choice(raw.modelUnits,['unitless',...Object.keys(MILLIMETERS_PER_UNIT)],'architecture.modelUnits',settings.units??'unitless');
   if(settings.units!==undefined&&modelUnits!==settings.units)throw Error('Architectural source units differ from the drawing assignment. Explicit conversion is required.');
   const revision=raw.revision??0;if(!Number.isSafeInteger(revision)||revision<0||revision>1e9)throw Error('Architecture revision is invalid.');
@@ -61,6 +61,7 @@ export function normalizeArchitecture(raw,settings={}){
   const constraints=list(raw,'constraints',ARCHITECTURE_LIMITS.constraints,c=>{keys(c,['id','kind','startNodeId','endNodeId','axis','value'],'constraint');if(c.kind!=='span')throw Error('Only bounded horizontal/vertical span constraints are supported.');if(!nodeMap.has(c.startNodeId)||!nodeMap.has(c.endNodeId)||c.startNodeId===c.endNodeId)throw Error('Span constraint node references are invalid.');return{id:id(c.id,'constraint.id'),kind:'span',startNodeId:c.startNodeId,endNodeId:c.endNodeId,axis:choice(c.axis,['x','y'],'constraint.axis'),value:number(c.value,'constraint.value')};});
   const tol=modelUnits==='unitless'?1e-8:geometryTolerance({units:modelUnits});for(const c of constraints)if(Math.abs(nodeMap.get(c.endNodeId)[c.axis]-nodeMap.get(c.startNodeId)[c.axis]-c.value)>tol)throw Error(`Driving dimension ${c.id} conflicts with current wall nodes.`);
   const cost=raw.costAssumptions??{};keys(cost,['prefabricatedTrussDesignSurcharge','manufacturingComplexitySurcharge'],'costAssumptions');if((cost.prefabricatedTrussDesignSurcharge??0)!==0||(cost.manufacturingComplexitySurcharge??0)!==0)throw Error('Truss design and manufacturing-complexity surcharges must remain zero.');
-  if(raw.acceptedAlternativeId!=null)throw Error('Accepted alternatives are reserved for a later milestone.');
-  return{schemaVersion:ARCHITECTURE_SCHEMA_VERSION,modelUnits,revision,buildingFrame,levels,wallNodes,walls,openings,rooms,roofGroups,assemblies,constraints,acceptedAlternativeId:null,costAssumptions:{prefabricatedTrussDesignSurcharge:0,manufacturingComplexitySurcharge:0}};
+  const acceptedAlternativeId=raw.acceptedAlternativeId??null;
+  if(acceptedAlternativeId!==null&&(raw.schemaVersion<6||typeof acceptedAlternativeId!=='string'||!/^r6-[a-f0-9]{16}$/.test(acceptedAlternativeId)))throw Error('Accepted alternative receipt requires schema 6 and a bounded R6 configuration identity.');
+  return{schemaVersion:ARCHITECTURE_SCHEMA_VERSION,modelUnits,revision,buildingFrame,levels,wallNodes,walls,openings,rooms,roofGroups,assemblies,constraints,acceptedAlternativeId,costAssumptions:{prefabricatedTrussDesignSurcharge:0,manufacturingComplexitySurcharge:0}};
 }
