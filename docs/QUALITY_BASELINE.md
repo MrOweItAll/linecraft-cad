@@ -37,3 +37,36 @@ Visible candidate/native dialogs, installed acceptance, Windows/DPI/font soak an
 fresh AutoCAD reference observations remain separate checks. LC-MON-003 viewport
 center repair, independent tick stroke, extra grip modes and idle two-click window
 selection are unfinished. Historical monitoring records remain untouched.
+
+
+## First milestone outcome
+
+Tested code commit3de665ab06f7a48eabc4a5331100786a01fb969a produced local candidate
+1.36.1-beta.1. Its full automated gate passed22/22 stages:559 selected portable
+checks, source and unpacked32/PDF9 each, and the new real-loopback9-check drafting
+smoke for each. These are overlapping evidence classes, not an independent feature
+total. The private original HATCH27-check control was separately rerun against
+current source and a preserved1.36 baseline; only module/fixture location bindings
+were adapted, without changing assertions. It overlaps the26 public HATCH tests.
+
+Both actual packaged PDFs were visually inspected. The actual127mm/50.8mm ruler
+measurements and20x12mm solid fill passed independent reading. An earlier stricter
+reader attempt failed by counting an antialiased partial boundary row; independent
+vector/device-coordinate inspection justified restricting sampling to fully
+contained pixels. The99.5% threshold and missing/partial-ink negative controls were
+preserved. Failed evidence remains available privately.
+
+Candidate-saved native drawing copies reopen semantically unchanged with all59
+runtime files extracted and hash-verified from the preserved1.36 checkpoint.
+This is source-reader compatibility, not installed downgrade/upgrade acceptance.
+The installer was compiled without installing. Native dialogs/physical input,
+installed candidate acceptance, dev-host reload/restart refresh, larger-drawing app
+timing, broad font/DPI/Windows soak and the original large client-sheet case on the
+refreshed vendor runtime remain unverified. The selected new sheet is a reduced
+calibration fixture; existing title-block references remain separate coverage.
+
+The local CI configuration has not been pushed or run remotely. Report/log artifact
+uploads were rejected by automatic approval review because of potential path or
+metadata disclosure; evidence remains local. No remote publication, merge, tag,
+installation, scheduler or outbound message occurred. Manual invocation ready;
+unattended execution not enabled. Next ready repair: separately review LC-MON-003.
