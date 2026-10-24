@@ -12,7 +12,7 @@ node node_modules/electron/install.js
 npm run dev
 ```
 
-The lockfile pins the dependencies. The explicit Electron install step obtains its pinned binary when npm installation did not supply the executable. Development uses that local runtime, not a private workspace or another installed CAD product. A code editor is sufficient for normal JavaScript/Electron work; Visual Studio is not a prerequisite.
+The lockfile pins the dependencies. The prerelease security refresh targets Electron **44.9.3**, with related locked development-dependency fixes; use the tagged lockfile and verify the actual runtime recorded by the checks. The explicit Electron install step obtains its pinned binary when npm installation did not supply the executable. Development uses that local runtime, not a private workspace or another installed CAD product. A code editor is sufficient for normal JavaScript/Electron work; Visual Studio is not a prerequisite.
 
 Use the source host for repeated code/test cycles. Renderer helpers and styles participate in the development reload loop. Main/preload changes require restarting the host. A recovered development checkpoint retains accepted drawing content/view but cancels active prompts and resets Undo history; it is not a substitute for saving project revisions. Installers belong to release qualification, not every edit.
 
@@ -38,7 +38,7 @@ Use only distributable fixtures and preserve reports identifying exact inputs, e
 
 The current public plan selects 306 portable core cases from the 318-case source, with twelve private-reference cases explicitly excluded, eleven self-contained pure suites, and source/unpacked ordinary-grip application checks with actual PDF auditing. The excluded cases are omitted by selection; they are not twelve executed TAP skips. Planned counts are not passing results. Public-gate execution and conditional clean CI install/uninstall are not claimed until their own completed reports exist. Read the release's [Public-Beta-Verification.json](https://github.com/MrOweItAll/linecraft-cad/releases/download/v1.36.0/Public-Beta-Verification.json) for the separately recorded public-checkout scope and results.
 
-The existing **177-stage** desktop qualification is provenance for the 1.36 implementation: **128 successful unchanged stages were inherited and 49 were newly executed** under reviewed continuation. It is not the public-checkout gate's test count.
+The historical **177-stage** desktop qualification used Electron **44.7.0**: **128 successful unchanged stages were inherited and 49 were newly executed** under reviewed continuation. Its visible installed 14/11/PDF9 checks are historical evidence for that vendor build. The refreshed beta preserves application code/resources while changing vendor dependencies, so fresh public tests, actual runtime versions, dependency-audit status and visible installed review must be recorded separately. Neither the original 177-stage total nor its installed checks establish the refreshed build's result.
 
 For a small geometry/input change, a self-contained check can run directly:
 

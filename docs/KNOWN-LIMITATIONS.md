@@ -1,6 +1,6 @@
 # Beta scope and known limitations
 
-The completed 1.36 qualification left no measured reproducible critical crash blocking its tested flows. It does not establish crash-free operation on every machine or drawing. Missing functionality below is distinguished from crashes, data loss, corrupt files or silently incorrect geometry/scale, which should be reported as bugs.
+The historical 1.36 qualification using Electron 44.7.0 left no measured reproducible critical crash blocking its tested flows. That finding does not qualify the refreshed Electron 44.9.3 vendor build or establish crash-free operation on every machine or drawing. Consult [the public verification receipt](https://github.com/MrOweItAll/linecraft-cad/releases/download/v1.36.0/Public-Beta-Verification.json) for completed checks of the released artifact. Missing functionality below is distinguished from crashes, data loss, corrupt files or silently incorrect geometry/scale, which should be reported as bugs.
 
 ## Drawing and interoperability
 

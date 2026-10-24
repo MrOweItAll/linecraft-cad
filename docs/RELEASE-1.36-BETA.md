@@ -19,7 +19,7 @@ This uses measurements from the actual AutoCAD LT 2027 application, with indepen
 
 The build also contains the existing drafting, architectural units, text/dimensions, layers, layouts/viewports, PDF, polygonal 3D and structured scripting work. It is not a claim of complete AutoCAD feature or DWG fidelity.
 
-## Existing desktop qualification
+## Historical desktop qualification — Electron 44.7.0
 
 - Qualified pipeline: **177/177 stages**, consisting of **128 successful unchanged stages inherited under reviewed provenance and 49 newly executed stages**. This is not 177 newly rerun stages.
 - Source ordinary-grip application: **32/32**; existing source drafting interaction: **59/59**. Matching actual PDF checks passed.
@@ -29,7 +29,7 @@ The build also contains the existing drafting, architectural units, text/dimensi
 
 Hidden source/packaged tests, visible development tests and installed native tests are separate evidence classes. Counts overlap and are not summed as independent feature coverage. Test setup/dependency-copy repairs and reviewed stage reuse were recorded; earlier failed runs were retained.
 
-The public checkout has a separately generated bounded verification gate. The original 177-stage qualification is not its execution count. Consult the linked public verification receipt for the actual result; clean CI install/uninstall success requires a matching completed record.
+The public beta preserves application code/resources and refreshes vendor dependencies, targeting Electron **44.9.3** with related locked development-dependency fixes. The historical 177 stages and installed 14/11/PDF9 results above do not qualify the refreshed runtime. The public checkout has a separately generated bounded verification gate; its receipt records the exact desktop runtime pin, dependency-audit result and fresh public/installed checks actually completed. Consult the linked [public verification receipt](https://github.com/MrOweItAll/linecraft-cad/releases/download/v1.36.0/Public-Beta-Verification.json) for that result. Fresh checks and clean CI install/uninstall success are not asserted before matching completed records exist.
 
 ## Known scope
 

@@ -26,7 +26,7 @@ There is **no automatic updater** in this release.
 3. Download and verify the new installer, close Linecraft cleanly and install for the same Windows user.
 4. Confirm the version. Open a drawing copy and check important geometry, units, layers, text/fonts, layouts, viewport scales and a plotted PDF before adopting it for the project.
 
-The 1.36 qualification exercised an existing per-user **1.34→1.36** upgrade and actual installed Save/reopen/PDF output. It did not qualify every older-version upgrade, clean-VM installation, downgrade or uninstall scenario.
+The historical 1.36 qualification with Electron 44.7.0 exercised an existing per-user **1.34→1.36** upgrade and actual installed Save/reopen/PDF output. It did not qualify every older-version upgrade, clean-VM installation, downgrade or uninstall scenario. The vendor security refresh targets Electron 44.9.3; consult [Public-Beta-Verification.json](https://github.com/MrOweItAll/linecraft-cad/releases/download/v1.36.0/Public-Beta-Verification.json) for fresh installed checks actually completed on the released runtime.
 
 ## Rollback
 
@@ -34,7 +34,7 @@ Older Linecraft versions may reject or misinterpret newer entities/settings. **B
 
 Close the beta, retain the current files, and use the older version's installer through its normal Windows flow. If it requires removing the beta first, use **Windows Settings → Apps** and retain project files/backups. Avoid deleting application profiles or project folders as a troubleshooting shortcut. Use the pre-upgrade drawing copy with the older version; keep newer revisions separate for recovery or conversion review.
 
-Rollback/uninstall was not part of this qualification. Report a failed downgrade with the versions and sanitized error through the [bug template](https://github.com/MrOweItAll/linecraft-cad/issues/new/choose).
+Rollback/uninstall was not part of the historical desktop qualification. Report a failed downgrade with the versions and sanitized error through the [bug template](https://github.com/MrOweItAll/linecraft-cad/issues/new/choose).
 
 ## Optional tools and source development
 

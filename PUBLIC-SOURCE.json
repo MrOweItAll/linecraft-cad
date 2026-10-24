@@ -368,12 +368,13 @@
     "visibleNativeFileChecks": 14,
     "additionalVisibleGestureChecks": 11,
     "actualPdfChecks": 9,
-    "scope": "Historical qualification of unchanged runtime; separate from this public reproducibility gate."
+    "scope": "Historical qualification of preserved application source/resources on Electron44.7.0. The Electron44.9.3 security refresh requires separate current public and visible-installed requalification; historical results do not establish the refreshed vendor runtime."
   },
   "publicGatePolicy": {
     "privateNativeCoreCasesExcluded": 12,
     "generatedCoreCases": 306,
     "referenceCapturesIncluded": false,
     "clientDrawingsIncluded": false
-  }
+  },
+  "desktopRuntimePin": "44.9.3"
 }

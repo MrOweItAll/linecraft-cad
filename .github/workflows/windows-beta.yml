@@ -44,6 +44,11 @@ jobs:
           "CAD_PYTHON=$((Resolve-Path .\.pdf-test-venv\Scripts\python.exe).Path)" | Add-Content -LiteralPath $env:GITHUB_ENV
       - name: Verify qualified runtime bytes
         run: node tools/verify-public-source.cjs
+      - name: Check current dependency advisories before building public assets
+        run: |
+          New-Item -Path work -ItemType Directory -Force | Out-Null
+          npm audit --json | Set-Content -LiteralPath work/public-npm-audit.json -Encoding utf8NoBOM
+          if ($LASTEXITCODE -ne 0) { throw 'Dependency advisories must be resolved before publishing.' }
       - name: Fresh public engine, source and unpacked application tests; compile installer
         run: |
           npm run release
@@ -79,7 +84,9 @@ jobs:
         with:
           name: public-beta-failure-logs
           if-no-files-found: ignore
-          path: work/public-gate-*/*.log
+          path: |
+            work/public-gate-*/*.log
+            work/public-npm-audit.json
   publish:
     needs: qualify
     if: github.ref == 'refs/tags/v1.36.0'

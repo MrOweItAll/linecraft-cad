@@ -8,9 +8,10 @@ Do not run every test by glob and interpret that as the supported public gate.
 
 ## Prerequisites
 
-Use Node.js 24 LTS and `npm ci`. The lockfile pins Electron 44.7.0,
+Use Node.js 24 LTS and `npm ci`. The lockfile pins Electron 44.9.3,
 electron-builder 26.15.3 and Playwright 1.62.1. Dependencies must be installed in
-this checkout; no personal module path, global runtime or node_modules junction
+this checkout; patched fast-uri and both undici major versions have exact compatible
+overrides in package.json. No personal module path, global runtime or node_modules junction
 is used. Ordinary application users do not need these development dependencies.
 
 `npm test` is portable and needs no Python. Desktop tests/builds require Windows

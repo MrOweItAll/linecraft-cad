@@ -22,7 +22,7 @@
     "test:trim": "node --test tests/trim-comprehensive.test.mjs"
   },
   "devDependencies": {
-    "electron": "44.7.0",
+    "electron": "44.9.3",
     "electron-builder": "26.15.3",
     "playwright": "1.62.1"
   },
@@ -101,5 +101,14 @@
         "to": "structural/linecraft-structural-adapter.py"
       }
     ]
+  },
+  "overrides": {
+    "fast-uri": "3.1.9",
+    "node-gyp": {
+      "undici": "6.29.1"
+    },
+    "@electron/get": {
+      "undici": "7.30.1"
+    }
   }
 }

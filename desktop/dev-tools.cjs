@@ -3,7 +3,7 @@
 // replaced with generated expected values. Historical suites are not globbed.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const {spawn}=require('node:child_process'),{createHash}=require('node:crypto');
-const root=path.resolve(__dirname,'..'),pins={electron:'44.7.0','electron-builder':'26.15.3',playwright:'1.62.1'};
+const root=path.resolve(__dirname,'..'),pins={electron:'44.9.3','electron-builder':'26.15.3',playwright:'1.62.1'};
 const suites=[
  'ordinary-grip-input.test.mjs','perpendicular-independent.test.mjs','command-completion.test.mjs','trim-comprehensive.test.mjs',
  'units-independent.test.mjs','advanced-independent.test.mjs','layouts-independent.test.mjs','viewport-object-independent.test.mjs',
@@ -30,7 +30,7 @@ function run(executable,args,log){return new Promise((resolve,reject)=>{
  const stop=()=>child.kill();process.once('SIGINT',stop);process.once('SIGTERM',stop);child.once('close',()=>{process.removeListener('SIGINT',stop);process.removeListener('SIGTERM',stop);});
 });}
 function counts(tap){const result={};for(const key of ['tests','pass','fail','cancelled','skipped']){const matches=[...tap.matchAll(new RegExp('^# '+key+' (\\d+)\\s*$','gm'))];assert.ok(matches.length,`Missing TAP ${key} summary`);result[key]=Number(matches.at(-1)[1]);}assert.equal(result.fail,0);assert.equal(result.cancelled,0);return result;}
-function verifySource(){assert.equal(manifest.version,require('../package.json').version);assert.equal(manifest.runtimeFiles.length,59);assert.equal(manifest.extraResources.length,12);for(const item of [...manifest.runtimeFiles,...manifest.extraResources]){assert.ok(!path.isAbsolute(item.file)&&!item.file.split(/[\\/]/).includes('..'));const bytes=fs.readFileSync(path.join(root,item.file));assert.equal(bytes.length,item.bytes,item.file);assert.equal(sha(bytes),item.sha256,item.file);}return{runtimeFiles:59,extraResources:12};}
+function verifySource(){assert.equal(manifest.desktopRuntimePin,pins.electron);assert.equal(manifest.version,require('../package.json').version);assert.equal(manifest.runtimeFiles.length,59);assert.equal(manifest.extraResources.length,12);for(const item of [...manifest.runtimeFiles,...manifest.extraResources]){assert.ok(!path.isAbsolute(item.file)&&!item.file.split(/[\\/]/).includes('..'));const bytes=fs.readFileSync(path.join(root,item.file));assert.equal(bytes.length,item.bytes,item.file);assert.equal(sha(bytes),item.sha256,item.file);}return{runtimeFiles:59,extraResources:12};}
 function verifyPackaged(executable){
  verifySource();const asar=require('@electron/asar'),resources=path.join(path.dirname(path.resolve(executable)),'resources'),archive=path.join(resources,'app.asar');
  for(const item of manifest.runtimeFiles)assert.equal(sha(asar.extractFile(archive,item.file)),item.sha256,item.file);
@@ -57,7 +57,7 @@ async function desktop(report,executable,entry,prefix){
  dependency('playwright','index.js');if(!entry)report.packagedBefore=verifyPackaged(executable);
  await stage(report,`actual hidden ${prefix}:32 checks and independent PDF9`,process.execPath,['tests/ordinary-grip-desktop.cjs',path.resolve(executable),entry,prefix],()=>{
   const file=path.join(root,'tests',prefix+'-results.json'),result=JSON.parse(fs.readFileSync(file,'utf8'));assert.equal(result.total,32);assert.equal(result.passed,32);assert.equal(result.failed,0);assert.equal(result.sourceUnchangedDuringRun,true);assert.equal(result.outputs.pdfAudit.total,9);assert.equal(result.outputs.pdfAudit.passed,9);assert.equal(result.hiddenWindowVerified,true);assert.equal(result.application.packaged,!entry);
-  return{report:path.relative(root,file),reportSHA256:sha(fs.readFileSync(file)),passed:32,total:32,pdf:result.outputs.pdf,pdfSHA256:result.outputs.pdfSHA256,pdfAudit:result.outputs.pdfAudit,scope:result.evidenceClass};
+  return{application:result.application,report:path.relative(root,file),reportSHA256:sha(fs.readFileSync(file)),passed:32,total:32,pdf:result.outputs.pdf,pdfSHA256:result.outputs.pdfSHA256,pdfAudit:result.outputs.pdfAudit,scope:result.evidenceClass};
  });if(!entry)report.packagedAfter=verifyPackaged(executable);
 }
 async function main(){

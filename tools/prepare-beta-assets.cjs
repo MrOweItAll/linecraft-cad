@@ -21,11 +21,12 @@ assert.equal(clean.version,version);assert.equal(clean.runId,process.env.GITHUB_
 const installer=`Linecraft-CAD-${version}-Setup.exe`,source=`Linecraft-CAD-${version}-Source.zip`;
 assert.equal(sha(path.join(out,installer)),clean.installerSha256);
 execFileSync('git',['archive','--format=zip',`--prefix=Linecraft-CAD-${version}-Source/`,`--output=${path.join(out,source)}`,commit],{cwd:root,stdio:'inherit'});
-const summary={format:'LinecraftPublicBetaVerification/1',version,tag:preflight?null:tag,commit,runId:process.env.GITHUB_RUN_ID,runUrl:`https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,releaseClass:preflight?'candidate':'prerelease',automaticUpdater:false,codeSigning:'unsigned',historicalQualifiedWindowsRuntime:read('PUBLIC-SOURCE.json').qualifiedWindowsEvidence,freshPublicChecks:{},limits:['Hidden CI tests stub native chooser/discard responses.','Visible installed Windows tests were separately performed on the unchanged application runtime.','Fresh install/uninstall scope is a GitHub-hosted Windows VM; broader Windows/DPI coverage remains beta work.']};
+const summary={format:'LinecraftPublicBetaVerification/1',version,tag:preflight?null:tag,commit,runId:process.env.GITHUB_RUN_ID,runUrl:`https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,releaseClass:preflight?'candidate':'prerelease',automaticUpdater:false,codeSigning:'unsigned',historicalQualifiedWindowsRuntime:read('PUBLIC-SOURCE.json').qualifiedWindowsEvidence,freshPublicChecks:{},limits:['Hidden CI tests stub native chooser/discard responses.','Historical visible installed Windows checks preceded the vendor security refresh; current public gates exercise the patched vendor runtime separately.','Fresh install/uninstall scope is a GitHub-hosted Windows VM; broader Windows/DPI coverage remains beta work.']};
 for(const mode of ['source','unpacked','installed']){
  const r=read(`tests/ordinary-grip-public-${mode}-results.json`);assert.equal(r.passed,32);assert.equal(r.failed,0);assert.equal(r.outputs.pdfAudit.passed,9);
+ assert.equal(r.application.electron,require('../package.json').devDependencies.electron,'Application did not run the patched vendor runtime.');
  assert.ok(Date.parse(r.startedAt)>=gateStart,'Stale application receipt.');
- summary.freshPublicChecks[mode]={applicationChecks:r.passed,failed:r.failed,pdfChecks:r.outputs.pdfAudit.passed,evidenceClass:r.evidenceClass,tests:r.tests.map(t=>({name:t.name,status:t.status}))};
+ summary.freshPublicChecks[mode]={application:r.application,applicationChecks:r.passed,failed:r.failed,pdfChecks:r.outputs.pdfAudit.passed,evidenceClass:r.evidenceClass,tests:r.tests.map(t=>({name:t.name,status:t.status}))};
  if(mode==='installed'){
   for(const [field,name]of [['native','Installed-Acceptance.linecraft'],['pdf','Installed-Acceptance.pdf']]){
    const file=path.resolve(r.outputs[field]),work=path.join(root,'work')+path.sep;
@@ -37,7 +38,10 @@ for(const mode of ['source','unpacked','installed']){
 }
 summary.cleanInstallation={os:clean.os,scope:clean.scope,checks:clean.checks};
 const pure=read('work/public-pure-results.json');assert.equal(pure.status,'passed');summary.freshPublicChecks.pure=pure;
-summary.runtimeIdentity={runtimeFiles:59,bundledResources:12,manifestSHA256:sha(path.join(root,'PUBLIC-SOURCE.json')),scope:'Source, unpacked and installed bytes are checked against the same qualified runtime manifest; development tooling metadata is separate.'};
+const audit=read('work/public-npm-audit.json');assert.equal(audit.metadata.vulnerabilities.total,0);
+summary.dependencyAudit={vulnerabilities:audit.metadata.vulnerabilities,dependencies:audit.metadata.dependencies,scope:'Current npm advisory response for the locked dependencies, including the bundled Electron runtime.'};
+summary.desktopRuntime=require('../package.json').devDependencies.electron;
+summary.runtimeIdentity={runtimeFiles:59,bundledResources:12,manifestSHA256:sha(path.join(root,'PUBLIC-SOURCE.json')),scope:'Original application code and resources retain qualified identities; the patched vendor desktop runtime is separately exercised in each public application gate.'};
 // Do not publish machine-local paths, temporary profiles or connection descriptors.
 const strip=(v)=>typeof v==='string'&&(/^[a-z]:[\\/]/i.test(v)||v.includes('\\Users\\'))?'[local path omitted]':Array.isArray(v)?v.map(strip):v&&typeof v==='object'?Object.fromEntries(Object.entries(v).filter(([k])=>!['cwd','root','work','executable','command','args','stdout','stderr','log','path'].includes(k)).map(([k,x])=>[k,strip(x)])):v;
 fs.writeFileSync(path.join(out,'Public-Beta-Verification.json'),JSON.stringify(strip(summary),null,2)+'\n');
