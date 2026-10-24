@@ -24,7 +24,15 @@
       "nextAction": "Perform visible exact-candidate native import/save/reopen/PDF acceptance before daily-use promotion",
       "candidateVersion": "1.36.1-beta.1",
       "testedCommit": "3de665ab06f7a48eabc4a5331100786a01fb969a",
-      "installedAcceptance": "not run"
+      "installedAcceptance": "not run",
+      "cumulativeBeta2Verification": {
+        "version": "1.36.1-beta.2",
+        "testedCommit": "fdc37327e174516dda10bcab7045ed991fdda8c4",
+        "publicHatchTests": "26/26",
+        "privateOriginalHatchControl": "27/27 vs viewport-only control; assertions unchanged",
+        "sourceAndPackagedImportSaveReopenPDF": "passed",
+        "installedAcceptance": "not run"
+      }
     },
     {
       "id": "LC-MON-003",
@@ -33,13 +41,24 @@
       "expected": "Preserve independently verified center and physical scale",
       "sourceVersion": "1.36.0",
       "sourceCommit": "f37aba5ebe19f27088847cd8f983ecf5facf8eac",
-      "reproduction": "Use private existing viewport packet with synthetic minimized control",
-      "fixtureClass": "private packet; synthetic public fixture pending",
+      "reproduction": "Import public synthetic tests/fixtures/top-viewport-center.dxf",
+      "fixtureClass": "public synthetic; original private controls retained separately",
       "acceptance": "Current importer geometry plus actual source/package/installed/PDF center and scale",
-      "status": "deferred",
-      "attempts": 0,
-      "evidence": [],
-      "nextAction": "Reconcile separate viewport-only patch after LC-MON-002"
+      "status": "verified",
+      "attempts": 1,
+      "evidence": [
+        "tests/viewport-center-import.test.mjs:23 selected checks",
+        "tests/quality-smoke.cjs:actual imported layout unchanged, Save/reopen/PDF",
+        "tests/audit-quality-pdf.py:40mm ruler midpoint150,197mm and10mm paper sentinel",
+        "full candidate gate23/23; source and unpacked smoke10/10 each",
+        "private original viewport controls18/18 with assertions unchanged"
+      ],
+      "nextAction": "Focused visible exact-candidate import/save/reopen/PDF acceptance before daily-use promotion; general twisted/oblique transforms remain separate",
+      "candidateVersion": "1.36.1-beta.2",
+      "testedCommit": "fdc37327e174516dda10bcab7045ed991fdda8c4",
+      "reproducedVersion": "1.36.1-beta.1",
+      "reproducedCommit": "9d538123b092345a7fc8cc98f0fa6b3ae31d17bf",
+      "installedAcceptance": "not run"
     },
     {
       "id": "LC-QA-001",
@@ -60,7 +79,8 @@
         "PDF ruler127mm/50.8mm and HATCH ink checks",
         "independent raster-bounds correction retained failed-run evidence"
       ],
-      "nextAction": "Use manual invocation for the next bounded session; native acceptance and remote CI remain separate"
+      "nextAction": "Use manual invocation for the next bounded session; native acceptance and remote CI remain separate",
+      "beta2Extension": "Actual imported viewport check added; source and packaged real-loopback smoke10/10 each. Existing9-check beta1 receipts remain historical."
     },
     {
       "id": "LC-MON-001",

@@ -2,7 +2,7 @@
 
 Baseline commit: f37aba5ebe19f27088847cd8f983ecf5facf8eac, version1.36.0,
 origin https://github.com/MrOweItAll/linecraft-cad.git. Local ownership branch:
-codex/quality-loop-1.36.1. Candidate version1.36.1-beta.1. Exact local paths and
+codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; active candidate1.36.1-beta.2. Exact local paths and
 checkpoint/installer hashes are in the private session report, outside this tree.
 
 Verified on2026-10-24: Windows x64, host Node24.13.0/npm11.6.2, local Electron44.9.3,
@@ -70,3 +70,52 @@ uploads were rejected by automatic approval review because of potential path or
 metadata disclosure; evidence remains local. No remote publication, merge, tag,
 installation, scheduler or outbound message occurred. Manual invocation ready;
 unattended execution not enabled. Next ready repair: separately review LC-MON-003.
+
+
+## Viewport-center cycle — October 24, 2026
+
+Tested code fdc37327e174516dda10bcab7045ed991fdda8c4 produces local candidate
+1.36.1-beta.2. All 23 automated stages passed: 582 selected portable checks,
+source and unpacked 32/PDF9 each, and the extended 10-check real-loopback smoke
+for each. Twelve private core references remain excluded, not passed.
+
+LC-MON-003 was reproduced on verified beta1: raw center (23,-41) imported as
+(41,23). The product change alters one importer line: only the existing normalized,
+untwisted World Top classification uses target + raw DCS XY. Target Z is retained.
+No general transform, paper frame, scale, lock, layer/freeze policy or schema change
+was introduced. The existing LC-MON-002 HATCH fix remains integrated.
+
+The actual app imports the synthetic layout and plots it without scripted repair.
+Complete Save/reopen state and IDs are checked. Its actual packaged PDF ruler is
+39.99972254 mm long at midpoint (149.99895685,196.99912957) mm against literal
+40 mm and (150,197) mm; the unchanged paper sentinel measures 9.99993064 mm.
+Existing 0.02 mm length/midpoint and 0.04 mm endpoint matching tolerances remain.
+Missing-ruler, wrong-scale and shifted-center negative controls must fail.
+The fresh viewport render was visually inspected; this is not native UI acceptance.
+
+Nine frozen synthetic beta1 non-Top output digests establish change isolation only.
+The original private viewport 18-check suite passed against HATCH-only beta1;
+the original private HATCH 27-check suite passed against an independently prepared
+viewport-only control. Only module/fixture-location adapters changed; assertions
+and fixtures stayed intact. Counts overlap the public suites and are not additive
+independent feature coverage. Raw private fixtures and logs remain outside source.
+
+A new import Undo/Redo assertion initially assumed the active paper tab would be
+restored. Preserved beta1 and unchanged core source independently confirmed that
+history restores content while retaining reconciled Model navigation. The test now
+checks the complete expected Redo document with that exact pre-existing context;
+constructor and app Save/reopen still require complete serialized equality.
+This did not change application navigation or weaken geometry/persistence checks.
+
+Actual packaged drafting/HATCH/viewport native copies reopen unchanged with both
+hash-verified 1.36 and beta1 source readers: six exact semantic comparisons. No
+installed upgrade/downgrade test is claimed. Beta1 manifest, installers, source
+archive and immutable1.36 baseline remain preserved. Beta2 uses its own explicit
+manifest and unique QA output directory. Native installed acceptance remains pending.
+
+Supplemental attachments were reviewed: the old scripting-foundation patch is
+already superseded by integrated current APIs, and the development handoff is a
+duplicate. DWG writing and a durable drafting/development relay remain gaps; broader
+font/layout/native transform fidelity is not established by this importer fix.
+No patch wholesale integration, installation, release, push, outbound message or
+scheduler change occurred. Manual invocation ready; unattended execution not enabled.
