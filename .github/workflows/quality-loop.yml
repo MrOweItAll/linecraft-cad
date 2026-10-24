@@ -1,0 +1,49 @@
+name: Quality loop
+on:
+  pull_request:
+  push:
+    branches: ['codex/quality-loop-*']
+permissions:
+  contents: read
+concurrency:
+  group: quality-loop-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  fast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE.json
+  application:
+    runs-on: windows-2025
+    timeout-minutes: 20
+    steps:
+      - shell: pwsh
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - shell: pwsh
+        run: |
+          npm ci --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned dependencies failed.' }
+          node node_modules/electron/install.js
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned runtime failed.' }
+          python -m venv .venv
+          .\.venv\Scripts\python.exe -m pip install -r tests/requirements-dev.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Independent PDF reader failed.' }
+          npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE.json
+          if ($LASTEXITCODE -ne 0) { throw 'Application checks failed.' }

@@ -210,8 +210,10 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
           const begin=record.groups.findIndex(([code])=>code===92),end=record.groups.findIndex(([code],index)=>index>begin&&code===97),groups=record.groups.slice(begin+1,end<0?undefined:end),loop={type:'HATCH-boundary',groups};
           if(num(loop,73,0)!==1||groups.some(([code,raw])=>code===42&&Number(raw)!==0))throw Error('Open or curved hatch loops are unsupported.');
           const points=[];let vertex=null;for(const[code,raw]of groups){if(code===10){if(vertex)points.push(vertex);vertex={x:Number(raw),y:NaN,z:0};}else if(vertex&&code===20)vertex.y=Number(raw);}if(vertex)points.push(vertex);
-          if(points.length!==num(loop,93)||points.length<3)throw Error('Malformed hatch boundary.');const basis=ocs(record),elevation=num(record,30,0),polygon=points.map(p=>xy(transform(basis.point({...p,z:elevation}))));
-          triangulatePolygon(polygon);publish({...common,type:'HATCH',boundary:{type:'PLINE',points:polygon,closed:true},pattern:'solid',angle:0,spacing:1,origin:polygon[0]});warn('hatch-import','Supported solid hatches retain captured nonassociative boundaries.');continue;
+          if(points.length!==num(loop,93)||points.length<3||points.length>4096)throw Error('Malformed hatch boundary or exceeds the 4096-vertex limit.');
+          // Remove only exact zero-length source edges, before any OCS/block transform.
+          const boundary=compact(points,true),basis=ocs(record),elevation=num(record,30,0),polygon=boundary.map(p=>xy(transform(basis.point({...p,z:elevation}))));
+          triangulatePolygon(polygon);if(boundary.length!==points.length)warn('hatch-redundant-vertices','Exact duplicate adjacent/closing vertices were removed from straight solid HATCH boundaries; all other vertices were retained.');publish({...common,type:'HATCH',boundary:{type:'PLINE',points:polygon,closed:true},pattern:'solid',angle:0,spacing:1,origin:polygon[0]});warn('hatch-import','Supported solid hatches retain captured nonassociative boundaries.');continue;
         }
         if(record.type==='LWPOLYLINE'||record.type==='POLYLINE'){
           const flags=num(record,70,0),closed=!!(flags&1),basis=ocs(record),vertices=[];

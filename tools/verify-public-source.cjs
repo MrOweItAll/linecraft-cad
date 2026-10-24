@@ -1,7 +1,7 @@
 'use strict';
 // Read-only runtime identity gate. Development metadata is deliberately separate.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{createHash}=require('node:crypto');
-const root=path.resolve(__dirname,'..'),manifest=JSON.parse(fs.readFileSync(path.join(root,'PUBLIC-SOURCE.json'),'utf8'));
+const root=path.resolve(__dirname,'..'),{manifest}=require('./source-manifest.cjs').loadManifest(process.argv.find(a=>a.startsWith('--manifest='))?.slice(11));
 const sha=b=>createHash('sha256').update(b).digest('hex');
 assert.equal(manifest.version,require('../package.json').version);
 assert.equal(manifest.runtimeFiles.length,59);assert.equal(manifest.extraResources.length,12);
@@ -21,4 +21,4 @@ if(process.argv.includes('--packaged')){
  const packaged=JSON.parse(asar.extractFile(archive,'package.json'));
  assert.equal(packaged.version,manifest.version);assert.equal(packaged.main,'desktop/main.cjs');
 }
-console.log('Verified 59 original runtime files and 12 bundled resources'+(process.argv.includes('--packaged')?' in source and actual ASAR/resources.':' in source.'));
+console.log('Verified 59 manifest-bound runtime files and 12 bundled resources'+(process.argv.includes('--packaged')?' in source and actual ASAR/resources.':' in source.'));

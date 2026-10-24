@@ -9,11 +9,13 @@ const suites=[
  'units-independent.test.mjs','advanced-independent.test.mjs','layouts-independent.test.mjs','viewport-object-independent.test.mjs',
  'viewport-scales-independent.test.mjs','roof-hip.test.mjs','clearance-independent.test.mjs'
 ].map(n=>'tests/'+n);
-const auxiliaries=['tests/core.test.mjs','tests/public-core-exclusions.json','tests/export-advanced-sample.mjs','tests/historical-native-fixture.mjs','tests/historical-trim-defaults.cjs','tests/viewport-fixtures-v17.mjs','tests/viewport-scales-fixtures-v18.mjs','tests/ordinary-grip-desktop.cjs','tests/ordinary-grip-confirm.cjs','tests/electron-test-options.cjs','tests/audit-drafting-pdf.py','tests/requirements-dev.txt','desktop/dev-tools.cjs','package.json','package-lock.json','PUBLIC-SOURCE.json','tools/verify-public-source.cjs'];
-const manifest=JSON.parse(fs.readFileSync(path.join(root,'PUBLIC-SOURCE.json'),'utf8'));
+const auxiliaries=['tests/core.test.mjs','tests/public-core-exclusions.json','tests/export-advanced-sample.mjs','tests/historical-native-fixture.mjs','tests/historical-trim-defaults.cjs','tests/viewport-fixtures-v17.mjs','tests/viewport-scales-fixtures-v18.mjs','tests/ordinary-grip-desktop.cjs','tests/ordinary-grip-confirm.cjs','tests/electron-test-options.cjs','tests/audit-drafting-pdf.py','tests/requirements-dev.txt','desktop/dev-tools.cjs','package.json','package-lock.json','PUBLIC-SOURCE.json','tools/verify-public-source.cjs','tools/source-manifest.cjs','tools/qa.cjs','tools/create-candidate-manifest.cjs','tests/quality-fixtures.mjs','tests/quality-smoke.cjs','tests/audit-quality-pdf.py','tests/fixtures/duplicate-closing-hatch.dxf'];
+const manifestOption=process.argv.find(a=>a.startsWith('--manifest='))?.slice(11);
+const {manifest,manifestFile,candidate}=require('../tools/source-manifest.cjs').loadManifest(manifestOption);
+if(candidate)suites.push('tests/hatch-normalization.test.mjs','tests/quality-reference.test.mjs','tests/qa-controls.test.cjs');
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const hashFiles=names=>Object.fromEntries(names.map(n=>[n,sha(fs.readFileSync(path.join(root,n)))]));
-const fingerprintNames=[...new Set([...manifest.runtimeFiles,...manifest.extraResources].map(r=>r.file).concat(suites,auxiliaries))].sort();
+const fingerprintNames=[...new Set([...manifest.runtimeFiles,...manifest.extraResources].map(r=>r.file).concat(suites,auxiliaries,[manifestFile]))].sort();
 function dependency(name,entry){
  const base=path.join(root,'node_modules',name);assert.ok(fs.existsSync(base),`Run npm ci: local ${name} is missing.`);
  assert.equal(JSON.parse(fs.readFileSync(path.join(base,'package.json'),'utf8')).version,pins[name],`${name} pin`);
@@ -21,12 +23,14 @@ function dependency(name,entry){
  const file=path.join(base,entry);assert.ok(fs.existsSync(file),`Local ${name} install is incomplete; enable npm install scripts.`);return file;
 }
 function runtime(){assert.equal(process.platform,'win32','Desktop and installer qualification require Windows; npm test is portable.');assert.equal(process.arch,'x64');const exe=dependency('electron','dist/electron.exe');assert.equal(fs.readFileSync(path.join(path.dirname(exe),'version'),'utf8').trim().replace(/^v/,''),pins.electron);return exe;}
-function childEnvironment(){const env={...process.env};for(const n of ['ELECTRON_RUN_AS_NODE','ELECTRON_OVERRIDE_DIST_PATH','CAD_ELECTRON_RUNTIME','CAD_PLAYWRIGHT_MODULE','NODE_PATH'])delete env[n];return env;}
+function childEnvironment(){const env={...process.env};for(const n of ['ELECTRON_RUN_AS_NODE','ELECTRON_OVERRIDE_DIST_PATH','CAD_ELECTRON_RUNTIME','CAD_PLAYWRIGHT_MODULE','NODE_PATH'])delete env[n];env.LINECRAFT_EXPECTED_VERSION=manifest.version;return env;}
 function run(executable,args,log){return new Promise((resolve,reject)=>{
  const output=fs.createWriteStream(log,{flags:'wx'}),child=spawn(executable,args,{cwd:root,env:childEnvironment(),windowsHide:true,stdio:['ignore','pipe','pipe']});
  child.stdout.pipe(output,{end:false});child.stderr.pipe(output,{end:false});
- let failed=false;child.once('error',error=>{failed=true;output.end();reject(error);});
- child.once('close',(code,signal)=>{output.end(()=>{if(failed)return;const text=fs.readFileSync(log,'utf8');if(code===0)resolve(text);else reject(Error(`Stage exited ${code??signal}; see ${path.relative(root,log)}\n${text.split(/\r?\n/).slice(-60).join('\n')}`));});});
+ let failed=false,timedOut=false;const budget=args.some(a=>/builder|install\.js/.test(a))?600000:180000;
+ const timer=process.argv[2]==='dev'?null:setTimeout(()=>{timedOut=true;if(process.platform==='win32')require('node:child_process').spawnSync('taskkill',['/PID',String(child.pid),'/T','/F'],{windowsHide:true,stdio:'ignore'});else child.kill('SIGTERM');},budget);
+ child.once('error',error=>{failed=true;clearTimeout(timer);output.end();reject(error);});
+ child.once('close',(code,signal)=>{clearTimeout(timer);if(timedOut)code='timeout';output.end(()=>{if(failed)return;const text=fs.readFileSync(log,'utf8');if(code===0)resolve(text);else reject(Error(`Stage exited ${code??signal}; see ${path.relative(root,log)}\n${text.split(/\r?\n/).slice(-60).join('\n')}`));});});
  const stop=()=>child.kill();process.once('SIGINT',stop);process.once('SIGTERM',stop);child.once('close',()=>{process.removeListener('SIGINT',stop);process.removeListener('SIGTERM',stop);});
 });}
 function counts(tap){const result={};for(const key of ['tests','pass','fail','cancelled','skipped']){const matches=[...tap.matchAll(new RegExp('^# '+key+' (\\d+)\\s*$','gm'))];assert.ok(matches.length,`Missing TAP ${key} summary`);result[key]=Number(matches.at(-1)[1]);}assert.equal(result.fail,0);assert.equal(result.cancelled,0);return result;}
@@ -54,18 +58,28 @@ async function pure(report){
  fs.writeFileSync(path.join(root,'work/public-pure-results.json'),JSON.stringify(summary,null,2)+'\n');
 }
 async function desktop(report,executable,entry,prefix){
+ if(candidate)prefix+='-'+(process.env.LINECRAFT_QA_LOCK_ID||String(process.pid));
  dependency('playwright','index.js');if(!entry)report.packagedBefore=verifyPackaged(executable);
  await stage(report,`actual hidden ${prefix}:32 checks and independent PDF9`,process.execPath,['tests/ordinary-grip-desktop.cjs',path.resolve(executable),entry,prefix],()=>{
-  const file=path.join(root,'tests',prefix+'-results.json'),result=JSON.parse(fs.readFileSync(file,'utf8'));assert.equal(result.total,32);assert.equal(result.passed,32);assert.equal(result.failed,0);assert.equal(result.sourceUnchangedDuringRun,true);assert.equal(result.outputs.pdfAudit.total,9);assert.equal(result.outputs.pdfAudit.passed,9);assert.equal(result.hiddenWindowVerified,true);assert.equal(result.application.packaged,!entry);
+  const file=path.join(root,'tests',prefix+'-results.json'),result=JSON.parse(fs.readFileSync(file,'utf8'));assert.ok(Date.parse(result.startedAt)>=Date.parse(report.stages.at(-1).startedAt),'Stale application result');assert.equal(result.total,32);assert.equal(result.passed,32);assert.equal(result.failed,0);assert.equal(result.sourceUnchangedDuringRun,true);assert.equal(result.outputs.pdfAudit.total,9);assert.equal(result.outputs.pdfAudit.passed,9);assert.equal(result.hiddenWindowVerified,true);assert.equal(result.application.packaged,!entry);
   return{application:result.application,report:path.relative(root,file),reportSHA256:sha(fs.readFileSync(file)),passed:32,total:32,pdf:result.outputs.pdf,pdfSHA256:result.outputs.pdfSHA256,pdfAudit:result.outputs.pdfAudit,scope:result.evidenceClass};
- });if(!entry)report.packagedAfter=verifyPackaged(executable);
+ });
+ if(candidate)await stage(report,`actual loopback drafting and import smoke: ${prefix}`,process.execPath,['tests/quality-smoke.cjs',path.resolve(executable),entry,prefix],()=>{const file=path.join(root,'tests',prefix+'-quality-results.json'),result=JSON.parse(fs.readFileSync(file));assert.equal(result.status,'passed');assert.ok(Date.parse(result.startedAt)>=Date.parse(report.stages.at(-1).startedAt));return{report:file,sha256:sha(fs.readFileSync(file)),evidenceClass:result.evidenceClass,checks:result.tests.length};});
+ if(!entry)report.packagedAfter=verifyPackaged(executable);
 }
 async function main(){
- const[command='test',installed]=process.argv.slice(2);assert.ok(['test','test-desktop','unpacked','release','dev','test-installed'].includes(command),'Commands: dev | test | test-desktop | unpacked | release | test-installed <exe>');
+ const[command='test']=process.argv.slice(2),installed=process.argv.slice(3).find(a=>!a.startsWith('--')),outputOption=process.argv.find(a=>a.startsWith('--output='))?.slice(9),buildOutput=outputOption?path.resolve(root,outputOption):path.join(root,'Windows-Release');
+ if(candidate&&['unpacked','release'].includes(command))assert.ok(outputOption,'Candidate builds require an explicit isolated --output directory');assert.ok(['test','test-desktop','unpacked','release','dev','test-installed'].includes(command),'Commands: dev | test | test-desktop | unpacked | release | test-installed <exe>');
  if(command==='dev'){fs.mkdirSync(path.join(root,'work'),{recursive:true});if(!fs.existsSync(path.join(root,'node_modules/electron/dist/electron.exe')))await run(process.execPath,[dependency('electron','install.js')],path.join(root,'work/electron-bootstrap-'+Date.now()+'.log'));const exe=runtime();return run(exe,[path.join(root,'desktop/main.cjs'),`--user-data-dir=${path.join(root,'work/development-profile')}`],path.join(root,'work/dev-'+Date.now()+'.log'));}
- const work=path.join(root,'work');fs.mkdirSync(work,{recursive:true});const logDirectory=path.join(work,'public-gate-'+command+'-'+Date.now());fs.mkdirSync(logDirectory,{recursive:false});
- const report={format:'LinecraftPublicGate/1',scope:'Generated public qualification only. No private native recordings, client drawings, ordinary installed desktop input, OS choosers or real clipboard access. Installed command means hidden runner acceptance, not native human review.',command,version:require('../package.json').version,node:process.version,platform:process.platform,arch:process.arch,startedAt:new Date().toISOString(),logDirectory,sourceSHA256:hashFiles(fingerprintNames),stages:[]};
+ const work=path.join(root,'work');fs.mkdirSync(work,{recursive:true});
+ const lockFile=path.join(work,'quality-gate.lock.json');let ownsLock=false;
+ if(process.env.LINECRAFT_QA_LOCK_ID){const owner=JSON.parse(fs.readFileSync(lockFile));assert.equal(owner.id,process.env.LINECRAFT_QA_LOCK_ID);assert.equal(owner.pid,process.ppid);assert.equal(owner.directory,process.env.LINECRAFT_QA_RUN_DIRECTORY);}
+ else{fs.writeFileSync(lockFile,JSON.stringify({id:'direct-'+process.pid,pid:process.pid,startedAt:new Date().toISOString()}),{flag:'wx'});ownsLock=true;}
+ const logDirectory=process.env.LINECRAFT_QA_RUN_DIRECTORY?path.join(process.env.LINECRAFT_QA_RUN_DIRECTORY,'gate'):path.join(work,'public-gate-'+command+'-'+Date.now());fs.mkdirSync(logDirectory,{recursive:false});
+ const report={manifestFile,manifestSHA256:sha(fs.readFileSync(path.join(root,manifestFile))),candidate,format:'LinecraftPublicGate/1',scope:'Generated public qualification only. No private native recordings, client drawings, ordinary installed desktop input, OS choosers or real clipboard access. Installed command means hidden runner acceptance, not native human review.',command,version:require('../package.json').version,node:process.version,platform:process.platform,arch:process.arch,startedAt:new Date().toISOString(),logDirectory,sourceSHA256:{},stages:[]};
  try{
+  report.sourceSHA256=hashFiles(fingerprintNames);
+  if(candidate&&['unpacked','release'].includes(command)){const relative=path.relative(path.join(work,'qa-runs'),buildOutput);assert.ok(relative&&!relative.startsWith('..')&&!path.isAbsolute(relative),'Candidate output must be a new owned directory under work/qa-runs');assert.ok(!fs.existsSync(buildOutput),'Candidate output must be new; preserve existing artifacts');if(process.env.LINECRAFT_QA_RUN_DIRECTORY)assert.equal(buildOutput,path.join(process.env.LINECRAFT_QA_RUN_DIRECTORY,'build'));}
   report.runtimeBefore=verifySource();
   if(command==='test-installed'){assert.ok(installed,'test-installed requires the installed executable path');await desktop(report,installed,'','ordinary-grip-public-installed');}
   else{
@@ -75,10 +89,10 @@ async function main(){
     const exe=runtime();report.dependencies=Object.fromEntries(Object.keys(pins).map(name=>{dependency(name,name==='electron'?'dist/electron.exe':name==='playwright'?'index.js':'cli.js');return[name,pins[name]];}));
     await desktop(report,exe,path.join(root,'desktop/main.cjs'),'ordinary-grip-public-source');
     if(['unpacked','release'].includes(command)){
-     const builder=dependency('electron-builder','cli.js'),unpacked=path.join(root,'Windows-Release/win-unpacked'),builtExe=path.join(unpacked,'Linecraft CAD.exe');stable(report);
-     await stage(report,'build Windows x64 unpacked application',process.execPath,[builder,'--publish','never','--win','--x64','--dir','--projectDir',root,`-c.electronDist=${path.dirname(exe)}`]);
+     const builder=dependency('electron-builder','cli.js'),unpacked=path.join(buildOutput,'win-unpacked'),builtExe=path.join(unpacked,'Linecraft CAD.exe');stable(report);
+     await stage(report,'build Windows x64 unpacked application',process.execPath,[builder,'--publish','never','--win','--x64','--dir','--projectDir',root,`-c.electronDist=${path.dirname(exe)}`,`-c.directories.output=${buildOutput}`]);
      await desktop(report,builtExe,'','ordinary-grip-public-unpacked');stable(report);
-     if(command==='release')await stage(report,'compile NSIS from tested unpacked application',process.execPath,[builder,'--publish','never','--win','nsis','--x64','--projectDir',root,'--prepackaged',unpacked],()=>{const file=path.join(root,'Windows-Release',`Linecraft-CAD-${report.version}-Setup.exe`),bytes=fs.readFileSync(file);report.installer={file,bytes:bytes.length,sha256:sha(bytes),installed:false};return report.installer;});
+     if(command==='release')await stage(report,'compile NSIS from tested unpacked application',process.execPath,[builder,'--publish','never','--win','nsis','--x64','--projectDir',root,'--prepackaged',unpacked,`-c.directories.output=${buildOutput}`],()=>{const file=path.join(buildOutput,`Linecraft-CAD-${report.version}-Setup.exe`),bytes=fs.readFileSync(file);report.installer={file,bytes:bytes.length,sha256:sha(bytes),installed:false};return report.installer;});
     }
    }
   }
@@ -87,6 +101,7 @@ async function main(){
  finally{
   report.completedAt=new Date().toISOString();report.passed=report.stages.filter(r=>r.status==='passed').length;report.total=report.stages.length;
   const filename=path.join(work,`public-${command==='test'?'test':command}-results.json`);fs.writeFileSync(path.join(logDirectory,'results.json'),JSON.stringify(report,null,2)+'\n');fs.writeFileSync(filename,JSON.stringify(report,null,2)+'\n');console.log(`${report.status}: ${report.passed}/${report.total} public stages; ${path.relative(root,filename)}`);if(report.error)console.error(report.error);
+  if(ownsLock&&JSON.parse(fs.readFileSync(lockFile)).pid===process.pid)fs.unlinkSync(lockFile);
  }
 }
 main().catch(error=>{console.error(error.stack||error);process.exitCode=1;});
