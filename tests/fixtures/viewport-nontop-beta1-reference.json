@@ -1,0 +1,61 @@
+{
+  "scope": "Frozen beta1 output preservation controls only. Not independent correctness/native qualification of general transforms. Synthetic inputs generated and frozen before LC-MON-003 patch.",
+  "baselineCommit": "9d538123b092345a7fc8cc98f0fa6b3ae31d17bf",
+  "baselineImporterSHA256": "61c8fd1a90eb070b94a7b1e83fdf8bb24571642c09b3ea641a7106648e07b90f",
+  "cases": [
+    {
+      "name": "front",
+      "inputSHA256": "4d93d3927e7c8cce9db0a75bf0b565df0c8218c03ef2fc1bef5b601b9f705226",
+      "nativeSHA256": "ac7d7f1b2aad51fea15f35149eae0df534f30b0c74fae614701c933a31253d5b",
+      "reportSHA256": "9321bd1e0a7bf6ac783f4e2c823c7a094f1e5a7ef751c7a1bc6914c537c2ca97"
+    },
+    {
+      "name": "right",
+      "inputSHA256": "43861fb50935da3c53566bd5edf3380ede2281e520e64d0f6bb1297d5541373d",
+      "nativeSHA256": "74470bab35ce9300976d546cd8c7287cb2052adc2fa6537834068f99b1bb05f2",
+      "reportSHA256": "9321bd1e0a7bf6ac783f4e2c823c7a094f1e5a7ef751c7a1bc6914c537c2ca97"
+    },
+    {
+      "name": "bottom",
+      "inputSHA256": "f371d825b5396a006de1570ffb6ec1d7f72272c668a3154ba21401d6200ecb30",
+      "nativeSHA256": "7addf63daa367f90a0c9e967b8ec03a3d1ce86035ecd459cf6f736fccf08feb2",
+      "reportSHA256": "9321bd1e0a7bf6ac783f4e2c823c7a094f1e5a7ef751c7a1bc6914c537c2ca97"
+    },
+    {
+      "name": "oblique",
+      "inputSHA256": "ea69d36d8d670f96a81f57a68803756d1dcf66e02b85cdfffb9f712ddffce32f",
+      "nativeSHA256": "bc2d4d88b613e7b6d2d37cd6dc6f92cf3eff03e4dff4c3c49a474ceed94af2bc",
+      "reportSHA256": "9321bd1e0a7bf6ac783f4e2c823c7a094f1e5a7ef751c7a1bc6914c537c2ca97"
+    },
+    {
+      "name": "top-twisted",
+      "inputSHA256": "6113a03f80ee13c406a74b6b185aa293010bb4d3902fbef7e6900645a9fbe8a4",
+      "nativeSHA256": "2b37d7d88a0c14afb279fccff2389e10f4fbf330eea92dd8b2026a373aca3efb",
+      "reportSHA256": "9321bd1e0a7bf6ac783f4e2c823c7a094f1e5a7ef751c7a1bc6914c537c2ca97"
+    },
+    {
+      "name": "top-full-turn-retains-existing-classification",
+      "inputSHA256": "48abf4e4b8b4d037965b1f0e82abc08b970e12b5524a2643e06efa44affe07b5",
+      "nativeSHA256": "d5ce62ab97ed6ee51fb1afe7fba5265c5ddc2469f26e04f81cd38fa99a68cb73",
+      "reportSHA256": "9321bd1e0a7bf6ac783f4e2c823c7a094f1e5a7ef751c7a1bc6914c537c2ca97"
+    },
+    {
+      "name": "oblique-twisted",
+      "inputSHA256": "997dc523852e6552c0f0c5515cfeafd0be76e590cb083e72ff5ccca9bc0b5128",
+      "nativeSHA256": "e152d51d089c0a920728032e1b4f033fdcc286448b3d536fa50669c7a9f7fd10",
+      "reportSHA256": "9321bd1e0a7bf6ac783f4e2c823c7a094f1e5a7ef751c7a1bc6914c537c2ca97"
+    },
+    {
+      "name": "scaled-near-top-outside-existing-tolerance",
+      "inputSHA256": "1f79b201a7c01ac7dfbfdb760c96a87dd96428ac1352fe56b6c84eefca849ce1",
+      "nativeSHA256": "77f38663e7ea2cb5579d8c1fb778eeb8ddced8e4dbdac9e13037d878aa3602c9",
+      "reportSHA256": "9321bd1e0a7bf6ac783f4e2c823c7a094f1e5a7ef751c7a1bc6914c537c2ca97"
+    },
+    {
+      "name": "invalid-zero-direction-remains-diagnostic",
+      "inputSHA256": "cb37843e9af93eaa81d352567647b653e4d74e8c1edf5cf25e6b98f495e88d06",
+      "nativeSHA256": "90ddeb26cf9c18ef1552118eaeabaa34276393b3ac5dececf2df3804aebd8191",
+      "reportSHA256": "e2dea2f05eccda5ec74a62f140ffa8b4f776c8ea9550b70e6ca3c3d838116a04"
+    }
+  ]
+}

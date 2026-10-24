@@ -65,6 +65,15 @@ const sha=b=>createHash('sha256').update(b).digest('hex');
    await apply([{op:'layout',action:'create',name:'Synthetic HATCH output',patch:{paper:{size:'A3',orientation:'landscape'}}}]);const id=(await doc()).layouts.at(-1).id;await apply([{op:'viewport',action:'create',layoutId:id,patch:{frame:{x:20,y:30,width:160,height:110},modelCenter:{x:22.5,y:13.25,z:0},scaleDenominator:1,locked:true,plotBorder:true}}]);
    const native=path.join(work,'hatch.linecraft'),pdf=path.join(work,'hatch.pdf'),accepted=await doc();await save(native);assert.equal(await action('new'),true);await open(native);assert.deepEqual(await doc(),accepted);await plot(pdf,id);await audit('hatch',native,pdf);
   });
+  await check('actual imported Top viewport retains its raw center and scale through Save/reopen and measured PDF',async()=>{
+   await open(path.join(root,'tests/fixtures/top-viewport-center.dxf'));const imported=await doc();assert.equal(imported.settings.units,'mm');assert.equal(imported.layouts.length,1);assert.equal(imported.entities.length,1);
+   assert.deepEqual(imported.entities[0].start,{x:3,y:-41});assert.deepEqual(imported.entities[0].end,{x:43,y:-41});const layout=imported.layouts[0];assert.equal(layout.name,'QA-CENTER');assert.equal(layout.viewports.length,1);assert.equal(layout.entities.length,1);
+   const viewport=layout.viewports[0];assert.deepEqual(viewport.modelCenter,{x:23,y:-41,z:0});assert.deepEqual(viewport.frame,{x:50,y:50,width:200,height:100});assert.equal(viewport.scaleDenominator,1);assert.equal(viewport.locked,true);assert.equal(viewport.workspace,'2d');assert.deepEqual(viewport.camera3d.target,{x:23,y:-41,z:0});
+   assert.deepEqual(layout.entities[0].start,{x:10,y:10});assert.deepEqual(layout.entities[0].end,{x:20,y:10});
+   // Plot the imported layout unchanged; creating/correcting a viewport here
+   // would bypass the import defect this check is intended to catch.
+   const native=path.join(work,'viewport.linecraft'),pdf=path.join(work,'viewport.pdf');await save(native);assert.equal(await action('new'),true);await open(native);assert.deepEqual(await doc(),imported);await plot(pdf,layout.id);assert.deepEqual(await doc(),imported);const result=await audit('viewport',native,pdf);return{measurements:result.measurements,importedViewportUnchanged:true};
+  });
   await check('hidden test stays offline without clipboard access or renderer errors',async()=>{assert.deepEqual(report.errors,[]);assert.deepEqual(report.network,[]);assert.equal(await app.evaluate(()=>globalThis.__quality.clipboardCalls),0);await visibility.verifyVisibility(app,report);});
   report.status='passed';
  }catch(error){report.status='failed';report.error=error.stack||String(error);console.error(report.error);}

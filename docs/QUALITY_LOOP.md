@@ -5,9 +5,9 @@ and the pinned Python PDF reader described in tests/README.md. No installation o
 the daily-use app is part of these commands.
 
 ```
-npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE.json
-npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE.json
-npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE.json
+npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.2.json
+npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.2.json
+npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.2.json
 ```
 
 These reuse desktop/dev-tools.cjs. Fast selects the existing bounded public core
@@ -69,6 +69,15 @@ Its independent DXF group reader checks the two ruler segments only. Hidden app
 tests use owned native chooser replies, forbid OS clipboard access and stay offline.
 They do not establish physical input, normal Windows choosers, DPI or installed
 human acceptance. Native AutoCAD comparison is not performed by this loop.
+
+The active beta2 manifest is separate from the preserved beta1 CANDIDATE-SOURCE.json.
+Beta2 also selects viewport-center-import.test.mjs and imports an untouched synthetic
+World Top layout through the real app. Save/reopen and actual PDF measurements check
+its40mm model ruler at paper midpoint150,197mm and unchanged10mm paper sentinel.
+No scripted viewport replacement or center correction is used in that exercise.
+Nine frozen beta1 non-Top output digests establish change isolation only; general
+twisted/oblique/Bottom correctness and new native coordinate-system parity remain
+unqualified. Original private controls remain private and are recorded separately.
 
 ## Release and recovery
 

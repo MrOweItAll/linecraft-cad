@@ -5,7 +5,7 @@ import fitz
 
 def audit():
     parser=argparse.ArgumentParser()
-    parser.add_argument('--mode',choices=['drafting','hatch'],required=True)
+    parser.add_argument('--mode',choices=['drafting','hatch','viewport'],required=True)
     for name in ['native','pdf','receipt']: parser.add_argument('--'+name,type=Path,required=True)
     args=parser.parse_args()
     assert not args.receipt.exists()
@@ -40,6 +40,45 @@ def audit():
                     else:raise AssertionError('Negative ruler control was incorrectly accepted')
                 report['measurements'].append({'expectedLengthMm':length,'actualLengthMm':actual,'toleranceMm':.02})
             assert 'SYNTHETIC QA REVISED' in page.get_text()
+        elif args.mode=='viewport':
+            assert native['settings']['units']=='mm'
+            assert len(native['layouts'])==1 and len(native['entities'])==1
+            assert native['entities'][0]['start']=={'x':3,'y':-41} and native['entities'][0]['end']=={'x':43,'y':-41}
+            layout=native['layouts'][0];assert len(layout['viewports'])==1 and len(layout['entities'])==1
+            viewport=layout['viewports'][0]
+            assert viewport['modelCenter']=={'x':23,'y':-41,'z':0}
+            assert viewport['camera3d']['target']=={'x':23,'y':-41,'z':0}
+            assert viewport['frame']=={'x':50,'y':50,'width':200,'height':100}
+            assert viewport['scaleDenominator']==1 and viewport['locked'] is True and viewport['workspace']=='2d'
+            assert layout['paper']['widthMm']==420 and layout['paper']['heightMm']==297
+            assert layout['entities'][0]['start']=={'x':10,'y':10} and layout['entities'][0]['end']=={'x':20,'y':10}
+            segments=[]
+            for drawing in page.get_drawings():
+                if drawing['type'] in ['s','fs']:
+                    for item in drawing['items']:
+                        if item[0]=='l':segments.append((tuple(value*mm for value in item[1]),tuple(value*mm for value in item[2])))
+            def validate(candidates,start,end,length):
+                matches=[segment for segment in candidates if min(math.dist(segment[0],start)+math.dist(segment[1],end),math.dist(segment[0],end)+math.dist(segment[1],start))<.04]
+                assert len(matches)==1,(start,end,len(matches))
+                actual=math.dist(*matches[0]);assert near(actual,length,.02)
+                return matches[0],actual
+            # Source literal center23,-41, target0 and 1:1 frame center150,100:
+            # model ruler130..170 at PDF y297-100; paper sentinel stays10..20.
+            assert len(segments)==2,len(segments)
+            for label,start,end,length in [('model ruler',(130,197),(170,197),40),('paper sentinel',(10,287),(20,287),10)]:
+                segment,actual=validate(segments,start,end,length)
+                midpoint=tuple((segment[0][i]+segment[1][i])/2 for i in [0,1])
+                expectedMidpoint=tuple((start[i]+end[i])/2 for i in [0,1])
+                assert all(near(actualValue,expected,.02) for actualValue,expected in zip(midpoint,expectedMidpoint))
+                report['measurements'].append({'object':label,'expectedLengthMm':length,'actualLengthMm':actual,'actualMidpointMm':midpoint,'expectedMidpointMm':expectedMidpoint,'lengthToleranceMm':.02})
+            # Remove the actually matched ruler rather than relying on draw order.
+            ruler,_=validate(segments,(130,197),(170,197),40)
+            probes=[lambda:validate([segment for segment in segments if segment!=ruler],(130,197),(170,197),40),lambda:validate(segments,(130,197),(170,197),80),lambda:validate(segments,(135,197),(175,197),40)]
+            for probe in probes:
+                try:probe()
+                except AssertionError:pass
+                else:raise AssertionError('Viewport missing/wrong-scale/shifted-center negative control incorrectly accepted')
+            report['negativeControls']=['missing model ruler','wrong physical scale','translated paper center']
         else:
             fill=next(e for e in native['entities'] if e['type']=='HATCH')
             assert fill['boundary']['points']==[{'x':12.5,'y':7.25},{'x':32.5,'y':7.25},{'x':32.5,'y':19.25},{'x':12.5,'y':19.25}]
