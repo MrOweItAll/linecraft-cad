@@ -21,7 +21,7 @@
         "tests/audit-quality-pdf.py",
         "local candidate gate22/22; private original control27/27"
       ],
-      "nextAction": "Perform visible exact-candidate native import/save/reopen/PDF acceptance before daily-use promotion",
+      "nextAction": "Separate promotion/installation authorization and broader qualification; focused unpacked native importer acceptance is complete",
       "candidateVersion": "1.36.1-beta.1",
       "testedCommit": "3de665ab06f7a48eabc4a5331100786a01fb969a",
       "installedAcceptance": "not run",
@@ -32,6 +32,21 @@
         "privateOriginalHatchControl": "27/27 vs viewport-only control; assertions unchanged",
         "sourceAndPackagedImportSaveReopenPDF": "passed",
         "installedAcceptance": "not run"
+      },
+      "nativeCandidateAcceptance": {
+        "version": "1.36.1-beta.2",
+        "testedCommit": "fdc37327e174516dda10bcab7045ed991fdda8c4",
+        "form": "unpacked",
+        "status": "passed",
+        "date": "2026-10-24",
+        "method": "Visible native input and real Windows Open/Save As/PDF dialogs; controller observations only",
+        "scope": "Synthetic import, complete Save/New/Open and post-plot state equality, actual PDF measurement and visual review",
+        "evidence": [
+          "docs/NATIVE-BETA2-ACCEPTANCE.md",
+          "Private native run receipts and output hashes"
+        ],
+        "installedAcceptance": "not run",
+        "dailyUseReady": false
       }
     },
     {
@@ -53,12 +68,28 @@
         "full candidate gate23/23; source and unpacked smoke10/10 each",
         "private original viewport controls18/18 with assertions unchanged"
       ],
-      "nextAction": "Focused visible exact-candidate import/save/reopen/PDF acceptance before daily-use promotion; general twisted/oblique transforms remain separate",
+      "nextAction": "Separate promotion/installation authorization and broader qualification; focused unpacked native importer acceptance is complete",
       "candidateVersion": "1.36.1-beta.2",
       "testedCommit": "fdc37327e174516dda10bcab7045ed991fdda8c4",
       "reproducedVersion": "1.36.1-beta.1",
       "reproducedCommit": "9d538123b092345a7fc8cc98f0fa6b3ae31d17bf",
-      "installedAcceptance": "not run"
+      "installedAcceptance": "not run",
+      "nativeCandidateAcceptance": {
+        "version": "1.36.1-beta.2",
+        "testedCommit": "fdc37327e174516dda10bcab7045ed991fdda8c4",
+        "form": "unpacked",
+        "status": "passed",
+        "date": "2026-10-24",
+        "method": "Visible native input and real Windows Open/Save As/PDF dialogs; controller observations only",
+        "scope": "Synthetic import, complete Save/New/Open and post-plot state equality, actual PDF measurement and visual review",
+        "evidence": [
+          "docs/NATIVE-BETA2-ACCEPTANCE.md",
+          "Private native run receipts and output hashes"
+        ],
+        "installedAcceptance": "not run",
+        "dailyUseReady": false,
+        "nativeEditCheck": "MOVE (5,7), full Undo/Redo/Undo states and 40-unit ruler length preserved"
+      }
     },
     {
       "id": "LC-QA-001",

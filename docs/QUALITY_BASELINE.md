@@ -34,9 +34,9 @@ client controls are preserved outside the repository and are not published.
 
 The proposed loop adds no new format/schema or general AutoCAD compatibility.
 Visible candidate/native dialogs, installed acceptance, Windows/DPI/font soak and
-fresh AutoCAD reference observations remain separate checks. LC-MON-003 viewport
-center repair, independent tick stroke, extra grip modes and idle two-click window
-selection are unfinished. Historical monitoring records remain untouched.
+fresh AutoCAD reference observations remain separate checks. The LC-MON-003 viewport
+center repair is verified in beta2; independent tick stroke, extra grip modes and
+idle two-click window selection remain unfinished. Historical monitoring records remain untouched.
 
 
 ## First milestone outcome
@@ -72,7 +72,7 @@ installation, scheduler or outbound message occurred. Manual invocation ready;
 unattended execution not enabled. Next ready repair: separately review LC-MON-003.
 
 
-## Viewport-center cycle — October 24, 2026
+## Viewport-center cycle - October 24, 2026
 
 Tested code fdc37327e174516dda10bcab7045ed991fdda8c4 produces local candidate
 1.36.1-beta.2. All 23 automated stages passed: 582 selected portable checks,
@@ -119,3 +119,19 @@ duplicate. DWG writing and a durable drafting/development relay remain gaps; bro
 font/layout/native transform fidelity is not established by this importer fix.
 No patch wholesale integration, installation, release, push, outbound message or
 scheduler change occurred. Manual invocation ready; unattended execution not enabled.
+
+## Native beta2 acceptance - October 24, 2026
+
+The exact unpacked beta2 from the recorded passing gate now has focused visible
+Windows acceptance for LC-MON-002 and LC-MON-003. Native input and real Windows
+dialogs completed import, MOVE/Undo/Redo/Undo, Save As/New/Open and PDF output.
+Complete document equality and independent PDF ruler/center/fill checks passed;
+both actual output renders were inspected. See [the native acceptance record](NATIVE-BETA2-ACCEPTANCE.md)
+for identity, fixture preparation, measurements, preservation and limits.
+
+Installed binaries, recorded normal-profile configuration and all recorded source
+inputs stayed unchanged. Only owned synthetic drawings were opened. The candidate
+quit normally. Earlier native-pending statements describe previous checkpoints;
+installed/upgrade acceptance, broader desktop usability and separate release
+authorization remain pending. No runtime change or rerun of the unchanged passing
+automated gate was required.

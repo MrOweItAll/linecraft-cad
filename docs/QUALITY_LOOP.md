@@ -97,3 +97,11 @@ Manual invocation ready; unattended execution not enabled. The separate QA workf
 configuration runs tests on proposed changes when committed/pushed; drafting it
 does not install a worker or prove a remote CI run. Existing publication triggers
 are preserved and must be reviewed before any future tag or release push.
+
+## Recorded native beta2 acceptance
+
+The exact unpacked 1.36.1-beta.2 has completed focused visible Windows importer
+acceptance with native input, normal dialogs, exact persistence and independent
+PDF measurement/render review. See [the acceptance record](NATIVE-BETA2-ACCEPTANCE.md).
+This does not waive the separate installed/upgrade checks, broader platform
+qualification or release authorization. No app code changed during this session.
