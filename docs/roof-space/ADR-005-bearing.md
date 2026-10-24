@@ -1,5 +1,7 @@
 # ADR-005: bounded different bearing heights
 
+> **Historical milestone reference.** This document records its original R0–R6 implementation scope and evidence. It is retained for design history; its status, next-step and test statements are not current v1.36 qualification claims. See [the historical-reference index](../HISTORICAL-REFERENCE.md) and [current release notes](../RELEASE-1.36-BETA.md).
+
 R5 extends the existing original rectilinear finite-front solver. A declared eave height delays activation; every active front retains the same selected pitch. With minimum height e0 and pitch p, edge i activates at (ei-e0)/p and advances by max(0,t-delay). Stationary boundary intervals may sweep vertical interfaces before activation. Explicit gable ends remain stationary. This is an original bounded implementation with no new geometry dependency.
 
 The solver includes all activation and coordinate-contact heights, batches simultaneous contacts, reconstructs finite occupied fronts between events, and merges legitimate swept patches. It does not apply unrestricted global plane envelopes across a concave footprint. Unresolved finite-endpoint provenance, consumed supports, open coverage or failed runoff produce an explicit failure/unsupported result with no partial accepted skin. A source edge consumed before its declared activation is infeasible. This does not construct arbitrary stepped multi-roof alternatives.

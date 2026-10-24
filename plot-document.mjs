@@ -1,9 +1,10 @@
 /* Original vector plotting. Documents are validated, and labels are escaped before HTML. */
 import * as core from './core.mjs';
 import {projectPoint,cameraBasis} from './3d-view.mjs';
+import {roofDisplayEdges} from './architecture/view-adapter.mjs';
 
 export const PAPERS=Object.freeze({A0:[841,1189],A1:[594,841],A2:[420,594],A3:[297,420],A4:[210,297],A5:[148,210],Letter:[215.9,279.4],Tabloid:[279.4,431.8]});
-export const DEFAULT_PLOT_OPTIONS=Object.freeze({paper:'A4',orientation:'landscape',scaleMode:'fit',ratio:1,margin:10,colorMode:'monochrome',lineweights:true,space:'current',layoutId:null});
+export const DEFAULT_PLOT_OPTIONS=Object.freeze({paper:'A4',orientation:'landscape',scaleMode:'fit',ratio:1,margin:10,colorMode:'monochrome',lineweights:true,space:'current',layoutId:null,layoutIds:null});
 const units={mm:1,cm:10,m:1000,in:25.4,ft:304.8};
 const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const numeric=value=>{if(!Number.isFinite(value))throw Error('Plot geometry exceeds the finite numeric range.');return Number(value.toPrecision(12)).toString();};
@@ -11,14 +12,23 @@ const pointString=p=>`${numeric(p.x)},${numeric(p.y)}`;
 const midpoint=(a,b)=>Math.sign(a)===Math.sign(b)?a+(b-a)/2:a/2+b/2;
 
 export function normalizePlotOptions(raw={}){
-  if(!raw||typeof raw!=='object'||Array.isArray(raw)||Object.keys(raw).some(key=>!Object.hasOwn(DEFAULT_PLOT_OPTIONS,key)))throw Error('Unsupported plot option.');
+  if(!raw||typeof raw!=='object'||![Object.prototype,null].includes(Object.getPrototypeOf(raw))||Reflect.ownKeys(raw).some(key=>{const descriptor=Object.getOwnPropertyDescriptor(raw,key);return typeof key!=='string'||!Object.hasOwn(DEFAULT_PLOT_OPTIONS,key)||!descriptor.enumerable||!Object.hasOwn(descriptor,'value');}))throw Error('Unsupported plot option; use plain data fields.');
   const o={...DEFAULT_PLOT_OPTIONS,...raw};
   if(!Object.hasOwn(PAPERS,o.paper)||!['portrait','landscape'].includes(o.orientation)||!['fit','scale'].includes(o.scaleMode)||!['color','grayscale','monochrome'].includes(o.colorMode))throw Error('Unsupported paper, orientation, scale or color mode.');
   if(typeof o.ratio!=='number'||!Number.isFinite(o.ratio)||o.ratio<1||o.ratio>1e9)throw Error('Plot ratio must be between 1 and 1000000000.');
   if(typeof o.margin!=='number'||!Number.isFinite(o.margin)||o.margin<5||o.margin>40)throw Error('Paper margin must be between 5 and 40 mm.');
   if(typeof o.lineweights!=='boolean')throw Error('Plot lineweights must be boolean.');
-  if(!['current','model','layout'].includes(o.space)||o.layoutId!==null&&(typeof o.layoutId!=='string'||!o.layoutId.length||o.layoutId.length>255))throw Error('Unsupported plot space or layout ID.');
+  if(!['current','model','layout','layouts'].includes(o.space)||o.layoutId!==null&&(typeof o.layoutId!=='string'||!o.layoutId.length||o.layoutId.length>255))throw Error('Unsupported plot space or layout ID.');
   if(o.space!=='layout'&&o.layoutId!==null)throw Error('A layout ID requires Layout plot space.');
+  if(o.space==='layouts'){
+    const ids=o.layoutIds;
+    if(!Array.isArray(ids)||Object.getPrototypeOf(ids)!==Array.prototype||ids.length<1||ids.length>32)throw Error('Choose 1 through 32 ordered layout IDs.');
+    if(Reflect.ownKeys(ids).some(key=>typeof key!=='string'||key!=='length'&&(!/^(0|[1-9]\d*)$/.test(key)||Number(key)>=ids.length)))throw Error('Layout IDs must be indexed plain data.');
+    const copy=[];
+    for(let i=0;i<ids.length;i++){const descriptor=Object.getOwnPropertyDescriptor(ids,String(i));if(!descriptor?.enumerable||!Object.hasOwn(descriptor,'value')||typeof descriptor.value!=='string'||!descriptor.value.length||descriptor.value.length>255)throw Error('Layout IDs must be nonempty strings in a dense plain array.');copy.push(descriptor.value);}
+    if(new Set(copy).size!==copy.length)throw Error('Ordered layout IDs must be distinct.');
+    o.layoutIds=copy;
+  }else if(o.layoutIds!==null)throw Error('Ordered layout IDs require Layouts plot space.');
   return o;
 }
 
@@ -111,7 +121,7 @@ function drawingPage(source,document,options,width,height,pageIndex){
   };
   const clipped=nearClipped>0||spanX*scale>availableW+1e-8||spanY*scale>availableH+1e-8;
   if(clipped)warnings.push('Some geometry is clipped by the printable area or the perspective near plane.');
-  const parts=renderEntities(entities,document,options,map,scale,is3D,perspective);
+  const parts=renderEntities(entities,document,options,map,scale,is3D,perspective,warnings);
   const clipId=`plot-area-${pageIndex}`;
   const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${numeric(width)}mm" height="${numeric(height)}mm" viewBox="0 0 ${numeric(width)} ${numeric(height)}" role="img" aria-label="${escape(source.title)}"><rect width="100%" height="100%" fill="white"/><defs><clipPath id="${clipId}"><rect x="${numeric(options.margin)}" y="${numeric(options.margin)}" width="${numeric(availableW)}" height="${numeric(availableH)}"/></clipPath></defs><g clip-path="url(#${clipId})">${parts.join('')}</g></svg>`;
   return{svg,width,height,paper:options.paper,orientation:options.orientation,space:'model',layoutId:null,plotScaleMmPerUnit:perspective?null:scale,worldBounds:core.bounds3D(entities,document),clipped,warnings};
@@ -119,7 +129,10 @@ function drawingPage(source,document,options,width,height,pageIndex){
 
 function layoutPage(source,document,layout,options,pageIndex){
   const {widthMm:width,heightMm:height}=layout.paper,warnings=[],parts=[],defs=[];
-  const paperMap=p=>({x:p.x,y:height-p.y});
+  const offset=layout.plotSettings?.renderOffsetMm||{x:0,y:0};
+  const physical=p=>({x:p.x+offset.x,y:p.y+offset.y});
+  const paperMap=p=>({x:p.x+offset.x,y:height-p.y-offset.y});
+  const outside=p=>{const q=physical(p);return q.x<0||q.x>width||q.y<0||q.y>height;};
   const paperEntities=(layout.entities??[]).map(entity=>({...entity,layoutId:layout.id}));
   const visiblePaper=visibleEntities(document,{space:'paper',layoutId:layout.id,viewportId:null},paperEntities);
   let clipped=false;
@@ -127,11 +140,11 @@ function layoutPage(source,document,layout,options,pageIndex){
   for(const viewport of layout.viewports){
     const frame=viewport.frame,layer=document.layers.find(item=>item.name===viewport.layer);
     const clipId=`viewport-${pageIndex}-${plottedViewports.length}`;
-    const borderRect=`x="${numeric(frame.x)}" y="${numeric(height-frame.y-frame.height)}" width="${numeric(frame.width)}" height="${numeric(frame.height)}"`;
+    const borderRect=`x="${numeric(frame.x+offset.x)}" y="${numeric(height-frame.y-frame.height-offset.y)}" width="${numeric(frame.width)}" height="${numeric(frame.height)}"`;
     const boundary=core.viewportBoundaryPoints(viewport),polygonPath=viewport.boundary?`M${boundary.map(point=>pointString(paperMap(point))).join(' L')} Z`:null;
     const clipShape=polygonPath?`<path d="${polygonPath}"/>`:`<rect ${borderRect}/>`;
     defs.push(`<clipPath id="${clipId}">${clipShape}</clipPath>`);
-    if(boundary.some(p=>p.x<0||p.x>width||p.y<0||p.y>height))clipped=true;
+    if(boundary.some(outside))clipped=true;
     const entities=visibleEntities(document,{space:'paper',layoutId:layout.id,viewportId:viewport.id});
     const factor=core.modelUnitMillimeters(document.settings)/viewport.scaleDenominator;
     const map=p=>paperMap(core.viewportModelToPaper(p,viewport,document.settings));
@@ -141,19 +154,19 @@ function layoutPage(source,document,layout,options,pageIndex){
       if(points.some(point=>!core.pointInViewport(point,viewport)))viewportCropped=true;
       if(viewport.boundary&&!viewportCropped)for(let i=1;i<points.length;i++)if(segmentLeavesViewport(points[i-1],points[i],viewport,boundary)){viewportCropped=true;break;}
     }
-    const body=renderEntities(entities,document,options,map,factor,viewport.workspace==='3d');
+    const body=renderEntities(entities,document,options,map,factor,viewport.workspace==='3d',false,warnings);
     parts.push(`<g data-viewport="${escape(viewport.id)}" clip-path="url(#${clipId})">${body.join('')}</g>`);
     if(viewport.workspace==='3d')warnings.push('3D paper viewports are plotted as vector wireframe; shaded surfaces and hidden-line removal are not plotted.');
     if(viewport.plotBorder&&layer?.plot!==false&&layer?.visible!==false&&layer?.paperVisible!==false){
-      const rgb=viewport.color??layer?.color??'#000000',color=options.colorMode==='monochrome'?'#000000':options.colorMode==='grayscale'?gray(rgb):rgb;
+      const rgb=plotInk(viewport,layer),color=options.colorMode==='monochrome'?'#000000':options.colorMode==='grayscale'?gray(rgb):rgb;
       const weight=options.lineweights?(viewport.lineweight??layer?.lineweight??.25):.18;
       const lineType=viewport.linetype??layer?.linetype;
       parts.push(`${polygonPath?`<path d="${polygonPath}"`:`<rect ${borderRect}`} fill="none" stroke="${color}" stroke-width="${numeric(Math.max(.01,weight))}"${dashAttribute(lineType)} data-viewport-border="${escape(viewport.id)}"/>`);
     }
     plottedViewports.push({id:viewport.id,scaleDenominator:viewport.scaleDenominator,plotScaleMmPerUnit:factor,frame:{...frame},...(viewport.boundary?{boundary:boundary.map(point=>({...point}))}:{}),workspace:viewport.workspace,modelCenter:{...viewport.modelCenter},visibleEntities:entities.length,viewportCropped});
   }
-  parts.push(...renderEntities(visiblePaper,document,options,paperMap,1));
-  for(const entity of visiblePaper)for(const p of core.entityPoints(entity,document))if(p.x<0||p.x>width||p.y<0||p.y>height)clipped=true;
+  parts.push(...renderEntities(visiblePaper,document,options,paperMap,1,false,false,warnings));
+  for(const entity of visiblePaper)for(const p of core.entityPoints(entity,document))if(outside(p))clipped=true;
   if(document.settings.units==='unitless'&&layout.viewports.length)warnings.push('Unitless model space uses 1 model unit = 1 mm in paper viewports. Set drawing units for a physical model scale.');
   const sheetId=`paper-${pageIndex}`;
   defs.push(`<clipPath id="${sheetId}"><rect width="${numeric(width)}" height="${numeric(height)}"/></clipPath>`);
@@ -162,7 +175,8 @@ function layoutPage(source,document,layout,options,pageIndex){
 }
 
 function dashAttribute(type){const pattern=({dashed:[4,2],hidden:[2,1],center:[8,2,1,2]})[type];return pattern?` stroke-dasharray="${pattern.map(numeric).join(' ')}"`:'';}
-function renderEntities(entities,document,options,map,scale,is3D=false,perspective=false){
+function plotInk(entity,layer){const source=entity.color!==undefined?entity.colorSource:layer?.colorSource;return source==='aci-7'?'#000000':entity.color??layer?.color??'#000000';}
+function renderEntities(entities,document,options,map,scale,is3D=false,perspective=false,warnings=[]){
   const parts=[],path=(points,closed=false,fill='none',attrs='')=>{
     const mapped=points.map(map);if(mapped.some(p=>!p))return '';
     return `<path d="M${mapped.map(pointString).join(' L')}${closed?' Z':''}" fill="${fill}" ${attrs}/>`;
@@ -177,17 +191,28 @@ function renderEntities(entities,document,options,map,scale,is3D=false,perspecti
     if(!px||!py)return '';
     const ax=(px.x-p.x),ay=(px.y-p.y),bx=-(py.x-p.x),by=-(py.y-p.y),length=text.width/text.height;
     // One local unit is one cap-height. The fixed host calibration corrects font ascent.
-    return `<text transform="matrix(${[ax,ay,bx,by,p.x,p.y].map(numeric).join(' ')})" font-family="${escape(text.fontFamily)}" font-size="1.38888888889" data-cap-height="1" text-anchor="${text.align==='center'?'middle':'start'}"${length>0?` textLength="${numeric(length)}" lengthAdjust="spacingAndGlyphs"`:''} fill="currentColor" stroke="none">${escape(text.text)}</text>`;
+    const measured=Number.isFinite(text.fontCapRatio)&&text.fontCapRatio>0;
+    return `<text transform="matrix(${[ax,ay,bx,by,p.x,p.y].map(numeric).join(' ')})" xml:space="preserve" style="white-space:pre" font-family="${escape(text.fontFamily)}"${text.fontWeight?` font-weight="${escape(text.fontWeight)}"`:''}${text.fontStyle?` font-style="${escape(text.fontStyle)}"`:''} font-size="${measured?numeric(1/text.fontCapRatio):'1.38888888889'}"${measured?` data-font-cap-ratio="${numeric(text.fontCapRatio)}" font-kerning="none"`:' data-cap-height="1"'} text-anchor="${text.align==='center'?'middle':'start'}"${length>0?` textLength="${numeric(length)}" lengthAdjust="spacingAndGlyphs"`:''} fill="currentColor" stroke="none">${escape(text.renderText??text.text)}</text>`;
   };
   for(const entity of entities){
-    const layer=document.layers.find(l=>l.name===entity.layer),rgb=entity.color??layer?.color??'#000000';
+    const layer=document.layers.find(l=>l.name===entity.layer),rgb=plotInk(entity,layer);
     const color=options.colorMode==='monochrome'?'#000000':options.colorMode==='grayscale'?gray(rgb):rgb;
     const weight=options.lineweights?(entity.lineweight??layer?.lineweight??.25):.18;
     const attrs=`stroke="${color}" stroke-width="${numeric(Math.max(.01,weight))}" stroke-linecap="round" stroke-linejoin="round"${dashAttribute(entity.linetype??layer?.linetype)}`;
     let body='';
-    if(['TEXT','MTEXT','DIMENSION'].includes(entity.type)){
+    if(entity.type==='IMAGE'){
+      const resource=document.imageResources?.find(row=>row.id===entity.resourceId);if(!resource?.dataURL||!/^data:image\/(?:png|jpeg);base64,/i.test(resource.dataURL))throw Error(`Unresolved raster image resource: ${resource?.name||entity.resourceId}. Resolve the source image before plotting.`);
+      if(perspective)throw Error('Perspective raster-image plotting is unavailable; use an orthographic view.');
+      const origin=map(entity.position),along=map({x:entity.position.x+entity.uVector.x,y:entity.position.y+entity.uVector.y}),up=map({x:entity.position.x+entity.vVector.x,y:entity.position.y+entity.vVector.y});
+      if(!origin||!along||!up)throw Error('Raster image lies outside the supported projection.');
+      const matrix=[(along.x-origin.x)/resource.width,(along.y-origin.y)/resource.width,(origin.x-up.x)/resource.height,(origin.y-up.y)/resource.height,up.x,up.y];
+      body=`<image x="0" y="0" width="${numeric(resource.width)}" height="${numeric(resource.height)}" transform="matrix(${matrix.map(numeric).join(' ')})" href="${escape(resource.dataURL)}" preserveAspectRatio="none" data-resource="${escape(resource.id)}"/>`;
+      if(document.rasterSettings?.frame===1)body+=path([entity.position,{x:entity.position.x+entity.uVector.x,y:entity.position.y+entity.uVector.y},{x:entity.position.x+entity.uVector.x+entity.vVector.x,y:entity.position.y+entity.uVector.y+entity.vVector.y},{x:entity.position.x+entity.vVector.x,y:entity.position.y+entity.vVector.y}],true,'none',`${attrs} data-image-frame="1"`);
+    }else if(['TEXT','MTEXT','DIMENSION','LEADER'].includes(entity.type)){
       const g=core.annotationPrimitives(entity,document);
-      if(entity.type==='DIMENSION')body=g.segments.map(([a,b])=>segment(a,b,attrs)).join('')+g.arrows.map(points=>path(points,true,color,'stroke="none"')).join('');
+      for(const warning of g.warnings||[]){const message=`Annotation ${entity.id}: ${warning}.`;if(!warnings.includes(message))warnings.push(message);}
+      if(g.texts.some(text=>text.metricStatus==='fallback')){const message=`Annotation ${entity.id} uses approximate text metrics because a requested local font profile is unavailable.`;if(!warnings.includes(message))warnings.push(message);}
+      body=(['DIMENSION','LEADER'].includes(entity.type)?g.segments||[]:g.decorationSegments||[]).map(([a,b])=>segment(a,b,attrs)).join('')+(g.arrows||[]).map(points=>path(points,true,color,'stroke="none"')).join('');
       body+=g.texts.map(label).join('');
     }else if(entity.type==='CIRCLE'&&!is3D){const p=map(entity.center);body=`<circle cx="${numeric(p.x)}" cy="${numeric(p.y)}" r="${numeric(entity.radius*scale)}" fill="none" ${attrs}/>`;
     }else if(entity.type==='ARC'&&!is3D){
@@ -201,8 +226,8 @@ function renderEntities(entities,document,options,map,scale,is3D=false,perspecti
     }else if(entity.type==='HATCH'){
       const g=core.hatchGeometry(entity);body=g.fills.map(fill=>path(fill.points,fill.closed,color,'stroke="none"')).join('')+g.segments.map(([a,b])=>segment(a,b,attrs)).join('');
     }else{
-      const curve=curvePoints(entity),edges=curve?curve.slice(1).map((p,i)=>[curve[i],p]):core.entityEdges(entity,document);
-      if(!edges.length)throw Error(`Plotting ${entity.type} is not supported.`);
+      const architectural=roofDisplayEdges(entity,document.architecture,document.architectureDerived),curve=curvePoints(entity),edges=architectural!==null?architectural.map(edge=>[edge.a,edge.b]):curve?curve.slice(1).map((p,i)=>[curve[i],p]):core.entityEdges(entity,document);
+      if(!edges.length&&architectural===null)throw Error(`Plotting ${entity.type} is not supported.`);
       body=edges.map(([a,b])=>segment(a,b,attrs)).join('');
     }
     parts.push(`<g color="${color}" data-entity="${escape(entity.id)}">${body}</g>`);
@@ -213,34 +238,50 @@ function renderEntities(entities,document,options,map,scale,is3D=false,perspecti
 function gray(color){const r=parseInt(color.slice(1,3),16),g=parseInt(color.slice(3,5),16),b=parseInt(color.slice(5,7),16),v=Math.round(.2126*r+.7152*g+.0722*b).toString(16).padStart(2,'0');return`#${v}${v}${v}`;}
 
 // Host executes this fixed code after loading our escaped HTML and fonts, without Node integration.
-export const PLOT_FONT_CALIBRATION=`(async()=>{await document.fonts.ready;const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');for(const text of document.querySelectorAll('text[data-cap-height]')){ctx.font='100px '+text.getAttribute('font-family');const ascent=ctx.measureText('H').actualBoundingBoxAscent;if(ascent>0&&Number.isFinite(ascent))text.setAttribute('font-size',String(100/ascent));}return true;})()`;
+export const PLOT_FONT_CALIBRATION=`(async()=>{await document.fonts.ready;await Promise.all([...document.querySelectorAll('image')].map(element=>new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(true);image.onerror=()=>reject(Error('An embedded raster image could not be decoded.'));image.src=element.getAttribute('href');})));const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d');for(const text of document.querySelectorAll('text[data-cap-height]')){ctx.font='100px '+text.getAttribute('font-family');const ascent=ctx.measureText('H').actualBoundingBoxAscent;if(ascent>0&&Number.isFinite(ascent))text.setAttribute('font-size',String(100/ascent));}return true;})()`;
 
 export function buildPlotHTML(sources,{options:rawOptions={},createEditor=core.createEditor}={}){
   const options=normalizePlotOptions(rawOptions);
   if(!Array.isArray(sources)||sources.length<1||sources.length>20)throw Error('Plot requires 1 through 20 drawing sheets.');
+  if(options.space==='layouts'&&sources.length!==1)throw Error('An ordered layout selection requires exactly one drawing.');
   if(sources.reduce((sum,s)=>sum+(typeof s?.text==='string'?BufferlessBytes(s.text):0),0)>100*1024*1024)throw Error('Batch plot input exceeds 100 MiB.');
   const [short,long]=PAPERS[options.paper],width=options.orientation==='landscape'?long:short,height=options.orientation==='landscape'?short:long;
-  const sheets=sources.map((source,index)=>{
+  const documents=sources.map((source,sourceIndex)=>{
     if(!source||typeof source.title!=='string'||source.title.length>512||typeof source.text!=='string'||BufferlessBytes(source.text)>25*1024*1024)throw Error('Plot source title or document is invalid or too large.');
     const editor=createEditor(),accepted=editor.importJSON(source.text);if(!accepted.ok)throw Error(accepted.message);
     // Native serialization intentionally saves architectural source, not generated
     // caches. Plot the freshly validated model entities (including roof skins and
     // separate gable closures), while keeping canonical paper ownership and the
     // saved model view rather than the currently active paper viewport's camera.
-    const document={...JSON.parse(editor.serialize()),entities:editor.state.entities.filter(entity=>!entity.layoutId)};
+    const document={...JSON.parse(editor.serialize()),entities:editor.state.entities.filter(entity=>!entity.layoutId),architectureDerived:editor.state.architectureDerived};
+    return {source,sourceIndex,editor,document};
+  });
+  const pages=[];
+  for(const entry of documents){
+    const {document}=entry;
+    if(options.space==='layouts'){
+      const layouts=new Map(document.layouts.map(layout=>[layout.id,layout]));
+      for(const id of options.layoutIds){const layout=layouts.get(id);if(!layout)throw Error(`Selected layout ID does not exist: ${id}`);pages.push({...entry,layout});}
+      continue;
+    }
     const wanted=options.space==='model'?null:options.space==='layout'?(options.layoutId??document.activeLayoutId):document.activeLayoutId;
     const layout=wanted?document.layouts?.find(item=>item.id===wanted):null;
     if(options.space==='layout'&&!layout)throw Error('Choose an existing layout to plot.');
+    pages.push({...entry,layout});
+  }
+  let vectorBytes=0;
+  const sheets=pages.map(({source,editor,document,layout},index)=>{
     const sheet=layout?layoutPage(source,document,layout,options,index):drawingPage(source,document,options,width,height,index);
-    for(const roof of editor.state.architectureDerived?.roofs??[])if(roof.status!=='ok')sheet.warnings.push(`Architectural roof ${roof.id} is ${roof.status}; its roof and closure geometry is excluded. Review the Architecture diagnostics.`);
+    for(const roof of editor.state.architectureDerived?.roofs??[]){if(roof.status==='needs-review')sheet.warnings.push(`Architectural roof ${roof.id} is included for drainage review only; its geometry is valid but drainage failed and approval quantities are withheld. Review the Architecture diagnostics.`);else if(roof.status!=='ok')sheet.warnings.push(`Architectural roof ${roof.id} is ${roof.status}; its roof and closure geometry is excluded. Review the Architecture diagnostics.`);}
+    vectorBytes+=BufferlessBytes(sheet.svg);if(vectorBytes>50*1024*1024)throw Error('Plot vector document exceeds 50 MiB.');
     return sheet;
   });
-  const sheetReport=(s,i)=>({title:sources[i].title,space:s.space,layoutId:s.layoutId,layoutName:s.layoutName??null,paper:s.paper,orientation:s.orientation,widthMm:s.width,heightMm:s.height,plotScaleMmPerUnit:s.plotScaleMmPerUnit,worldBounds:s.worldBounds,clipped:s.clipped,warnings:s.warnings,...(s.viewports?{viewports:s.viewports}:{})});
-  const report={pages:sheets.length,paper:sheets[0].paper,orientation:sheets[0].orientation,space:sheets[0].space,layoutId:sheets[0].layoutId,scaleMode:sheets[0].space==='layout'?'layout':options.scaleMode,ratio:sheets[0].space==='layout'?1:options.ratio,plotScaleMmPerUnit:sheets[0].plotScaleMmPerUnit,worldBounds:sheets[0].worldBounds,clipped:sheets.some(s=>s.clipped),warnings:[...new Set(sheets.flatMap(s=>s.warnings))],sheets:sheets.map(sheetReport)};
+  const sheetReport=(s,i)=>({title:pages[i].source.title,sourceIndex:pages[i].sourceIndex,space:s.space,layoutId:s.layoutId,layoutName:s.layoutName??null,paper:s.paper,orientation:s.orientation,widthMm:s.width,heightMm:s.height,plotScaleMmPerUnit:s.plotScaleMmPerUnit,worldBounds:s.worldBounds,clipped:s.clipped,warnings:s.warnings,...(s.viewports?{viewports:s.viewports}:{})});
+  const report={pages:sheets.length,paper:sheets[0].paper,orientation:sheets[0].orientation,space:options.space==='layouts'?'layouts':sheets[0].space,layoutId:options.space==='layouts'?null:sheets[0].layoutId,...(options.space==='layouts'?{layoutIds:[...options.layoutIds]}:{}),scaleMode:sheets[0].space==='layout'?'layout':options.scaleMode,ratio:sheets[0].space==='layout'?1:options.ratio,plotScaleMmPerUnit:sheets[0].plotScaleMmPerUnit,worldBounds:sheets[0].worldBounds,clipped:sheets.some(s=>s.clipped),warnings:[...new Set(sheets.flatMap(s=>s.warnings))],sheets:sheets.map(sheetReport)};
   const pageCSS=sheets.map((s,i)=>`@page sheet${i}{size:${numeric(s.width)}mm ${numeric(s.height)}mm;margin:0}section.sheet${i}{page:sheet${i};width:${numeric(s.width)}mm;height:${numeric(s.height)}mm}`).join('');
-  const html=`<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; font-src 'none'; img-src 'none'; base-uri 'none'; form-action 'none'"><title>Linecraft PDF Plot</title><style>@page{size:${numeric(sheets[0].width)}mm ${numeric(sheets[0].height)}mm;margin:0}${pageCSS}html,body{margin:0;padding:0;background:white}section{overflow:hidden;break-after:page}section:last-child{break-after:auto}svg{display:block}</style></head><body>${sheets.map((s,i)=>`<section class="sheet${i}">${s.svg}</section>`).join('')}</body></html>`;
+  const html=`<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; font-src 'none'; img-src data:; base-uri 'none'; form-action 'none'"><title>Linecraft PDF Plot</title><style>@page{size:${numeric(sheets[0].width)}mm ${numeric(sheets[0].height)}mm;margin:0}${pageCSS}html,body{margin:0;padding:0;background:white}section{overflow:hidden;break-after:page}section:last-child{break-after:auto}svg{display:block}</style></head><body>${sheets.map((s,i)=>`<section class="sheet${i}">${s.svg}</section>`).join('')}</body></html>`;
   if(BufferlessBytes(html)>50*1024*1024)throw Error('Plot vector document exceeds 50 MiB.');
-  return{html,previewSVG:sheets[0].svg,report,pdfOptions:{printBackground:true,preferCSSPageSize:true,displayHeaderFooter:false,pageSize:{width:sheets[0].width/25.4,height:sheets[0].height/25.4},margins:{top:0,bottom:0,left:0,right:0}}};
+  return{html,previewSVG:sheets[0].svg,previewSVGs:sheets.map(sheet=>sheet.svg),report,pdfOptions:{printBackground:true,preferCSSPageSize:true,displayHeaderFooter:false,pageSize:{width:sheets[0].width/25.4,height:sheets[0].height/25.4},margins:{top:0,bottom:0,left:0,right:0}}};
 }
 
 function BufferlessBytes(text){return new TextEncoder().encode(text).byteLength;}

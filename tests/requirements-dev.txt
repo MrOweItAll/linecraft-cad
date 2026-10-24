@@ -1,0 +1,2 @@
+# Independent PDF-reader tests only; never an application prerequisite.
+PyMuPDF==1.28.0

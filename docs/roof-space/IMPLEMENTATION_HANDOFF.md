@@ -1,4 +1,6 @@
 # Linecraft Roof + Space
+
+> **Historical milestone reference.** This document records its original R0–R6 implementation scope and evidence. It is retained for design history; its status, next-step and test statements are not current v1.36 qualification claims. See [the historical-reference index](../HISTORICAL-REFERENCE.md) and [current release notes](../RELEASE-1.36-BETA.md).
 ## Parametric residential envelope and interior-volume extension — implementation handoff
 
 **Date:** October 15, 2026  

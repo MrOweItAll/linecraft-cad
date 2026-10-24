@@ -1,106 +1,92 @@
 'use strict';
-// Public synthetic workflow: no native drawings, private corpora or caches.
-const fs=require('node:fs'),path=require('node:path'),{spawn}=require('node:child_process'),{createHash}=require('node:crypto');
+// Bounded public qualification. Private native recordings are never required or
+// replaced with generated expected values. Historical suites are not globbed.
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {spawn}=require('node:child_process'),{createHash}=require('node:crypto');
 const root=path.resolve(__dirname,'..'),pins={electron:'44.7.0','electron-builder':'26.15.3',playwright:'1.62.1'};
-function dependency(name,entry){const base=path.join(root,'node_modules',name),manifest=path.join(base,'package.json');if(!fs.existsSync(manifest))throw Error(`Run npm ci first: local ${name} is missing.`);if(JSON.parse(fs.readFileSync(manifest)).version!==pins[name])throw Error(`${name} ${pins[name]} is pinned. Run npm ci.`);const file=path.join(base,entry);if(!fs.existsSync(file))throw Error(`Local ${name} is incomplete. Run npm ci with install scripts enabled.`);return file;}
-function runtime(){if(process.platform!=='win32')throw Error('Desktop checks and installer builds require Windows x64. Pure npm test is portable.');return dependency('electron','dist/electron.exe');}
-function run(executable,args){return new Promise((resolve,reject)=>{const env={...process.env};delete env.ELECTRON_RUN_AS_NODE;const child=spawn(executable,args,{cwd:root,env,stdio:'inherit',windowsHide:true});child.once('error',reject);child.once('exit',(code,signal)=>code===0?resolve():reject(Error(`Check failed (${code??signal}): ${path.basename(executable)} ${args.join(' ')}`)));const stop=()=>child.kill();process.once('SIGINT',stop);process.once('SIGTERM',stop);child.once('exit',()=>{process.removeListener('SIGINT',stop);process.removeListener('SIGTERM',stop);});});}
-const pureStages=[
- ['structured revision scripting, R4 preservation and authenticated loopback control',['tests/run-scripting-tests.mjs']],
- ['synthetic engine regression',['tests/run-tests.mjs']],
- ['Roof + Space source, exact rooms, independent roof topology and runoff',['tests/run-architecture-tests.mjs']],
- ['Fixed-roof ceiling envelope, analytic volume, headroom and independent sections',['tests/run-clearance-tests.mjs']],
- ['Bounded stepped tray, exact containment, return clearance and accepted profile comparison',['tests/run-tray-tests.mjs']],
- ['Confirmed terminal gable topology, source integration and independent analytical checks',['tests/run-gable-tests.mjs']],
- ['Additive activation, ridge migration, source supports and atomic bearing integration',['tests/run-bearing-tests.mjs']],
- ['Bounded R6 alternatives, target-capped benefit, physical quantities and atomic source history',['tests/run-alternatives-tests.mjs']],
- ['Original source-only R6 room, linked bearings and locked common scales',['tests/export-alternatives-sample.mjs']],
- ['Roof + Space native-file schema and atomic validation',['tests/architecture-ipc.test.cjs']],
- ['regenerate and round-trip original source-only H sample',['tests/export-roof-sample.mjs']],
- ['regenerate and round-trip declared fixed-roof ceiling-space sample',['tests/export-clearance-sample.mjs']],
- ['regenerate and round-trip source-only tray ceiling sample',['tests/export-tray-sample.mjs']],
- ['regenerate and round-trip source-only confirmed gable example',['tests/export-gable-sample.mjs']],
- ['export and round-trip the source-only scripting review fixture',['tests/export-scripting-sample.mjs']],
- ['validate source-only analytical gable PDF fixture and locked plan/elevation sheets',['tests/export-roof-plot-sample.mjs']],
- ['validate source-only unequal-bearing fixture, migration and locked common scales',['tests/export-bearing-sample.mjs']],
- ['independent physical unit and dimension arithmetic',['--test','tests/units-independent.test.mjs']],
- ['unit IPC validation and real files',['tests/units-security.test.cjs']],
- ['independent paper scale, UCS and exact spatial-curve math',['--test','tests/layouts-independent.test.mjs']],
- ['paper/viewport/layer/plane IPC validation and real files',['tests/layouts-security.test.cjs']],
- ['independent viewport objects, clipping owner graphs and resize compensation',['tests/viewport-object-tests.mjs']],
- ['polygon viewport IPC schema, bounded resources and real Save/Open validation',['tests/viewport-security-v17.cjs']],
- ['physical viewport scale catalog, notation and XP factors',['--test','tests/viewport-scales.test.mjs']],
- ['independent architectural scale arithmetic and unchanged geometry',['tests/viewport-scales-tests.mjs']],
- ['viewport scale and XP IPC validation with real files',['tests/viewport-scales-security-v18.cjs']],
- ['original clipped-viewport DXF fixture export',['tests/export-viewport-v17.mjs']],
- ['desktop trust and native file boundaries',['tests/desktop-unit.test.cjs']],
- ['restricted geometry clipboard transport',['tests/clipboard-security.test.cjs']],
- ['annotation/settings validation',['tests/annotation-security.test.cjs']],
- ['independent mesh topology and volume',['tests/mesh-v14.mjs']],
- ['mesh IPC resource validation',['tests/mesh-security.test.cjs']],
- ['independent conic/cubic/hatch/corner math',['--test','tests/advanced-independent.test.mjs']],
- ['advanced schema and block resource validation',['tests/advanced-security.test.cjs']],
- ['vector plot documents and physical sheet arithmetic',['--test','tests/plot-document.test.mjs']],
- ['isolated PDF host and file bounds',['tests/plot-files.test.cjs']],
- ['PDF IPC trust and drawing association',['tests/plot-ipc.test.cjs']],
- ['hidden startup/compositor policy',['tests/hidden-startup.test.cjs']],
- ['independent camera and construction projection',['tests/projection3d.test.mjs']],
- ['DWG converter isolation and bounded failure handling',['tests/import-files.test.cjs']],
- ['synthetic bounded DXF decoder',['--test','tests/dwg-import.test.mjs']]
-];
-function sourceFiles(folder=root,prefix=''){const result=[];for(const item of fs.readdirSync(folder,{withFileTypes:true})){const name=prefix+item.name;if(['node_modules','Windows-Release','work','.git','.linecraft-dev-profile','__pycache__'].includes(item.name)||['tests/layout-pdf-v16','tests/viewport-pdf-v17','tests/viewport-scales-pdf-v18'].includes(name))continue;if(item.isDirectory())result.push(...sourceFiles(path.join(folder,item.name),name+'/'));else if(item.isFile()&&!/-results\.json$|\.log$/.test(name)&&!(name.startsWith('tests/')&&name.endsWith('.png')))result.push(name);}return result.sort();}
-const fingerprint=files=>Object.fromEntries(files.map(name=>[name,createHash('sha256').update(fs.readFileSync(path.join(root,name))).digest('hex')]));
-function assertStable(report){const after=fingerprint(Object.keys(report.sourceSHA256)),changed=Object.keys(after).filter(name=>after[name]!==report.sourceSHA256[name]);if(changed.length)throw Error(`Public sources changed: ${changed.join(', ')}. Repeat before building.`);}
-async function check(report,name,args){const row={name,status:'running'},start=Date.now();report.stages.push(row);console.log(`[Public check ${report.stages.length}] ${name}`);try{await run(process.execPath,args);row.status='passed';}catch(error){row.status='failed';row.error=error.message;throw error;}finally{row.durationMs=Date.now()-start;}}
-async function gate(command){const version=JSON.parse(fs.readFileSync(path.join(root,'package.json'))).version,report={scope:'Public synthetic validation; no native CAD evidence, user drawings or internal release fixtures.',command,version,startedAt:new Date().toISOString(),node:process.version,sourceSHA256:fingerprint(sourceFiles()),stages:[]},start=Date.now();
+const suites=[
+ 'ordinary-grip-input.test.mjs','perpendicular-independent.test.mjs','command-completion.test.mjs','trim-comprehensive.test.mjs',
+ 'units-independent.test.mjs','advanced-independent.test.mjs','layouts-independent.test.mjs','viewport-object-independent.test.mjs',
+ 'viewport-scales-independent.test.mjs','roof-hip.test.mjs','clearance-independent.test.mjs'
+].map(n=>'tests/'+n);
+const auxiliaries=['tests/core.test.mjs','tests/public-core-exclusions.json','tests/export-advanced-sample.mjs','tests/historical-native-fixture.mjs','tests/historical-trim-defaults.cjs','tests/viewport-fixtures-v17.mjs','tests/viewport-scales-fixtures-v18.mjs','tests/ordinary-grip-desktop.cjs','tests/ordinary-grip-confirm.cjs','tests/electron-test-options.cjs','tests/audit-drafting-pdf.py','tests/requirements-dev.txt','desktop/dev-tools.cjs','package.json','package-lock.json','PUBLIC-SOURCE.json','tools/verify-public-source.cjs'];
+const manifest=JSON.parse(fs.readFileSync(path.join(root,'PUBLIC-SOURCE.json'),'utf8'));
+const sha=b=>createHash('sha256').update(b).digest('hex');
+const hashFiles=names=>Object.fromEntries(names.map(n=>[n,sha(fs.readFileSync(path.join(root,n)))]));
+const fingerprintNames=[...new Set([...manifest.runtimeFiles,...manifest.extraResources].map(r=>r.file).concat(suites,auxiliaries))].sort();
+function dependency(name,entry){
+ const base=path.join(root,'node_modules',name);assert.ok(fs.existsSync(base),`Run npm ci: local ${name} is missing.`);
+ assert.equal(JSON.parse(fs.readFileSync(path.join(base,'package.json'),'utf8')).version,pins[name],`${name} pin`);
+ assert.ok(!fs.lstatSync(path.join(root,'node_modules')).isSymbolicLink(),'node_modules must be an independent local install, not a junction.');
+ const file=path.join(base,entry);assert.ok(fs.existsSync(file),`Local ${name} install is incomplete; enable npm install scripts.`);return file;
+}
+function runtime(){assert.equal(process.platform,'win32','Desktop and installer qualification require Windows; npm test is portable.');assert.equal(process.arch,'x64');const exe=dependency('electron','dist/electron.exe');assert.equal(fs.readFileSync(path.join(path.dirname(exe),'version'),'utf8').trim().replace(/^v/,''),pins.electron);return exe;}
+function childEnvironment(){const env={...process.env};for(const n of ['ELECTRON_RUN_AS_NODE','ELECTRON_OVERRIDE_DIST_PATH','CAD_ELECTRON_RUNTIME','CAD_PLAYWRIGHT_MODULE','NODE_PATH'])delete env[n];return env;}
+function run(executable,args,log){return new Promise((resolve,reject)=>{
+ const output=fs.createWriteStream(log,{flags:'wx'}),child=spawn(executable,args,{cwd:root,env:childEnvironment(),windowsHide:true,stdio:['ignore','pipe','pipe']});
+ child.stdout.pipe(output,{end:false});child.stderr.pipe(output,{end:false});
+ let failed=false;child.once('error',error=>{failed=true;output.end();reject(error);});
+ child.once('close',(code,signal)=>{output.end(()=>{if(failed)return;const text=fs.readFileSync(log,'utf8');if(code===0)resolve(text);else reject(Error(`Stage exited ${code??signal}; see ${path.relative(root,log)}\n${text.split(/\r?\n/).slice(-60).join('\n')}`));});});
+ const stop=()=>child.kill();process.once('SIGINT',stop);process.once('SIGTERM',stop);child.once('close',()=>{process.removeListener('SIGINT',stop);process.removeListener('SIGTERM',stop);});
+});}
+function counts(tap){const result={};for(const key of ['tests','pass','fail','cancelled','skipped']){const matches=[...tap.matchAll(new RegExp('^# '+key+' (\\d+)\\s*$','gm'))];assert.ok(matches.length,`Missing TAP ${key} summary`);result[key]=Number(matches.at(-1)[1]);}assert.equal(result.fail,0);assert.equal(result.cancelled,0);return result;}
+function verifySource(){assert.equal(manifest.version,require('../package.json').version);assert.equal(manifest.runtimeFiles.length,59);assert.equal(manifest.extraResources.length,12);for(const item of [...manifest.runtimeFiles,...manifest.extraResources]){assert.ok(!path.isAbsolute(item.file)&&!item.file.split(/[\\/]/).includes('..'));const bytes=fs.readFileSync(path.join(root,item.file));assert.equal(bytes.length,item.bytes,item.file);assert.equal(sha(bytes),item.sha256,item.file);}return{runtimeFiles:59,extraResources:12};}
+function verifyPackaged(executable){
+ verifySource();const asar=require('@electron/asar'),resources=path.join(path.dirname(path.resolve(executable)),'resources'),archive=path.join(resources,'app.asar');
+ for(const item of manifest.runtimeFiles)assert.equal(sha(asar.extractFile(archive,item.file)),item.sha256,item.file);
+ for(const item of manifest.extraResources){const target=item.file.startsWith('third-party/')?item.file:'structural/linecraft-structural-adapter.py';assert.equal(sha(fs.readFileSync(path.join(resources,target))),item.sha256,target);}
+ const metadata=JSON.parse(asar.extractFile(archive,'package.json'));assert.equal(metadata.version,manifest.version);assert.equal(metadata.main,'desktop/main.cjs');return{runtimeFiles:59,extraResources:12,archiveSHA256:sha(fs.readFileSync(archive))};
+}
+function stable(report){const after=hashFiles(fingerprintNames),changed=Object.keys(after).filter(n=>after[n]!==report.sourceSHA256[n]);report.changedSource=changed;assert.deepEqual(changed,[],'Bound public inputs changed during qualification.');}
+async function stage(report,name,executable,args,validate){
+ const row={name,status:'running',command:[path.relative(root,executable)||executable,...args],log:path.join(report.logDirectory,String(report.stages.length+1).padStart(2,'0')+'-'+name.replace(/[^a-z0-9-]+/gi,'-').toLowerCase()+'.log'),startedAt:new Date().toISOString()};report.stages.push(row);console.log(`[Public ${report.stages.length}] ${name}`);
+ try{const text=await run(executable,args,row.log);if(validate)row.evidence=await validate(text);row.status='passed';console.log('PASS '+name);}catch(error){row.status='failed';row.error=error.message;throw error;}finally{row.completedAt=new Date().toISOString();}
+}
+async function pure(report){
+ fs.mkdirSync(path.join(root,'samples'),{recursive:true});
+ await stage(report,'generate original numerical advanced exchange sample',process.execPath,['tests/export-advanced-sample.mjs'],()=>Object.fromEntries(['samples/advanced-v14-reference.linecraft','samples/advanced-v14-reference.dxf'].map(file=>[file,sha(fs.readFileSync(path.join(root,file)))])));
+ const exclusions=JSON.parse(fs.readFileSync(path.join(root,'tests/public-core-exclusions.json'),'utf8'));assert.equal(exclusions.exactExcludedCases.length,12);
+ const core=fs.readFileSync(path.join(root,'tests/core.test.mjs'),'utf8');for(const item of exclusions.exactExcludedCases)assert.ok(core.includes(item.name),`Exclusion disappeared: ${item.name}`);
+ const escape=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),pattern='^(?:'+exclusions.exactExcludedCases.map(item=>escape(item.name)).join('|')+')$';
+ await stage(report,'generated core; twelve explicitly unavailable private reference cases',process.execPath,['--test','--test-reporter=tap','--test-skip-pattern',pattern,'tests/core.test.mjs'],text=>{const c=counts(text);assert.equal(c.tests,306);assert.equal(c.pass,306);assert.equal(c.skipped,0);return{...c,declaredOriginalCases:318,excludedCount:12,excluded:exclusions.exactExcludedCases.map(item=>item.name),accounting:'Node24 omits excluded selections from TAP totals.306 executed plus12 explicitly unavailable references accounts for318 original declarations.'};});
+ for(const file of suites)await stage(report,file,process.execPath,['--test','--test-reporter=tap',file],text=>{const c=counts(text);assert.equal(c.skipped,0);return c;});
+ const summary={format:'LinecraftPublicPureSummary/1',scope:'Generated public cases; private native-recording cases explicitly excluded, not passed.',version:report.version,node:report.node,status:'passed',core:report.stages.find(row=>row.name.startsWith('generated core;')).evidence,suites:report.stages.filter(row=>suites.includes(row.name)).map(row=>({file:row.name,...row.evidence})),sourceSHA256:report.sourceSHA256,completedAt:new Date().toISOString()};
+ fs.writeFileSync(path.join(root,'work/public-pure-results.json'),JSON.stringify(summary,null,2)+'\n');
+}
+async function desktop(report,executable,entry,prefix){
+ dependency('playwright','index.js');if(!entry)report.packagedBefore=verifyPackaged(executable);
+ await stage(report,`actual hidden ${prefix}:32 checks and independent PDF9`,process.execPath,['tests/ordinary-grip-desktop.cjs',path.resolve(executable),entry,prefix],()=>{
+  const file=path.join(root,'tests',prefix+'-results.json'),result=JSON.parse(fs.readFileSync(file,'utf8'));assert.equal(result.total,32);assert.equal(result.passed,32);assert.equal(result.failed,0);assert.equal(result.sourceUnchangedDuringRun,true);assert.equal(result.outputs.pdfAudit.total,9);assert.equal(result.outputs.pdfAudit.passed,9);assert.equal(result.hiddenWindowVerified,true);assert.equal(result.application.packaged,!entry);
+  return{report:path.relative(root,file),reportSHA256:sha(fs.readFileSync(file)),passed:32,total:32,pdf:result.outputs.pdf,pdfSHA256:result.outputs.pdfSHA256,pdfAudit:result.outputs.pdfAudit,scope:result.evidenceClass};
+ });if(!entry)report.packagedAfter=verifyPackaged(executable);
+}
+async function main(){
+ const[command='test',installed]=process.argv.slice(2);assert.ok(['test','test-desktop','unpacked','release','dev','test-installed'].includes(command),'Commands: dev | test | test-desktop | unpacked | release | test-installed <exe>');
+ if(command==='dev'){fs.mkdirSync(path.join(root,'work'),{recursive:true});if(!fs.existsSync(path.join(root,'node_modules/electron/dist/electron.exe')))await run(process.execPath,[dependency('electron','install.js')],path.join(root,'work/electron-bootstrap-'+Date.now()+'.log'));const exe=runtime();return run(exe,[path.join(root,'desktop/main.cjs'),`--user-data-dir=${path.join(root,'work/development-profile')}`],path.join(root,'work/dev-'+Date.now()+'.log'));}
+ const work=path.join(root,'work');fs.mkdirSync(work,{recursive:true});const logDirectory=path.join(work,'public-gate-'+command+'-'+Date.now());fs.mkdirSync(logDirectory,{recursive:false});
+ const report={format:'LinecraftPublicGate/1',scope:'Generated public qualification only. No private native recordings, client drawings, ordinary installed desktop input, OS choosers or real clipboard access. Installed command means hidden runner acceptance, not native human review.',command,version:require('../package.json').version,node:process.version,platform:process.platform,arch:process.arch,startedAt:new Date().toISOString(),logDirectory,sourceSHA256:hashFiles(fingerprintNames),stages:[]};
  try{
-  for(const[name,args]of pureStages)await check(report,name,args);
-  if(command!=='test'){
-   const executable=runtime(),entry=path.join(root,'desktop/main.cjs');dependency('playwright','index.js');
-   await check(report,'actual fixed reader version and license/source identities',['tests/converter-identity.cjs']);
-   await check(report,'actual hidden source units/coordinates/persistence',['tests/units-v15.cjs',executable,entry,'public-source-units']);
-   await check(report,'actual hidden source layouts/viewport/layers/UCS',['tests/layouts-v16.cjs',executable,entry,'public-source-layouts']);
-   await check(report,'actual hidden source rectangle/polygon selection, grips, commands and navigation',['tests/viewports-v17.cjs',executable,entry,'public-source-viewports']);
-   await check(report,'actual hidden source active-command viewport pan and cursor-anchored zoom',['tests/viewport-regression-v17.cjs',executable,entry,'public-source-viewport-navigation']);
-   await check(report,'actual hidden production paper PDF and unequal Publish sheets',['tests/run-layout-pdf-v16.cjs',executable]);
-   await check(report,'actual hidden production polygon clipping and off-sheet vector PDF',['tests/run-viewport-pdf-v17.cjs',executable]);
-   await check(report,'actual hidden source architectural and engineering scale choices, exact custom ratios and lock protection',['tests/viewport-scales-v18.cjs',executable,entry,'public-source-viewport-scales']);
-   await check(report,'actual hidden source Roof + Space authoring, owner picking, Save/Open and grouped Undo',['tests/architecture-desktop.cjs',executable,entry,'public-source-architecture']);
-   await check(report,'actual hidden source fixed-roof space study, ceiling adoption, reservations and sections',['tests/clearance-desktop.cjs',executable,entry,'public-source-clearance']);
-   await check(report,'actual hidden source tray proposal, accepted profile, fixed roof and grouped Undo',['tests/tray-desktop.cjs',executable,entry,'public-source-tray']);
-   await check(report,'actual hidden source confirmed terminal gable assignments, atomic edits and persistence',['tests/gable-desktop.cjs',executable,entry,'public-source-gable']);
-   await check(report,'actual hidden source real CLI scripting, grouped history, native save and PDF',['tests/scripting-desktop.cjs',executable,entry,'public-source-scripting']);
-   await check(report,'actual hidden source generated roof/closure PDF, locked physical scales and frozen layers',['tests/roof-plot-desktop.cjs',executable,entry,'public-source-roof-plot']);
-   await check(report,'actual hidden source unequal-bearing draft/apply, grouped history and step/closure PDFs',['tests/bearing-desktop.cjs',executable,entry,'public-source-bearing']);
-   await check(report,'actual hidden source R6 bounded search, review, grouped Apply, paper report, native files and PDFs',['tests/alternatives-desktop.cjs',executable,entry,'public-source-alternatives']);
-   await check(report,'actual hidden production architectural preset PDF in four assigned model units',['tests/run-viewport-scales-pdf-v18.cjs',executable]);
-   await check(report,'actual hidden source watched reload, Architecture draft deferral and recovery',['tests/dev-reload.cjs',executable,entry]);
-   await check(report,'actual hidden isolated validator architecture-helper cache protection',['tests/dev-validator.cjs',executable]);
-   assertStable(report);
-   if(['unpacked','build'].includes(command)){
-    const builder=dependency('electron-builder','cli.js'),out=JSON.parse(fs.readFileSync(path.join(root,'package.json'))).build.directories.output,unpacked=path.join(root,out,'win-unpacked'),app=path.join(unpacked,'Linecraft CAD.exe');
-    await check(report,'build unpacked Windows x64 application',[builder,'--publish','never','--win','--x64','--dir','--projectDir',root,`-c.electronDist=${path.dirname(executable)}`]);
-    await check(report,'actual hidden unpacked unit workflow',['tests/units-v15.cjs',app,'','public-unpacked-units']);
-    await check(report,'actual hidden unpacked layout/UCS workflow',['tests/layouts-v16.cjs',app,'','public-unpacked-layouts']);
-    await check(report,'actual hidden unpacked rectangle/polygon viewport workflow',['tests/viewports-v17.cjs',app,'','public-unpacked-viewports']);
-    await check(report,'actual hidden unpacked active-command viewport pan and zoom',['tests/viewport-regression-v17.cjs',app,'','public-unpacked-viewport-navigation']);
-    await check(report,'actual hidden unpacked common viewport scales, XP input and protected lock workflow',['tests/viewport-scales-v18.cjs',app,'','public-unpacked-viewport-scales']);
-    await check(report,'actual hidden unpacked Roof + Space modules, authoring and persistence',['tests/architecture-desktop.cjs',app,'','public-unpacked-architecture']);
-    await check(report,'actual hidden unpacked fixed-roof space study, ceiling adoption and sections',['tests/clearance-desktop.cjs',app,'','public-unpacked-clearance']);
-    await check(report,'actual hidden unpacked tray proposal, accepted source persistence and fixed roof',['tests/tray-desktop.cjs',app,'','public-unpacked-tray']);
-    await check(report,'actual hidden unpacked confirmed terminal gable assignments and source persistence',['tests/gable-desktop.cjs',app,'','public-unpacked-gable']);
-    await check(report,'actual hidden unpacked real CLI scripting, native save and PDF',['tests/scripting-desktop.cjs',app,'','public-unpacked-scripting']);
-    await check(report,'actual hidden unpacked generated roof/closure PDFs and unchanged locked viewports',['tests/roof-plot-desktop.cjs',app,'','public-unpacked-roof-plot']);
-    await check(report,'actual hidden unpacked unequal bearings, ridge migration and step/closure PDFs',['tests/bearing-desktop.cjs',app,'','public-unpacked-bearing']);
-    await check(report,'actual hidden unpacked R6 bounded alternatives, source history, report and PDFs',['tests/alternatives-desktop.cjs',app,'','public-unpacked-alternatives']);
-    await check(report,'packaged converter/license/source byte identities',['tests/converter-identity.cjs',path.join(unpacked,'resources/third-party/libredwg'),'public-unpacked-converter']);
-    assertStable(report);
-    if(command==='build')await check(report,'compile NSIS from tested unpacked application',[builder,'--publish','never','--win','nsis','--x64','--projectDir',root,'--prepackaged',unpacked]);
+  report.runtimeBefore=verifySource();
+  if(command==='test-installed'){assert.ok(installed,'test-installed requires the installed executable path');await desktop(report,installed,'','ordinary-grip-public-installed');}
+  else{
+   if(command!=='test-desktop')await pure(report);
+   if(command!=='test'){
+    if(!fs.existsSync(path.join(root,'node_modules/electron/dist/electron.exe')))await stage(report,'bootstrap pinned local Electron runtime',process.execPath,[dependency('electron','install.js')]);
+    const exe=runtime();report.dependencies=Object.fromEntries(Object.keys(pins).map(name=>{dependency(name,name==='electron'?'dist/electron.exe':name==='playwright'?'index.js':'cli.js');return[name,pins[name]];}));
+    await desktop(report,exe,path.join(root,'desktop/main.cjs'),'ordinary-grip-public-source');
+    if(['unpacked','release'].includes(command)){
+     const builder=dependency('electron-builder','cli.js'),unpacked=path.join(root,'Windows-Release/win-unpacked'),builtExe=path.join(unpacked,'Linecraft CAD.exe');stable(report);
+     await stage(report,'build Windows x64 unpacked application',process.execPath,[builder,'--publish','never','--win','--x64','--dir','--projectDir',root,`-c.electronDist=${path.dirname(exe)}`]);
+     await desktop(report,builtExe,'','ordinary-grip-public-unpacked');stable(report);
+     if(command==='release')await stage(report,'compile NSIS from tested unpacked application',process.execPath,[builder,'--publish','never','--win','nsis','--x64','--projectDir',root,'--prepackaged',unpacked],()=>{const file=path.join(root,'Windows-Release',`Linecraft-CAD-${report.version}-Setup.exe`),bytes=fs.readFileSync(file);report.installer={file,bytes:bytes.length,sha256:sha(bytes),installed:false};return report.installer;});
+    }
    }
   }
-  assertStable(report);report.status='passed';
- }catch(error){report.status='failed';report.error=error.message;throw error;}
- finally{report.completedAt=new Date().toISOString();report.durationMs=Date.now()-start;report.passed=report.stages.filter(stage=>stage.status==='passed').length;report.failed=report.status==='passed'?0:Math.max(1,report.stages.filter(stage=>stage.status==='failed').length);fs.mkdirSync(path.join(root,'work'),{recursive:true});fs.writeFileSync(path.join(root,'work',`public-${command}-results.json`),JSON.stringify(report,null,2)+'\n');console.log(`Public ${command}: ${report.passed}/${report.stages.length} stages, ${report.status}.`);}
+  report.runtimeAfter=verifySource();stable(report);report.status='passed';
+ }catch(error){report.status='failed';report.error=error.stack||String(error);process.exitCode=1;}
+ finally{
+  report.completedAt=new Date().toISOString();report.passed=report.stages.filter(r=>r.status==='passed').length;report.total=report.stages.length;
+  const filename=path.join(work,`public-${command==='test'?'test':command}-results.json`);fs.writeFileSync(path.join(logDirectory,'results.json'),JSON.stringify(report,null,2)+'\n');fs.writeFileSync(filename,JSON.stringify(report,null,2)+'\n');console.log(`${report.status}: ${report.passed}/${report.total} public stages; ${path.relative(root,filename)}`);if(report.error)console.error(report.error);
+ }
 }
-async function main(){const command=process.argv[2]||'dev';if(['test','desktop','unpacked','build'].includes(command))return gate(command);if(command==='dev'){const profile=path.join(root,'.linecraft-dev-profile');fs.mkdirSync(profile,{recursive:true});return run(runtime(),[path.join(root,'desktop/main.cjs'),`--user-data-dir=${profile}`]);}const focused={'test-units':'units-v15.cjs','test-layouts':'layouts-v16.cjs','test-viewports':'viewports-v17.cjs','test-viewport-navigation':'viewport-regression-v17.cjs','test-scales':'viewport-scales-v18.cjs','test-architecture':'architecture-desktop.cjs','test-space':'clearance-desktop.cjs','test-tray':'tray-desktop.cjs','test-gable':'gable-desktop.cjs','test-scripting':'scripting-desktop.cjs','test-roof-plot':'roof-plot-desktop.cjs','test-bearing':'bearing-desktop.cjs','test-alternatives':'alternatives-desktop.cjs'};if(focused[command]){dependency('playwright','index.js');return run(process.execPath,[`tests/${focused[command]}`,runtime(),path.join(root,'desktop/main.cjs'),`public-${command.slice(5)}`]);}if(['test-pdf','test-viewport-pdf','test-scales-pdf'].includes(command)){const producer={'test-pdf':'run-layout-pdf-v16.cjs','test-viewport-pdf':'run-viewport-pdf-v17.cjs','test-scales-pdf':'run-viewport-scales-pdf-v18.cjs'}[command];return run(process.execPath,['tests/'+producer,runtime()]);}throw Error('Use dev, test, desktop, test-units, test-layouts, test-viewports, test-viewport-navigation, test-scales, test-pdf, test-viewport-pdf, test-scales-pdf, test-architecture, test-space, test-tray, test-gable, test-scripting, test-roof-plot, test-bearing, test-alternatives, unpacked or build.');}
 main().catch(error=>{console.error(error.stack||error);process.exitCode=1;});

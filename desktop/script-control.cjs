@@ -20,7 +20,7 @@ async function startScriptControl({connectionFile,dispatch}) {
     try{
       for await(const chunk of req){size+=chunk.length;if(size>2*1024*1024)throw Error('Scripting request exceeds 2 MiB.');chunks.push(chunk);}
       const request=JSON.parse(Buffer.concat(chunks).toString('utf8'));
-      if(!request||request.version!==1||!['describe','snapshot','preview','apply','undo','redo'].includes(request.method))throw Error('Unsupported scripting request.');
+      if(!request||request.version!==1||!['describe','snapshot','resolveSheetSet','preview','apply','undo','redo'].includes(request.method))throw Error('Unsupported scripting request.');
       const result=await dispatch(request);reply(200,result);
     }catch(error){if(!res.destroyed)reply(400,{ok:false,error:error.message});}
     finally{active=false;}

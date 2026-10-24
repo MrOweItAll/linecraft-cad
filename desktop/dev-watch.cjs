@@ -4,8 +4,8 @@ const path = require('node:path');
 
 /** Development only: renderer edits reload; main/preload edits require an explicit restart. */
 function watchDevelopment(root, getWindow, {debounceMs = 180, log = console.log} = {}) {
-  const rendererFiles = new Set(['app.mjs', 'linecraft-scripting.mjs', 'core.mjs', 'units.mjs', 'paper-space.mjs', 'drawing-plane.mjs', 'viewport-scales.mjs', '3d-view.mjs', 'advanced-geometry.mjs', 'dwg-import.mjs', 'plot-document.mjs', 'styles.css', 'index.html', 'favicon.svg']);
-  const hostFiles = new Set(['main.cjs', 'script-control.cjs', 'preload.cjs', 'import-files.cjs', 'plot-files.cjs', 'dev-watch.cjs']);
+  const rendererFiles = new Set(['app.mjs', 'context-menu-policy.mjs', 'command-completion.mjs', 'ordinary-grip-input.mjs', 'object-snaps.mjs', 'trim-geometry.mjs', 'linecraft-scripting.mjs', 'core.mjs', 'font-metrics.mjs', 'rich-text.mjs', 'units.mjs', 'paper-space.mjs', 'drawing-plane.mjs', 'viewport-scales.mjs', '3d-view.mjs', 'advanced-geometry.mjs', 'dwg-import.mjs', 'plot-document.mjs', 'styles.css', 'index.html', 'favicon.svg']);
+  const hostFiles = new Set(['main.cjs', 'script-control.cjs', 'preload.cjs', 'import-files.cjs', 'plot-files.cjs', 'structural-files.cjs', 'dev-watch.cjs']);
   const pending = new Set();
   const watchers = [];
   let timer = null, closed = false;

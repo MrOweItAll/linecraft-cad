@@ -1,0 +1,435 @@
+{
+  "format": "Linecraft/1",
+  "entities": [
+    {
+      "id": "e4",
+      "type": "RECTANG",
+      "layer": "0",
+      "points": [
+        {
+          "x": 0,
+          "y": 50
+        },
+        {
+          "x": 40,
+          "y": 50
+        },
+        {
+          "x": 40,
+          "y": 80
+        },
+        {
+          "x": 0,
+          "y": 80
+        }
+      ]
+    },
+    {
+      "id": "e6",
+      "type": "CIRCLE",
+      "layer": "0",
+      "center": {
+        "x": 60,
+        "y": 65
+      },
+      "radius": 15
+    },
+    {
+      "id": "e7",
+      "type": "HATCH",
+      "layer": "0",
+      "boundary": {
+        "type": "CIRCLE",
+        "center": {
+          "x": 60,
+          "y": 65
+        },
+        "radius": 15
+      },
+      "pattern": "solid",
+      "angle": 0,
+      "spacing": 10,
+      "origin": {
+        "x": 60,
+        "y": 65
+      }
+    },
+    {
+      "id": "e8",
+      "type": "ELLIPSE",
+      "layer": "0",
+      "center": {
+        "x": 120,
+        "y": 65
+      },
+      "major": {
+        "x": 20,
+        "y": 0
+      },
+      "ratio": 0.4
+    },
+    {
+      "id": "e9",
+      "type": "HATCH",
+      "layer": "0",
+      "boundary": {
+        "type": "ELLIPSE",
+        "center": {
+          "x": 120,
+          "y": 65
+        },
+        "major": {
+          "x": 20,
+          "y": 0
+        },
+        "ratio": 0.4
+      },
+      "pattern": "parallel",
+      "angle": 45,
+      "spacing": 3,
+      "origin": {
+        "x": 120,
+        "y": 65
+      }
+    },
+    {
+      "id": "e10",
+      "type": "LINE",
+      "layer": "0",
+      "start": {
+        "x": 0,
+        "y": 110
+      },
+      "end": {
+        "x": 32,
+        "y": 110
+      }
+    },
+    {
+      "id": "e11",
+      "type": "LINE",
+      "layer": "0",
+      "start": {
+        "x": 40,
+        "y": 118
+      },
+      "end": {
+        "x": 40,
+        "y": 150
+      }
+    },
+    {
+      "id": "e12",
+      "type": "ARC",
+      "layer": "0",
+      "center": {
+        "x": 32,
+        "y": 118
+      },
+      "radius": 8,
+      "startAngle": -90,
+      "sweepAngle": 90
+    },
+    {
+      "id": "e13",
+      "type": "LINE",
+      "layer": "0",
+      "start": {
+        "x": 60,
+        "y": 110
+      },
+      "end": {
+        "x": 95,
+        "y": 110
+      }
+    },
+    {
+      "id": "e14",
+      "type": "LINE",
+      "layer": "0",
+      "start": {
+        "x": 100,
+        "y": 120
+      },
+      "end": {
+        "x": 100,
+        "y": 150
+      }
+    },
+    {
+      "id": "e15",
+      "type": "LINE",
+      "layer": "0",
+      "start": {
+        "x": 95,
+        "y": 110
+      },
+      "end": {
+        "x": 100,
+        "y": 120
+      }
+    },
+    {
+      "id": "e16",
+      "type": "INSERT",
+      "layer": "0",
+      "blockName": "AdvancedPart",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "scale": 1,
+      "rotation": 0
+    },
+    {
+      "type": "INSERT",
+      "blockName": "AdvancedPart",
+      "position": {
+        "x": 200,
+        "y": 0
+      },
+      "scale": 1.5,
+      "rotation": 30,
+      "layer": "0",
+      "id": "e17"
+    }
+  ],
+  "layers": [
+    {
+      "name": "0",
+      "color": "#e5e7eb",
+      "visible": true,
+      "locked": false,
+      "lineweight": 0.25,
+      "modelVisible": true,
+      "paperVisible": true,
+      "plot": true,
+      "linetype": "continuous"
+    }
+  ],
+  "currentLayer": "0",
+  "textStyles": [
+    {
+      "name": "Standard",
+      "fontFamily": "Arial",
+      "defaultHeight": 2.5,
+      "defaultRotation": 0,
+      "widthFactor": 1
+    }
+  ],
+  "dimStyles": [
+    {
+      "name": "Standard",
+      "textStyle": "Standard",
+      "textHeight": 2.5,
+      "arrowSize": 2.5,
+      "gap": 1,
+      "extensionOffset": 1,
+      "extensionOvershoot": 1.25,
+      "precision": 2,
+      "scale": 1,
+      "prefix": "",
+      "suffix": ""
+    }
+  ],
+  "currentTextStyle": "Standard",
+  "currentDimStyle": "Standard",
+  "settings": {
+    "units": "unitless",
+    "precision": 4,
+    "linearFormat": "decimal",
+    "fractionPrecision": 4,
+    "angularInputUnit": "degrees",
+    "angularFormat": "decimal-degrees",
+    "angularPrecision": 4,
+    "gridEnabled": true,
+    "snapEnabled": true,
+    "orthoEnabled": false,
+    "snapModes": [
+      "endpoint",
+      "midpoint",
+      "center",
+      "quadrant"
+    ],
+    "gridAdaptive": true,
+    "gridSpacing": 10,
+    "constructionElevation": 0,
+    "constructionPlane": "XY",
+    "trimExtendMode": "quick",
+    "trimProject": "ucs",
+    "trimEdgeExtend": false
+  },
+  "blocks": [
+    {
+      "name": "AdvancedPart",
+      "base": {
+        "x": 0,
+        "y": 0
+      },
+      "entities": [
+        {
+          "type": "ELLIPSE",
+          "layer": "0",
+          "center": {
+            "x": 20,
+            "y": 0
+          },
+          "major": {
+            "x": 20,
+            "y": 0
+          },
+          "ratio": 0.4
+        },
+        {
+          "type": "SPLINE",
+          "layer": "0",
+          "controlPoints": [
+            {
+              "x": 60,
+              "y": 0
+            },
+            {
+              "x": 60,
+              "y": 20
+            },
+            {
+              "x": 100,
+              "y": 20
+            },
+            {
+              "x": 100,
+              "y": 0
+            }
+          ],
+          "degree": 3,
+          "knots": [
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            1
+          ],
+          "closed": false
+        },
+        {
+          "type": "DIMENSION",
+          "layer": "0",
+          "kind": "angular",
+          "placement": {
+            "x": 135,
+            "y": 15
+          },
+          "style": "Standard",
+          "scale": 1,
+          "p1": {
+            "x": 140,
+            "y": 0
+          },
+          "p2": {
+            "x": 120,
+            "y": 20
+          },
+          "vertex": {
+            "x": 120,
+            "y": 0
+          }
+        },
+        {
+          "type": "HATCH",
+          "layer": "0",
+          "boundary": {
+            "type": "RECTANG",
+            "points": [
+              {
+                "x": 0,
+                "y": 50
+              },
+              {
+                "x": 40,
+                "y": 50
+              },
+              {
+                "x": 40,
+                "y": 80
+              },
+              {
+                "x": 0,
+                "y": 80
+              }
+            ]
+          },
+          "pattern": "parallel",
+          "angle": 30,
+          "spacing": 4,
+          "origin": {
+            "x": 0,
+            "y": 50
+          }
+        }
+      ]
+    }
+  ],
+  "layouts": [],
+  "ucs": {
+    "origin": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "xAxis": {
+      "x": 1,
+      "y": 0,
+      "z": 0
+    },
+    "yAxis": {
+      "x": 0,
+      "y": 1,
+      "z": 0
+    },
+    "zAxis": {
+      "x": 0,
+      "y": 0,
+      "z": 1
+    }
+  },
+  "architecture": null,
+  "viewport": {
+    "center": {
+      "x": 0,
+      "y": 0
+    },
+    "scale": 10
+  },
+  "workspace": "2d",
+  "camera3d": {
+    "target": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+    "orbitCenter": null,
+    "scale": 10,
+    "yaw": 45,
+    "pitch": 35.264389682754654,
+    "roll": 0,
+    "mode": "iso",
+    "renderMode": "shaded",
+    "projection": "orthographic",
+    "distance": 200,
+    "fov": 45,
+    "autoTarget": true
+  },
+  "activeSpace": "model",
+  "activeLayoutId": null,
+  "activeViewportId": null,
+  "paperViewport": {
+    "center": {
+      "x": 210,
+      "y": 148.5
+    },
+    "scale": 2
+  }
+}

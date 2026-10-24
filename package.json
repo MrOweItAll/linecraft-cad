@@ -1,6 +1,6 @@
 {
   "name": "linecraft-cad",
-  "version": "1.14.0",
+  "version": "1.36.0",
   "description": "Independent offline 2D drafting and polygonal 3D modeling for Windows",
   "author": "Linecraft contributors",
   "license": "MIT",
@@ -9,44 +9,17 @@
   "scripts": {
     "dev": "node desktop/dev-tools.cjs dev",
     "test": "node desktop/dev-tools.cjs test",
-    "test:core": "node tests/run-tests.mjs",
-    "test:units-math": "node --test tests/units-independent.test.mjs",
-    "test:layouts-math": "node --test tests/layouts-independent.test.mjs",
-    "test:layouts-security": "node tests/layouts-security.test.cjs",
-    "test:viewport-math": "node tests/viewport-object-tests.mjs",
-    "test:viewport-security": "node tests/viewport-security-v17.cjs",
-    "test:units-desktop": "node desktop/dev-tools.cjs test-units",
-    "test:layouts-desktop": "node desktop/dev-tools.cjs test-layouts",
-    "test:viewports-desktop": "node desktop/dev-tools.cjs test-viewports",
-    "test:viewport-navigation": "node desktop/dev-tools.cjs test-viewport-navigation",
-    "test:paper-pdf": "node desktop/dev-tools.cjs test-pdf",
-    "test:viewport-pdf": "node desktop/dev-tools.cjs test-viewport-pdf",
-    "test:viewport-export": "node tests/export-viewport-v17.mjs",
-    "test:scale-catalog": "node --test tests/viewport-scales.test.mjs",
-    "test:scale-math": "node tests/viewport-scales-tests.mjs",
-    "test:scale-security": "node tests/viewport-scales-security-v18.cjs",
-    "test:scales": "node desktop/dev-tools.cjs test-scales",
-    "test:scale-pdf": "node desktop/dev-tools.cjs test-scales-pdf",
-    "test:desktop": "node desktop/dev-tools.cjs desktop",
-    "test:converter": "node tests/converter-identity.cjs",
+    "test:core": "node desktop/dev-tools.cjs test",
+    "test:desktop": "node desktop/dev-tools.cjs test-desktop",
+    "test:ordinary-grip": "node desktop/dev-tools.cjs test-desktop",
     "unpacked": "node desktop/dev-tools.cjs unpacked",
-    "build": "node desktop/dev-tools.cjs build",
-    "test:architecture": "node tests/run-architecture-tests.mjs",
-    "test:architecture-ipc": "node tests/architecture-ipc.test.cjs",
-    "test:architecture-desktop": "node desktop/dev-tools.cjs test-architecture",
-    "test:space": "node tests/run-clearance-tests.mjs",
-    "test:space-desktop": "node desktop/dev-tools.cjs test-space",
-    "test:tray": "node tests/run-tray-tests.mjs",
-    "test:tray-desktop": "node desktop/dev-tools.cjs test-tray",
-    "test:gable": "node tests/run-gable-tests.mjs",
-    "test:gable-desktop": "node desktop/dev-tools.cjs test-gable",
-    "test:scripting": "node tests/run-scripting-tests.mjs",
-    "test:scripting-desktop": "node desktop/dev-tools.cjs test-scripting",
-    "test:roof-plot": "node desktop/dev-tools.cjs test-roof-plot",
-    "test:bearing": "node tests/run-bearing-tests.mjs",
-    "test:bearing-desktop": "node desktop/dev-tools.cjs test-bearing",
-    "test:alternatives": "node tests/run-alternatives-tests.mjs",
-    "test:alternatives-desktop": "node desktop/dev-tools.cjs test-alternatives"
+    "release": "node desktop/dev-tools.cjs release",
+    "verify:source": "node tools/verify-public-source.cjs",
+    "verify:packaged": "node tools/verify-public-source.cjs --packaged",
+    "test:installed": "node desktop/dev-tools.cjs test-installed",
+    "test:perpendicular": "node --test tests/perpendicular-independent.test.mjs",
+    "test:completion": "node --test tests/command-completion.test.mjs",
+    "test:trim": "node --test tests/trim-comprehensive.test.mjs"
   },
   "devDependencies": {
     "electron": "44.7.0",
@@ -84,7 +57,17 @@
       "viewport-scales.mjs",
       "architecture/*.mjs",
       "linecraft-scripting.mjs",
-      "desktop/script-control.cjs"
+      "desktop/script-control.cjs",
+      "desktop/open-files.cjs",
+      "context-menu-policy.mjs",
+      "desktop/structural-files.cjs",
+      "font-metrics.mjs",
+      "rich-text.mjs",
+      "desktop/drawing-resources.cjs",
+      "object-snaps.mjs",
+      "command-completion.mjs",
+      "trim-geometry.mjs",
+      "ordinary-grip-input.mjs"
     ],
     "win": {
       "target": "nsis",
@@ -102,6 +85,7 @@
       "shortcutName": "Linecraft CAD",
       "runAfterFinish": false,
       "deleteAppDataOnUninstall": false,
+      "include": "installer.nsh",
       "license": "LICENSE"
     },
     "extraResources": [
@@ -111,6 +95,10 @@
         "filter": [
           "**/*"
         ]
+      },
+      {
+        "from": "tools/linecraft-structural-adapter.py",
+        "to": "structural/linecraft-structural-adapter.py"
       }
     ]
   }

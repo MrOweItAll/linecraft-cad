@@ -48,7 +48,7 @@ export function normalizePaperViewport(raw,paper,layers,normalizeCamera){
   const camera3d=normalizeCamera({...raw.camera3d,target:modelCenter,...(raw.camera3d===undefined?{yaw:-90,pitch:90,roll:0,mode:'top',projection:'orthographic'}:{})});
   if(camera3d.projection!=='orthographic')throw Error('Scaled paper viewports support orthographic projection only.');
   const layer=raw.layer===undefined?'0':raw.layer;if(!layers.some(item=>item.name===layer))throw Error('Viewport border layer does not exist.');
-  const attributes={};if(raw.color!==undefined){if(typeof raw.color!=='string'||!/^#[0-9a-f]{6}$/i.test(raw.color))throw Error('Viewport color must be a six-digit hex value.');attributes.color=raw.color;}if(raw.lineweight!==undefined){if(!finite(raw.lineweight)||raw.lineweight<0||raw.lineweight>10)throw Error('Viewport lineweight must be 0..10 mm.');attributes.lineweight=raw.lineweight;}if(raw.linetype!==undefined){if(!LINETYPES.includes(raw.linetype))throw Error('Viewport linetype is invalid.');attributes.linetype=raw.linetype;}
+  const attributes={};if(raw.color!==undefined){if(typeof raw.color!=='string'||!/^#[0-9a-f]{6}$/i.test(raw.color))throw Error('Viewport color must be a six-digit hex value.');attributes.color=raw.color;}if(raw.colorSource!==undefined){if(!['aci-7','true-color'].includes(raw.colorSource)||!raw.color||raw.colorSource==='aci-7'&&raw.color.toLowerCase()!=='#ffffff')throw Error('Invalid viewport color-source metadata.');attributes.colorSource=raw.colorSource;}if(raw.lineweight!==undefined){if(!finite(raw.lineweight)||raw.lineweight<0||raw.lineweight>10)throw Error('Viewport lineweight must be 0..10 mm.');attributes.lineweight=raw.lineweight;}if(raw.linetype!==undefined){if(!LINETYPES.includes(raw.linetype))throw Error('Viewport linetype is invalid.');attributes.linetype=raw.linetype;}
   return{id:raw.id,frame,...(boundary?{boundary}:{}),modelCenter,scaleDenominator,locked:raw.locked??false,frozenLayers:[...frozenLayers],workspace,camera3d,plotBorder:raw.plotBorder??false,layer,...attributes};
 }
 export function normalizeLayouts(raw,layers,normalizeCamera){
@@ -61,8 +61,17 @@ export function normalizeLayouts(raw,layers,normalizeCamera){
     const rawViewports=layout.viewports===undefined?[]:layout.viewports;if(!Array.isArray(rawViewports)||rawViewports.length>16)throw Error('Each layout supports at most 16 viewports.');
     const viewports=rawViewports.map(view=>{const vp=normalizePaperViewport(view,paper,layers,normalizeCamera);if(vpIds.has(vp.id))throw Error('Viewport IDs must be globally distinct.');vpIds.add(vp.id);return vp;});
     const entities=layout.entities===undefined?[]:layout.entities;if(!Array.isArray(entities))throw Error('Paper entities must be an array.');
-    return{id:layout.id,name:layout.name,paper,viewports,entities:copy(entities)};
+    return{id:layout.id,name:layout.name,paper,viewports,entities:copy(entities),...(layout.plotSettings===undefined?{}:{plotSettings:normalizePlotSettings(layout.plotSettings)})};
   });
+}
+export function normalizePlotSettings(raw){
+  const record=(v,keys)=>{if(!v||typeof v!=='object'||![Object.prototype,null].includes(Object.getPrototypeOf(v))||Reflect.ownKeys(v).some(k=>typeof k!=='string'||!keys.includes(k)||!Object.getOwnPropertyDescriptor(v,k)?.enumerable||!Object.hasOwn(Object.getOwnPropertyDescriptor(v,k),'value')))throw Error('Plot settings must contain only supported plain data.');};
+  record(raw,['marginsMm','originMm','renderOffsetMm','sourcePaperUnits','sourceMediaMm','deviceName','mediaName']);record(raw.marginsMm,['left','bottom','right','top']);record(raw.originMm,['x','y']);record(raw.renderOffsetMm,['x','y']);
+  for(const k of ['left','bottom','right','top'])if(!finite(raw.marginsMm[k])||raw.marginsMm[k]<0||raw.marginsMm[k]>5000)throw Error('Plot margins must be finite millimeters from 0 through 5000.');for(const key of ['originMm','renderOffsetMm'])for(const k of ['x','y'])if(!finite(raw[key][k])||Math.abs(raw[key][k])>1e6)throw Error('Plot offsets must be finite bounded millimeters.');
+  if(!['mm','in'].includes(raw.sourcePaperUnits)||raw.renderOffsetMm.x!==raw.marginsMm.left+raw.originMm.x||raw.renderOffsetMm.y!==raw.marginsMm.bottom+raw.originMm.y)throw Error('Plot render offset must equal the printable-origin translation.');
+  if(raw.sourceMediaMm!==undefined){record(raw.sourceMediaMm,['width','height']);if(![raw.sourceMediaMm.width,raw.sourceMediaMm.height].every(n=>finite(n)&&n>=10&&n<=5000))throw Error('Source paper media dimensions are invalid.');}
+  for(const key of ['deviceName','mediaName'])if(raw[key]!==undefined&&(typeof raw[key]!=='string'||raw[key].length>255||/[\x00-\x1f\x7f]/.test(raw[key])))throw Error('Plot device/media names must be bounded plain metadata.');
+  return copy(raw);
 }
 function basis(viewport){
   if(viewport.workspace!=='3d')return{right:{x:1,y:0,z:0},up:{x:0,y:1,z:0},normal:{x:0,y:0,z:1}};

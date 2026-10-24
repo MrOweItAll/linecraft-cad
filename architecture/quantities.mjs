@@ -1,6 +1,7 @@
 /* Original R6 quantity ledger. Quantities keep their physical units and confidence;
    no price, triangulation penalty, structural member or purchase count is invented. */
 import {geometryTolerance,physicalScale} from './units-adapter.mjs';
+import {normalizeRoofBoundary,roofBoundaryEdgeKey} from './roof-boundary.mjs';
 
 export const ALTERNATIVE_QUANTITY_VERSION='quantities-r6-1';
 const bounded=n=>typeof n==='number'&&Number.isFinite(n)&&Math.abs(n)<=1e18;
@@ -21,17 +22,20 @@ export function quantifyAlternative(source,derived){
  if(!derived||derived.validation?.geometry!=='ok'||!Array.isArray(derived.roofs)||derived.roofs.length!==source.roofGroups.length||derived.roofs.some(r=>r.status!=='ok'))throw Error('Only complete valid current geometry has material quantities.');
  const roofGroups=derived.roofs.map(roof=>{
   const group=source.roofGroups.find(g=>g.id===roof.id);if(!group||!Array.isArray(roof.faces)||!roof.faces.length||roof.faces.length>4096)throw Error('Roof quantity identity or face budget is invalid.');
-  const pitch=group.riseTwice/24,measurements=roof.faces.map(f=>faceMeasure(f.vertices,tolerance));
-  if(measurements.some(m=>m.projectedArea<=0||Math.abs(m.slope-pitch)>Math.max(1e-7,pitch*1e-7)))throw Error('Roof skin contains a vertical, degenerate or unlike-pitch surface.');
-  const projectedArea=measurements.reduce((s,m)=>s+m.projectedArea,0),roofSurfaceArea=measurements.reduce((s,m)=>s+m.surfaceArea,0),expectedSurfaceArea=projectedArea*Math.sqrt(1+pitch*pitch),checkTolerance=Math.max(tolerance*tolerance*8,expectedSurfaceArea*1e-8);
-  if(Math.abs(roofSurfaceArea-expectedSurfaceArea)>checkTolerance)throw Error('Same-pitch roof area invariant failed.');
+  const pitchOverrides=new Map((group.pitchAssignments??[]).map(a=>[a.edgeKey,a.riseTwice/24])),pitches=roof.faces.map(f=>{
+   if(!group.components?.length)return pitchOverrides.get(roof.sourceEdgeKeys?.[f.sourceEdge]??f.sourceEdgeKey)??group.riseTwice/24;
+   const component=group.components.find(c=>c.id===f.componentId);if(!component)throw Error('Joined quantity facet has no current source component.');const boundary=normalizeRoofBoundary(component.boundary,{tolerance}),i=f.sourceEdge;if(!Number.isInteger(i)||i<0||i>=4)throw Error('Joined quantity facet has an invalid source edge.');const key=roofBoundaryEdgeKey(boundary[i],boundary[(i+1)%4]);if(key!==f.sourceEdgeKey||component.gableAssignments.includes(key))throw Error('Joined quantity facet source key is stale or stationary.');return(component.pitchAssignments.find(a=>a.edgeKey===key)?.riseTwice??component.riseTwice)/24;
+  }),mixed=pitches.some(p=>p!==pitches[0]),pitch=pitches[0],measurements=roof.faces.map(f=>faceMeasure(f.vertices,tolerance));
+  if(measurements.some((m,i)=>m.projectedArea<=0||Math.abs(m.slope-pitches[i])>Math.max(1e-7,pitches[i]*1e-7)))throw Error('Roof skin contains a vertical, degenerate or source-pitch-mismatched surface.');
+  const projectedArea=measurements.reduce((s,m)=>s+m.projectedArea,0),roofSurfaceArea=measurements.reduce((s,m)=>s+m.surfaceArea,0),expectedSurfaceArea=mixed?measurements.reduce((s,m,i)=>s+m.projectedArea*Math.hypot(1,pitches[i]),0):projectedArea*Math.sqrt(1+pitch*pitch),checkTolerance=Math.max(tolerance*tolerance*8,expectedSurfaceArea*1e-8);
+  if(Math.abs(roofSurfaceArea-expectedSurfaceArea)>checkTolerance)throw Error(mixed?'Per-face pitch area invariant failed.':'Same-pitch roof area invariant failed.');
   if(!Array.isArray(roof.eaveBoundary)||Math.abs(area2(roof.eaveBoundary)-projectedArea)>Math.max(checkTolerance,projectedArea*1e-8))throw Error('Roof skin projection does not conserve its single coverage domain.');
   const edgeLengths={ridge:0,hip:0,valley:0,eave:0,rake:0};
   if(!Array.isArray(roof.edges)||roof.edges.length>16384)throw Error('Roof edge quantity budget is invalid.');
   for(const e of roof.edges){if(!e?.a||!e?.b||!['x','y','z'].every(k=>bounded(e.a[k])&&bounded(e.b[k])))throw Error('Roof edge has invalid quantity coordinates.');if(Object.hasOwn(edgeLengths,e.kind))edgeLengths[e.kind]+=length(e);}
   const closureArea=items=>{if(!Array.isArray(items)||items.length>4096)throw Error('Closure quantity budget is invalid.');return items.reduce((s,c)=>s+faceMeasure(c.vertices,tolerance).surfaceArea,0);};
   const assembly=source.assemblies.find(a=>a.id===group.assemblyId);
-  return{roofGroupId:roof.id,pitch,projectedArea,roofSurfaceArea,gableClosureArea:closureArea(roof.gableClosures??[]),stepClosureArea:closureArea(roof.stepClosures??[]),edgeLengths:{...edgeLengths,step:null},areaInvariant:{status:'verified',expectedSurfaceArea,actualSurfaceArea:roofSurfaceArea,tolerance:checkTolerance,verticalClosuresExcluded:true},layers:(assembly?.layers??[]).map(l=>({assemblyId:assembly.id,layerName:l.name,material:l.material,normalThickness:l.normalThickness,netSurfaceArea:roofSurfaceArea,nominalVolume:roofSurfaceArea*l.normalThickness,confidence:'declared nominal; joints and waste excluded'}))};
+  return{roofGroupId:roof.id,pitch:mixed?null:pitch,...(mixed?{pitchMode:'per-edge',facePitches:roof.faces.map((f,i)=>({faceId:f.id,sourceEdge:f.sourceEdge,pitch:pitches[i],projectedArea:measurements[i].projectedArea,surfaceArea:measurements[i].surfaceArea}))}:{}),projectedArea,roofSurfaceArea,gableClosureArea:closureArea(roof.gableClosures??[]),stepClosureArea:closureArea(roof.stepClosures??[]),edgeLengths:{...edgeLengths,step:null},areaInvariant:{status:'verified',...(mixed?{basis:'sum of each projected facet area times sqrt(1 + its declared source pitch squared)'}:{}),expectedSurfaceArea,actualSurfaceArea:roofSurfaceArea,tolerance:checkTolerance,verticalClosuresExcluded:true},layers:(assembly?.layers??[]).map(l=>({assemblyId:assembly.id,layerName:l.name,material:l.material,normalThickness:l.normalThickness,netSurfaceArea:roofSurfaceArea,nominalVolume:roofSurfaceArea*l.normalThickness,confidence:'declared nominal; joints and waste excluded'}))};
  });
  const ceilingFinishes=source.rooms.map(room=>{
   const resolved=derived.rooms.find(r=>r.id===room.id),space=derived.spaces.find(s=>s.roomId===room.id);if(!resolved||!space?.current?.feasible)throw Error(`Room ${room.id} has no complete feasible accepted ceiling.`);

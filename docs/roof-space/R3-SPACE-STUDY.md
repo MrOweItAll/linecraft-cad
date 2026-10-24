@@ -1,5 +1,7 @@
 # Fixed-roof ceiling study
 
+> **Historical milestone reference.** This document records its original R0–R6 implementation scope and evidence. It is retained for design history; its status, next-step and test statements are not current v1.36 qualification claims. See [the historical-reference index](../HISTORICAL-REFERENCE.md) and [current release notes](../RELEASE-1.36-BETA.md).
+
 The existing Roof + Space workspace includes exact flat-ceiling analysis, introduced in Linecraft 1.10 and subsequently extended with rectangular trays and optional thickness. Open **Architecture → Space study**, or type **ROOFSPACE**. The study reuses assigned drawing units, architectural length input, existing room topology and the accepted roof facets.
 
 ## Workflow

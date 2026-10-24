@@ -1,5 +1,7 @@
 # Linecraft scripting foundation
 
+> **Historical integration record.** The R3/R4 branch and test counts below describe the original scripting foundation, not the complete v1.36 public-checkout gate. The protocol remains reference material; consult [current release notes](RELEASE-1.36-BETA.md) for present qualification scope.
+
 This development branch adds structured scripting of the drawing already open in Linecraft. The existing engine remains responsible for drafting, property validation, architectural generation and Undo/Redo. A revision edits existing objects by ID. It does not recreate the document or replace the editor.
 
 This extension has been integrated into the active Roof + Space R4 source without replacing its newer geometry, units, layouts or native format. Engine/API and real loopback CLI tests have run on Windows. Consult the accompanying release verification report for the exact installed version and completed visible, native-save and PDF checks; a source checkout alone does not update the installed application. The original PR was based on the earlier R3 branch.

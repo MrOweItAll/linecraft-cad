@@ -52,8 +52,18 @@ function runoff(faces,edges,boundary,tolerance){
     if(edge.kind==='eave')return boundaryPoint(p);
     if(edge.kind==='valley')return routeValley(edge);
     if(edge.kind==='coplanar'){const id=edge.faceIds.find(id=>id!==face.id);return id?routeRay(byFace.get(id),p):false;}
+    // Joined roof volumes may meet at an explicitly validated vertical wall.
+    // Water can drop from its upper skin, or descend along the lower wall/skin
+    // interface. It can never climb to the upper face or use a level gutter.
+    if(edge.kind==='step')return routeStep(edge,p);
     return false;
   }
+  function routeStep(edge,p){return record(`step/${edge.id}/${pointKey(p)}`,()=>{
+    const lower=byFace.get(edge.lowerFaceId);if(!lower)return false;
+    if(rayTarget(lower,p))return routeRay(lower,p);
+    const a=edge.lowerA,b=edge.lowerB;if(!a||!b||Math.abs(a.z-b.z)<=tolerance)return false;
+    return routeNode(a.z<b.z?a:b);
+  });}
   function rayTarget(face,p){
     const d=faceFlow.get(face.id),hits=[];for(let i=0;i<face.vertices.length;i++){const a=face.vertices[i],b=face.vertices[(i+1)%face.vertices.length];if(a[d.perp]===b[d.perp])continue;const t=(p[d.perp]-a[d.perp])/(b[d.perp]-a[d.perp]);if(t<-tolerance||t>1+tolerance)continue;const q={x:a.x+t*(b.x-a.x),y:a.y+t*(b.y-a.y)},travel=(q[d.axis]-p[d.axis])*d.sign;if(travel>tolerance)hits.push({q,travel});}hits.sort((a,b)=>a.travel-b.travel);if(!hits.length)return null;
     const target=hits[0].q,m={x:(p.x+target.x)/2,y:(p.y+target.y)/2};if(!pointInLoop(m,face.vertices)||face.vertices.some((a,i)=>onSegment(m,a,face.vertices[(i+1)%face.vertices.length],tolerance)))return null;return target;
@@ -62,7 +72,8 @@ function runoff(faces,edges,boundary,tolerance){
   function routeNode(p){return record(`node/${pointKey(p)}`,()=>{
     if(boundaryPoint(p))return true;const choices=[];
     for(const edge of edges)if(edge.kind==='valley'){const high=edge.a.z>edge.b.z?edge.a:edge.b,low=edge.a.z<edge.b.z?edge.a:edge.b;if(distance(p,high)<=tolerance&&high.z>low.z+tolerance)choices.push(()=>routeValley(edge));}
-    for(const face of faces)if(face.vertices.some((a,i)=>onSegment(p,a,face.vertices[(i+1)%face.vertices.length],tolerance))&&rayTarget(face,p))choices.push(()=>routeRay(face,p));
+    for(const edge of edges)if(edge.kind==='step'&&onSegment(p,edge.a,edge.b,tolerance)){const a=edge.lowerA,b=edge.lowerB,low=a.z<b.z?a:b,high=a.z>b.z?a:b;if(high.z>low.z+tolerance&&distance(p,low)>tolerance)choices.push(()=>routeStep(edge,p));}
+    for(const face of faces)if(Math.abs(elevation(face,p)-p.z)<=tolerance*16&&face.vertices.some((a,i)=>onSegment(p,a,face.vertices[(i+1)%face.vertices.length],tolerance))&&rayTarget(face,p))choices.push(()=>routeRay(face,p));
     return choices.length>0&&choices.every(f=>f());
   });}
   function routeCell(cell){return record(`cell/${cell.id}`,()=>{
@@ -73,19 +84,20 @@ function runoff(faces,edges,boundary,tolerance){
   for(const cell of cells)if(!routeCell(cell))diagnostics.push(cell.id);
   // Every positive-flux boundary interval must be a known receiving interface.
   for(const face of faces)for(const edge of faceEdges.get(face.id)){
-    const a=edge.a,b=edge.b,m={x:(a.x+b.x)/2,y:(a.y+b.y)/2},d=faceFlow.get(face.id),own=face.vertices.findIndex((p,i)=>onSegment(m,p,face.vertices[(i+1)%face.vertices.length],tolerance));if(own<0)throw new Error('Roof edge has no matching incident face boundary.');const p=face.vertices[own],q=face.vertices[(own+1)%face.vertices.length],outward=d.axis==='x'?(q.y-p.y)*d.sign:-(q.x-p.x)*d.sign;if(outward>tolerance&&!['eave','valley','coplanar'].includes(edge.kind))diagnostics.push(`${face.id}/${edge.id}/invalid-outflow`);
+    const a=edge.a,b=edge.b,m={x:(a.x+b.x)/2,y:(a.y+b.y)/2},d=faceFlow.get(face.id),own=face.vertices.findIndex((p,i)=>onSegment(m,p,face.vertices[(i+1)%face.vertices.length],tolerance));if(own<0)throw new Error('Roof edge has no matching incident face boundary.');const p=face.vertices[own],q=face.vertices[(own+1)%face.vertices.length],outward=d.axis==='x'?(q.y-p.y)*d.sign:-(q.x-p.x)*d.sign;if(outward>tolerance&&!['eave','valley','coplanar','step'].includes(edge.kind))diagnostics.push(`${face.id}/${edge.id}/invalid-outflow`);
   }
   return{valid:diagnostics.length===0,unresolved:diagnostics,catchmentCells:cells.length,method:'exact constant-gradient characteristic bands; every positive-area band reaches an approved eave via validated interfaces'};
 }
-export function validateRoofSkin({faces,edges,eaveBoundary,pitch,eaveSurfaceElevation,tolerance=1e-8,rakeBoundary=[]}){
+export function validateRoofSkin({faces,edges,eaveBoundary,pitch,eaveSurfaceElevation,tolerance=1e-8,rakeBoundary=[],edgePitches=null,edgeElevations=null}){
   const validation={geometry:'failed',drainage:'not-run',clearance:'not-analyzed',structural:'unverified',supplier:'unverified',diagnostics:[]};
   try{
     if(!Number.isFinite(pitch)||pitch<=0||pitch>1||!Number.isFinite(eaveSurfaceElevation)||!Number.isFinite(tolerance)||tolerance<=0)throw new Error('Roof validation requires finite positive pitch/tolerance and a finite eave datum.');
     const boundary=normalizeRoofBoundary(eaveBoundary,{tolerance});if(!Array.isArray(faces)||!faces.length||faces.length>256||!Array.isArray(edges)||edges.length>4096)throw new Error('Roof validation input exceeds bounded skin limits.');
+    if(edgePitches!==null&&(!Array.isArray(edgePitches)||edgePitches.length!==boundary.length||edgePitches.some(p=>!Number.isFinite(p)||p<=0||p>1)||!Array.isArray(edgeElevations)||edgeElevations.length!==boundary.length||edgeElevations.some(z=>!Number.isFinite(z))))throw new Error('Per-edge roof validation requires a finite pitch and eave elevation for every boundary edge.');
     if(new Set(faces.map(f=>f.id)).size!==faces.length||new Set(edges.map(e=>e.id)).size!==edges.length)throw new Error('Roof face/edge IDs must be unique.');
     let maxPlaneResidual=0,maxPitchResidual=0;const ids=new Set(faces.map(f=>f.id));
-    for(const face of faces){if(!face.plane||!['a','b','c','d'].every(k=>Number.isFinite(face.plane[k]))||face.plane.c===0||!Array.isArray(face.vertices)||face.vertices.length<3||face.vertices.length>1024)throw new Error('Roof face plane or loop is invalid.');if(signedArea(face.vertices)<=tolerance*tolerance)throw new Error('Roof face must have positive plan area and consistent winding.');for(const p of face.vertices){if(!['x','y','z'].every(k=>Number.isFinite(p[k])))throw new Error('Roof vertex must be finite.');maxPlaneResidual=Math.max(maxPlaneResidual,Math.abs(face.plane.a*p.x+face.plane.b*p.y+face.plane.c*p.z+face.plane.d)/Math.abs(face.plane.c));}maxPitchResidual=Math.max(maxPitchResidual,Math.abs(Math.hypot(face.plane.a,face.plane.b)/Math.abs(face.plane.c)-pitch));}
-    for(const e of edges){if(![e.a,e.b].every(p=>p&&['x','y','z'].every(k=>Number.isFinite(p[k])))||!['eave','rake','hip','ridge','valley','coplanar'].includes(e.kind)||!Array.isArray(e.faceIds)||!e.faceIds.every(id=>ids.has(id))||new Set(e.faceIds).size!==e.faceIds.length||distance(e.a,e.b)<=tolerance)throw new Error('Roof edge has invalid coordinates, classification, owner, incidence or length.');for(const id of e.faceIds){const f=faces.find(f=>f.id===id);for(const p of[e.a,e.b])if(Math.abs(f.plane.a*p.x+f.plane.b*p.y+f.plane.c*p.z+f.plane.d)/Math.abs(f.plane.c)>tolerance*16)throw new Error('Shared roof edge has an XYZ gap.');}if(e.kind==='eave'&&(Math.abs(e.a.z-eaveSurfaceElevation)>tolerance*16||Math.abs(e.b.z-eaveSurfaceElevation)>tolerance*16))throw new Error('Eave edge elevation disagrees with eave datum.');}
+    for(const face of faces){if(!face.plane||!['a','b','c','d'].every(k=>Number.isFinite(face.plane[k]))||face.plane.c===0||!Array.isArray(face.vertices)||face.vertices.length<3||face.vertices.length>1024)throw new Error('Roof face plane or loop is invalid.');if(signedArea(face.vertices)<=tolerance*tolerance)throw new Error('Roof face must have positive plan area and consistent winding.');for(const p of face.vertices){if(!['x','y','z'].every(k=>Number.isFinite(p[k])))throw new Error('Roof vertex must be finite.');maxPlaneResidual=Math.max(maxPlaneResidual,Math.abs(face.plane.a*p.x+face.plane.b*p.y+face.plane.c*p.z+face.plane.d)/Math.abs(face.plane.c));}let expectedPitch=pitch;if(edgePitches!==null){const i=face.sourceEdge;if(!Number.isInteger(i)||i<0||i>=boundary.length)throw new Error('Per-edge roof facet has no current source edge.');expectedPitch=edgePitches[i];const a=boundary[i],b=boundary[(i+1)%boundary.length],len=distance(a,b),nx=-(b.y-a.y)/len,ny=(b.x-a.x)/len;if(Math.abs(face.plane.a/face.plane.c+expectedPitch*nx)>1e-10||Math.abs(face.plane.b/face.plane.c+expectedPitch*ny)>1e-10||Math.abs(-(face.plane.a*a.x+face.plane.b*a.y+face.plane.d)/face.plane.c-edgeElevations[i])>tolerance*16)throw new Error('Per-edge roof facet disagrees with its declared pitch or source plane.');}maxPitchResidual=Math.max(maxPitchResidual,Math.abs(Math.hypot(face.plane.a,face.plane.b)/Math.abs(face.plane.c)-expectedPitch));}
+    for(const e of edges){if(![e.a,e.b].every(p=>p&&['x','y','z'].every(k=>Number.isFinite(p[k])))||!['eave','rake','hip','ridge','valley','coplanar'].includes(e.kind)||!Array.isArray(e.faceIds)||!e.faceIds.every(id=>ids.has(id))||new Set(e.faceIds).size!==e.faceIds.length||distance(e.a,e.b)<=tolerance)throw new Error('Roof edge has invalid coordinates, classification, owner, incidence or length.');for(const id of e.faceIds){const f=faces.find(f=>f.id===id);for(const p of[e.a,e.b])if(Math.abs(f.plane.a*p.x+f.plane.b*p.y+f.plane.c*p.z+f.plane.d)/Math.abs(f.plane.c)>tolerance*16)throw new Error('Shared roof edge has an XYZ gap.');}if(edgePitches===null&&e.kind==='eave'&&(Math.abs(e.a.z-eaveSurfaceElevation)>tolerance*16||Math.abs(e.b.z-eaveSurfaceElevation)>tolerance*16))throw new Error('Eave edge elevation disagrees with eave datum.');}
     const coverage=topologyCoverage(faces,edges,boundary,tolerance,rakeBoundary);Object.assign(validation,coverage,{maxPlaneResidual,maxPitchResidual});delete validation.valid;
     if(!coverage.valid||maxPlaneResidual>tolerance*16||maxPitchResidual>1e-10)throw new Error('Roof coverage, topology, pitch or plane residual exceeds tolerance.');validation.geometry='valid';
     const drainage=runoff(faces,edges,boundary,tolerance);validation.drainage=drainage.valid?'valid':'failed';validation.unresolvedDrainage=drainage.unresolved;validation.catchmentCells=drainage.catchmentCells;validation.method=drainage.method;if(!drainage.valid)validation.diagnostics.push('A collecting seam, outlet or positive-area runoff catchment fails drainage validation.');
@@ -93,4 +105,4 @@ export function validateRoofSkin({faces,edges,eaveBoundary,pitch,eaveSurfaceElev
 }
 
 // Pure validation disciplines reused by the R5 additive-height kernel.
-export {topologyCoverage,runoff};
+export {topologyCoverage,runoff,triangles};

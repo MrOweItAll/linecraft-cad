@@ -1,5 +1,7 @@
 # Different bearing heights
 
+> **Historical milestone reference.** This document records its original R0–R6 implementation scope and evidence. It is retained for design history; its status, next-step and test statements are not current v1.36 qualification claims. See [the historical-reference index](../HISTORICAL-REFERENCE.md) and [current release notes](../RELEASE-1.36-BETA.md).
+
 Open Architecture → Roof and choose a roof. The existing default bearing remains a drawing-length input. Inspect the source edges, enable overrides for the desired edges and enter their bearing elevations using the drawing's feet/inches or other assigned units. These controls change support elevations, independently of the room ceiling.
 
 Review the draft geometry/status and activation diagnostics. Confirm the bearing draft and, for a gable roof, confirm its end assignment. Apply makes one ordinary Undo record. Preview does not change the drawing. Invalid constraints keep the accepted roof intact. Editing an edge, height, overhang or pitch invalidates the confirmation; stale geometric edge assignments require explicit review/reset.

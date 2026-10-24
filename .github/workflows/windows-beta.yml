@@ -1,0 +1,120 @@
+name: Windows public beta
+on:
+  push:
+    tags: ['v1.36.0']
+    branches: ['codex/public-beta-1.36']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: windows-beta-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  qualify:
+    runs-on: windows-2025
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Preserve canonical source bytes
+        run: |
+          git config --global core.autocrlf false
+          "GATE_START_UTC=$([DateTime]::UtcNow.ToString('o'))" | Add-Content -LiteralPath $env:GITHUB_ENV
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install pinned development and PDF test dependencies
+        run: |
+          npm ci --no-audit --no-fund
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned npm installation failed.' }
+          node node_modules/electron/install.js
+          if ($LASTEXITCODE -ne 0) { throw 'Pinned Electron bootstrap failed.' }
+          python -m venv .pdf-test-venv
+          .\.pdf-test-venv\Scripts\python.exe -m pip install PyMuPDF==1.28.0
+          if ($LASTEXITCODE -ne 0) { throw 'Independent PDF reader setup failed.' }
+          "CAD_PYTHON=$((Resolve-Path .\.pdf-test-venv\Scripts\python.exe).Path)" | Add-Content -LiteralPath $env:GITHUB_ENV
+      - name: Verify qualified runtime bytes
+        run: node tools/verify-public-source.cjs
+      - name: Fresh public engine, source and unpacked application tests; compile installer
+        run: |
+          npm run release
+          if ($LASTEXITCODE -ne 0) { throw 'Public qualification/build failed.' }
+          node tools/verify-public-source.cjs --packaged
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged runtime identity failed.' }
+      - name: Clean per-user install, installed application/PDF and uninstall
+        run: ./tools/ci-clean-install.ps1
+      - name: Prepare exact-tag source, verification and checksums
+        if: startsWith(github.ref, 'refs/tags/')
+        run: node tools/prepare-beta-assets.cjs
+      - name: Preflight source archive and asset verification without publishing
+        if: github.ref == 'refs/heads/codex/public-beta-1.36'
+        run: node tools/prepare-beta-assets.cjs --preflight
+      - name: Preserve approved beta evidence
+        if: success() && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/codex/public-beta-1.36')
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-beta-evidence
+          if-no-files-found: ignore
+          path: |
+            Windows-Release/SHA256SUMS.txt
+            Windows-Release/Public-Beta-Verification.json
+            Windows-Release/Installed-Acceptance.pdf
+            Windows-Release/Installed-Acceptance.linecraft
+            Windows-Release/Linecraft-CAD-1.36.0-Setup.exe
+            Windows-Release/Linecraft-CAD-1.36.0-Source.zip
+            Windows-Release/libredwg-0.13.4-upstream.tar.gz
+            Windows-Release/release-notes.md
+      - name: Preserve generated-test failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-beta-failure-logs
+          if-no-files-found: ignore
+          path: work/public-gate-*/*.log
+  publish:
+    needs: qualify
+    if: github.ref == 'refs/tags/v1.36.0'
+    runs-on: windows-2025
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: public-beta-evidence
+          path: approved-assets
+      # No checkout, npm install or project code runs with this write token.
+      - name: Verify approved assets and publish prerelease
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-Location approved-assets
+          $verification = Get-Content -LiteralPath Public-Beta-Verification.json -Raw | ConvertFrom-Json
+          if ($verification.commit -ne $env:GITHUB_SHA -or $verification.tag -ne 'v1.36.0' -or $verification.releaseClass -ne 'prerelease') { throw 'Qualification does not bind this tag/commit.' }
+          $expected = @('Linecraft-CAD-1.36.0-Setup.exe', 'Linecraft-CAD-1.36.0-Source.zip', 'Installed-Acceptance.linecraft', 'Installed-Acceptance.pdf', 'Public-Beta-Verification.json', 'libredwg-0.13.4-upstream.tar.gz')
+          $seen = @()
+          foreach ($line in Get-Content -LiteralPath SHA256SUMS.txt) {
+            if ($line -notmatch '\A([a-f0-9]{64})  ([A-Za-z0-9._-]+)\z') { throw 'Malformed checksum record.' }
+            $digest = $Matches[1]; $asset = $Matches[2]
+            if ($asset -notin $expected -or $asset -in $seen) { throw 'Unexpected or duplicate asset.' }
+            if ((Get-FileHash -LiteralPath $asset -Algorithm SHA256).Hash.ToLowerInvariant() -ne $digest) { throw "Checksum mismatch: $asset" }
+            $seen += $asset
+          }
+          if ($seen.Count -ne $expected.Count) { throw 'Incomplete qualified asset set.' }
+          $remoteCommit = gh api "repos/$env:GITHUB_REPOSITORY/commits/v1.36.0" --jq .sha
+          if ($LASTEXITCODE -ne 0 -or $remoteCommit -ne $verification.commit) { throw 'Remote tag no longer identifies the qualified commit.' }
+          $assets = $expected + @('SHA256SUMS.txt')
+          gh release create v1.36.0 @assets --verify-tag --prerelease --latest=false --title 'Linecraft CAD 1.36.0 Public Beta' --notes-file release-notes.md
+          if ($LASTEXITCODE -ne 0) { throw 'Prerelease publication failed.' }

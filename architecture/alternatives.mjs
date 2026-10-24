@@ -45,6 +45,8 @@ function applyConfiguration(source,configuration){
  const ceilingChanged=JSON.stringify(before.ceiling)!==JSON.stringify(configuration.ceiling);if(ceilingChanged&&!room.allowCeilingChange)throw Error(`Room ${room.id} does not permit ceiling changes.`);
  const c=configuration.ceiling;room.ceilingType=c.type;room.ceilingElevation=c.type==='flat'?c.elevation:c.baseElevation;room.trayCeiling=c.type==='tray'?{min:clone(c.min),max:clone(c.max),baseElevation:c.baseElevation,raisedElevation:c.raisedElevation}:null;
  const offset=configuration.roof.bearingOffset,pitchChanged=configuration.roof.riseTwice!==group.riseTwice;
+ if(group.components?.length&&(offset!==0||pitchChanged))throw Error('Joined roof pitch and bearing edits require explicit component revisions. R6 parent-default co-design cannot change a composed roof.');
+ if(group.pitchAssignments?.length&&pitchChanged)throw Error('Changing the default pitch of a per-edge roof through R6 co-design is unsupported. Review its explicit edge pitches in the Roof pane.');
  if(offset!==0||pitchChanged){
   if(group.eaveElevation!==null)throw Error('Co-design with an explicit common eave elevation is unsupported. Review and clear that source override first.');
   const supportIds=new Set([...(group.boundarySource==='walls'?group.boundaryWallIds:[]),...group.supportWallIds,...proposed.walls.filter(w=>w.roofGroupId===group.id).map(w=>w.id)]);

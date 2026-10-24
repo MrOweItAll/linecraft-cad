@@ -1,5 +1,7 @@
 # Bounded tray study beneath a fixed roof
 
+> **Historical milestone reference.** This document records its original R0–R6 implementation scope and evidence. It is retained for design history; its status, next-step and test statements are not current v1.36 qualification claims. See [the historical-reference index](../HISTORICAL-REFERENCE.md) and [current release notes](../RELEASE-1.36-BETA.md).
+
 Open **Architecture → Space study** in the existing drawing. Assign physical model units. This is a mathematical model: roof and ceiling surfaces have zero thickness by default, and no assembly declaration is required to calculate or apply a ceiling. Add optional roof-normal layers, vertical ceiling-finish thickness, and local reservation boxes anytime.
 
 The first tray type has one rectangular raised plateau, a lower flat band, and ideal vertical finished returns. Enter the plateau's minimum and maximum X/Y in building-local coordinates, its lower elevation, and its raised elevation. The complete rectangle must be strictly inside the resolved room. A corner-only fit across a concave notch is rejected. Ceiling elevations are independent of wall bearings and roof elevations.

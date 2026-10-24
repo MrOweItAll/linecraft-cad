@@ -4,7 +4,7 @@ const fs=require('node:fs/promises');
 const http=require('node:http');
 async function main(){
   const [connectionFile,method,requestFile]=process.argv.slice(2);
-  if(!connectionFile||!method)throw Error('Usage: node tools/linecraft-control.cjs CONNECTION_FILE describe|snapshot|preview|apply|undo|redo [REQUEST_JSON_FILE]');
+  if(!connectionFile||!method)throw Error('Usage: node tools/linecraft-control.cjs CONNECTION_FILE describe|snapshot|resolveSheetSet|preview|apply|undo|redo [REQUEST_JSON_FILE]');
   const connection=JSON.parse(await fs.readFile(connectionFile,'utf8'));
   if(connection.format!=='LinecraftControl/1'||connection.host!=='127.0.0.1'||!Number.isInteger(connection.port)||connection.port<1||connection.port>65535||typeof connection.token!=='string'||!/^[a-f0-9]{64}$/.test(connection.token))throw Error('Invalid local connection descriptor.');
   const request=requestFile?JSON.parse(await fs.readFile(requestFile,'utf8')):{version:1,method};

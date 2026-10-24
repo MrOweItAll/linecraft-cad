@@ -1,5 +1,7 @@
 # Bounded material and ceiling-space alternatives
 
+> **Historical milestone reference.** This document records its original R0–R6 implementation scope and evidence. It is retained for design history; its status, next-step and test statements are not current v1.36 qualification claims. See [the historical-reference index](../HISTORICAL-REFERENCE.md) and [current release notes](../RELEASE-1.36-BETA.md).
+
 Open **Architecture → Alternatives**, or enter `ROOFOPTIMIZE`. Choose one accepted room and its sole covering roof. Establish a feasible accepted ceiling, a declared roof assembly and room target in the existing Space study first. Every accepted room and roof must remain valid for a proposal to qualify.
 
 The default **Fixed roof** mode varies ceilings beneath the accepted roof. It retains roof coverage, pitch, bearings, gable assignments, roof geometry and all other rooms' intent. **Co-design** is a separate explicit selection: list permitted pitches and uniform bearing offsets. These offsets move the selected roof's source bearings and its linked support-wall tops equally. Existing locks, reservations, opening-head clearance, ridge limits, shared-support decisions and physical feasibility checks remain active. The search does not authorize arbitrary per-edge edits or structural framing design.

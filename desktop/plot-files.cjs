@@ -19,23 +19,32 @@ function createPlotService({BrowserWindow,dialog,getMainWindow,getTitle,buildPlo
     const normalized=normalizePlotOptions(options);if(!Array.isArray(sources)||sources.length<1||sources.length>20)throw Error('PDF output requires 1 through 20 drawings.');let total=0;
     for(const source of sources){drawingText(source.text);total+=Buffer.byteLength(source.text,'utf8');if(total>MAX_BATCH)throw Error('Publish batch exceeds the 100 MiB input limit.');await validateDrawing(source.text);}
     const prepared=await buildPlotHTML(sources,normalized);if(!prepared||typeof prepared.html!=='string'||Buffer.byteLength(prepared.html,'utf8')>MAX_HTML)throw Error('Vector PDF markup exceeds its size limit.');
-    if(!prepared.report||prepared.report.pages!==sources.length)throw Error('Vector PDF sheet count is invalid.');
+    const expectedPages=normalized.space==='layouts'?normalized.layoutIds.length:sources.length;
+    if(!prepared.report||prepared.report.pages!==expectedPages)throw Error('Vector PDF sheet count is invalid.');
+    if(normalized.space==='layouts'&&(!Array.isArray(prepared.report.sheets)||prepared.report.sheets.length!==expectedPages||prepared.report.sheets.some((sheet,index)=>sheet.layoutId!==normalized.layoutIds[index]||sheet.space!=='layout'||sheet.sourceIndex!==0)))throw Error('Vector PDF layout order or source binding is invalid.');
     return prepared;
   }
   async function renderPDF(prepared){
-    const html=prepared.html.replace(/<head(?:\s[^>]*)?>/i,match=>`${match}<meta http-equiv="Content-Security-Policy" content="${CSP}">`),url=`data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
-    let window,timer;
+    // Keep the bounded markup in memory. Encoding a whole supported sheet in a
+    // data URL crosses Chromium's URL-length limit well before our HTML limit.
+    // This handler belongs only to this one nonpersistent renderer session.
+    const html=prepared.html.replace(/<head(?:\s[^>]*)?>/i,match=>`${match}<meta http-equiv="Content-Security-Policy" content="${CSP}">`),scheme='linecraft-plot',url=`${scheme}://${randomUUID()}/document`;
+    let window,timer,protocol,registered=false,finished=false;
     try{
       window=new BrowserWindow({show:false,paintWhenInitiallyHidden:true,width:800,height:600,skipTaskbar:true,focusable:false,webPreferences:{partition:`linecraft-plot-${randomUUID()}`,nodeIntegration:false,contextIsolation:true,sandbox:true,webSecurity:true,devTools:false,backgroundThrottling:false,focusOnNavigation:false}});
       const contents=window.webContents,session=contents.session;
       if(!session?.webRequest)throw Error('The isolated PDF renderer session is unavailable.');
+      protocol=session.protocol;if(typeof protocol?.handle!=='function'||typeof protocol?.unhandle!=='function')throw Error('The isolated PDF document transport is unavailable.');
       session.setPermissionRequestHandler((_contents,_permission,callback)=>callback(false));session.setPermissionCheckHandler(()=>false);
-      session.webRequest.onBeforeRequest({urls:['<all_urls>']},(details,callback)=>callback({cancel:details.url!==url}));
+      session.webRequest.onBeforeRequest({urls:['<all_urls>']},(details,callback)=>callback({cancel:details.url!==url||details.method!=='GET'}));
       contents.setWindowOpenHandler(()=>({action:'deny'}));for(const event of ['will-navigate','will-frame-navigate','will-attach-webview'])contents.on(event,event=>event.preventDefault());
+      const headers={'Content-Type':'text/html; charset=utf-8','Content-Security-Policy':CSP,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
+      protocol.handle(scheme,request=>request.url===url&&request.method==='GET'&&!finished?new Response(html,{headers}):new Response(null,{status:403,headers}));registered=true;
+      const active=()=>{if(finished||window.isDestroyed())throw Error('PDF rendering was canceled.');};
       const timeout=new Promise((_resolve,reject)=>{timer=setTimeout(()=>reject(Error('PDF generation exceeded its time limit.')),timeoutMs);});
-      const render=async()=>{await window.loadURL(url);if(typeof fontCalibration!=='string'||fontCalibration.length>32768)throw Error('Fixed PDF font calibration is unavailable.');await contents.executeJavaScript(fontCalibration);const bytes=await contents.printToPDF(prepared.pdfOptions);if(!Buffer.isBuffer(bytes)||bytes.length<8||bytes.length>MAX_PDF||bytes.subarray(0,5).toString('ascii')!=='%PDF-')throw Error('The PDF renderer returned invalid or oversized output.');return bytes;};
+      const render=async()=>{await window.loadURL(url);active();if(typeof fontCalibration!=='string'||fontCalibration.length>32768)throw Error('Fixed PDF font calibration is unavailable.');await contents.executeJavaScript(fontCalibration);active();const bytes=await contents.printToPDF(prepared.pdfOptions);active();if(!Buffer.isBuffer(bytes)||bytes.length<8||bytes.length>MAX_PDF||bytes.subarray(0,5).toString('ascii')!=='%PDF-')throw Error('The PDF renderer returned invalid or oversized output.');return bytes;};
       return await Promise.race([render(),timeout]);
-    }finally{clearTimeout(timer);if(window&&!window.isDestroyed())window.destroy();}
+    }finally{finished=true;clearTimeout(timer);try{if(window&&!window.isDestroyed())window.destroy();}finally{if(registered)protocol.unhandle(scheme);}}
   }
   async function savePrepared(prepared,defaultName){
     const chosen=await dialog.showSaveDialog(getMainWindow(),{title:prepared.report.pages>1?'Publish combined PDF':'Plot drawing to PDF',defaultPath:defaultName,filters:[{name:'PDF document',extensions:['pdf']}]});
@@ -44,7 +53,7 @@ function createPlotService({BrowserWindow,dialog,getMainWindow,getTitle,buildPlo
   }
   async function plotPDF(payload){payloadShape(payload,['text','options']);const title=String(getTitle()||'Untitled drawing').replace(/[\x00-\x1f\x7f]/g,'').slice(0,255),prepared=await prepare([{title,text:payload.text}],payload.options);return savePrepared(prepared,`${path.parse(title).name||'Untitled'}.pdf`);}
   async function publishPDF(payload){
-    payloadShape(payload,['options']);const options=normalizePlotOptions(payload.options),chosen=await dialog.showOpenDialog(getMainWindow(),{title:'Choose drawings to publish',properties:['openFile','multiSelections'],filters:[{name:'Linecraft drawings',extensions:['linecraft','json']}]});
+    payloadShape(payload,['options']);const options=normalizePlotOptions(payload.options);if(options.space==='layouts')throw Error('Publish ordered layouts from one current drawing; saved-drawing publishing does not accept a layout-ID list.');const chosen=await dialog.showOpenDialog(getMainWindow(),{title:'Choose drawings to publish',properties:['openFile','multiSelections'],filters:[{name:'Linecraft drawings',extensions:['linecraft','json']}]});
     if(chosen.canceled||!chosen.filePaths?.length)return{ok:false,canceled:true};if(chosen.filePaths.length>20)throw Error('Publish accepts at most 20 drawings.');
     const sources=[];let total=0;
     for(const filename of chosen.filePaths){if(typeof filename!=='string'||!path.isAbsolute(filename)||!['.linecraft','.json'].includes(path.extname(filename).toLowerCase()))throw Error('Publish requires native Linecraft drawing files.');const text=await readSource(filename);drawingText(text);total+=Buffer.byteLength(text,'utf8');if(total>MAX_BATCH)throw Error('Publish batch exceeds the 100 MiB input limit.');sources.push({title:path.basename(filename),text});}

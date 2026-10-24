@@ -1,5 +1,7 @@
 # ADR-002: Fixed-roof flat-ceiling space analysis
 
+> **Historical milestone reference.** This document records its original R0–R6 implementation scope and evidence. It is retained for design history; its status, next-step and test statements are not current v1.36 qualification claims. See [the historical-reference index](../HISTORICAL-REFERENCE.md) and [current release notes](../RELEASE-1.36-BETA.md).
+
 Status: implemented for the bounded R3 preview.
 
 The architectural source and the R2 roof solve remain authoritative. R3 reads the already generated roof and the room boundary. It never edits roof vertices, pitch, eave elevation, bearing elevation, support references, or wall heights. A proposed ceiling can be accepted separately by the editor as a room edit in its existing transaction system.

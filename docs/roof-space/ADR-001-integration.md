@@ -1,5 +1,7 @@
 # ADR-001: Extend Linecraft with semantic architectural source
 
+> **Historical milestone reference.** This document records its original R0–R6 implementation scope and evidence. It is retained for design history; its status, next-step and test statements are not current v1.36 qualification claims. See [the historical-reference index](../HISTORICAL-REFERENCE.md) and [current release notes](../RELEASE-1.36-BETA.md).
+
 Status: Accepted for bounded R0-R2 preview, October 15, 2026.
 Baseline: public commit 40c45886f1e2b81efb10523d8c8690ec1af3ac0b, version 1.8.0. Local public checkout was clean before creating codex/roof-space-r0-r2. The existing private delivery source was inspected before editing.
 

@@ -1,5 +1,7 @@
 # R4 — terminal gable assignments
 
+> **Historical milestone reference.** This document records its original R0–R6 implementation scope and evidence. It is retained for design history; its status, next-step and test statements are not current v1.36 qualification claims. See [the historical-reference index](../HISTORICAL-REFERENCE.md) and [current release notes](../RELEASE-1.36-BETA.md).
+
 R4 extends the existing architectural source, renderer, selection, native files, layouts and grouped Undo history. It does not replace Linecraft's drafting tools. Gable roof vertices are generated from the source footprint, pitch, bearing, eave/rake overhangs and confirmed terminal assignments.
 
 ## Use the Roof pane

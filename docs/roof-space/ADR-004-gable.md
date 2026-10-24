@@ -1,5 +1,7 @@
 # R4: confirmed stationary gable ends
 
+> **Historical milestone reference.** This document records its original R0–R6 implementation scope and evidence. It is retained for design history; its status, next-step and test statements are not current v1.36 qualification claims. See [the historical-reference index](../HISTORICAL-REFERENCE.md) and [current release notes](../RELEASE-1.36-BETA.md).
+
 Accepted for the bounded equal-bearing, equal-pitch orthogonal roof model.
 
 R4 extends the existing finite-edge wavefront solver. It does not replace the
