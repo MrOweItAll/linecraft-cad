@@ -53,7 +53,16 @@ def audit():
             # Bounds alone would accept sparse corner triangles. Inspect all interior ink
             # independently, excluding0.1mm edge antialiasing; reject partial/absent masks.
             clip=fitz.Rect(90.1/mm,206.1/mm,109.9/mm,217.9/mm)
-            samples=page.get_pixmap(matrix=fitz.Matrix(3,3),colorspace=fitz.csGRAY,clip=clip,alpha=False).samples
+            scale=3
+            pix=page.get_pixmap(matrix=fitz.Matrix(scale,scale),colorspace=fitz.csGRAY,clip=clip,alpha=False)
+            # MuPDF expands a noninteger clip to whole device pixels and antialiases
+            # its partially clipped edge pixels. Count only pixels wholly inside the
+            # declared sample region, using the returned device origin and stride.
+            left=math.ceil(clip.x0*scale-pix.x);right=math.floor(clip.x1*scale-pix.x)
+            top=math.ceil(clip.y0*scale-pix.y);bottom=math.floor(clip.y1*scale-pix.y)
+            assert 0<=left<right<=pix.width and 0<=top<bottom<=pix.height
+            raw=pix.samples
+            samples=bytes(raw[row*pix.stride+column] for row in range(top,bottom) for column in range(left,right))
             def coverage(pixels):
                 fraction=sum(value<32 for value in pixels)/len(pixels)
                 assert fraction>=.995,fraction
@@ -63,7 +72,7 @@ def audit():
                 try:coverage(pixels)
                 except AssertionError:pass
                 else:raise AssertionError('Partial/missing-fill negative control was incorrectly accepted')
-            report['measurements'].append({'fillWidthMm':bounds.width*mm,'fillHeightMm':bounds.height*mm,'declaredRectangleAreaMm2':240,'interiorDarkFraction':fraction,'minimumInteriorDarkFraction':.995,'negativeControls':['missing fill','partial fill']})
+            report['measurements'].append({'fillWidthMm':bounds.width*mm,'fillHeightMm':bounds.height*mm,'declaredRectangleAreaMm2':240,'interiorDarkFraction':fraction,'minimumInteriorDarkFraction':.995,'fullyInteriorPixels':len(samples),'partiallyClippedEdgePixelsExcluded':pix.width*pix.height-len(samples),'negativeControls':['missing fill','partial fill']})
         raster=args.receipt.with_suffix('.png');assert not raster.exists();page.get_pixmap(matrix=fitz.Matrix(1.5,1.5),alpha=False).save(raster);report['raster']=str(raster)
         report['status']='passed'
     except Exception as error:

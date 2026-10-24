@@ -34,14 +34,16 @@ async function main(){
   const gateFile=path.join(directory,'gate','results.json'),gate=JSON.parse(fs.readFileSync(gateFile));
   assert.equal(gate.status,'passed');assert.ok(Date.parse(gate.startedAt)>=Date.parse(row.startedAt));
   assert.equal(gate.manifestSHA256,report.manifest.sha256);assert.equal(gate.version,report.manifest.version);assert.equal(gate.logDirectory,path.join(directory,'gate'));
-  fs.copyFileSync(gateFile,path.join(directory,'gate-results.json'));report.gate={file:path.join(directory,'gate-results.json'),sha256:sha(fs.readFileSync(gateFile)),stages:gate.total};
+  fs.copyFileSync(gateFile,path.join(directory,'gate-results.json'));report.gate={file:path.join(directory,'gate-results.json'),sha256:sha(fs.readFileSync(gateFile)),status:gate.status,passed:gate.passed,stages:gate.total};
   report.installer=gate.installer||null;report.status='passed';
   report.dailyUseReady=false;report.notVerified=['visible candidate Windows input and ordinary native dialogs','installed candidate acceptance','broader Windows/DPI/font coverage'];
   report.scope=mode==='candidate'?'Local reviewable candidate build; daily-use promotion awaits separate native acceptance and authorization.':'Automated checks only; no installed/native human acceptance claim.';
  }catch(error){report.status=error.message.includes('lock exists')?'blocked':'failed';report.error=error.stack||String(error);process.exitCode=1;}
  finally{
+  const failedGateFile=path.join(directory,'gate','results.json');
+  if(!report.gate&&fs.existsSync(failedGateFile)){const gate=JSON.parse(fs.readFileSync(failedGateFile));fs.copyFileSync(failedGateFile,path.join(directory,'gate-results.json'));report.gate={file:path.join(directory,'gate-results.json'),sha256:sha(fs.readFileSync(failedGateFile)),status:gate.status,passed:gate.passed,stages:gate.total};report.installer=gate.installer||null;}
   report.completedAt=new Date().toISOString();fs.writeFileSync(path.join(directory,'results.json'),JSON.stringify(report,null,2)+'\n');
-  const summary=`${report.status.toUpperCase()}: ${mode}\nVersion: ${report.manifest?.version||'unavailable'}\nCommit: ${report.source?.commit||'unavailable'}\nGate: ${report.gate?.stages??0} stages\nDaily-use readiness: not established\n${report.error?report.error.split('\n')[0]+'\n':''}`;
+  const summary=`${report.status.toUpperCase()}: ${mode}\nVersion: ${report.manifest?.version||'unavailable'}\nCommit: ${report.source?.commit||'unavailable'}\nGate: ${report.gate?.passed??0}/${report.gate?.stages??0} stages\nDaily-use readiness: not established\n${report.error?report.error.split('\n')[0]+'\n':''}`;
   fs.writeFileSync(path.join(directory,'SUMMARY.txt'),summary);console.log(summary+`Evidence: ${directory}`);
   if(acquired&&JSON.parse(fs.readFileSync(lock)).id===id)fs.unlinkSync(lock);
  }
