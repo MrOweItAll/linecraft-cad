@@ -1,0 +1,18 @@
+import {readFileSync,writeFileSync,existsSync} from 'node:fs';
+import assert from 'node:assert/strict';
+import {createEditor,UNIT_PRESETS} from '../core.mjs';
+import {inferGableCandidates} from '../architecture/roof-gable.mjs';
+
+const editor=createEditor({settings:UNIT_PRESETS.architectural}),accept=result=>assert.equal(result.ok,true,result.message);
+accept(editor.applyArchitecture({type:'addWalls',points:[{x:0,y:0},{x:480,y:0},{x:480,y:240},{x:0,y:240}],closed:true,referenceFace:'left',thickness:6,baseElevation:0,bearingElevation:120,role:'exterior'}));
+accept(editor.applyArchitecture({type:'recognizeRooms'}));const roomId=editor.state.architecture.rooms[0].id;
+accept(editor.applyArchitecture({type:'setRoom',roomId,values:{label:'R4 mathematical gable study · 40 × 20 ft',ceilingElevation:96,targetCeilingElevation:108,minimumClearHeight:84,headroomThreshold:108,ceilingFinishThickness:0,allowCeilingChange:true}}));
+accept(editor.applyArchitecture({type:'addRoof',name:'4:12 GABLE · X ridge · explicit terminal ends',riseTwice:8,overhang:24,bearingElevation:120,heelOffset:0,wallIds:editor.state.architecture.walls.map(wall=>wall.id),supportWallIds:editor.state.architecture.walls.map(wall=>wall.id)}));
+const roofId=editor.state.architecture.roofGroups[0].id,boundary=editor.state.architecture.roofGroups[0].boundary,candidate=inferGableCandidates(boundary).alternatives.find(item=>item.ridgeDirection==='X');assert.ok(candidate);
+accept(editor.applyArchitecture({type:'setRoof',roofGroupId:roofId,values:{roofType:'GABLE',gablePolicy:'ALL_GABLE',gableAssignments:candidate.edgeKeys,rakeOverhang:36}}));
+const roof=editor.state.architectureDerived.roofs[0];assert.equal(roof.status,'ok');assert.equal(new Set(roof.gableClosures.map(closure=>closure.sourceEdgeKey)).size,2);assert.equal(Math.max(...roof.faces.flatMap(face=>face.vertices.map(point=>point.z))),160);assert.equal(editor.getArchitectureReport().spaces[0].status,'ok');
+const layout=editor.addLayout('R4 gable study — A3',{size:'A3',orientation:'landscape'});accept(layout);accept(editor.addViewport(layout.layoutId,{x:15,y:25,width:210,height:245},{workspace:'2d',modelCenter:{x:240,y:120,z:0},scaleDenominator:48,locked:true}));accept(editor.addViewport(layout.layoutId,{x:240,y:65,width:160,height:160},{workspace:'3d',modelCenter:{x:240,y:120,z:100},scaleDenominator:96,locked:true,camera3d:{yaw:45,pitch:35.264389682754654,target:{x:240,y:120,z:100},projection:'orthographic'}}));
+accept(editor.setWorkspace('3d'));accept(editor.set3DView({target:{x:240,y:120,z:100},scale:.9,yaw:45,pitch:35.264389682754654,autoTarget:false}));
+const legacy=JSON.parse(editor.serialize());legacy.architecture.schemaVersion=4;for(const group of legacy.architecture.roofGroups)delete group.bearingAssignments;const file=new URL('../samples/gable-v112.linecraft',import.meta.url),serialized=JSON.stringify(legacy,null,2);if(!existsSync(file))writeFileSync(file,serialized,'utf8');else assert.deepEqual(JSON.parse(readFileSync(file,'utf8')),JSON.parse(serialized),'Published gable fixture differs; do not silently overwrite it.');
+const raw=JSON.parse(readFileSync(file,'utf8')),restored=createEditor(raw);assert.equal(raw.format,'Linecraft/2');assert.equal(raw.architecture.schemaVersion,4);assert.ok(!raw.entities.some(entity=>entity.id.startsWith('@architecture/')));assert.deepEqual(restored.state.architecture,editor.state.architecture);assert.deepEqual(restored.state.entities,editor.state.entities);
+console.log('Validated source-only schema4 gable: X ridge, 2 explicit terminal ends, eave 24 in / rake 36 in, 4:12, fixed 10 ft bearings, independent 8 ft ceiling, zero-thickness mathematical surfaces.');

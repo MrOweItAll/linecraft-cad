@@ -1,5 +1,5 @@
 /* Original bounded ASCII DXF importer. DWG decoding is performed separately by GNU LibreDWG. */
-import {createEditor as defaultCreateEditor,textLayout,triangulatePolygon} from './core.mjs';
+import {createEditor as defaultCreateEditor,textLayout,triangulatePolygon,parseRichText,canonicalFontFamily,modelUnitMillimeters} from './core.mjs';
 import {validateEllipse,validateSpline} from './advanced-geometry.mjs';
 
 const MAX_BYTES=50*1024*1024,MAX_RECORDS=1000000,MAX_ENTITIES=100000;
@@ -97,6 +97,7 @@ function aciColor(index){
   return'#'+rgb.map(value=>Math.round((value+m)*255).toString(16).padStart(2,'0')).join('');
 }
 function color(record,fallback){const trueColor=first(record,420);if(trueColor!==undefined)return'#'+(Number(trueColor)>>>0&0xffffff).toString(16).padStart(6,'0');const index=num(record,62,256);return index===256?undefined:index===0?fallback:aciColor(index);}
+function colorSource(record){return first(record,420)!==undefined?'true-color':Math.abs(num(record,62,256))===7?'aci-7':undefined;}
 function ocs(record){
   const n=unit({x:num(record,210,0),y:num(record,220,0),z:num(record,230,1)});
   const a=unit(cross(Math.abs(n.x)<1/64&&Math.abs(n.y)<1/64?{x:0,y:1,z:0}:{x:0,y:0,z:1},n)),b=cross(n,a);
@@ -106,7 +107,7 @@ function compact(points,closed=false){const p=points.filter((v,i)=>!i||!eq(v,poi
 
 /** Import model space; recursively expand ordinary INSERTs with bounded affine transformations. */
 export function importDXF(source,{sourceName='Imported DXF',createEditor=defaultCreateEditor,dwgMetadata=null}={}){
-  const {records,header}=readDXF(source),warnings=new Map(),unsupported=new Map(),entities=[],layers=new Map(),blocks=new Map(),styles=new Map(),dimStyles=new Map(),handleStyles=new Map();
+  const {records,header}=readDXF(source),warnings=new Map(),unsupported=new Map(),entities=[],layers=new Map(),blocks=new Map(),styles=new Map(),dimStyles=new Map(),handleStyles=new Map(),imageResources=[],layouts=[];let currentPaperLayout=null;
   const warn=(key,message)=>{const old=warnings.get(key);warnings.set(key,{message,count:(old?.count??0)+1});};
   const skip=(type,message)=>{unsupported.set(type,(unsupported.get(type)??0)+1);if(message)warn(type,message);};
   const hv=name=>header[name]?.[0]?.[1];
@@ -115,8 +116,8 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
   const safeName=(value,fallback='Standard')=>{const name=String(value??fallback).trim();if(!name||name.length>255||/[<>\/:;?*|=,\x00-\x1f]/.test(name)){warn('resource-name','Invalid resource names were replaced.');return fallback;}return name;};
   ensureLayer('0');styles.set('Standard',{name:'Standard',fontFamily:'Arial',defaultHeight:2.5,defaultRotation:0,widthFactor:1});
   for(const record of records.filter(r=>r.section==='TABLES')){
-    if(record.type==='LAYER'){const name=safeName(first(record,2),'0'),flags=num(record,70,0);layers.set(name,{name,color:color(record)??aciColor(num(record,62,7)),lineweight:Math.max(0,num(record,370,25))/100,visible:num(record,62,7)>=0&&!(flags&1),locked:!!(flags&4),linetype:linetypeFor(record),plot:num(record,290,1)!==0});}
-    if(record.type==='STYLE'){const name=safeName(first(record,2)),file=first(record,3,'').toLowerCase().replace(/^.*[\\/]/,'');let fontFamily=file.includes('arial')?'Arial':file.includes('consola')?'Consolas':file.includes('segoe')?'Segoe UI':'Arial';if(!/arial|consola|segoe/.test(file))warn('font','Unsupported source fonts use installed Arial; native font metrics are not retained.');styles.set(name,{name,fontFamily,defaultHeight:num(record,40,0)>0?num(record,40):2.5,defaultRotation:0,widthFactor:num(record,41,1)});if(first(record,5))handleStyles.set(first(record,5).trim(),name);}
+    if(record.type==='LAYER'){const name=safeName(first(record,2),'0'),flags=num(record,70,0),source=colorSource(record);layers.set(name,{name,color:color(record)??aciColor(num(record,62,7)),...(source?{colorSource:source}:{}),lineweight:Math.max(0,num(record,370,25))/100,visible:num(record,62,7)>=0&&!(flags&1),locked:!!(flags&4),linetype:linetypeFor(record),plot:num(record,290,1)!==0});}
+    if(record.type==='STYLE'){const name=safeName(first(record,2)),file=first(record,3,'').toLowerCase().replace(/^.*[\\/]/,'');let fontFamily;try{fontFamily=canonicalFontFamily(file.replace(/\.ttf$/i,'').replace(/^times$/i,'Times New Roman').replace(/^technic_$/i,'Technic').replace(/^consola$/i,'Consolas').replace(/^segoeui$/i,'Segoe UI'));}catch{fontFamily=file.includes('arial')?'Arial':file.includes('consola')?'Consolas':file.includes('segoe')?'Segoe UI':'Arial';if(!/arial|consola|segoe/.test(file))warn('font','Unsupported source fonts use installed Arial; native font metrics are not retained.');}styles.set(name,{name,fontFamily,defaultHeight:num(record,40,0)>0?num(record,40):2.5,defaultRotation:0,widthFactor:num(record,41,1)});if(first(record,5))handleStyles.set(first(record,5).trim(),name);}
   }
   if(dwgMetadata!==null){
     if(!dwgMetadata||!Array.isArray(dwgMetadata.layers)||dwgMetadata.layers.length>100000)throw Error('Invalid trusted DWG layer metadata.');
@@ -139,15 +140,15 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
     if(expectedLinear&&expectedLinear!==drawingLinear)warn('dimension-linear-display','Source dimension-specific linear format follows the drawing display format; geometric measurements are retained.');
     const physicalFactor=['engineering','architectural'].includes(expectedLinear)?({0:1,1:1,2:12,4:1/25.4,5:1/2.54,6:1/.0254})[Number(hv('$INSUNITS')??0)]??1:1;
     if(Math.abs(num(record,144,1)-physicalFactor)>1e-10*Math.max(1,Math.abs(physicalFactor)))warn('dimension-measurement-factor','Source alternate dimension measurement factor is not retained; dimensions measure their original definition geometry in the assigned drawing units.');
-    dimStyles.set(name,{name,textStyle,textHeight:num(record,140,2.5),arrowSize:num(record,41,2.5),extensionOffset:num(record,42,1),extensionOvershoot:num(record,44,1.25),gap:num(record,147,1),precision:dimensionPrecision,...unitOverrides,scale:num(record,40,1)||1,prefix:parts.length===2?parts[0]:'',suffix:parts.length===2?parts[1]:''});
+    const tick=num(record,142,0);dimStyles.set(name,{name,textStyle,textHeight:num(record,140,2.5),arrowSize:tick>0?tick:num(record,41,2.5),...(tick>0?{arrowType:'architectural-tick'}:{}),extensionOffset:num(record,42,1),extensionOvershoot:num(record,44,1.25),gap:num(record,147,1),precision:dimensionPrecision,...unitOverrides,scale:num(record,40,1)||1,prefix:parts.length===2?parts[0]:'',suffix:parts.length===2?parts[1]:''});
   }
   let current=null;
   for(const record of records.filter(r=>r.section==='BLOCKS')){
     if(record.type==='BLOCK'){current={name:first(record,2,'').trim(),base:xyz(record),flags:num(record,70,0),records:[]};blocks.set(current.name,current);}
     else if(record.type==='ENDBLK')current=null;else current?.records.push(record);
   }
-  const publish=entity=>{if(entities.length>=MAX_ENTITIES)throw Error('Imported drawing exceeds 100000 objects.');entities.push({id:`e${entities.length+1}`,...entity});};
-  const styleFor=(record,context)=>{const layer=ensureLayer(safeName(first(record,8,'0'),'0')==='0'&&context.layer?context.layer:safeName(first(record,8,'0'),'0')),ink=color(record,context.color),linetype=linetypeFor(record,true);return{layer,...(ink?{color:ink}:{}),...(linetype?{linetype}:{}),...(num(record,370,-1)>=0?{lineweight:num(record,370)/100}:{})};};
+  const publish=entity=>{if(entities.length>=MAX_ENTITIES)throw Error('Imported drawing exceeds 100000 objects.');entities.push({id:`e${entities.length+1}`,...entity,...(currentPaperLayout?{layoutId:currentPaperLayout.id}:{})});};
+  const styleFor=(record,context)=>{const layer=ensureLayer(safeName(first(record,8,'0'),'0')==='0'&&context.layer?context.layer:safeName(first(record,8,'0'),'0')),ink=color(record,context.color),source=colorSource(record)??(num(record,62,256)===0?context.colorSource:undefined),linetype=linetypeFor(record,true);return{layer,...(ink?{color:ink,...(source?{colorSource:source}:{})}:{}),...(linetype?{linetype}:{}),...(num(record,370,-1)>=0?{lineweight:num(record,370)/100}:{})};};
   const path=(points,closed,common)=>{const p=compact(points,closed);if(p.length<(closed?3:2))throw Error('Collapsed imported path.');if(p.every(v=>v.z===0))publish({...common,type:'PLINE',points:p.map(xy),closed});else publish({...common,type:'POLY3D',points:p,closed});};
   const line=(a,b,common)=>{if(eq(a,b))throw Error('Collapsed imported line.');if(a.z===0&&b.z===0)publish({...common,type:'LINE',start:xy(a),end:xy(b)});else publish({...common,type:'POLY3D',points:[a,b],closed:false});};
   const curve=(center,radius,start,sweep,isCircle,transform,common)=>{
@@ -170,6 +171,15 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
       const record=list[i];if(['VERTEX','SEQEND','ATTRIB','ATTDEF'].includes(record.type)){if(record.type==='ATTRIB'||record.type==='ATTDEF')skip(record.type,'Block attributes are not editable/imported annotations.');continue;}
       const common=styleFor(record,context),transform=context.transform;
       try{
+        if(record.type==='LEADER'){
+          if(num(record,72,0)!==0)throw Error('Spline leaders are unsupported.');const points=[];let p=null;for(const[c,raw]of record.groups){if(c===10){if(p)points.push(p);p={x:Number(raw),y:NaN,z:0};}else if(p&&c===20)p.y=Number(raw);else if(p&&c===30)p.z=Number(raw);}if(p)points.push(p);if(points.length!==num(record,76))throw Error('Leader vertex count is malformed.');const annotation=records.find(r=>first(r,5)===first(record,340)&&r.type==='MTEXT');if(!annotation)throw Error('Only text-annotated leaders are supported.');const primary=annotation.groups.findIndex(([c])=>c===101),a={...annotation,groups:primary<0?annotation.groups:annotation.groups.slice(0,primary)},content=decodeCADText(a.groups.filter(([c])=>c===1||c===3).map(([,v])=>v).join(''),true).text;if(/[\r\n]/.test(content))throw Error('Only single-line leader annotations are supported.');let style=safeName(first(a,7));if(!styles.has(style))style='Standard';const dim=dimStyles.get(safeName(first(record,3)))??dimStyles.get('Standard'),origin=transform({x:0,y:0,z:0}),up=transform({x:0,y:1,z:0}),scale=Math.hypot(up.x-origin.x,up.y-origin.y);publish({...common,type:'LEADER',points:points.map(p=>xy(transform(p))),text:content,style,height:num(a,40)*scale,arrowSize:dim.arrowSize*dim.scale*scale,arrowType:dim.arrowType??'closed-filled'});warn('leader-landing','Leader vertices and annotation text are editable; native automatic annotation gap/attachment is represented by the explicit Linecraft endpoint baseline.');continue;
+        }
+        if(record.type==='MTEXT'&&list.some(r=>r.type==='LEADER'&&first(r,340)===first(record,5)))continue;
+        if(record.type==='VIEWPORT'){continue;}
+        if(record.type==='IMAGE'){
+          const def=records.find(item=>item.type==='IMAGEDEF'&&first(item,5)===first(record,340));if(!def)throw Error('IMAGE definition is missing.');const width=num(record,13,num(def,10)),height=num(record,23,num(def,20)),id=`image-${first(def,5,'resource')}`;let resource=imageResources.find(r=>r.id===id);if(!resource){const sourceName=first(def,1,'');resource={id,name:sourceName.replace(/^.*[\\/]/,'')||id,width,height,sourceName:sourceName||`${id}.jpg`};imageResources.push(resource);}
+          const origin=transform(xyz(record)),zero=transform({x:0,y:0,z:0}),u=transform(mul(xyz(record,11),width)),v=transform(mul(xyz(record,12),height));publish({...common,type:'IMAGE',resourceId:id,position:xy(origin),uVector:{x:u.x-zero.x,y:u.y-zero.y},vVector:{x:v.x-zero.x,y:v.y-zero.y}});warn('image-sidecar','Raster images retain their placement and linked resource; the safe desktop resource resolver must supply the matching JPEG/PNG.');continue;
+        }
         if(record.type==='LINE'){line(transform(xyz(record)),transform(xyz(record,11)),common);continue;}
         if(record.type==='CIRCLE'||record.type==='ARC'){
           const basis=ocs(record),apply=p=>transform(basis.point(p)),start=num(record,50,0),sweep=record.type==='CIRCLE'?360:((num(record,51)-start)%360+360)%360;
@@ -236,7 +246,7 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
           const c=Math.cos(rotation),s=Math.sin(rotation);
           for(let row=0;row<rows;row++)for(let column=0;column<columns;column++){
             const apply=p=>{const x=(p.x-block.base.x)*sx+column*num(record,44,0),y=(p.y-block.base.y)*sy+row*num(record,45,0),z=(p.z-block.base.z)*sz;return transform(add(position,add(add(mul(basis.a,x*c-y*s),mul(basis.b,x*s+y*c)),mul(basis.n,z))));};
-            decodeRecords(block.records,{transform:apply,layer:common.layer,color:common.color??layers.get(common.layer)?.color},depth+1,[...ancestry,name]);
+            decodeRecords(block.records,{transform:apply,layer:common.layer,color:common.color??layers.get(common.layer)?.color,colorSource:common.colorSource??layers.get(common.layer)?.colorSource},depth+1,[...ancestry,name]);
           }
           warn('block-expanded','Ordinary blocks are expanded into editable primitives; block identities and attributes are not retained.');continue;
         }
@@ -248,11 +258,16 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
           let style=safeName(first(main,7));if(!styles.has(style)){style='Standard';warn('missing-style','Missing annotation styles use Standard.');}
           const sourceStyle=styles.get(style),factor=(record.type==='TEXT'?num(main,41,sourceStyle.widthFactor):sourceStyle.widthFactor)*widthScale/hScale;
           if(Math.abs(factor-sourceStyle.widthFactor)>1e-12){let derived=`ImportedText${styles.size+1}`;while(styles.has(derived))derived+='x';styles.set(derived,{...sourceStyle,name:derived,widthFactor:factor});style=derived;}
-          const decoded=decodeCADText(record.type==='MTEXT'?main.groups.filter(([code])=>code===1||code===3).map(([,raw])=>raw).join(''):first(main,1,''),record.type==='MTEXT');if(decoded.formatted)warn('text-format','Rich text and native text decorations are flattened to plain text.');if(!decoded.text.trim())throw Error('Empty imported text.');
-          if(horizontal!==0||record.type==='TEXT'&&vertical!==0||record.type==='MTEXT'&&num(main,71,1)!==1)warn('text-alignment','Source alignment anchors are retained using approximate original text-box metrics.');
+          const rawContent=record.type==='MTEXT'?main.groups.filter(([code])=>code===1||code===3).map(([,raw])=>raw).join(''):first(main,1,''),decoded=decodeCADText(rawContent,record.type==='MTEXT');if(!decoded.text.trim())throw Error('Empty imported text.');
+          if(record.type==='TEXT'&&(horizontal!==0||vertical!==0))warn('text-alignment','Source TEXT alignment uses the shared text-box metrics.');
           if(Math.abs(widthScale-hScale)>1e-10*Math.max(widthScale,hScale))warn('text-nonuniform','Nonuniform text scaling cannot retain native glyph proportions.');
           const entity={...common,type:record.type,position:xy(position),text:decoded.text,height:num(main,40)*hScale,rotation:angle(Math.atan2(tip.y-position.y,tip.x-position.x)),style};
-          if(record.type==='MTEXT')entity.width=num(main,41)>0?num(main,41)*widthScale:Math.max(entity.height,decoded.text.length*entity.height*.6);
+          if(record.type==='MTEXT'){
+            entity.width=num(main,41)>0?num(main,41)*widthScale:Math.max(entity.height,decoded.text.length*entity.height*.6);
+            // Relative controls scale naturally with base height. Absolute height
+            // controls must follow a paper-unit/block scale exactly once.
+            const scaledRaw=rawContent.replace(/\\H([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)\s*;/g,(_,n)=>`\\H${Number(n)*hScale};`),parsed=parseRichText(scaledRaw,{...styles.get(style),height:entity.height});entity.text=parsed.text;entity.richText={version:1,source:scaledRaw,attachment:num(main,71,1),lineSpacingStyle:num(main,73,1),lineSpacingFactor:num(main,44,1)};parsed.warnings.forEach(w=>warn(`rich-${w}`,`MTEXT retains unsupported formatting source: ${w}.`));publish(entity);continue;
+          }
           const layout=textLayout(entity,{textStyles:[...styles.values()]}),c=Math.cos(radians(entity.rotation)),s=Math.sin(radians(entity.rotation));let dx=0,dy=0;
           if(record.type==='TEXT'){dx=horizontal===1||horizontal===4?-layout.width/2:horizontal===2?-layout.width:0;dy=horizontal===4||vertical===2?-.325*entity.height:vertical===3?-entity.height:vertical===1?.35*entity.height:0;}
           else{const attachment=num(main,71,1);dx=(attachment-1)%3===1?-entity.width/2:(attachment-1)%3===2?-entity.width:0;dy=Math.floor((attachment-1)/3)*layout.height/2;}
@@ -277,7 +292,25 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
   };
   const modelRecords=records.filter(record=>record.section==='ENTITIES'&&first(record,67,'0').trim()!=='1'&&(!first(record,410)||first(record,410).trim()==='Model'));
   decodeRecords(modelRecords);
-  if(!entities.length)throw Error('The file has no supported model-space drawing geometry.');
+  // Paper geometry is owned by its persisted block record, including inactive
+  // layouts stored in BLOCKS. Do not relocate it to Model or invent geometry.
+  const layoutRecords=records.filter(r=>r.type==='LAYOUT').map(record=>{const split=record.groups.findIndex(([c,v])=>c===100&&v==='AcDbLayout'),plot={...record,groups:record.groups.slice(0,split)},layout={...record,groups:record.groups.slice(split+1)};return{record,plot,layout,name:first(layout,1,''),owner:layout.groups.filter(([c])=>c===330).at(-1)?.[1],order:num(layout,71,0)};}).filter(r=>r.name&&r.name!=='Model').sort((a,b)=>a.order-b.order);
+  for(const sourceLayout of layoutRecords){
+    const owned=records.filter(r=>['ENTITIES','BLOCKS'].includes(r.section)&&!['BLOCK','ENDBLK','VERTEX','SEQEND'].includes(r.type)&&(first(r,330)===sourceLayout.owner||first(r,410)===sourceLayout.name));
+    if(!owned.some(r=>r.type!=='VIEWPORT'))continue;if(layouts.length>=32)throw Error('Imported drawing exceeds 32 paper layouts.');
+    const inch=num(sourceLayout.plot,72,1)===0,paperFactor=inch?25.4:1,sourceWidth=num(sourceLayout.plot,44,420),sourceHeight=num(sourceLayout.plot,45,297),media=first(sourceLayout.plot,4,''),canonical=/ARCH_D_\(36\.00_x_24\.00_Inches\)/i.test(media)&&Math.abs(sourceWidth-914.4)<.001&&Math.abs(sourceHeight-609.6)<.001;
+    const width=canonical?914.4:sourceWidth,height=canonical?609.6:sourceHeight,marginsMm={left:num(sourceLayout.plot,40,0),bottom:num(sourceLayout.plot,41,0),right:num(sourceLayout.plot,42,0),top:num(sourceLayout.plot,43,0)},originMm={x:num(sourceLayout.plot,46,0),y:num(sourceLayout.plot,47,0)},layout={id:`layout${layouts.length+1}`,name:safeName(sourceLayout.name,`Imported sheet ${layouts.length+1}`),paper:{size:'Custom',orientation:width>=height?'landscape':'portrait',widthMm:width,heightMm:height},entities:[],viewports:[],plotSettings:{marginsMm,originMm,renderOffsetMm:{x:marginsMm.left+originMm.x,y:marginsMm.bottom+originMm.y},sourcePaperUnits:inch?'in':'mm',sourceMediaMm:{width:sourceWidth,height:sourceHeight},deviceName:first(sourceLayout.plot,2,''),mediaName:media}};layouts.push(layout);currentPaperLayout=layout;
+    decodeRecords(owned.filter(r=>r.type!=='VIEWPORT'),{transform:p=>mul(p,paperFactor),layer:null,color:null});
+    for(const viewport of owned.filter(r=>r.type==='VIEWPORT')){
+      if(num(viewport,69,1)===1){warn('overall-paper-viewport','The overall paper navigation viewport is represented by the layout itself and written as one overall viewport on export.');continue;}
+      if(layout.viewports.length>=16)throw Error('Imported layout exceeds 16 model viewports.');
+      try{const center=xyz(viewport),w=num(viewport,40)*paperFactor,h=num(viewport,41)*paperFactor,viewHeight=num(viewport,45),normal=unit({x:num(viewport,16,0),y:num(viewport,26,0),z:num(viewport,36,1)}),yaw=angle(Math.atan2(normal.y,normal.x)),pitch=angle(Math.asin(normal.z)),roll=num(viewport,51,0),cy=Math.cos(radians(yaw)),sy=Math.sin(radians(yaw)),cp=Math.cos(radians(pitch)),sp=Math.sin(radians(pitch)),cr=Math.cos(radians(roll)),sr=Math.sin(radians(roll)),right={x:-sy*cr-cy*sp*sr,y:cy*cr-sy*sp*sr,z:cp*sr},up={x:-cy*sp*cr+sy*sr,y:-sy*sp*cr-cy*sr,z:cp*cr},target={x:num(viewport,17,0),y:num(viewport,27,0),z:num(viewport,37,0)},modelCenter=add(target,add(mul(right,num(viewport,12,0)),mul(up,num(viewport,22,0)))),units=({0:'unitless',1:'in',2:'ft',4:'mm',5:'cm',6:'m'})[Number(hv('$INSUNITS'))]??'unitless',scaleDenominator=modelUnitMillimeters({units})*viewHeight/h,top=Math.abs(normal.x)<1e-12&&Math.abs(normal.y)<1e-12&&normal.z>0&&roll===0;
+        const frame={x:center.x*paperFactor-w/2,y:center.y*paperFactor-h/2,width:w,height:h},frozenLayers=viewport.groups.filter(([c])=>c===331).map(([,handle])=>records.find(r=>r.type==='LAYER'&&first(r,5)===handle)).filter(Boolean).map(r=>safeName(first(r,2),'0')),view={id:`viewport-${first(viewport,5,`${layout.id}-${layout.viewports.length+1}`)}`,frame,modelCenter,scaleDenominator,locked:!!(num(viewport,90,0)&16384),frozenLayers,layer:ensureLayer(safeName(first(viewport,8,'0'),'0')),workspace:top?'2d':'3d',camera3d:{yaw:top?-90:yaw,pitch:top?90:pitch,roll,mode:top?'top':'custom',projection:'orthographic'},plotBorder:false};layout.viewports.push(view);
+      }catch(error){skip('VIEWPORT',`A paper viewport could not be represented: ${error.message}`);}
+    }
+    currentPaperLayout=null;
+  }
+  if(!entities.length&&!layouts.length)throw Error('The file has no supported model-space drawing geometry or paper layout content.');
   const units=({0:'unitless',1:'in',2:'ft',4:'mm',5:'cm',6:'m'})[Number(hv('$INSUNITS'))]??'unitless',rawPrecision=Number(hv('$LUPREC')??4),currentLayer=safeName(hv('$CLAYER'),'0');ensureLayer(currentLayer);
   const linearCode=Number(hv('$LUNITS')??2),angularCode=Number(hv('$AUNITS')??0),rawAngularPrecision=Number(hv('$AUPREC')??([1,4].includes(angularCode)?0:4)),precision=Number.isInteger(rawPrecision)&&rawPrecision>=0&&rawPrecision<=8?rawPrecision:4;
   const linearFormat=({2:'decimal',3:'engineering',4:'architectural'})[linearCode]??'decimal',angularFormat=({0:'decimal-degrees',1:'dms',3:'radians',4:'dms'})[angularCode]??'decimal-degrees';
@@ -287,9 +320,9 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
   const nativeAngularPrecision=Number.isInteger(rawAngularPrecision)&&rawAngularPrecision>=0&&rawAngularPrecision<=8?rawAngularPrecision:4;
   if(angularFormat==='dms'&&nativeAngularPrecision<4)warn('coarse-dms','Source degrees-only or degree/minute precision uses whole-second DMS display; geometric angles are retained.');
   const unitSettings={units,precision,linearFormat,fractionPrecision:linearFormat==='architectural'?precision:4,angularInputUnit:angularCode===3?'radians':'degrees',angularFormat,angularPrecision:angularFormat==='dms'?Math.max(0,nativeAngularPrecision-4):nativeAngularPrecision};
-  const document={format:'Linecraft/1',entities,layers:[...layers.values()],currentLayer,textStyles:[...styles.values()],dimStyles:[...dimStyles.values()],settings:unitSettings,workspace:entities.some(entity=>['MESH','POLY3D','CIRCLE3D','ARC3D'].includes(entity.type))?'3d':'2d'};
+  const document={format:'Linecraft/1',entities,layers:[...layers.values()],currentLayer,textStyles:[...styles.values()],dimStyles:[...dimStyles.values()],settings:unitSettings,workspace:entities.some(entity=>['MESH','POLY3D','CIRCLE3D','ARC3D'].includes(entity.type))?'3d':'2d',...(layouts.length?{layouts,activeSpace:'paper',activeLayoutId:layouts[0].id}:{}),...(imageResources.length?{imageResources,rasterSettings:{frame:num(records.find(record=>record.type==='RASTERVARIABLES')??{groups:[]},70,1)}}:{})};
   const editor=createEditor(),accepted=editor.importJSON(JSON.stringify(document));if(!accepted.ok)throw Error(`Imported geometry did not pass document validation: ${accepted.message}`);
   const text=editor.serialize();if(new TextEncoder().encode(text).length>25*1024*1024)throw Error('Normalized drawing exceeds the 25MiB document limit.');
-  const report={sourceFormat:'DXF',sourceName:String(sourceName).slice(0,1024),modelSourceEntities:modelRecords.filter(record=>!['VERTEX','SEQEND'].includes(record.type)).length,importedEntities:editor.state.entities.length,unsupportedByType:Object.fromEntries(unsupported),unsupportedEntities:[...unsupported.values()].reduce((sum,n)=>sum+n,0),warnings:[...warnings.values()],modelSpaceOnly:true,sourceLayerStatesFromDWG:dwgMetadata!==null,sourceAssociationAdopted:false,originalFileWritten:false,scope:'Model-space supported primitives with bounded ordinary block expansion. Unsupported entities and appearance changes are reported; proprietary solids, xrefs, paper layouts and full native glyph/style fidelity are not claimed.'};
+  const report={sourceFormat:'DXF',sourceName:String(sourceName).slice(0,1024),modelSourceEntities:modelRecords.filter(record=>!['VERTEX','SEQEND'].includes(record.type)).length,importedEntities:editor.state.entities.length,unsupportedByType:Object.fromEntries(unsupported),unsupportedEntities:[...unsupported.values()].reduce((sum,n)=>sum+n,0),warnings:[...warnings.values()],modelSpaceOnly:!layouts.length,paperLayouts:layouts.map(l=>({id:l.id,name:l.name,entities:editor.state.entities.filter(e=>e.layoutId===l.id).length,viewports:l.viewports.length,paper:l.paper,plotSettings:l.plotSettings})),sourceLayerStatesFromDWG:dwgMetadata!==null,sourceAssociationAdopted:false,originalFileWritten:false,scope:'Supported model and owned paper primitives with bounded ordinary block expansion, editable rich MTEXT and linked raster resources. Unsupported objects, missing image/font resources and rich-text layout limitations are reported; proprietary solids, xrefs and unrestricted native compatibility are not claimed.'};
   return{text,report};
 }

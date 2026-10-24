@@ -1,9 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
 import * as core from '../core.mjs';
 import {makeClampedKnots,splineBoundsPoints,boundaryContains} from '../advanced-geometry.mjs';
 
-// Original synthetic mathematical inputs; private native evidence is excluded.
+// v1.2 editing fixtures are mathematical inputs; separate native measurements appear below.
 const accepted = (editor, commands) => {
   for (const command of commands) { const response = editor.execute(command); assert.equal(response.ok, true, `${String(command)}: ${response.message}`); }
 };
@@ -582,7 +584,7 @@ test('CIRCLE JSON import rejects invalid radius atomically and DXF exports nativ
   const dxf = e.exportDXF(); assert.match(dxf, /0\r\nCIRCLE\r\n/); assert.match(dxf, /100\r\nAcDbCircle\r\n10\r\n12\.5\r\n20\r\n-4\r\n30\r\n0\r\n40\r\n3\.25\r\n/);
 });
 
-test('synthetic sequence: circle radius recovery, diameter, Last MOVE and COPY', () => {
+test('LT script geometry reference: circle radius recovery, diameter, Last MOVE and COPY', () => {
   const e = core.createEditor(); submit(e, ['C', '150,25']);
   assert.equal(e.execute('-5').ok, false); assert.equal(e.state.commandPhase, 'radius'); assert.equal(e.state.entities.length, 0);
   const outcomes = submit(e, ['25', 'CIRCLE', '220,25', 'D', '20', 'MOVE', 'L', '', '0,0', '@10,5', 'COPY', 'L', '', '0,0', '@30,0']);
@@ -639,7 +641,7 @@ test('COPY mode default acceptance and removal of all copies leave no empty tran
   e.undo(); assert.equal(e.state.entities.length, 0);
 });
 
-test('synthetic repeated COPY sequence: every relative destination uses the original base', () => {
+test('interactive LT COPY reference: every relative destination uses the original base', () => {
   const e = core.createEditor(); submit(e, ['CIRCLE', '260,30', '10', 'CO', 'L', '', '0,0', '@20,0', '@40,0', '']);
   assert.equal(e.state.command, null); assert.equal(e.state.entities.length, 3);
   [[260,30],[280,30],[300,30]].forEach((p,index) => { point(e.state.entities[index].center, p); assert.equal(e.state.entities[index].radius, 10); });
@@ -652,11 +654,41 @@ test('repeated COPY relative Cartesian and polar destinations keep a nonzero bas
   [[0,0],[20,0],[40,0],[0,10]].forEach((p,index) => point(e.state.entities[index].start, p));
 });
 
+test('native DXF reference: rectangle ROTATE/MOVE/COPY/negative ROTATE matches measured corners', async () => {
+  const measured = JSON.parse(await readFile(new URL('../evidence/study-1.1/observed-geometry.json', import.meta.url), 'utf8'));
+  const expected = measured.entities.filter(entity => entity.type === 'RECTANG');
+  assert.equal(measured.observed, true); assert.equal(expected.length, 2);
+  const e = core.createEditor();
+  const outcomes = submit(e, ['RECTANG', '10,80', '60,100', 'ROTATE', 'L', '', '10,80', '90', 'MOVE', 'L', '', '0,0', '@20,10', 'COPY', 'L', '', 'Multiple', '0,0', '@80,0', '', 'ROTATE', 'L', '', '0,0', '-90']);
+  assert.ok(outcomes.every(outcome => outcome.ok)); assert.equal(e.state.command, null); assert.equal(e.state.entities.length, 2);
+  e.state.entities.forEach((entity,index) => expected[index].points.forEach((p,corner) => point(entity.points[corner], [p.x,p.y], `native rectangle ${index} corner ${corner}`)));
+  const complete = geometry(e); e.undo(); e.redo(); assert.deepEqual(e.state.entities, complete);
+});
 
+test('native DXF reference: LINE command-local Undo and Close reproduce measured triangle', async () => {
+  const measured = JSON.parse(await readFile(new URL('../evidence/study-1.1/observed-geometry.json', import.meta.url), 'utf8'));
+  const expected = measured.entities.filter(entity => entity.type === 'LINE'); const e = core.createEditor();
+  const outcomes = submit(e, ['LINE', '-100,-100', '-50,-100', '@0,40', 'U', '@0,20', 'C']);
+  assert.ok(outcomes.every(outcome => outcome.ok)); assert.equal(e.state.command, null); assert.equal(e.state.entities.length, expected.length);
+  e.state.entities.forEach((entity,index) => { point(entity.start, [expected[index].start.x,expected[index].start.y]); point(entity.end, [expected[index].end.x,expected[index].end.y]); });
+});
 
-
-
-
+test('full native DXF fixture: independent sequence reproduces all ten measured entities', async () => {
+  const measured = JSON.parse(await readFile(new URL('../evidence/study-1.1/observed-geometry.json', import.meta.url), 'utf8'));
+  const nativeDXF = await readFile(new URL('../evidence/study-1.1/AutoCAD-observed-geometry.dxf', import.meta.url));
+  assert.equal(createHash('sha256').update(nativeDXF).digest('hex'), measured.sha256);
+  const e = core.createEditor();
+  // Explicit Single reproduces the measured script-compatible COPY result; later COPY is interactive Multiple.
+  const outcomes = submit(e, ['CIRCLE', '150,25', '25', 'CIRCLE', '220,25', 'D', '20', 'MOVE', 'L', '', '0,0', '@10,5', 'COPY', 'L', '', 'Single', '0,0', '@30,0', 'COPY', 'L', '', '0,0', '@20,0', '@40,0', '', 'RECTANG', '10,80', '60,100', 'ROTATE', 'L', '', '10,80', '90', 'MOVE', 'L', '', '0,0', '@20,10', 'COPY', 'L', '', 'Multiple', '0,0', '@80,0', '', 'ROTATE', 'L', '', '0,0', '-90', 'LINE', '-100,-100', '-50,-100', '@0,40', 'U', '@0,20', 'C']);
+  assert.ok(outcomes.every(outcome => outcome.ok)); assert.equal(e.state.command, null); assert.equal(e.state.entities.length, measured.entities.length);
+  e.state.entities.forEach((entity,index) => {
+    const expected = measured.entities[index]; assert.equal(entity.type, expected.type); assert.equal(entity.layer, expected.layer);
+    if (entity.type === 'CIRCLE') { point(entity.center, [expected.center.x,expected.center.y]); assert.ok(Math.abs(entity.radius - expected.radius) < EPS); }
+    else if (entity.type === 'RECTANG') expected.points.forEach((p,corner) => point(entity.points[corner], [p.x,p.y]));
+    else { point(entity.start, [expected.start.x,expected.start.y]); point(entity.end, [expected.end.x,expected.end.y]); }
+  });
+  const imported = core.createEditor(JSON.parse(e.serialize())); assert.deepEqual(imported.state.entities, e.state.entities);
+});
 
 test('typed radius property retains exact scalar precision at a large center and supports Undo/Redo', () => {
   const e = core.createEditor(); submit(e, ['CIRCLE', '1000000000000,1000000000000', '10']);
@@ -876,7 +908,7 @@ test('MIRROR arbitrary axis is involutive and invalid coincident axis rejects be
 });
 
 test('TRIM repeated picked end edits honor finite LINE boundaries and local/global Undo', () => {
-  const e=core.createEditor({entities:[
+  const e=core.createEditor({settings:{trimExtendMode:'standard'},entities:[
     {id:'target',type:'LINE',start:{x:0,y:0},end:{x:100,y:0},layer:'0'},
     {id:'boundary',type:'LINE',start:{x:70,y:-10},end:{x:70,y:10},layer:'0'}]});
   accepted(e,['TR','boundary','','90,0']); point(e.state.entities[0].end,[70,0]); assert.equal(e.state.commandPhase,'target');
@@ -889,7 +921,7 @@ test('TRIM circle boundaries produce two exact fragments when the middle is pick
   const circle={id:'circle',type:'CIRCLE',center:{x:0,y:0},radius:10,layer:'0'};
   const fragments=core.trimLine(source,[circle],{x:0,y:0}); assert.equal(fragments.length,2);
   point(fragments[0].start,[-20,0]); point(fragments[0].end,[-10,0]); point(fragments[1].start,[10,0]); point(fragments[1].end,[20,0]);
-  const e=core.createEditor({entities:[source,circle]}); accepted(e,['TR','circle','','0,0','']);
+  const e=core.createEditor({settings:{trimExtendMode:'standard'},entities:[source,circle]}); accepted(e,['TR','circle','','0,0','']);
   const lines=e.state.entities.filter(entity=>entity.type==='LINE'); assert.equal(lines.length,2); assert.equal(new Set(lines.map(entity=>entity.id)).size,2); assert.ok(lines.every(entity=>entity.color==='#336699'));
 });
 
@@ -897,7 +929,7 @@ test('TRIM rectangle and PLINE boundaries intersect actual finite edges; absent 
   const line={id:'line',type:'LINE',start:{x:0,y:20},end:{x:100,y:20},layer:'0'};
   const rectangle=fixtureEntities()[2]; const fragments=core.trimLine(line,[rectangle],{x:40,y:20});
   point(fragments[0].end,[20,20]); point(fragments[1].start,[60,20]);
-  const e=core.createEditor({entities:[line,{id:'p',type:'PLINE',points:[{x:70,y:0},{x:70,y:40}],closed:false,layer:'0'}]});
+  const e=core.createEditor({settings:{trimExtendMode:'standard'},entities:[line,{id:'p',type:'PLINE',points:[{x:70,y:0},{x:70,y:40}],closed:false,layer:'0'}]});
   accepted(e,['TR','p','','90,20','']); point(e.state.entities[0].end,[70,20]);
   const far={id:'far',type:'LINE',start:{x:50,y:60},end:{x:50,y:80},layer:'0'};
   assert.deepEqual(core.lineIntersections(line,[far]),[]); assert.throws(()=>core.trimLine(line,[far],{x:20,y:20}),/No cutting/);
@@ -910,12 +942,12 @@ test('EXTEND selects the picked endpoint and nearest finite boundary, including 
   point(core.extendLine(line,[near,far],{x:35,y:50}).end,[80,50]);
   const circle={id:'circle',type:'CIRCLE',center:{x:-30,y:50},radius:10,layer:'0'};
   point(core.extendLine(line,[circle],{x:5,y:50}).start,[-20,50]);
-  const e=core.createEditor({entities:[line,near]}); accepted(e,['EX','near','','35,50','U','35,50','']); point(e.state.entities[0].end,[80,50]);
+  const e=core.createEditor({settings:{trimExtendMode:'standard'},entities:[line,near]}); accepted(e,['EX','near','','35,50','U','35,50','']); point(e.state.entities[0].end,[80,50]);
   accepted(e,['U']); point(e.state.entities[0].end,[40,50]);
 });
 
-test('TRIM/EXTEND unsupported targets, ambiguous cut points and parallel boundaries preserve the drawing', () => {
-  const e=core.createEditor({entities:fixtureEntities()}); accepted(e,['TR','b','']); const before=e.serialize();
+test('TRIM/EXTEND untrimmable targets, ambiguous cut points and parallel boundaries preserve the drawing', () => {
+  const e=core.createEditor({settings:{trimExtendMode:'standard'},entities:fixtureEntities()}); accepted(e,['TR','b','']); const before=e.serialize();
   assert.equal(e.execute('40,10').ok,false); assert.equal(e.serialize(),before); accepted(e,['ESC']);
   const source={type:'LINE',start:{x:0,y:0},end:{x:100,y:0}};
   assert.throws(()=>core.trimLine(source,[{type:'LINE',start:{x:50,y:-10},end:{x:50,y:10}}],{x:50,y:0}),/away/);
@@ -1060,7 +1092,7 @@ test('TRIM retains representable sub-unit cut positions on very long lines',()=>
 });
 
 test('TRIM uses current boundary fragments after editing a selected cutting edge and local Undo',()=>{
-  const e=core.createEditor({entities:[{id:'horizontal',type:'LINE',start:{x:-10,y:0},end:{x:10,y:0},layer:'0'},
+  const e=core.createEditor({settings:{trimExtendMode:'standard'},entities:[{id:'horizontal',type:'LINE',start:{x:-10,y:0},end:{x:10,y:0},layer:'0'},
     {id:'vertical',type:'LINE',start:{x:0,y:-10},end:{x:0,y:10},layer:'0'},
     {id:'other',type:'LINE',start:{x:5,y:-10},end:{x:5,y:10},layer:'0'}]});
   accepted(e,['TR','horizontal','vertical','','8,0']);point(e.state.entities[0].end,[0,0]);const before=e.serialize();assert.equal(e.execute('5,8').ok,false);assert.equal(e.serialize(),before);
@@ -1101,9 +1133,30 @@ test('OFFSET rectangle exact edge picks and overflowed side projections reject w
   assert.throws(()=>core.offsetEntity(huge,1e306,{x:-1e308,y:-1e308}),/numeric range/);
 });
 
+test('actual LT 2027 editing DXF: fourteen measured entities match TRIM/EXTEND/OFFSET/SCALE/MIRROR/ERASE/BREAK/PLINE',async()=>{
+  const fixture=JSON.parse(await readFile(new URL('../evidence/study-1.2/editing-observed-geometry.json',import.meta.url),'utf8'));
+  const native=await readFile(new URL('../evidence/study-1.2/AutoCAD-editing-geometry.dxf',import.meta.url));
+  assert.equal(fixture.observed,true);assert.equal(createHash('sha256').update(native).digest('hex'),fixture.sha256);
+  // The preserved native fixture explicitly used Standard (initcommandversion 1).
+  // Keep its command/geometry evidence unchanged while choosing that mode here.
+  const e=core.createEditor({settings:{trimExtendMode:'standard'}});accepted(e,[
+    'LINE','0,0','100,0','', 'LINE','70,-20','70,20','', 'TRIM','70,10','','90,0','',
+    'LINE','0,50','40,50','', 'LINE','80,30','80,70','', 'EXTEND','80,60','','35,50','',
+    'OFFSET','10','20,0','20,-15','', 'RECTANG','120,0','160,20', 'OFFSET','5','140,0','140,-10','',
+    'CIRCLE','220,10','10', 'OFFSET','3','230,10','240,10','', 'RECTANG','300,0','320,10',
+    'SCALE','L','','300,0','2', 'MIRROR','L','','300,-20','300,40','N', 'ERASE','L','','U','REDO','U',
+    'LINE','400,0','500,0','', 'BREAK','450,0','','430,0','470,0', 'PLINE','0,100','30,100','30,130','U','40,100','40,120','C'
+  ]);
+  assert.equal(e.state.entities.length,fixture.entities.length);assert.equal(fixture.entities.length,14);
+  e.state.entities.forEach((entity,index)=>{
+    const expected=fixture.entities[index];assert.equal(entity.type==='RECTANG'?'PLINE':entity.type,expected.type,`entity ${index} type`);assert.equal(entity.layer,expected.layer);
+    if(entity.type==='LINE'){point(entity.start,[expected.start.x,expected.start.y]);point(entity.end,[expected.end.x,expected.end.y]);}
+    else if(entity.type==='CIRCLE'){point(entity.center,[expected.center.x,expected.center.y]);assert.equal(entity.radius,expected.radius);}
+    else{assert.equal(entity.type==='RECTANG'||entity.closed,expected.closed);assert.equal(entity.points.length,expected.points.length);entity.points.forEach((p,j)=>point(p,[expected.points[j].x,expected.points[j].y]));}
+  });
+});
 
-
-test('COPYBASE base-first grammar accepts base first, then prompted selection; pickfirst still asks for base',()=>{
+test('native COPYBASE grammar accepts base first, then prompted selection; pickfirst still asks for base',()=>{
   const e=core.createEditor({entities:fixtureEntities()});accepted(e,['COPYBASE']);assert.equal(e.state.commandPhase,'base');accepted(e,['10,20']);assert.equal(e.state.commandPhase,'selection');accepted(e,['L','']);point(e.getClipboard().base,[10,20]);assert.equal(e.getClipboard().entities[0].type,'RECTANG');
   e.select(['a']);accepted(e,['COPYBASE']);assert.equal(e.state.commandPhase,'base');accepted(e,['30,40']);assert.equal(e.state.command,null);point(e.getClipboard().base,[30,40]);assert.equal(e.getClipboard().entities[0].type,'LINE');
 });
@@ -1158,7 +1211,32 @@ test('circle intersections retain tangencies under floating-point roundoff and r
   }
 });
 
-
+test('actual LT 2027 combined DXF: clipboard base placement, atomic Cut adapter, ARC, JOIN and EXPLODE match all twenty-five measured entities',async()=>{
+  const base=JSON.parse(await readFile(new URL('../evidence/study-1.2/editing-observed-geometry.json',import.meta.url),'utf8'));
+  const fixture=JSON.parse(await readFile(new URL('../evidence/study-1.2/clipboard-curves-observed-geometry.json',import.meta.url),'utf8'));
+  const native=await readFile(new URL('../evidence/study-1.2/AutoCAD-clipboard-curves-geometry.dxf',import.meta.url));
+  assert.equal(fixture.observed,true);assert.equal(createHash('sha256').update(native).digest('hex'),fixture.sha256);
+  const e=core.createEditor({entities:base.entities});accepted(e,[
+    'LINE','600,0','650,0','', 'COPYBASE','600,0','L','', 'PASTECLIP','600,100',
+    'CIRCLE','700,20','10', 'COPYCLIP','L','', 'PASTECLIP','750,100',
+    'LINE','800,0','820,0','', 'CUTCLIP','L',''
+  ]);
+  assert.equal(e.state.commandPhase,'clipboard-ready');assert.equal(e.finishClipboardCut(true).ok,true); // Native OS write is separately tested before this acknowledgement.
+  accepted(e,['PASTECLIP','800,100', 'ARC','600,200','620,220','640,200',
+    'LINE','900,0','930,0','930,30','', 'JOIN','910,0','930,20','', 'RECTANG','1000,0','1040,20', 'EXPLODE','L','']);
+  const positive=angle=>{const value=angle%360;return value<0?value+360:value;};
+  const canonical=entity=>{
+    const output={type:entity.type==='RECTANG'?'PLINE':entity.type,layer:entity.layer};
+    if(entity.type==='LINE'){output.start=entity.start;output.end=entity.end;}
+    else if(entity.type==='CIRCLE'){output.center=entity.center;output.radius=entity.radius;}
+    else if(entity.type==='ARC'){output.center=entity.center;output.radius=entity.radius;output.startAngle=positive(entity.startAngle+(entity.sweepAngle<0?entity.sweepAngle:0));output.sweepAngle=Math.abs(entity.sweepAngle);}
+    else{output.points=entity.points;output.closed=entity.type==='RECTANG'||entity.closed;}
+    return JSON.stringify(output);
+  };
+  assert.equal(e.state.entities.length,25);assert.equal(fixture.entities.length,25);
+  assert.deepEqual(e.state.entities.map(canonical).sort(),fixture.entities.map(canonical).sort()); // Native JOIN appends its new entity; engine retains the first source ID/order.
+  const pasted=e.state.entities.find(entity=>entity.type==='CIRCLE'&&entity.center.x===760);assert.ok(pasted);point(pasted.center,[760,110]);
+});
 
 test('legacy drawings gain independent annotation/style/settings defaults and round-trip without changing existing geometry',()=>{
   const e=core.createEditor({entities:fixtureEntities()});assert.equal(e.state.currentTextStyle,'Standard');assert.equal(e.state.textStyles[0].fontFamily,'Arial');assert.equal(e.state.settings.units,'unitless');assert.equal(e.state.settings.gridAdaptive,true);assert.deepEqual(e.state.entities,fixtureEntities());assert.deepEqual(core.createEditor(JSON.parse(e.serialize())).state.entities,e.state.entities);
@@ -1278,7 +1356,25 @@ test('dimension arrows that collapse below world-coordinate resolution never sel
   assert.equal(core.hitTest(e.state.entities,{x:0,y:500},.1,e.state),null);assert.deepEqual(core.entitiesInBox(e.state.entities,{x:1,y:501},{x:-1,y:499},true,e.state),[]);
 });
 
-
+test('actual LT 2027 annotation DXF: two TEXT, MTEXT and five dimensions match measured definitions with disclosed context adapters',async()=>{
+  const fixture=JSON.parse(await readFile(new URL('../evidence/study-1.3/annotation-observed.json',import.meta.url),'utf8'));
+  const bytes=await readFile(new URL('../evidence/study-1.3/AutoCAD-annotation-geometry.dxf',import.meta.url)),script=await readFile(new URL('../evidence/study-1.3/annotation-corrected-sequences.scr',import.meta.url));
+  assert.equal(fixture.observed,true);assert.equal(createHash('sha256').update(bytes).digest('hex'),fixture.sha256);assert.equal(createHash('sha256').update(script).digest('hex'),fixture.scriptSHA256);
+  const corpus=JSON.parse(await readFile(new URL('./annotation-corpus.json',import.meta.url),'utf8')),item=corpus.cases[0],e=core.createEditor();assert.equal(item.observed,true);assert.equal(e.updateDrawingSettings(item.settingsAdapter).ok,true);accepted(e,item.commands);
+  const actual=e.state.entities.filter(entity=>['TEXT','MTEXT','DIMENSION'].includes(entity.type));assert.equal(actual.length,8);assert.equal(e.state.entities.length,11);
+  actual.forEach((entity,index)=>{
+    const expected=fixture.annotations[index];assert.equal(entity.type,expected.type);assert.equal(entity.layer,expected.layer);
+    if(entity.type!=='DIMENSION'){assert.equal(entity.text,expected.content);point(entity.position,[expected.position.x,expected.position.y]);assert.equal(entity.height,expected.height);assert.equal(entity.rotation,expected.rotation);if(entity.type==='MTEXT')assert.equal(entity.width,expected.width);return;}
+    assert.equal(entity.kind,expected.subtype.toLowerCase());assert.ok(Math.abs(core.formatDimension(entity,e.state).measurement-expected.measuredValue)<1e-8);
+    if(['linear','aligned'].includes(entity.kind)){
+      point(entity.p1,[expected.p1.x,expected.p1.y]);point(entity.p2,[expected.p2.x,expected.p2.y]);const angle=entity.kind==='linear'?entity.axisAngle*Math.PI/180:Math.atan2(entity.p2.y-entity.p1.y,entity.p2.x-entity.p1.x),nx=-Math.sin(angle),ny=Math.cos(angle);
+      const sourceOffset=(entity.placement.x-entity.p1.x)*nx+(entity.placement.y-entity.p1.y)*ny,nativeOffset=(expected.definitionPoint.x-entity.p1.x)*nx+(expected.definitionPoint.y-entity.p1.y)*ny;assert.ok(Math.abs(sourceOffset-nativeOffset)<1e-8);
+    }else{
+      const center=entity.kind==='radius'?expected.definitionPoint:{x:(expected.definitionPoint.x+expected.point15.x)/2,y:(expected.definitionPoint.y+expected.point15.y)/2};point(entity.center,[center.x,center.y]);assert.ok(Math.abs(entity.radius-expected.measuredValue/(entity.kind==='diameter'?2:1))<1e-8);
+      const sourceDirection={x:entity.placement.x-entity.center.x,y:entity.placement.y-entity.center.y},nativeDirection={x:expected.point15.x-center.x,y:expected.point15.y-center.y};const sourceLength=Math.hypot(sourceDirection.x,sourceDirection.y),nativeLength=Math.hypot(nativeDirection.x,nativeDirection.y);point({x:sourceDirection.x/sourceLength,y:sourceDirection.y/sourceLength},[nativeDirection.x/nativeLength,nativeDirection.y/nativeLength]);
+    }
+  });
+});
 
 test('explicit null annotation preferences and overrides reject atomically instead of silently defaulting',()=>{
   const e=core.createEditor();accepted(e,['DIMLINEAR','0,0','10,0','5,5']);const before=e.serialize();
@@ -1286,7 +1382,7 @@ test('explicit null annotation preferences and overrides reject atomically inste
   assert.equal(e.setDimensionProperties(e.state.entities[0].id,{textOverride:null}).ok,false);assert.equal(e.serialize(),before);
 });
 
-test('MTEXT literal percent, Unicode-looking slash, braces and carets use literal control separators',()=>{
+test('MTEXT literal percent, Unicode-looking slash, braces and carets use native-proven control separators',()=>{
   const e=core.createEditor();accepted(e,['MTEXT','0,100','H','5','200,0']);
   const content=String.raw`50% | %%d | \P | {braces} | ^J | ^M | \U+1234`;
   assert.equal(e.submitText(content).ok,true);const saved=e.serialize(),dxf=e.exportDXF();
@@ -1887,9 +1983,46 @@ test('paper BLOCK definitions are owner-neutral while inserted children inherit 
   const{e,layoutId}=paperFixture();e.updateDrawingSettings(core.UNIT_PRESETS.architectural);e.setSpace('paper',layoutId);accepted(e,['DIMLINEAR','0,0','100,0','50,10']);const sourceId=e.getPaperEntities()[0].id;accepted(e,['BLOCK','PaperTitle','0,0',sourceId,'']);assert.equal(e.state.blocks[0].entities[0].layoutId,undefined);assert.equal(e.getPaperEntities()[0].type,'INSERT');const children=core.expandedInsertEntities(e.getPaperEntities()[0],e.state);assert.equal(children[0].layoutId,layoutId);assert.equal(core.formatDimension(children[0],e.state).label,'100.00');const reopened=core.createEditor(JSON.parse(e.serialize()));assert.equal(reopened.getPaperEntities()[0].type,'INSERT');assert.equal(reopened.state.blocks[0].entities[0].layoutId,undefined);accepted(e,['U']);assert.equal(e.getPaperEntities()[0].type,'DIMENSION');assert.equal(core.formatDimension(e.getPaperEntities()[0],e.state).label,'100.00');
 });
 
+const nativeLayoutReference=async()=>{
+  const observed=JSON.parse(await readFile(new URL('../evidence/study-1.6/native-layout-observed.json',import.meta.url),'utf8'));
+  const bytes=await readFile(new URL(`../${observed.sourceFile}`,import.meta.url));
+  assert.equal(observed.observed,true);assert.equal(bytes.length,observed.sourceBytes);
+  assert.equal(createHash('sha256').update(bytes).digest('hex'),observed.sourceSHA256);
+  return observed;
+};
 const xyzArray=p=>[p.x,p.y,p.z??0];
-
-
+test('actual LT UCS reference: local LINE, analytic CIRCLE and RECTANG reproduce exact measured WCS geometry',async()=>{
+  const observed=await nativeLayoutReference(),e=core.createEditor({settings:{units:'mm'}});
+  e.addLayer('LC-UCS');e.setCurrentLayer('LC-UCS');
+  accepted(e,['UCS','3POINT','100,200,300','200,200,300','100,200,400','LINE','0,0,0','100,50,0','','CIRCLE','50,50,0','10','RECTANG','0,0','100,50']);
+  const native=observed.modelEntities.filter(entity=>entity.layer==='LC-UCS'),[path,circle,rectangle]=e.getModelEntities();
+  // Native LINE/LWPOLYLINE are represented as true XYZ paths in this bounded
+  // engine; compare geometry rather than asserting identical entity types.
+  assert.equal(path.type,'POLY3D');assert.deepEqual(path.points.map(xyzArray),[native[0].start,native[0].end]);
+  assert.equal(circle.type,'CIRCLE3D');assert.deepEqual(xyzArray(circle.center),native[1].centerWCS);assert.equal(circle.radius,native[1].radius);
+  assert.deepEqual(xyzArray(core.normalizeUCS({origin:circle.center,xAxis:circle.xAxis,yAxis:circle.yAxis}).zAxis),native[1].normal);
+  assert.equal(rectangle.type,'POLY3D');assert.equal(rectangle.closed,native[2].closed);assert.deepEqual(rectangle.points.map(xyzArray),native[2].pointsWCS);
+  assert.deepEqual(xyzArray(e.state.ucs.origin),observed.headers.$UCSORG);assert.deepEqual(xyzArray(e.state.ucs.xAxis),observed.headers.$UCSXDIR);assert.deepEqual(xyzArray(e.state.ucs.yAxis),observed.headers.$UCSYDIR);
+  assert.deepEqual(core.createEditor(JSON.parse(e.serialize())).getModelEntities(),e.getModelEntities());
+});
+test('actual LT layout reference: authored paper line and two viewport frames/scales/lock/freeze match independently parsed native values',async()=>{
+  const observed=await nativeLayoutReference(),native=observed.layouts.find(layout=>layout.name==='LC-A3'),e=core.createEditor({settings:{units:'mm'}});
+  for(const name of ['LC-Model','LC-Detail','LC-Viewport','LC-Paper'])e.addLayer(name);
+  e.setCurrentLayer('LC-Model');accepted(e,['RECTANG','0,0','1000,500']);e.setCurrentLayer('LC-Detail');line(e,'0,200','1000,200');
+  const sheet=e.addLayout(native.name,{size:'A3',orientation:'landscape'});assert.equal(sheet.ok,true);
+  assert.deepEqual([sheet.layout.paper.widthMm,sheet.layout.paper.heightMm],native.orientedPaperWidthHeightMm);
+  // Native ID1 is paper-display metadata; ID2 is an automatic viewport that
+  // predates the authored sequence. Only deliberate IDs3/4 are adapted here.
+  const authored=native.viewports.filter(view=>[3,4].includes(view.id));assert.equal(authored.length,2);assert.ok(native.viewports.some(view=>view.id===2));
+  for(const measured of authored){
+    const made=e.addViewport(sheet.layoutId,measured.frame,{layer:measured.layer,modelCenter:{x:measured.modelCenterDCS[0],y:measured.modelCenterDCS[1],z:0},scaleDenominator:1/measured.paperPerModelUnit,locked:measured.locked,frozenLayers:measured.frozenLayers});assert.equal(made.ok,true);
+    const view=made.viewport;assert.deepEqual(view.frame,measured.frame);assert.equal(view.locked,measured.locked);assert.deepEqual(view.frozenLayers,measured.frozenLayers);
+    const a=core.viewportModelToPaper({x:0,y:200,z:0},view,e.state.settings),b=core.viewportModelToPaper({x:1000,y:200,z:0},view,e.state.settings);
+    assert.equal(b.x-a.x,1000*measured.paperPerModelUnit);assert.equal(view.frame.height*view.scaleDenominator,measured.modelViewHeight);
+    assert.equal(core.isEntityVisible(e.getModelEntities()[1],e.state,{space:'paper',layoutId:sheet.layoutId,viewportId:view.id}),!measured.frozenLayers.includes('LC-Detail'));
+  }
+  e.setSpace('paper',sheet.layoutId);e.setCurrentLayer('LC-Paper');line(e,'20,150','120,150');const paper=e.getPaperEntities()[0];assert.deepEqual(xyzArray(paper.start),native.entities[0].start);assert.deepEqual(xyzArray(paper.end),native.entities[0].end);assert.equal(e.getModelEntities().length,2);
+});
 test('conditional DXF UCS and elevation headers preserve WCS basis and independent local elevation without mutating geometry',()=>{
   const e=core.createEditor();accepted(e,['UCS','3POINT','100,200,300','200,200,300','100,200,400']);e.updateDraftingSettings({constructionElevation:12});accepted(e,['CIRCLE','50,50','10']);
   const saved=e.serialize(),rows=e.exportDXF().split(/\r?\n/),headers={};let name=null;
@@ -1898,7 +2031,11 @@ test('conditional DXF UCS and elevation headers preserve WCS basis and independe
   assert.deepEqual(e.state.entities[0].center,{x:150,y:188,z:350});
   const elevationOnly=core.createEditor();elevationOnly.updateDraftingSettings({constructionElevation:-2});const dxf=elevationOnly.exportDXF();assert.ok(dxf.includes('9\r\n$ELEVATION\r\n40\r\n-2\r\n'));assert.equal(dxf.includes('$UCSORG'),false);
 });
-
+test('default World and zero elevation DXF retains the pre-layout advanced reference bytes exactly',async()=>{
+  const data=JSON.parse(await readFile(new URL('../samples/advanced-v14-reference.linecraft',import.meta.url),'utf8')),expected=await readFile(new URL('../samples/advanced-v14-reference.dxf',import.meta.url));
+  assert.equal(createHash('sha256').update(expected).digest('hex'),'a933adc7f740f275e4107f36d77d2a306955d868b3419b97ba28ba29766daf65');
+  const actual=Buffer.from(core.createEditor(data).exportDXF(),'utf8');assert.deepEqual(actual,expected);assert.equal(actual.includes(Buffer.from('$UCSORG')),false);assert.equal(actual.includes(Buffer.from('$ELEVATION')),false);
+});
 
 const viewportObjectFixture=()=>{const{e,layoutId,viewportId}=paperFixture();e.setSpace('paper',layoutId);return{e,layoutId,viewportId,proxy:()=>e.getPaperObjects(layoutId).find(object=>object.type==='VIEWPORT'&&object.viewportId===viewportId),view:()=>e.state.layouts.find(layout=>layout.id===layoutId).viewports.find(view=>view.id===viewportId)};};
 test('paper viewport proxy geometry supplies normal edge picks, windows, endpoints, midpoint snaps and shared grip previews',()=>{
@@ -1936,12 +2073,23 @@ test('polygon DXF viewport clipping flags point at owned closed LWPOLYLINEs in e
 test('deleting a historic geometry ID equal to a viewport namespace never deletes the unselected frame or changes its session token',()=>{
   const{e,layoutId,viewportId,proxy}=viewportObjectFixture(),raw=JSON.parse(e.serialize()),collisionId=proxy().id;raw.layouts[0].entities=[{id:collisionId,type:'LINE',layer:'0',start:{x:0,y:150},end:{x:100,y:150}}];const target=core.createEditor(raw),frame=target.getPaperObjects(layoutId).find(object=>object.type==='VIEWPORT'),before=target.serialize();assert.notEqual(frame.id,collisionId);target.select([collisionId]);assert.equal(target.getSelectionObjects()[0].type,'LINE');assert.equal(target.deleteSelected().ok,true);assert.equal(target.getPaperEntities().length,0);assert.equal(target.getPaperObjects(layoutId).length,1);assert.equal(target.getPaperObjects(layoutId)[0].id,frame.id);assert.equal(target.state.layouts[0].viewports[0].id,viewportId);accepted(target,['U']);assert.equal(target.serialize(),before);target.select([collisionId,frame.id]);accepted(target,['ERASE']);assert.equal(target.getPaperObjects(layoutId).length,0);accepted(target,['U']);assert.equal(target.serialize(),before);
 });
-
+test('actual native viewport SCALE DXF retains scale but compensates model view center to keep paper projection anchored',async()=>{
+  const bytes=await readFile(new URL('../evidence/study-1.7/native-scale.dxf',import.meta.url));assert.equal(createHash('sha256').update(bytes).digest('hex'),'617e30ab1248ce018fc94203ce0a52954942b64fac29d88741f0ba37a28264bb');const lines=bytes.toString('utf8').trimEnd().split(/\r?\n/),records=[];let record;for(let i=0;i<lines.length;i+=2){const code=Number(lines[i]),value=lines[i+1].trim();if(code===0){record={type:value,pairs:[]};records.push(record);}else record?.pairs.push([code,value]);}const field=(r,c)=>r.pairs.find(pair=>pair[0]===c)?.[1],native=records.find(record=>record.type==='VIEWPORT'&&field(record,5)==='9A');assert.ok(native);
+  const e=core.createEditor({settings:{units:'mm'}});accepted(e,['REC','0,0','1000,500']);const sheet=e.addLayout('LC-VP17'),made=e.addViewport(sheet.layoutId,{x:20,y:20,width:100,height:60},{modelCenter:{x:500,y:250,z:0},scaleDenominator:10});e.setSpace('paper',sheet.layoutId);e.select([made.viewportId]);const source=structuredClone(e.state.layouts[0].viewports[0]),model=structuredClone(e.getModelEntities());accepted(e,['SCALE','0,0','2']);const actual=e.state.layouts[0].viewports[0];assert.equal(actual.frame.width,Number(field(native,40)));assert.equal(actual.frame.height,Number(field(native,41)));assert.equal(actual.frame.x+actual.frame.width/2,Number(field(native,10)));assert.equal(actual.frame.y+actual.frame.height/2,Number(field(native,20)));assert.deepEqual(actual.modelCenter,{x:Number(field(native,12)),y:Number(field(native,22)),z:0});assert.equal(1/actual.scaleDenominator,Number(field(native,41))/Number(field(native,45)));assert.deepEqual(e.getModelEntities(),model);const before=core.viewportModelToPaper({x:0,y:0},source,e.state.settings),after=core.viewportModelToPaper({x:0,y:0},actual,e.state.settings);point(after,[before.x,before.y]);assert.deepEqual(actual.camera3d.target,actual.modelCenter);
+});
 test('resize compensation preserves absolute paper positions in inch front and oblique orthographic windows across SCALE and grips',()=>{
   for(const camera of [{yaw:-90,pitch:0,roll:0},{yaw:35,pitch:25,roll:17}]){const{e,layoutId,viewportId,proxy,view}=viewportObjectFixture();assert.equal(e.updateViewport(layoutId,viewportId,{workspace:'3d',camera3d:camera,modelCenter:{x:5,y:10,z:20}}).ok,true);const source=structuredClone(view()),world={x:15,y:-2,z:34},old=core.viewportModelToPaper(world,source,e.state.settings);e.select([proxy().id]);accepted(e,['SCALE','-40,25','1.7']);const scaled=core.viewportModelToPaper(world,view(),e.state.settings);point(scaled,[old.x,old.y]);assert.equal(view().scaleDenominator,source.scaleDenominator);accepted(e,['U']);assert.deepEqual(view(),source);assert.equal(e.moveGrip(proxy().id,2,{x:250,y:160}).ok,true);const gripped=core.viewportModelToPaper(world,view(),e.state.settings);point(gripped,[old.x,old.y]);accepted(e,['U']);assert.deepEqual(view(),source);}
 });
 test('frame relocation moves content while dimensional frame or polygon resize keeps paper projection and malformed null APIs reject atomically',()=>{
   const{e,layoutId,viewportId,view}=viewportObjectFixture(),world={x:650,y:20,z:0},original=structuredClone(view()),a=core.viewportModelToPaper(world,original,e.state.settings);assert.equal(e.updateViewport(layoutId,viewportId,{frame:{...original.frame,x:30,y:40}}).ok,true);const moved=core.viewportModelToPaper(world,view(),e.state.settings);point(moved,[a.x+20,a.y+30]);assert.deepEqual(view().modelCenter,original.modelCenter);const beforeResize=structuredClone(view());assert.equal(e.updateViewport(layoutId,viewportId,{frame:{...view().frame,width:300,height:160}}).ok,true);const resized=core.viewportModelToPaper(world,view(),e.state.settings);point(resized,[moved.x,moved.y]);assert.equal(view().scaleDenominator,beforeResize.scaleDenominator);const saved=e.serialize();for(const key of ['frame','modelCenter','camera3d']){assert.equal(e.updateViewport(layoutId,viewportId,{[key]:null}).ok,false);assert.equal(e.serialize(),saved);}
 });
-
-
+test('actual native corner grip and subsequent MOVE retain physical ratio with resize compensation versus whole-window translation',async()=>{
+  const observed=JSON.parse(await readFile(new URL('../evidence/study-1.7/native-viewport-values.json',import.meta.url),'utf8'));for(const name of ['native-grip.dxf','native-move.dxf']){const bytes=await readFile(new URL(`../evidence/study-1.7/${name}`,import.meta.url));assert.equal(createHash('sha256').update(bytes).digest('hex'),observed[name].sha256);}const nativeGrip=observed['native-grip.dxf'].viewports[0],nativeMove=observed['native-move.dxf'].viewports[0],e=core.createEditor({settings:{units:'mm'}}),sheet=e.addLayout('LC-VP17'),made=e.addViewport(sheet.layoutId,{x:20,y:20,width:100,height:60},{modelCenter:{x:500,y:250,z:0},scaleDenominator:10});e.setSpace('paper',sheet.layoutId);e.select([made.viewportId]);accepted(e,['SCALE','0,0','2']);const proxy=e.getSelectionObjects()[0]??e.getPaperObjects()[0],target={x:Number(nativeGrip[10])+Number(nativeGrip[40])/2,y:Number(nativeGrip[20])+Number(nativeGrip[41])/2};assert.equal(e.moveGrip(proxy.id,2,target).ok,true);
+  const compare=measured=>{const view=e.state.layouts[0].viewports[0],actual=[view.frame.x+view.frame.width/2,view.frame.y+view.frame.height/2,view.frame.width,view.frame.height,view.modelCenter.x,view.modelCenter.y,view.frame.height*view.scaleDenominator],expected=[10,20,40,41,12,22,45].map(code=>Number(measured[code]));actual.forEach((number,i)=>assert.ok(Math.abs(number-expected[i])<1e-8,`${i}: ${number} != ${expected[i]}`));assert.equal(view.scaleDenominator,10);};compare(nativeGrip);const center=structuredClone(e.state.layouts[0].viewports[0].modelCenter);e.select([proxy.id]);accepted(e,['MOVE','0,0','@10,5']);compare(nativeMove);assert.deepEqual(e.state.layouts[0].viewports[0].modelCenter,center);
+});
+test('actual native MVIEW Polygon supplies the exact concave clip, AABB and enabled clipping pointer with an explicit initial-view adapter',async()=>{
+  const observed=JSON.parse(await readFile(new URL('../evidence/study-1.7/native-viewport-values.json',import.meta.url),'utf8')),bytes=await readFile(new URL('../evidence/study-1.7/native-polygon.dxf',import.meta.url));assert.equal(createHash('sha256').update(bytes).digest('hex'),observed['native-polygon.dxf'].sha256);const lines=bytes.toString('utf8').trimEnd().split(/\r?\n/),records=[];let record;for(let i=0;i<lines.length;i+=2){const code=Number(lines[i]),value=lines[i+1].trim();if(code===0){record={type:value,pairs:[]};records.push(record);}else record?.pairs.push([code,value]);}const field=(r,c)=>r.pairs.find(pair=>pair[0]===c)?.[1],native=records.find(r=>r.type==='VIEWPORT'&&field(r,5)==='BC'),clip=records.find(r=>field(r,5)===field(native,340));assert.equal(clip.type,'LWPOLYLINE');assert.ok(Number(field(native,90))&65536);assert.ok(Number(field(clip,70))&1);const xs=clip.pairs.filter(p=>p[0]===10).map(p=>Number(p[1])),ys=clip.pairs.filter(p=>p[0]===20).map(p=>Number(p[1])),points=xs.map((x,i)=>({x,y:ys[i]})),e=core.createEditor({settings:{units:'mm'}});accepted(e,['PSPACE','MVIEW','P',...points.map(p=>`${p.x},${p.y}`),'C']);const view=e.state.layouts[0].viewports[0];assert.deepEqual(view.boundary,points);assert.equal(view.frame.width,Number(field(native,40)));assert.equal(view.frame.height,Number(field(native,41)));assert.equal(view.frame.x+view.frame.width/2,Number(field(native,10)));assert.equal(view.frame.y+view.frame.height/2,Number(field(native,20)));
+  // Native creation inherited another initial model view; this adapter is
+  // explicit, rather than asserting identical unobserved default policy.
+  assert.equal(e.updateViewport(e.state.activeLayoutId,view.id,{modelCenter:{x:Number(field(native,12)),y:Number(field(native,22)),z:0},scaleDenominator:Number(field(native,45))/Number(field(native,41))}).ok,true);assert.equal(e.state.layouts[0].viewports[0].scaleDenominator,10);assert.equal(core.pointInViewport({x:50,y:120},e.state.layouts[0].viewports[0]),true);assert.equal(core.pointInViewport({x:140,y:120},e.state.layouts[0].viewports[0]),false);
+});

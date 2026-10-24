@@ -1,0 +1,2 @@
+# Runtime qualification binds exact bytes, including original line endings.
+* -text

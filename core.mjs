@@ -1,9 +1,23 @@
 /* Linecraft geometry and command engine. Original implementation; no external dependencies. */
 import {validateEllipse,ellipsePoint,ellipseBoundsPoints,validateSpline,makeClampedKnots,splinePoint,splineBezierSegments,splineBoundsPoints,sampleCurve,boundaryPolygon,boundaryContains,hatchGeometry,filletLines,chamferLines} from './advanced-geometry.mjs';
 import {parseLength,parseAngle,formatLength,formatAngle,formatArea,UNIT_PRESETS,UNIT_SETTINGS_DEFAULTS,normalizeUnitSettings,dxfUnitFormat} from './units.mjs';
-import {PAPER_SIZES,LINETYPES,modelUnitMillimeters,normalizePaper,normalizeLayouts,normalizePaperViewport,normalizePaperView,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible,viewportBoundaryPoints,viewportFrameFromPoints,normalizeViewportBoundary,viewportAsObject,compensateViewportResize} from './paper-space.mjs';
+import {PAPER_SIZES,LINETYPES,modelUnitMillimeters,normalizePaper,normalizeLayouts,normalizePaperViewport,normalizePaperView,normalizeFrame,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible,viewportBoundaryPoints,viewportFrameFromPoints,normalizeViewportBoundary,viewportAsObject,compensateViewportResize} from './paper-space.mjs';
 import {presetUCS,normalizeUCS,ucsFromThreePoints,constructionPlane,planeToWorld,worldToPlane,intersectPlaneRay,planeCamera,spatialCurvePoint,spatialAngleOnArc,spatialCurveBounds,validateSpatialCurve,sampleSpatialCurve,spatialCurveOCS} from './drawing-plane.mjs';
 import {parseViewportZoomFactor} from './viewport-scales.mjs';
+import {FONT_FAMILIES,canonicalFontFamily,measureFontText} from './font-metrics.mjs';
+import {parseRichText,normalizeRichText,layoutRichText,scaleRichTextSource} from './rich-text.mjs';
+export {FONT_FAMILIES,canonicalFontFamily,registerFontMetrics,measureFontText,clearFontMetrics} from './font-metrics.mjs';
+export {parseRichText} from './rich-text.mjs';
+import {normalizeArchitecture,ARCHITECTURE_SCHEMA_VERSION} from './architecture/model.mjs';
+import {applyArchitectureEdit,generateArchitecture} from './architecture/editor-adapter.mjs';
+import {buildRoomSection} from './architecture/sections.mjs';
+import {physicalScale} from './architecture/units-adapter.mjs';
+import {TRIM_TARGET_TYPES,trimEntityGeometry,trimFenceHits,trimProjection,trimTargetDistance} from './trim-geometry.mjs';
+import {perpendicularSnapCandidates} from './object-snaps.mjs';
+export {roofBoundaryFromWalls} from './architecture/plan-topology.mjs';
+export {fromWorld as architectureWorldToLocal,toWorld as architectureLocalToWorld} from './architecture/units-adapter.mjs';
+const ARCHITECTURE_PREFIX='@architecture/';
+const architecturalEntity=entity=>typeof entity?.id==='string'&&entity.id.startsWith(ARCHITECTURE_PREFIX);
 export {PAPER_SIZES,LINETYPES,modelUnitMillimeters,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible,viewportBoundaryPoints,viewportFrameFromPoints,normalizeViewportBoundary,viewportAsObject,compensateViewportResize,presetUCS,normalizeUCS,ucsFromThreePoints,constructionPlane,planeToWorld,worldToPlane,intersectPlaneRay,planeCamera};
 export {spatialCurvePoint,spatialCurveBounds,validateSpatialCurve,sampleSpatialCurve};
 export {parseLength,parseAngle,formatLength,formatAngle,formatArea,UNIT_PRESETS,dxfUnitFormat};
@@ -22,10 +36,13 @@ const SELECT_COMMANDS = new Set([...TRANSFORMS, 'ERASE', 'COPYCLIP', 'COPYBASE',
 const TYPES3D=new Set(['MESH','POLY3D','CIRCLE3D','ARC3D']),SPATIAL_CURVES=new Set(['CIRCLE3D','ARC3D']),DRAW3D=new Set(['BOX','CYLINDER','SPHERE','3DPOLY']);
 const MAX_MESH_VERTICES=100000,MAX_MESH_FACES=200000,MAX_EXTRUSION_VERTICES=4096;
 const REPEATED_EDITS = new Set(['TRIM', 'EXTEND', 'OFFSET']);
+// Command aliases apply only at idle. Active prompt letters retain their own
+// meanings (for example COPY Mode and LINE Close/Undo).
+const IDLE_COMMAND_ALIASES=Object.freeze({BH:'HATCH',CYL:'CYLINDER',EXT:'EXTRUDE',LO:'LAYOUT'});
 const TEXT_TYPES=new Set(['TEXT','MTEXT']);
 const DIM_COMMANDS=new Set(['DIMLINEAR','DIMALIGNED','DIMRADIUS','DIMDIAMETER','DIMANGULAR']);
 const MIN_SCALE = 1e-6, MAX_SCALE = 1e6;
-const DEFAULT_SETTINGS={units:'unitless',precision:4,...UNIT_SETTINGS_DEFAULTS,gridEnabled:true,snapEnabled:true,orthoEnabled:false,snapModes:['endpoint','midpoint','center','quadrant'],gridAdaptive:true,gridSpacing:10,constructionElevation:0,constructionPlane:'XY'};
+const DEFAULT_SETTINGS={units:'unitless',precision:4,...UNIT_SETTINGS_DEFAULTS,gridEnabled:true,snapEnabled:true,orthoEnabled:false,snapModes:['endpoint','midpoint','center','quadrant'],gridAdaptive:true,gridSpacing:10,constructionElevation:0,constructionPlane:'XY',trimExtendMode:'quick',trimProject:'ucs',trimEdgeExtend:false};
 const DEFAULT_CAMERA3D={target:{x:0,y:0,z:0},orbitCenter:null,scale:10,yaw:45,pitch:35.264389682754654,roll:0,mode:'iso',renderMode:'shaded',projection:'orthographic',distance:200,fov:45,autoTarget:true};
 const DEFAULT_TEXT_STYLE={name:'Standard',fontFamily:'Arial',defaultHeight:2.5,defaultRotation:0,widthFactor:1};
 const DEFAULT_DIM_STYLE={name:'Standard',textStyle:'Standard',textHeight:2.5,arrowSize:2.5,gap:1,extensionOffset:1,extensionOvershoot:1.25,precision:2,scale:1,prefix:'',suffix:''};
@@ -34,10 +51,11 @@ function positive(value,label){if(!finite(value)||value<=0)throw new Error(`${la
 function normalizeTextStyle(raw){
   const style={...DEFAULT_TEXT_STYLE,...raw};
   if(!validLayerName(style.name))throw new Error('Text style name is invalid.');
-  if(!['Arial','Segoe UI','Consolas'].includes(style.fontFamily))throw new Error('Supported fonts are Arial, Segoe UI and Consolas.');
+  style.fontFamily=canonicalFontFamily(style.fontFamily);
   positive(style.defaultHeight,'Default text height');if(!finite(style.defaultRotation))throw new Error('Default text rotation must be finite.');style.defaultRotation%=360;
   if(!finite(style.widthFactor)||style.widthFactor<.01||style.widthFactor>100)throw new Error('Text width factor must be between 0.01 and 100.');
-  return {name:style.name,fontFamily:style.fontFamily,defaultHeight:style.defaultHeight,defaultRotation:style.defaultRotation,widthFactor:style.widthFactor};
+  if(raw?.metrics!==undefined&&raw.metrics!=='registered')throw Error('Text metric mode must be registered.');
+  return {name:style.name,fontFamily:style.fontFamily,defaultHeight:style.defaultHeight,defaultRotation:style.defaultRotation,widthFactor:style.widthFactor,...(raw?.metrics!==undefined?{metrics:raw.metrics}:{})};
 }
 function normalizeDimStyle(raw,textStyles){
   const style={...DEFAULT_DIM_STYLE,...raw};
@@ -48,7 +66,8 @@ function normalizeDimStyle(raw,textStyles){
   for(const key of ['prefix','suffix'])if(typeof style[key]!=='string'||style[key].length>256||/[\r\n\x00-\x1f]/.test(style[key])||style[key].includes('<>'))throw new Error('Dimension prefix/suffix must be plain single-line text of at most 256 characters without a measurement placeholder.');
   if(new TextEncoder().encode(`${escapeDXFMText(style.prefix)}<>${escapeDXFMText(style.suffix)}`).length>2048)throw new Error('Dimension prefix/suffix exceed the encoded exchange limit.');
   for(const key of ['fractionPrecision','angularPrecision'])if(raw?.[key]!==undefined&&(!Number.isInteger(raw[key])||raw[key]<0||raw[key]>8))throw new Error(`${key} must be an integer from zero through eight.`);
-  return {...Object.fromEntries(Object.keys(DEFAULT_DIM_STYLE).map(key=>[key,style[key]])),...Object.fromEntries(['fractionPrecision','angularPrecision'].filter(key=>raw?.[key]!==undefined).map(key=>[key,raw[key]]))};
+  if(raw?.arrowType!==undefined&&!['closed-filled','architectural-tick'].includes(raw.arrowType))throw Error('Unsupported dimension arrow type.');
+  return {...Object.fromEntries(Object.keys(DEFAULT_DIM_STYLE).map(key=>[key,style[key]])),...Object.fromEntries(['fractionPrecision','angularPrecision','arrowType'].filter(key=>raw?.[key]!==undefined).map(key=>[key,raw[key]]))};
 }
 function normalizeSettings(raw={}){
   if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new Error('Drawing settings must be an object.');
@@ -59,7 +78,8 @@ function normalizeSettings(raw={}){
   for(const key of ['gridEnabled','snapEnabled','orthoEnabled','gridAdaptive'])if(typeof settings[key]!=='boolean')throw new Error(`${key} must be boolean.`);
   positive(settings.gridSpacing,'Grid spacing');
   if(!finite(settings.constructionElevation)||!['XY','XZ','YZ','custom'].includes(settings.constructionPlane))throw new Error('Construction plane must be XY, XZ, YZ or custom with a finite elevation.');
-  if(!Array.isArray(settings.snapModes)||settings.snapModes.some(mode=>!['endpoint','midpoint','center','quadrant'].includes(mode)))throw new Error('Snap modes must be a supported subset.');
+  if(!['quick','standard'].includes(settings.trimExtendMode)||!['none','ucs','view'].includes(settings.trimProject)||typeof settings.trimEdgeExtend!=='boolean')throw new Error('Trim settings require Quick/Standard, None/UCS/View and a boolean implied-edge choice.');
+  if(!Array.isArray(settings.snapModes)||settings.snapModes.some(mode=>!['endpoint','midpoint','center','quadrant','perpendicular'].includes(mode)))throw new Error('Snap modes must be a supported subset.');
   settings.snapModes=[...new Set(settings.snapModes)];return Object.fromEntries(Object.keys(DEFAULT_SETTINGS).map(key=>[key,settings[key]]));
 }
 function validateText(entity,document){
@@ -69,6 +89,7 @@ function validateText(entity,document){
   if(entity.type==='TEXT'&&new TextEncoder().encode(escapeDXFText(entity.text)).length>2048)throw new Error('TEXT exceeds the 2048-byte encoded exchange limit; use MTEXT for longer content.');
   if(entity.type==='MTEXT')positive(entity.width,'MTEXT width');
   if(!document.textStyles.some(style=>style.name===entity.style))throw new Error('Entity text style does not exist.');
+  if(entity.richText!==undefined){if(entity.type!=='MTEXT')throw Error('Rich formatting is supported only by MTEXT.');entity.richText=normalizeRichText(entity.richText,entity,document.textStyles.find(s=>s.name===entity.style));}
   textLayout(entity,document).corners.forEach(point);
 }
 function styleContext(document={}){return{...document,textStyles:document.textStyles??[DEFAULT_TEXT_STYLE],dimStyles:document.dimStyles??[DEFAULT_DIM_STYLE],settings:document.settings??DEFAULT_SETTINGS};}
@@ -77,31 +98,34 @@ function glyphAdvance(character,font){
   if(character===' ')return .34;if(/[ilI.,'!|]/.test(character))return .28;if(/[MW@#]/.test(character))return .9;
   return character.codePointAt(0)>0x2ff?.8:.62;
 }
-function textWidth(text,height,style){return Array.from(text).reduce((sum,c)=>sum+glyphAdvance(c,style.fontFamily),0)*height*style.widthFactor;}
+function fallbackTextWidth(text,height,style){return Array.from(text).reduce((sum,c)=>sum+glyphAdvance(c,style.fontFamily),0)*height*style.widthFactor;}
+function usesFontMetrics(style){return style.metrics==='registered'||!['Arial','Segoe UI','Consolas'].includes(style.fontFamily);}
+function textWidth(text,height,style,heightMode='cap'){return(usesFontMetrics(style)?measureFontText(text,height,style.fontFamily,{widthFactor:style.widthFactor,heightMode})?.width:undefined)??fallbackTextWidth(text,height,style);}
 function textWorld(entity,x,y){const[c,s]=angleBasis(entity.rotation??0);return point({x:entity.position.x+x*c-y*s,y:entity.position.y+x*s+y*c});}
 
 /** Deterministic original metric approximation; Canvas and selection share wrapping and line positions. */
 export function textLayout(entity,rawDocument={}){
   const document=styleContext(rawDocument),style=document.textStyles.find(item=>item.name===entity.style)??DEFAULT_TEXT_STYLE;
+  if(entity.richText)return layoutRichText(entity,style,fallbackTextWidth);
   const content=entity.text.replace(/\r\n?/g,'\n').replace(/\t/g,'    '),lines=[];
   for(const paragraph of content.split('\n')){
     if(entity.type!=='MTEXT'){lines.push(paragraph);continue;}
     let current='',currentWidth=0;
     const flush=()=>{lines.push(current);current='';currentWidth=0;};
     for(const token of paragraph.match(/\S+|\s+/gu)??[]){
-      const tokenWidth=textWidth(token,entity.height,style);
+      const tokenWidth=textWidth(token,entity.height,style,entity.type==='MTEXT'?'mtext':'cap');
       if(current&&currentWidth+tokenWidth>entity.width)flush();
       if(tokenWidth<=entity.width){current+=token;currentWidth+=tokenWidth;continue;}
       for(const character of Array.from(token)){
-        const advance=glyphAdvance(character,style.fontFamily)*entity.height*style.widthFactor;
+        const advance=textWidth(character,entity.height,style,entity.type==='MTEXT'?'mtext':'cap');
         if(current&&currentWidth+advance>entity.width)flush();current+=character;currentWidth+=advance;
       }
     }
     lines.push(current);
   }
-  const widths=lines.map(line=>textWidth(line,entity.height,style)),width=Math.max(entity.type==='MTEXT'?entity.width:0,...widths),height=entity.height*(entity.type==='MTEXT'?Math.max(1,lines.length)*1.35:1.35);
+  const widths=lines.map(line=>textWidth(line,entity.height,style,entity.type==='MTEXT'?'mtext':'cap')),width=Math.max(entity.type==='MTEXT'?entity.width:0,...widths),height=entity.height*(entity.type==='MTEXT'?Math.max(1,lines.length)*1.35:1.35);
   const top=entity.type==='MTEXT'?0:entity.height,bottom=entity.type==='MTEXT'?-height:-entity.height*.35;
-  return{lines:lines.map((text,index)=>({text,position:textWorld(entity,0,entity.type==='MTEXT'?-entity.height*(index*1.35+1):0),width:widths[index],height:entity.height,rotation:entity.rotation??0,fontFamily:style.fontFamily,widthFactor:style.widthFactor,align:'left'})),corners:[[0,bottom],[width,bottom],[width,top],[0,top]].map(([x,y])=>textWorld(entity,x,y)),width,height,origin:{...entity.position},rotation:entity.rotation??0,fontFamily:style.fontFamily,widthFactor:style.widthFactor};
+  return{lines:lines.map((text,index)=>{const m=usesFontMetrics(style)?measureFontText(text,entity.height,style.fontFamily,{widthFactor:style.widthFactor,heightMode:entity.type==='MTEXT'?'mtext':'cap'}):null;return{text,position:textWorld(entity,0,entity.type==='MTEXT'?-entity.height*(index*1.35+1):0),width:widths[index],height:entity.height,rotation:entity.rotation??0,fontFamily:style.fontFamily,widthFactor:style.widthFactor,align:'left',...(usesFontMetrics(style)?{metricStatus:m?'registered':'fallback',...(m?{fontCapRatio:m.capHeight/m.unitsPerEm,fontSHA256:m.fontSHA256,renderText:m.renderText}:{})}:{})};}),corners:[[0,bottom],[width,bottom],[width,top],[0,top]].map(([x,y])=>textWorld(entity,x,y)),width,height,origin:{...entity.position},rotation:entity.rotation??0,fontFamily:style.fontFamily,widthFactor:style.widthFactor};
 }
 function validateDimension(entity,document){
   if(!['linear','aligned','radius','diameter','angular'].includes(entity.kind))throw new Error('Unsupported dimension kind.');
@@ -136,7 +160,14 @@ function angularDefinition(entity){
 }
 export function annotationPrimitives(entity,rawDocument={}){
   const document=styleContext(rawDocument);
-  if(TEXT_TYPES.has(entity.type)){const layout=textLayout(entity,document);return{segments:layout.corners.map((p,index)=>[p,layout.corners[(index+1)%4]]),arrows:[],texts:layout.lines,boundsPoints:layout.corners};}
+  if(TEXT_TYPES.has(entity.type)){const layout=textLayout(entity,document);return{segments:layout.corners.map((p,index)=>[p,layout.corners[(index+1)%4]]),arrows:[],texts:layout.lines,boundsPoints:layout.corners,...(layout.segments?{decorationSegments:layout.segments}:{}),...(layout.warnings?{warnings:layout.warnings}:{})};}
+  if(entity.type==='LEADER'){
+    const segments=entity.points.slice(0,-1).map((p,i)=>[p,entity.points[i+1]]),arrows=[],a=entity.points[0],b=entity.points[1],length=Math.hypot(b.x-a.x,b.y-a.y),u={x:(b.x-a.x)/length,y:(b.y-a.y)/length},v={x:-u.y,y:u.x},size=entity.arrowSize;
+    if(entity.arrowType==='architectural-tick'){const k=size;segments.push([{x:a.x-k*(u.x+v.x),y:a.y-k*(u.y+v.y)},{x:a.x+k*(u.x+v.x),y:a.y+k*(u.y+v.y)}]);}
+    else arrows.push([a,{x:a.x+u.x*size+v.x*size*.35,y:a.y+u.y*size+v.y*size*.35},{x:a.x+u.x*size-v.x*size*.35,y:a.y+u.y*size-v.y*size*.35}]);
+    const layout=textLayout({type:'TEXT',position:entity.points.at(-1),text:entity.text,height:entity.height,rotation:0,style:entity.style},document);
+    return{segments,arrows,texts:layout.lines,boundsPoints:[...segments.flat(),...arrows.flat(),...layout.corners],definitionPoints:entity.points};
+  }
   if(entity.type!=='DIMENSION')return{segments:[],arrows:[],texts:[],boundsPoints:[]};
   const style=document.dimStyles.find(item=>item.name===entity.style)??DEFAULT_DIM_STYLE,factor=style.scale*entity.scale,h=style.textHeight*factor,arrow=style.arrowSize*factor,gap=style.gap*factor;
   const{measurement,label}=formatDimension(entity,document),segments=[],arrows=[],definition=[];let q1,q2,u,v,labelPosition,rotation;
@@ -164,13 +195,39 @@ export function annotationPrimitives(entity,rawDocument={}){
     labelPosition=entity.placement;rotation=0;definition.push(entity.center,entity.placement);
   }
   rotation=readableAngle(rotation);
+  if(style.arrowType==='architectural-tick'&&entity.kind!=='angular'){
+    for(const triangle of arrows){const p=triangle[0],bx=midpoint(triangle[1].x,triangle[2].x)-p.x,by=midpoint(triangle[1].y,triangle[2].y)-p.y,length=Math.hypot(bx,by),dx=arrow*(bx-by)/length,dy=arrow*(by+bx)/length;segments.push([point({x:p.x-dx,y:p.y-dy}),point({x:p.x+dx,y:p.y+dy})]);}arrows.length=0;
+  }
   if(['linear','aligned'].includes(entity.kind)){const[c,s]=angleBasis(rotation);labelPosition=shifted({x:midpoint(q1.x,q2.x),y:midpoint(q1.y,q2.y)},{x:-s,y:c},gap+h*.6);}
   const textStyle=document.textStyles.find(item=>item.name===style.textStyle)??DEFAULT_TEXT_STYLE;
   const width=textWidth(label,h,textStyle),[c,s]=angleBasis(rotation),textOrigin=point({x:labelPosition.x-width/2*c,y:labelPosition.y-width/2*s});
   const layout=textLayout({type:'TEXT',position:textOrigin,text:label,height:h,rotation,style:style.textStyle},document);
-  return{segments,arrows,texts:[{text:label,position:labelPosition,width,height:h,rotation,fontFamily:textStyle.fontFamily,widthFactor:textStyle.widthFactor,align:'center'}],boundsPoints:[...segments.flat(),...arrows.flat(),...layout.corners],definitionPoints:definition,measurement,label,dimensionLine:[q1,q2]};
+  const fontFields=layout.lines[0].metricStatus?Object.fromEntries(['metricStatus','fontCapRatio','fontSHA256','renderText'].filter(k=>layout.lines[0][k]!==undefined).map(k=>[k,layout.lines[0][k]])):{};
+  return{segments,arrows,texts:[{text:label,position:labelPosition,width,height:h,rotation,fontFamily:textStyle.fontFamily,widthFactor:textStyle.widthFactor,align:'center',...fontFields}],boundsPoints:[...segments.flat(),...arrows.flat(),...layout.corners],definitionPoints:definition,measurement,label,dimensionLine:[q1,q2]};
 }
 export const dimensionGeometry=annotationPrimitives;
+function validateLeader(entity,document){
+  if(!Array.isArray(entity.points)||entity.points.length<2||entity.points.length>64)throw Error('LEADER requires 2 through 64 points.');entity.points.forEach(point);for(let i=1;i<entity.points.length;i++)if(samePoint(entity.points[i-1],entity.points[i]))throw Error('Adjacent LEADER points must differ.');
+  if(!['closed-filled','architectural-tick'].includes(entity.arrowType))throw Error('Unsupported leader arrow type.');positive(entity.arrowSize,'Leader arrow size');
+  validateText({type:'TEXT',position:entity.points.at(-1),text:entity.text,height:entity.height,rotation:0,style:entity.style},document);annotationPrimitives(entity,document).boundsPoints.forEach(point);
+}
+function normalizeImageResources(raw){
+  if(raw===undefined)return[];if(!Array.isArray(raw)||raw.length>64)throw Error('Image resources must be an array of at most 64 items.');let total=0;const ids=new Set();return raw.map(item=>{
+    if(!item||typeof item!=='object'||Array.isArray(item))throw Error('Malformed image resource.');for(const key of Object.keys(item))if(!['id','name','width','height','sourceName','mimeType','sha256','dataURL'].includes(key))throw Error('Unsupported image resource field.');
+    for(const key of ['id','name','sourceName'])if(typeof item[key]!=='string'||!item[key]||item[key].length>(key==='sourceName'?2048:255)||/[\x00-\x1f]/.test(item[key]))throw Error('Invalid image resource identity.');if(ids.has(item.id))throw Error('Duplicate image resource ID.');ids.add(item.id);
+    if(!Number.isInteger(item.width)||!Number.isInteger(item.height)||item.width<1||item.height<1||item.width>32768||item.height>32768||item.width*item.height>40000000)throw Error('Image dimensions exceed the 40M-pixel budget.');
+    if(item.mimeType!==undefined&&!['image/jpeg','image/png'].includes(item.mimeType))throw Error('Only JPEG/PNG image resources are supported.');if(item.sha256!==undefined&&!/^[a-f0-9]{64}$/i.test(item.sha256))throw Error('Invalid image resource SHA256.');
+    if(item.dataURL!==undefined){if(typeof item.dataURL!=='string'||item.dataURL.length>Math.ceil(8*1024*1024/3)*4+64)throw Error('Image resource exceeds 8MiB.');const match=/^data:(image\/(?:jpeg|png));base64,([A-Za-z0-9+/]*={0,2})$/.exec(item.dataURL);if(!match||match[2].length%4||item.mimeType!==undefined&&item.mimeType!==match[1])throw Error('Malformed inline JPEG/PNG resource.');const bytes=match[2].length*3/4-(match[2].endsWith('==')?2:match[2].endsWith('=')?1:0);total+=bytes;if(total>16*1024*1024)throw Error('Inline image resources exceed 16MiB.');const raw=Uint8Array.from(atob(match[2]),c=>c.charCodeAt(0)),view=new DataView(raw.buffer);let width,height;
+      if(match[1]==='image/png'){if(raw.length<33||![137,80,78,71,13,10,26,10].every((b,i)=>raw[i]===b)||view.getUint32(8)!==13||String.fromCharCode(...raw.slice(12,16))!=='IHDR')throw Error('Inline PNG header is invalid.');width=view.getUint32(16);height=view.getUint32(20);}
+      else{if(raw.length<4||raw[0]!==255||raw[1]!==216)throw Error('Inline JPEG header is invalid.');let p=2,segments=0;while(p<raw.length&&++segments<4096){if(raw[p++]!==255)throw Error('Malformed JPEG marker.');while(raw[p]===255)p++;const marker=raw[p++];if(marker===217||marker===218)break;if(marker===1||marker>=208&&marker<=215)continue;if(p+2>raw.length)throw Error('Truncated JPEG segment.');const length=view.getUint16(p);if(length<2||p+length>raw.length)throw Error('Truncated JPEG payload.');if([192,193,194,195,197,198,199,201,202,203,205,206,207].includes(marker)){if(length<8)throw Error('Invalid JPEG size segment.');height=view.getUint16(p+3);width=view.getUint16(p+5);break;}p+=length;}}
+      if(width!==item.width||height!==item.height)throw Error('Inline image dimensions disagree with the resource metadata.');}
+    return{...clone(item),...(item.dataURL&&item.mimeType===undefined?{mimeType:item.dataURL.startsWith('data:image/png;')?'image/png':'image/jpeg'}:{})};
+  });
+}
+function normalizeRasterSettings(raw){scriptRecordFields(raw,['frame'],['frame'],'Raster settings');if(!Number.isInteger(raw.frame)||raw.frame<0||raw.frame>2)throw Error('Image frame must be0(hidden),1(display and plot),or2(display only).');return{frame:raw.frame};}
+function imageCorners(entity){return[entity.position,point({x:entity.position.x+entity.uVector.x,y:entity.position.y+entity.uVector.y}),point({x:entity.position.x+entity.uVector.x+entity.vVector.x,y:entity.position.y+entity.uVector.y+entity.vVector.y}),point({x:entity.position.x+entity.vVector.x,y:entity.position.y+entity.vVector.y})];}
+function validateImage(entity,document){point(entity.position);point(entity.uVector);point(entity.vVector);const u=Math.hypot(entity.uVector.x,entity.uVector.y),v=Math.hypot(entity.vVector.x,entity.vVector.y);if(!u||!v||!finite(u)||!finite(v)||Math.abs(entity.uVector.x/u*entity.vVector.y/v-entity.uVector.y/u*entity.vVector.x/v)<1e-10)throw Error('IMAGE vectors must span a finite noncollapsed parallelogram.');if(!document.imageResources?.some(r=>r.id===entity.resourceId))throw Error('IMAGE resource does not exist.');imageCorners(entity);}
+export function dxfImageFileName(resource){return resource.sha256?`linecraft-image-${resource.sha256.toLowerCase()}.${resource.mimeType==='image/png'?'png':'jpg'}`:`linecraft-unresolved-${resource.id.replace(/[^a-z0-9_-]/gi,'_')}.${resource.mimeType==='image/png'?'png':'jpg'}`;}
 
 function midpoint(a, b) {
   if (a === b) return a;
@@ -392,7 +449,8 @@ export function entityPoints(entity,document={}) {
   if(entity.type==='INSERT')return visibleInsertEntities(entity,document).flatMap(child=>entityPoints(child,document));
   if(entity.type==='MESH')return entity.vertices;
   if(entity.type==='POLY3D')return entity.points;
-  if(TEXT_TYPES.has(entity.type)||entity.type==='DIMENSION')return annotationPrimitives(entity,document).boundsPoints;
+  if(entity.type==='IMAGE')return imageCorners(entity);
+  if(TEXT_TYPES.has(entity.type)||entity.type==='DIMENSION'||entity.type==='LEADER')return annotationPrimitives(entity,document).boundsPoints;
   if (entity.type === 'ARC') {
     const extrema = [arcPoint(entity, 0), arcPoint(entity, 1)];
     for (const angle of [0,90,180,270]) if (angleOnArc(entity,angle)) { const [x,y]=angleBasis(angle); extrema.push({x:entity.center.x+entity.radius*x,y:entity.center.y+entity.radius*y}); }
@@ -413,6 +471,8 @@ export function entityGripPoints(entity,document={}) {
   if(entity.type==='SPLINE')return entity.controlPoints;
   if(entity.type==='HATCH')return entityGripPoints(entity.boundary,document);
   if(entity.type==='INSERT')return[entity.position];
+  if(entity.type==='IMAGE')return imageCorners(entity);
+  if(entity.type==='LEADER')return entity.points;
   if(TEXT_TYPES.has(entity.type))return entity.type==='MTEXT'?[entity.position,textWorld(entity,entity.width,0)]:[entity.position];
   if(entity.type==='DIMENSION')return entity.kind==='angular'?[entity.vertex,entity.p1,entity.p2,entity.placement]:['linear','aligned'].includes(entity.kind)?[entity.p1,entity.p2,entity.placement]:[entity.center,entity.placement];
   return entity.type === 'ARC' ? [arcPoint(entity,0),arcPoint(entity,0.5),arcPoint(entity,1),{...entity.center}] : entity.type === 'CIRCLE' ? [{ ...entity.center }, ...entityPoints(entity,document)] : entityPoints(entity,document);
@@ -480,8 +540,13 @@ function mapEntity(entity, mapping, radiusFactor = 1,rawDocument={}) {
     transformed.vertices=entity.vertices.map(p=>point3(mapping(p)));validateMesh(transformed);
   }else if(entity.type==='POLY3D'){
     transformed.points=entity.points.map(p=>point3(mapping(p)));validatePolyline3D(transformed.points,transformed.closed);
+  }else if(entity.type==='IMAGE'){
+    transformed.position=point(mapping(entity.position));const u=point(mapping({x:entity.position.x+entity.uVector.x,y:entity.position.y+entity.uVector.y})),v=point(mapping({x:entity.position.x+entity.vVector.x,y:entity.position.y+entity.vVector.y}));transformed.uVector=point({x:u.x-transformed.position.x,y:u.y-transformed.position.y});transformed.vVector=point({x:v.x-transformed.position.x,y:v.y-transformed.position.y});validateImage(transformed,rawDocument);
+  }else if(entity.type==='LEADER'){
+    transformed.points=entity.points.map(p=>point(mapping(p)));transformed.height*=radiusFactor;transformed.arrowSize*=radiusFactor;validateLeader(transformed,styleContext(rawDocument));
   }else if(TEXT_TYPES.has(entity.type)){
     transformed.position=point(mapping(entity.position));transformed.height*=radiusFactor;if(entity.type==='MTEXT')transformed.width*=radiusFactor;
+    if(transformed.richText&&radiusFactor!==1)transformed.richText.source=scaleRichTextSource(transformed.richText.source,radiusFactor);
     validateText(transformed,styleContext(rawDocument));
   }else if(entity.type==='DIMENSION'){
     transformed.placement=point(mapping(entity.placement));transformed.scale*=radiusFactor;
@@ -607,6 +672,10 @@ export function previewGrip(entity, index, rawPoint,document={}) {
     if(!Number.isInteger(index)||index<0||index>=edited.controlPoints.length)throw new Error('SPLINE control grip index is invalid.');edited.controlPoints[index]=p;validateSpline(edited);splineBoundsPoints(edited).forEach(point);
   }else if(entity.type==='HATCH'){edited.boundary=previewGrip(entity.boundary,index,p,document);validateHatch(edited);}
   else if(entity.type==='INSERT'){if(index!==0)throw new Error('INSERT has one insertion grip.');edited.position=p;validateInsert(edited,document);}
+  else if(entity.type==='LEADER'){if(!Number.isInteger(index)||index<0||index>=entity.points.length)throw Error('LEADER grip index is invalid.');edited.points[index]=p;validateLeader(edited,styleContext(document));}
+  else if(entity.type==='IMAGE'){
+    if(![0,1,2,3].includes(index))throw Error('IMAGE grip index is invalid.');if(index===0)edited.position=p;else if(index===1)edited.uVector=point({x:p.x-entity.position.x,y:p.y-entity.position.y});else if(index===3)edited.vVector=point({x:p.x-entity.position.x,y:p.y-entity.position.y});else{const old=imageCorners(entity)[2],scale=Math.hypot(p.x-entity.position.x,p.y-entity.position.y)/Math.hypot(old.x-entity.position.x,old.y-entity.position.y);edited.uVector={x:entity.uVector.x*scale,y:entity.uVector.y*scale};edited.vVector={x:entity.vVector.x*scale,y:entity.vVector.y*scale};}validateImage(edited,document);
+  }
   else if(SPATIAL_CURVES.has(entity.type)){
     const plane={origin:entity.center,xAxis:entity.xAxis,yAxis:entity.yAxis,normal:{x:entity.xAxis.y*entity.yAxis.z-entity.xAxis.z*entity.yAxis.y,y:entity.xAxis.z*entity.yAxis.x-entity.xAxis.x*entity.yAxis.z,z:entity.xAxis.x*entity.yAxis.y-entity.xAxis.y*entity.yAxis.x}};
     if(entity.type==='CIRCLE3D'){if(![0,1,2,3,4].includes(index))throw new Error('Spatial CIRCLE grip index is invalid.');if(index===0)edited.center=p;else{const local=worldToPlane(p,plane);if(Math.abs(local.z)>1e-9*Math.max(1,entity.radius))throw new Error('Radius grip must stay in the circle plane.');edited.radius=Math.hypot(local.x,local.y);}}
@@ -668,7 +737,8 @@ function segments(entity,document={}) {
   if(entity.type==='HATCH')return hatchGeometry(entity).segments;
   if(entity.type==='INSERT')return visibleInsertEntities(entity,document).flatMap(child=>segments(child,document));
   if(TYPES3D.has(entity.type))return entityEdges(entity,document);
-  if(TEXT_TYPES.has(entity.type)||entity.type==='DIMENSION'){const picture=annotationPrimitives(entity,document);return[...picture.segments,...picture.arrows.flatMap(triangle=>triangle.map((p,index)=>[p,triangle[(index+1)%3]]))];}
+  if(entity.type==='IMAGE'){const p=imageCorners(entity);return p.map((a,i)=>[a,p[(i+1)%4]]);}
+  if(TEXT_TYPES.has(entity.type)||entity.type==='DIMENSION'||entity.type==='LEADER'){const picture=annotationPrimitives(entity,document);return[...picture.segments,...picture.arrows.flatMap(triangle=>triangle.map((p,index)=>[p,triangle[(index+1)%3]]))];}
   if (entity.type === 'LINE') return [[entity.start, entity.end]];
   if (entity.type === 'RECTANG') return entity.points.map((p, index) => [p, entity.points[(index + 1) % 4]]);
   if (entity.type === 'PLINE') return entity.points.slice(0, entity.closed ? undefined : -1).map((p, index) => [p, entity.points[(index + 1) % entity.points.length]]);
@@ -680,7 +750,7 @@ export function expandedInsertEntities(entity,document={}){
   return block.entities.map((child,index)=>{
     const source=entity.layoutId?{...child,layoutId:entity.layoutId}:child;
     let expanded=translateEntity(rotateEntity(scaleEntity(source,{x:0,y:0},entity.scale,document),{x:0,y:0},entity.rotation,document),entity.position,document);
-    expanded.id=`${entity.id??'insert'}/${index}`;if(child.layer==='0'){expanded.layer=entity.layer;if(child.color===undefined&&entity.color!==undefined)expanded.color=entity.color;if(child.lineweight===undefined&&entity.lineweight!==undefined)expanded.lineweight=entity.lineweight;}return expanded;
+    expanded.id=`${entity.id??'insert'}/${index}`;if(child.layer==='0'){expanded.layer=entity.layer;if(child.color===undefined&&entity.color!==undefined){expanded.color=entity.color;if(entity.colorSource)expanded.colorSource=entity.colorSource;}if(child.lineweight===undefined&&entity.lineweight!==undefined)expanded.lineweight=entity.lineweight;}return expanded;
   });
 }
 export function expandedEntities(entities,document={}){return entities.flatMap(entity=>entity.type==='INSERT'?expandedInsertEntities(entity,document):[entity]);}
@@ -871,15 +941,14 @@ export function hitTest(entities, p, tolerance,document={}) {
   for (let index = entities.length - 1; index >= 0; index--) {
     const entity = entities[index];
     if(entity.type==='INSERT'&&hitTest(visibleInsertEntities(entity,document),p,tolerance,document)!==null&&winner===null){winner=entity.id;best=0;}
+    if(entity.type==='IMAGE'&&boundaryContains({type:'PLINE',points:imageCorners(entity),closed:true},p)&&winner===null){winner=entity.id;best=0;}
     if(entity.type==='HATCH'&&entity.pattern==='solid'&&boundaryContains(entity.boundary,p)&&winner===null){winner=entity.id;best=0;}
     if(TEXT_TYPES.has(entity.type)){
-      const dx=p.x-entity.position.x,dy=p.y-entity.position.y,[c,s]=angleBasis(entity.rotation),x=dx*c+dy*s,y=-dx*s+dy*c,layout=textLayout(entity,document);
-      const top=entity.type==='MTEXT'?0:entity.height,bottom=entity.type==='MTEXT'?-layout.height:-entity.height*.35;
-      if(x>=-tolerance&&x<=layout.width+tolerance&&y>=bottom-tolerance&&y<=top+tolerance&&winner===null){winner=entity.id;best=0;}
+      const layout=textLayout(entity,document);if(boundaryContains({type:'PLINE',points:layout.corners,closed:true},p)&&winner===null){winner=entity.id;best=0;}
     }
-    if(entity.type==='DIMENSION'){
+    if(entity.type==='DIMENSION'||entity.type==='LEADER'){
       const picture=annotationPrimitives(entity,document);
-      const insideText=picture.texts.some(text=>{const dx=p.x-text.position.x,dy=p.y-text.position.y,[c,s]=angleBasis(text.rotation),x=dx*c+dy*s,y=-dx*s+dy*c;return x>=-text.width/2-tolerance&&x<=text.width/2+tolerance&&y>=-text.height*.35-tolerance&&y<=text.height+tolerance;});
+      const insideText=picture.texts.some(text=>{const dx=p.x-text.position.x,dy=p.y-text.position.y,[c,s]=angleBasis(text.rotation),x=dx*c+dy*s,y=-dx*s+dy*c;return x>=(text.align==='center'?-text.width/2:0)-tolerance&&x<=(text.align==='center'?text.width/2:text.width)+tolerance&&y>=-text.height*.35-tolerance&&y<=text.height+tolerance;});
       const insideArrow=picture.arrows.some(triangle=>{
         const[a,b,c]=triangle,area=(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
         if(!finite(area)||area===0)return false;
@@ -948,13 +1017,17 @@ export function entitiesInBox(entities, start, end, crossing = end.x < start.x,d
 }
 
 /** Endpoint/midpoint and circle center/quadrant snaps use a world tolerance. */
-export function snapCandidates(entity,document={}){
+export function snapCandidates(entity,document={},options={}){
+    const anchor=options.anchor??document.snapAnchor,perpendicular=anchor?perpendicularSnapCandidates(entity,anchor):[];
+    if(entity.type==='INSERT'){const children=visibleInsertEntities(entity,document);return children.length?[{point:entity.position,type:'endpoint'},...children.flatMap(child=>snapCandidates(child,document,{anchor}))]:[];}
+    if(entity.type==='HATCH')return snapCandidates(entity.boundary,document,{anchor});
+    return[...staticSnapCandidates(entity,document),...perpendicular];
+}
+function staticSnapCandidates(entity,document={}){
     if(entity.type==='CIRCLE3D')return[{point:entity.center,type:'center'},...[0,.25,.5,.75].map(t=>({point:spatialCurvePoint(entity,t),type:'quadrant'}))];
     if(entity.type==='ARC3D')return[{point:entity.center,type:'center'},{point:spatialCurvePoint(entity,0),type:'endpoint'},{point:spatialCurvePoint(entity,.5),type:'midpoint'},{point:spatialCurvePoint(entity,1),type:'endpoint'}];
     if(entity.type==='ELLIPSE')return[{point:entity.center,type:'center'},...[0,.25,.5,.75].map(f=>({point:ellipsePoint(entity,f),type:'quadrant'}))];
     if(entity.type==='SPLINE')return[{point:splinePoint(entity,0),type:'endpoint'},{point:splinePoint(entity,1),type:'endpoint'}];
-    if(entity.type==='HATCH')return snapCandidates(entity.boundary,document);
-    if(entity.type==='INSERT'){const children=visibleInsertEntities(entity,document);return children.length?[{point:entity.position,type:'endpoint'},...children.flatMap(child=>snapCandidates(child,document))]:[];}
     const candidates = TEXT_TYPES.has(entity.type)?[{point:entity.position,type:'endpoint'}]:entity.type==='DIMENSION'?entityGripPoints(entity,document).map(point=>({point,type:'endpoint'})):entity.type === 'ARC'
       ? [{point:arcPoint(entity,0),type:'endpoint'},{point:arcPoint(entity,1),type:'endpoint'},{point:arcPoint(entity,0.5),type:'midpoint'},{point:entity.center,type:'center'}]
       : entity.type === 'CIRCLE'
@@ -990,7 +1063,162 @@ function normalizeLayer(layer) {
   if (!finite(lineweight) || lineweight < 0 || lineweight > 10) throw new Error('Lineweight must be between 0 and 10 mm.');
   for(const key of ['visible','locked','modelVisible','paperVisible','plot'])if(layer[key]!==undefined&&typeof layer[key]!=='boolean')throw new Error(`${key} must be boolean.`);
   const linetype=layer.linetype===undefined?'continuous':layer.linetype;if(!LINETYPES.includes(linetype))throw new Error('Unsupported layer linetype.');
-  return { name: layer.name, color, visible: layer.visible !== false, locked: layer.locked === true, lineweight,modelVisible:layer.modelVisible??true,paperVisible:layer.paperVisible??true,plot:layer.plot??true,linetype };
+  if(layer.colorSource!==undefined&&!['aci-7','true-color'].includes(layer.colorSource))throw Error('Unsupported color-source metadata.');if(layer.colorSource==='aci-7'&&color.toLowerCase()!=='#ffffff')throw Error('Adaptive ACI7 requires its white RGB fallback.');
+  return { name: layer.name, color, visible: layer.visible !== false, locked: layer.locked === true, lineweight,modelVisible:layer.modelVisible??true,paperVisible:layer.paperVisible??true,plot:layer.plot??true,linetype,...(layer.colorSource!==undefined?{colorSource:layer.colorSource}:{}) };
+}
+const SCRIPT_LAYER_PROPERTIES=Object.freeze(['color','visible','locked','lineweight','modelVisible','paperVisible','linetype','plot']);
+const SCRIPT_LAYER_BOOLEANS=Object.freeze(['visible','locked','modelVisible','paperVisible','plot']);
+const plainScriptRecord=value=>{
+  if(!value||typeof value!=='object'||![Object.prototype,null].includes(Object.getPrototypeOf(value)))return false;
+  return Reflect.ownKeys(value).every(key=>{const descriptor=Object.getOwnPropertyDescriptor(value,key);return typeof key==='string'&&descriptor.enumerable&&Object.hasOwn(descriptor,'value');});
+};
+// Staging re-normalizes objects and may change their key insertion order.
+// Revision equality follows data values while preserving ordered arrays.
+const sameScriptData=(a,b)=>{
+  if(a===b)return true;
+  if(!a||!b||typeof a!=='object'||typeof b!=='object'||Array.isArray(a)!==Array.isArray(b))return false;
+  if(Array.isArray(a))return a.length===b.length&&a.every((value,index)=>sameScriptData(value,b[index]));
+  const keys=Object.keys(a);return keys.length===Object.keys(b).length&&keys.every(key=>Object.hasOwn(b,key)&&sameScriptData(a[key],b[key]));
+};
+function validateScriptLayerStep(step){
+  if(!plainScriptRecord(step)||Object.keys(step).some(key=>!['op','action','name','patch'].includes(key))||!['op','action','name'].every(key=>Object.hasOwn(step,key)))throw Error('Layer operation must be a plain record with op, action and name.');
+  if(!['create','update','set-current'].includes(step.action))throw Error('Layer action must be create, update or set-current.');
+  if(!validLayerName(step.name))throw Error('Layer name is invalid.');
+  if(step.action==='set-current'){
+    if(Object.hasOwn(step,'patch'))throw Error('set-current accepts only op, action and name.');
+    return;
+  }
+  if(!Object.hasOwn(step,'patch')||!plainScriptRecord(step.patch))throw Error('Layer patch must be a plain record.');
+  const fields=step.action==='update'?['name',...SCRIPT_LAYER_PROPERTIES]:SCRIPT_LAYER_PROPERTIES;
+  if(Object.keys(step.patch).some(key=>!fields.includes(key)))throw Error('Unsupported layer patch property.');
+  for(const [key,value] of Object.entries(step.patch)){
+    if(key==='name'&&!validLayerName(value))throw Error('Layer name is invalid.');
+    if(key==='color'&&(typeof value!=='string'||!/^#[0-9a-f]{6}$/i.test(value)))throw Error('Layer color must be a six-digit hex string.');
+    if(key==='lineweight'&&(!finite(value)||value<0||value>10))throw Error('Layer lineweight must be a finite number between 0 and 10 mm.');
+    if(key==='linetype'&&(typeof value!=='string'||!LINETYPES.includes(value)))throw Error('Unsupported layer linetype.');
+    if(SCRIPT_LAYER_BOOLEANS.includes(key)&&typeof value!=='boolean')throw Error(`Layer ${key} must be boolean.`);
+  }
+}
+const SCRIPT_LAYOUT_PAPER_FIELDS=Object.freeze(['size','orientation','widthMm','heightMm']);
+const validScriptLayoutName=name=>validLayerName(name)&&name.toLowerCase()!=='model';
+/** Validate structured layout steps before serialization or request cloning. */
+export function validateScriptLayoutStep(step,currentPaper){
+  if(!plainScriptRecord(step)||!['op','action','patch'].every(key=>Object.hasOwn(step,key))||step.op!=='layout')throw Error('Layout operation must be a plain record with op, action and patch.');
+  if(!['create','update'].includes(step.action))throw Error('Layout action must be create or update.');
+  const fields=step.action==='create'?['op','action','name','patch']:['op','action','layoutId','patch'];
+  if(Object.keys(step).some(key=>!fields.includes(key)))throw Error('Unsupported layout operation field.');
+  if(step.action==='create'&&(!Object.hasOwn(step,'name')||!validScriptLayoutName(step.name)))throw Error('Layout name is invalid.');
+  if(step.action==='update'&&(!Object.hasOwn(step,'layoutId')||typeof step.layoutId!=='string'||!step.layoutId.length||step.layoutId.length>255))throw Error('An existing layoutId string is required.');
+  if(!plainScriptRecord(step.patch))throw Error('Layout patch must be a plain record.');
+  const patchFields=step.action==='create'?['paper']:['name','paper'];
+  if(Object.keys(step.patch).some(key=>!patchFields.includes(key)))throw Error('Unsupported layout patch property.');
+  if(Object.hasOwn(step.patch,'name')&&!validScriptLayoutName(step.patch.name))throw Error('Layout name is invalid.');
+  if(Object.hasOwn(step.patch,'paper')){
+    const paper=step.patch.paper;if(!plainScriptRecord(paper))throw Error('Layout paper must be a plain record.');
+    if(Object.keys(paper).some(key=>!SCRIPT_LAYOUT_PAPER_FIELDS.includes(key)))throw Error('Unsupported layout paper property.');
+    for(const [key,value] of Object.entries(paper)){
+      if(key==='size'&&(typeof value!=='string'||value!=='Custom'&&!Object.hasOwn(PAPER_SIZES,value)))throw Error('Unsupported paper size.');
+      if(key==='orientation'&&!['portrait','landscape'].includes(value))throw Error('Paper orientation must be portrait or landscape.');
+      if(['widthMm','heightMm'].includes(key)&&(!finite(value)||value<10||value>5000))throw Error('Paper dimensions must be finite numbers between 10 and 5000 mm.');
+    }
+    if(step.action==='create'||currentPaper!==undefined){
+      const size=paper.size??currentPaper?.size??'A3',orientation=paper.orientation??currentPaper?.orientation??'landscape';
+      if(size!=='Custom'){
+        const preset=PAPER_SIZES[size],width=orientation==='portrait'?preset.widthMm:preset.heightMm,height=orientation==='portrait'?preset.heightMm:preset.widthMm;
+        if(Object.hasOwn(paper,'widthMm')&&paper.widthMm!==width||Object.hasOwn(paper,'heightMm')&&paper.heightMm!==height)throw Error('Explicit preset paper dimensions must match the selected size and orientation.');
+      }
+    }
+  }
+}
+const SCRIPT_VIEWPORT_FIELDS=Object.freeze(['frame','boundary','modelCenter','scaleDenominator','locked','frozenLayers','view','plotBorder','layer','color','lineweight','linetype']);
+const SCRIPT_VIEWPORT_VIEWS=Object.freeze(Object.fromEntries(Object.entries({top:[-90,90],bottom:[-90,-90],front:[-90,0],back:[90,0],left:[180,0],right:[0,0],iso:[45,35.264389682754654],neiso:[45,35.264389682754654],seiso:[-45,35.264389682754654],swiso:[-135,35.264389682754654],nwiso:[135,35.264389682754654]}).map(([name,angles])=>[name,Object.freeze({yaw:angles[0],pitch:angles[1],roll:0})])));
+const scriptRecordFields=(value,fields,required,label)=>{
+  if(!plainScriptRecord(value)||Object.keys(value).some(key=>!fields.includes(key))||required.some(key=>!Object.hasOwn(value,key)))throw Error(`${label} must be a plain record with only ${fields.join(', ')}.`);
+};
+const scriptDataArray=(value,label,maximum)=>{
+  if(!Array.isArray(value)||Object.getPrototypeOf(value)!==Array.prototype||value.length>maximum)throw Error(`${label} must be a bounded plain array.`);
+  if(Reflect.ownKeys(value).some(key=>typeof key!=='string'||key!=='length'&&(!/^(0|[1-9]\d*)$/.test(key)||Number(key)>=value.length)))throw Error(`${label} must contain only indexed plain data.`);
+  for(let i=0;i<value.length;i++){const descriptor=Object.getOwnPropertyDescriptor(value,String(i));if(!descriptor?.enumerable||!Object.hasOwn(descriptor,'value'))throw Error(`${label} must contain dense plain data, without accessors.`);}
+};
+const validSheetSetId=value=>typeof value==='string'&&value.length>0&&value.length<=255&&!/[\x00-\x1f\x7f]/.test(value);
+const validSheetSetName=value=>validLayerName(value)&&!/[\x7f]/.test(value);
+/** Native definitions retain missing references; only explicit user repair replaces them. */
+export function normalizeSheetSets(raw){
+  if(Array.isArray(raw)&&raw.length>32)throw Error('Drawing supports at most 32 sheet sets.');
+  scriptDataArray(raw,'Sheet sets',32);const ids=new Set(),names=new Set();
+  return raw.map(source=>{
+    scriptRecordFields(source,['id','name','entries'],['id','name','entries'],'Sheet set');
+    if(!validSheetSetId(source.id)||ids.has(source.id))throw Error('Sheet-set IDs must be distinct nonempty strings of at most 255 characters.');
+    if(!validSheetSetName(source.name)||names.has(source.name.toLowerCase()))throw Error('Sheet-set names must be valid and distinct without regard to case.');
+    ids.add(source.id);names.add(source.name.toLowerCase());if(Array.isArray(source.entries)&&source.entries.length>32)throw Error('A sheet set supports at most 32 ordered layouts.');scriptDataArray(source.entries,'Sheet-set entries',32);
+    if(!source.entries.length)throw Error('A sheet set requires 1 through 32 ordered layouts.');
+    const references=new Set();return{id:source.id,name:source.name,entries:source.entries.map(entry=>{
+      scriptRecordFields(entry,['layoutId','lastKnownName'],['layoutId','lastKnownName'],'Sheet-set entry');
+      if(!validSheetSetId(entry.layoutId)||references.has(entry.layoutId))throw Error('Sheet-set layout IDs must be distinct exact nonempty strings.');
+      if(!validSheetSetName(entry.lastKnownName))throw Error('A sheet-set entry requires a valid last-known layout name.');
+      references.add(entry.layoutId);return{layoutId:entry.layoutId,lastKnownName:entry.lastKnownName};
+    })};
+  });
+}
+function sheetSetEntries(layoutIds,layouts){
+  scriptDataArray(layoutIds,'Sheet-set layout IDs',32);if(!layoutIds.length)throw Error('A sheet set requires 1 through 32 ordered layouts.');
+  const chosen=new Set();return layoutIds.map(layoutId=>{if(!validSheetSetId(layoutId)||chosen.has(layoutId))throw Error('Sheet-set layout IDs must be distinct exact strings.');const layout=layouts.find(layout=>layout.id===layoutId);if(!layout)throw Error(`Sheet-set layout ID does not exist: ${layoutId}`);chosen.add(layoutId);return{layoutId,lastKnownName:layout.name};});
+}
+/** Validate new publication-resource operations before cloning or measuring them. */
+export function validateScriptSheetSetStep(step){
+  scriptRecordFields(step,['op','action','sheetSetId','patch'],['op','action'],'Sheet-set operation');
+  if(step.op!=='sheetSet'||!['create','update','delete'].includes(step.action))throw Error('Sheet-set action must be create, update or delete.');
+  if(step.action==='delete'){
+    scriptRecordFields(step,['op','action','sheetSetId'],['op','action','sheetSetId'],'Sheet-set deletion');
+    if(!validSheetSetId(step.sheetSetId))throw Error('An existing exact sheetSetId string is required.');
+    return;
+  }
+  if(step.action==='create'&&Object.hasOwn(step,'sheetSetId'))throw Error('Sheet-set creation allocates its own ID.');
+  if(step.action==='update'&&(!Object.hasOwn(step,'sheetSetId')||!validSheetSetId(step.sheetSetId)))throw Error('An existing exact sheetSetId string is required.');
+  scriptRecordFields(step.patch,['name','layoutIds'],step.action==='create'?['name','layoutIds']:[],'Sheet-set patch');
+  if(Object.hasOwn(step.patch,'name')&&!validSheetSetName(step.patch.name))throw Error('Sheet-set name is invalid.');
+  if(Object.hasOwn(step.patch,'layoutIds')){
+    scriptDataArray(step.patch.layoutIds,'Sheet-set layout IDs',32);
+    if(!step.patch.layoutIds.length||step.patch.layoutIds.some(id=>!validSheetSetId(id))||new Set(step.patch.layoutIds).size!==step.patch.layoutIds.length)throw Error('A sheet set requires 1 through 32 distinct exact layout IDs.');
+  }
+}
+export function validateScriptStepList(steps){scriptDataArray(steps,'Revision steps',500);}
+const TEXT_STYLE_FIELDS=Object.freeze(['fontFamily','defaultHeight','defaultRotation','widthFactor','metrics']);
+const DIM_STYLE_FIELDS=Object.freeze([...Object.keys(DEFAULT_DIM_STYLE).filter(k=>k!=='name'),'fractionPrecision','angularPrecision','arrowType']);
+export function validateScriptAnnotationStyleStep(step){
+  scriptRecordFields(step,['op','action','name','patch'],['op','action','name'],'Annotation style operation');
+  if(!['textStyle','dimStyle'].includes(step.op)||!['create','update','current'].includes(step.action)||!validLayerName(step.name))throw Error('Annotation style requires textStyle/dimStyle, create/update/current and an exact valid name.');
+  if(step.action==='current'){scriptRecordFields(step,['op','action','name'],['op','action','name'],'Current style operation');return;}
+  scriptRecordFields(step.patch,step.op==='textStyle'?TEXT_STYLE_FIELDS:DIM_STYLE_FIELDS,[],'Annotation style patch');
+  if(step.op==='textStyle')normalizeTextStyle({name:step.name,...step.patch});else normalizeDimStyle({name:step.name,...step.patch},[{name:step.patch.textStyle??'Standard'}]);
+}
+const editorLayoutReservations=new WeakMap();
+const editorSheetSetReservations=new WeakMap();
+/** Validate before JSON measurement or structuredClone can invoke user accessors. */
+export function validateScriptViewportStep(step){
+  if(!plainScriptRecord(step)||!['op','action','layoutId','patch'].every(key=>Object.hasOwn(step,key))||step.op!=='viewport')throw Error('Viewport operation must be a plain record with op, action, layoutId and patch.');
+  if(!['create','update'].includes(step.action))throw Error('Viewport action must be create or update.');
+  const fields=step.action==='create'?['op','action','layoutId','patch']:['op','action','layoutId','viewportId','patch'];
+  if(Object.keys(step).some(key=>!fields.includes(key)))throw Error('Unsupported viewport operation field.');
+  for(const key of step.action==='create'?['layoutId']:['layoutId','viewportId'])if(!Object.hasOwn(step,key)||typeof step[key]!=='string'||!step[key].length||step[key].length>255)throw Error(`An existing ${key} string is required.`);
+  scriptRecordFields(step.patch,SCRIPT_VIEWPORT_FIELDS,[],'Viewport patch');const patch=step.patch;
+  if(step.action==='create'&&!Object.hasOwn(patch,'frame')&&!Object.hasOwn(patch,'boundary'))throw Error('Viewport creation requires a frame or polygon boundary.');
+  if(Object.hasOwn(patch,'frame')){scriptRecordFields(patch.frame,['x','y','width','height'],['x','y','width','height'],'Viewport frame');normalizeFrame(patch.frame);}
+  if(Object.hasOwn(patch,'boundary')){
+    scriptDataArray(patch.boundary,'Viewport boundary',64);
+    for(const p of patch.boundary){scriptRecordFields(p,['x','y'],['x','y'],'Viewport boundary point');if(!finite(p.x)||!finite(p.y))throw Error('Viewport boundary coordinates must be finite numbers.');}
+    const boundary=normalizeViewportBoundary(patch.boundary),bounds=viewportFrameFromPoints(boundary);
+    if(patch.frame&&['x','y','width','height'].some(key=>Math.abs(patch.frame[key]-bounds[key])>Number.EPSILON*64*Math.max(1,Math.abs(bounds[key]))))throw Error('Viewport frame must equal its polygon boundary bounds.');
+  }
+  if(Object.hasOwn(patch,'modelCenter')){scriptRecordFields(patch.modelCenter,['x','y','z'],['x','y'],'Viewport model center');if(Object.values(patch.modelCenter).some(value=>!finite(value)))throw Error('Viewport model center coordinates must be finite numbers.');point3(patch.modelCenter);}
+  if(Object.hasOwn(patch,'scaleDenominator')&&(!finite(patch.scaleDenominator)||patch.scaleDenominator<1e-6||patch.scaleDenominator>1e9))throw Error('Viewport scale denominator must be between 0.000001 and 1000000000.');
+  for(const key of ['locked','plotBorder'])if(Object.hasOwn(patch,key)&&typeof patch[key]!=='boolean')throw Error(`Viewport ${key} must be boolean.`);
+  if(Object.hasOwn(patch,'frozenLayers')){scriptDataArray(patch.frozenLayers,'Viewport freeze list',100000);if(patch.frozenLayers.some(name=>typeof name!=='string'||!validLayerName(name))||new Set(patch.frozenLayers).size!==patch.frozenLayers.length)throw Error('Viewport freeze list must contain distinct existing layer names.');}
+  if(Object.hasOwn(patch,'view')&&(typeof patch.view!=='string'||!Object.hasOwn(SCRIPT_VIEWPORT_VIEWS,patch.view)))throw Error('Viewport view must be a supported named orthographic orientation.');
+  if(Object.hasOwn(patch,'layer')&&!validLayerName(patch.layer))throw Error('Viewport border layer name is invalid.');
+  if(Object.hasOwn(patch,'color')&&(typeof patch.color!=='string'||!/^#[0-9a-f]{6}$/i.test(patch.color)))throw Error('Viewport color must be a six-digit hex string.');
+  if(Object.hasOwn(patch,'lineweight')&&(!finite(patch.lineweight)||patch.lineweight<0||patch.lineweight>10))throw Error('Viewport lineweight must be a finite number between 0 and 10 mm.');
+  if(Object.hasOwn(patch,'linetype')&&!LINETYPES.includes(patch.linetype))throw Error('Unsupported viewport linetype.');
 }
 function normalizeHatchBoundary(raw){
   if(!raw||!['RECTANG','PLINE','CIRCLE','ELLIPSE'].includes(raw.type))throw new Error('HATCH supports one closed RECTANG/PLINE, CIRCLE or ELLIPSE boundary.');
@@ -1017,7 +1245,7 @@ function validateExpandedResources(document){
     if(entity.type==='PLINE')return Math.max(1,(entity.points?.length??0)-(entity.closed?0:1));
     if(['CIRCLE','ELLIPSE',...SPATIAL_CURVES].includes(entity.type))return 128;if(entity.type==='ARC')return 64;
     if(entity.type==='SPLINE')return 128+(entity.controlPoints?.length??0);
-    if(TEXT_TYPES.has(entity.type))return 1+Math.ceil((entity.text?.length??0)/16);
+    if(TEXT_TYPES.has(entity.type)||entity.type==='LEADER')return 1+Math.ceil((entity.text?.length??0)/16);
     if(entity.type==='DIMENSION'){const style=document.dimStyles?.find(item=>item.name===entity.style)??DEFAULT_DIM_STYLE;return(entity.kind==='angular'?128:10)+Math.ceil(((entity.textOverride?.length??0)+(style.prefix?.length??0)+(style.suffix?.length??0)+32)/16);}
     if(entity.type==='HATCH')return 1;return 0;
   };
@@ -1030,7 +1258,11 @@ function validateInsert(entity,document){
 
 function normalizeDocument(input = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Invalid drawing document.');
-  if (input.format != null && input.format !== 'Linecraft/1') throw new Error('Unsupported drawing format.');
+  const sheetSetsField=Object.getOwnPropertyDescriptor(input,'sheetSets');
+  if(sheetSetsField&&(!sheetSetsField.enumerable||!Object.hasOwn(sheetSetsField,'value'))||!sheetSetsField&&'sheetSets' in input)throw Error('Sheet sets must be an own enumerable plain-data field.');
+  const sheetSets=normalizeSheetSets(sheetSetsField?sheetSetsField.value:[]);
+  if (input.format != null && !['Linecraft/1','Linecraft/2'].includes(input.format)) throw new Error('Unsupported drawing format.');
+  if(input.format==='Linecraft/2'&&input.architecture==null)throw new Error('Linecraft/2 requires a versioned architectural source section.');
   const layers = (input.layers ?? [{ name: '0' }]).map(normalizeLayer);
   if (!layers.some(layer => layer.name === '0')) layers.unshift(normalizeLayer({ name: '0' }));
   if (new Set(layers.map(layer => layer.name)).size !== layers.length) throw new Error('Duplicate layer names.');
@@ -1047,7 +1279,13 @@ function normalizeDocument(input = {}) {
   if(!dimStyles.some(style=>style.name==='Standard'))dimStyles.unshift(normalizeDimStyle(DEFAULT_DIM_STYLE,textStyles));
   if(new Set(dimStyles.map(style=>style.name)).size!==dimStyles.length)throw new Error('Duplicate dimension style names.');
   const settings=normalizeSettings(input.settings===undefined?{}:input.settings),currentTextStyle=input.currentTextStyle===undefined?'Standard':input.currentTextStyle,currentDimStyle=input.currentDimStyle===undefined?'Standard':input.currentDimStyle;
+  if(rawEntities.some(architecturalEntity))throw new Error('Generated architectural IDs are reserved. Native files must contain architectural source, not derived caches.');
+  const architecture=input.architecture==null?null:normalizeArchitecture(input.architecture,settings);
+  const architectureDerived=architecture?generateArchitecture(architecture,settings):{entities:[],owners:{},diagnostics:[],rooms:[],roofs:[],quantities:{},validation:{}};
+  rawEntities.push(...architectureDerived.entities);
+  if(rawEntities.length>100000)throw new Error('Drawing and architectural derivatives exceed the 100000 entity limit.');
   if(!textStyles.some(style=>style.name===currentTextStyle)||!dimStyles.some(style=>style.name===currentDimStyle))throw new Error('Current annotation style does not exist.');
+  const imageResources=normalizeImageResources(input.imageResources),rasterSettings=input.rasterSettings===undefined?undefined:normalizeRasterSettings(input.rasterSettings);
   const rawBlocks=input.blocks===undefined?[]:input.blocks;if(!Array.isArray(rawBlocks)||rawBlocks.length>64)throw new Error('Drawing supports up to 64 flat block definitions.');const names=new Set();
   if(!Array.isArray(input.entities??[]))throw new Error('Entities must be an array.');
   for(const block of rawBlocks)if(!block||!Array.isArray(block.entities)||!block.entities.length||block.entities.length>10000||block.entities.some(entity=>!entity||TYPES3D.has(entity.type)||entity.type==='INSERT'))throw new Error('Blocks require 1..10000 flat planar entities; nested INSERT and 3D content are unsupported.');
@@ -1055,13 +1293,13 @@ function normalizeDocument(input = {}) {
   const blocks=rawBlocks.map(block=>{
     if(!block||!validLayerName(block.name)||names.has(block.name))throw new Error('Block names must be valid and unique.');names.add(block.name);const base=point(block.base);
     if(!Array.isArray(block.entities)||!block.entities.length||block.entities.length>10000||block.entities.some(entity=>!entity||TYPES3D.has(entity.type)||entity.type==='INSERT'))throw new Error('Blocks require 1..10000 flat planar entities; nested INSERT and 3D content are unsupported.');
-    const normalized=normalizeDocument({layers,textStyles,dimStyles,settings,entities:block.entities.map((entity,i)=>({...entity,id:`block${i}`}))});return{name:block.name,base,entities:normalized.entities.map(({id,...entity})=>entity)};
+    const normalized=normalizeDocument({layers,textStyles,dimStyles,settings,imageResources,entities:block.entities.map((entity,i)=>({...entity,id:`block${i}`}))});return{name:block.name,base,entities:normalized.entities.map(({id,...entity})=>entity)};
   });if(blocks.reduce((sum,block)=>sum+block.entities.length,0)>50000)throw new Error('Total block geometry exceeds 50000 entities.');
-  const annotationContext={textStyles,dimStyles,settings,blocks};
+  const annotationContext={textStyles,dimStyles,settings,blocks,imageResources};
   const ids = new Set();
   if (!Array.isArray(input.entities ?? [])) throw new Error('Entities must be an array.');
   const entities = rawEntities.map((raw, index) => {
-    if (!raw || !['LINE', 'RECTANG', 'CIRCLE', 'PLINE','ARC','TEXT','MTEXT','DIMENSION','MESH','POLY3D','ELLIPSE','SPLINE','HATCH','INSERT',...SPATIAL_CURVES].includes(raw.type)) throw new Error('Unsupported entity type.');
+    if (!raw || !['LINE', 'RECTANG', 'CIRCLE', 'PLINE','ARC','TEXT','MTEXT','LEADER','IMAGE','DIMENSION','MESH','POLY3D','ELLIPSE','SPLINE','HATCH','INSERT',...SPATIAL_CURVES].includes(raw.type)) throw new Error('Unsupported entity type.');
     const id = raw.id ?? `e${index + 1}`;
     if (typeof id !== 'string' || !id || ids.has(id)) throw new Error('Entity IDs must be unique nonempty strings.');
     ids.add(id);
@@ -1081,8 +1319,10 @@ function normalizeDocument(input = {}) {
       if(!Array.isArray(raw.points)||raw.points.length>MAX_MESH_VERTICES)throw new Error('3DPOLY points exceed the resource limit or are malformed.');
       entity.points=Array.isArray(raw.points)?raw.points.map(point3):raw.points;entity.closed=raw.closed;validatePolyline3D(entity.points,entity.closed);
     }else if(TEXT_TYPES.has(raw.type)){
-      entity.position=point(raw.position);entity.text=raw.text;entity.height=raw.height;entity.rotation=raw.rotation===undefined?0:raw.rotation;entity.style=raw.style===undefined?'Standard':raw.style;if(raw.type==='MTEXT')entity.width=raw.width;
+      entity.position=point(raw.position);entity.text=raw.text;entity.height=raw.height;entity.rotation=raw.rotation===undefined?0:raw.rotation;entity.style=raw.style===undefined?'Standard':raw.style;if(raw.type==='MTEXT'){entity.width=raw.width;if(raw.richText!==undefined)entity.richText=clone(raw.richText);}
       validateText(entity,annotationContext);entity.rotation%=360;
+    }else if(raw.type==='LEADER'){entity.points=Array.isArray(raw.points)?raw.points.map(point):null;entity.text=raw.text;entity.style=raw.style===undefined?'Standard':raw.style;entity.height=raw.height;entity.arrowSize=raw.arrowSize;entity.arrowType=raw.arrowType===undefined?'closed-filled':raw.arrowType;validateLeader(entity,annotationContext);
+    }else if(raw.type==='IMAGE'){entity.resourceId=raw.resourceId;entity.position=point(raw.position);entity.uVector=point(raw.uVector);entity.vVector=point(raw.vVector);validateImage(entity,annotationContext);
     }else if(raw.type==='DIMENSION'){
       entity.kind=raw.kind;entity.placement=point(raw.placement);entity.style=raw.style===undefined?'Standard':raw.style;entity.scale=raw.scale===undefined?1:raw.scale;
       if(['linear','aligned','angular'].includes(raw.kind)){entity.p1=point(raw.p1);entity.p2=point(raw.p2);if(raw.kind==='linear')entity.axisAngle=raw.axisAngle===undefined?0:raw.axisAngle;if(raw.kind==='angular')entity.vertex=point(raw.vertex);}
@@ -1108,6 +1348,7 @@ function normalizeDocument(input = {}) {
       if (!/^#[0-9a-f]{6}$/i.test(raw.color)) throw new Error('Entity color is invalid.');
       entity.color = raw.color;
     }
+    if(raw.colorSource!==undefined){if(!['aci-7','true-color'].includes(raw.colorSource)||!entity.color||raw.colorSource==='aci-7'&&entity.color.toLowerCase()!=='#ffffff')throw Error('Invalid entity color-source metadata.');entity.colorSource=raw.colorSource;}
     if (raw.lineweight != null) {
       if (!finite(raw.lineweight) || raw.lineweight < 0 || raw.lineweight > 10) throw new Error('Entity lineweight is invalid.');
       entity.lineweight = raw.lineweight;
@@ -1128,7 +1369,7 @@ function normalizeDocument(input = {}) {
   const activeSpace=input.activeSpace===undefined?'model':input.activeSpace,activeLayoutId=input.activeLayoutId??null,activeViewportId=input.activeViewportId??null;
   if(!['model','paper'].includes(activeSpace)||activeLayoutId!==null&&!layouts.some(layout=>layout.id===activeLayoutId)||activeLayoutId===null&&(activeSpace==='paper'||activeViewportId!==null)||activeSpace==='paper'&&activeViewportId!==null||activeViewportId!==null&&!layouts.find(layout=>layout.id===activeLayoutId)?.viewports.some(view=>view.id===activeViewportId))throw new Error('Active paper/model space or viewport reference is invalid.');
   const paperViewport=normalizePaperView(input.paperViewport===undefined?{center:{x:210,y:148.5},scale:2}:input.paperViewport);
-  return { entities, layers, currentLayer, viewport,textStyles,dimStyles,currentTextStyle,currentDimStyle,settings,blocks,workspace,camera3d,layouts,activeSpace,activeLayoutId,activeViewportId,paperViewport,ucs };
+  return { entities, layers, currentLayer, viewport,textStyles,dimStyles,imageResources,rasterSettings,currentTextStyle,currentDimStyle,settings,blocks,workspace,camera3d,layouts,sheetSets,activeSpace,activeLayoutId,activeViewportId,paperViewport,ucs,architecture,architectureDerived };
 }
 
 function normalizeClipboard(input) {
@@ -1139,9 +1380,9 @@ function normalizeClipboard(input) {
   if (raw.entities.length > 100000) throw new Error('Clipboard entity count exceeds 100000.');
   const layerNames = [...new Set(raw.entities.map(entity => entity?.layer ?? '0'))];
   const layers = raw.layers == null ? layerNames.map(name => normalizeLayer({ name })) : raw.layers;
-  const normalized = normalizeDocument({ layers,textStyles:raw.textStyles,dimStyles:raw.dimStyles,blocks:raw.blocks, entities: raw.entities.map((entity, index) => ({ ...entity, id: `clipboard${index}` })) });
+  const normalized = normalizeDocument({ layers,textStyles:raw.textStyles,dimStyles:raw.dimStyles,imageResources:raw.imageResources,blocks:raw.blocks, entities: raw.entities.map((entity, index) => ({ ...entity, id: `clipboard${index}` })) });
   normalized.blocks.forEach(block=>block.entities.forEach(entity=>{if(entity.layer!=='0')layerNames.push(entity.layer);}));
-  return { format: 'LinecraftClipboard/1', base, entities: normalized.entities.map(({ id, ...entity }) => entity), layers: normalized.layers.filter(layer=>layerNames.includes(layer.name)),textStyles:normalized.textStyles,dimStyles:normalized.dimStyles,blocks:normalized.blocks };
+  return { format: 'LinecraftClipboard/1', base, entities: normalized.entities.map(({ id, ...entity }) => entity), layers: normalized.layers.filter(layer=>layerNames.includes(layer.name)),textStyles:normalized.textStyles,dimStyles:normalized.dimStyles,blocks:normalized.blocks,...(normalized.imageResources.length?{imageResources:normalized.imageResources}:{}) };
 }
 
 function escapeDXFText(text){return text.replace(/[\\%^]/g,character=>`\\U+${character.charCodeAt(0).toString(16).toUpperCase().padStart(4,'0')}`);}
@@ -1197,6 +1438,7 @@ function writeDXF(document) {
     geometry.texts.forEach(text=>picture.parts.push({type:'TEXT',id:allocate(),...text,style:document.dimStyles.find(style=>style.name===entity.style).textStyle}));
     dimensionPictures.push(picture);
   });
+  const leaderInfo=new Map();for(const{entity,key}of allDimensionSources)if(entity.type==='LEADER'){let n=leaderInfo.size+1,name;do{name=`LinecraftLeader${n++}`;}while(exportDimStyles.some(s=>s.name===name));exportDimStyles.push({...DEFAULT_DIM_STYLE,name,textStyle:entity.style,textHeight:entity.height,arrowSize:entity.arrowSize,arrowType:entity.arrowType});leaderInfo.set(key,{annotation:allocate(),styleName:name});}
   const dimStyleIds=new Map(exportDimStyles.map(style=>[style.name,allocate()]));
   const userBlocks=document.blocks.map(block=>({...block,record:allocate(),begin:allocate(),end:allocate(),handles:block.entities.map(()=>allocate())}));
   const modelRecord = allocate(), paperRecord = allocate();
@@ -1206,6 +1448,8 @@ function writeDXF(document) {
   const modelLayout = allocate(), paperLayout = allocate();
   const sheets=document.layouts.length?document.layouts.map((layout,index)=>({...layout,record:index===0?paperRecord:allocate(),begin:index===0?paperBegin:allocate(),end:index===0?paperEnd:allocate(),layoutHandle:index===0?paperLayout:allocate(),blockName:index===0?'*Paper_Space':`*Paper_Space${index-1}`,overallViewport:allocate(),viewportHandles:layout.viewports.map(()=>allocate()),viewportClips:layout.viewports.map(view=>view.boundary?allocate():null)})):[{id:null,name:'Layout1',paper:{widthMm:420,heightMm:297},viewports:[],record:paperRecord,begin:paperBegin,end:paperEnd,layoutHandle:paperLayout,blockName:'*Paper_Space'}];
   const entityIds = document.entities.map(() => allocate());
+  const rasterVariables=document.rasterSettings?allocate():null,imageDictionary=document.imageResources.length?allocate():null,imageDefs=new Map(document.imageResources.map(resource=>[resource.id,{resource,handle:allocate(),reactors:[]}])),imageInstances=new Map();
+  for(const{entity,key,index}of allDimensionSources)if(entity.type==='IMAGE'){const def=imageDefs.get(entity.resourceId),handle=key.startsWith('model:')?entityIds[index]:userBlocks.find(b=>key.startsWith(`block:${b.name}:`))?.handles[Number(key.split(':').at(-1))],reactor=allocate();def.reactors.push(reactor);imageInstances.set(key,{reactor,handle});}
   const threeDHandles=document.entities.map((entity,index)=>entity.type==='MESH'?entity.faces.map((_,faceIndex)=>faceIndex===0?entityIds[index]:allocate()):entity.type==='POLY3D'?{vertices:entity.points.map(()=>allocate()),end:allocate()}:null);
   const box = bounds3D(document.entities.filter(entity=>!entity.layoutId),document) ?? { minX: 0, minY: 0,minZ:0, maxX: 1, maxY: 1,maxZ:0 };
   const middle = { x: midpoint(box.minX, box.maxX), y: midpoint(box.minY, box.maxY) };
@@ -1220,9 +1464,9 @@ function writeDXF(document) {
     const hundredths = value * 100, supported = [0, 5, 9, 13, 15, 18, 20, 25, 30, 35, 40, 50, 53, 60, 70, 80, 90, 100, 106, 120, 140, 158, 200, 211];
     return supported.reduce((best, candidate) => Math.abs(candidate - hundredths) < Math.abs(best - hundredths) ? candidate : best);
   };
-  const fontFiles={'Arial':'Arial.ttf','Segoe UI':'segoeui.ttf','Consolas':'consola.ttf'};
+  const fontFiles={'Arial':'Arial.ttf','Segoe UI':'segoeui.ttf','Consolas':'consola.ttf','Times New Roman':'times.ttf','Technic':'technic_.ttf','ARCHITXT':'ARCHITXT.TTF'};
   const entityHeader=(type,handle,entity,owner=modelRecord)=>{
-    pair(0,type);pair(5,handle);pair(330,owner);pair(100,'AcDbEntity');pair(8,entity.layer);if(owner===modelRecord)pair(410,'Model');pair(370,entity.lineweight==null?(owner!==modelRecord&&entity.layer==='0'?-2:-1):lineweight(entity.lineweight));if(entity.color)pair(420,Number.parseInt(entity.color.slice(1),16));
+    pair(0,type);pair(5,handle);pair(330,owner);pair(100,'AcDbEntity');pair(8,entity.layer);if(owner===modelRecord)pair(410,'Model');pair(370,entity.lineweight==null?(owner!==modelRecord&&entity.layer==='0'?-2:-1):lineweight(entity.lineweight));if(entity.colorSource==='aci-7')pair(62,7);else if(entity.color)pair(420,Number.parseInt(entity.color.slice(1),16));
     const sheet=sheets.find(sheet=>sheet.record===owner);if(sheet){pair(67,1);pair(410,sheet.name);if(document.layers.find(layer=>layer.name===entity.layer)?.paperVisible===false)pair(60,1);}if(entity.linetype)pair(6,entity.linetype.toUpperCase());
     if(userBlocks.some(block=>block.record===owner)&&entity.layer==='0'&&!entity.color)pair(62,0);
   };
@@ -1267,7 +1511,7 @@ function writeDXF(document) {
   beginTable('LAYER', exportLayers.length);
   for (const layer of exportLayers) {
     symbol('LAYER', layerIds.get(layer.name), 'LAYER', 'AcDbLayerTableRecord', layer.name); pair(70, layer.locked ? 4 : 0);
-    pair(62, layer.visible ? 7 : -7); pair(6, (layer.linetype??'continuous').toUpperCase()); pair(420, Number.parseInt(layer.color.slice(1), 16)); pair(290, layer.plot===false?0:1); pair(370, lineweight(layer.lineweight)); pair(390, normalPlotStyle); pair(347, '0');
+    pair(62, layer.visible ? 7 : -7); pair(6, (layer.linetype??'continuous').toUpperCase()); if(layer.colorSource!=='aci-7')pair(420, Number.parseInt(layer.color.slice(1), 16)); pair(290, layer.plot===false?0:1); pair(370, lineweight(layer.lineweight)); pair(390, normalPlotStyle); pair(347, '0');
   }
   pair(0, 'ENDTAB');
   beginTable('STYLE', document.textStyles.length);
@@ -1279,7 +1523,7 @@ function writeDXF(document) {
   for(const style of exportDimStyles){
     const format=style.paper?dxfUnitFormat({...document.settings,units:'mm',linearFormat:'decimal'}):unitFormat;
     pair(0,'DIMSTYLE');pair(105,dimStyleIds.get(style.name));pair(330,tableIds.DIMSTYLE);pair(100,'AcDbSymbolTableRecord');pair(100,'AcDbDimStyleTableRecord');pair(2,style.name);pair(70,0);pair(3,`${escapeDXFMText(style.prefix)}<>${escapeDXFMText(style.suffix)}`);
-    pair(40,style.scale);pair(41,style.arrowSize);pair(42,style.extensionOffset);pair(44,style.extensionOvershoot);pair(140,style.textHeight);pair(147,style.gap);pair(144,format.dimlfac);pair(271,!style.paper&&document.settings.linearFormat==='architectural'?(style.fractionPrecision??document.settings.fractionPrecision):style.precision);pair(277,format.dimlunit);pair(278,46);pair(73,0);pair(74,0);pair(77,1);pair(340,textStyleIds.get(style.textStyle));pair(371,-1);pair(372,-1);if(!style.paper&&document.settings.linearFormat!=='decimal'){pair(276,2);pair(78,0);}if(document.settings.angularFormat!=='decimal-degrees'||style.angularPrecision!==undefined){const p=style.angularPrecision??style.precision;pair(275,format.dimaunit);pair(179,document.settings.angularFormat==='dms'?Math.min(8,p+4):p);pair(79,0);}
+    pair(40,style.scale);pair(41,style.arrowSize);pair(42,style.extensionOffset);pair(44,style.extensionOvershoot);if(style.arrowType==='architectural-tick')pair(142,style.arrowSize);pair(140,style.textHeight);pair(147,style.gap);pair(144,format.dimlfac);pair(271,!style.paper&&document.settings.linearFormat==='architectural'?(style.fractionPrecision??document.settings.fractionPrecision):style.precision);pair(277,format.dimlunit);pair(278,46);pair(73,0);pair(74,0);pair(77,1);pair(340,textStyleIds.get(style.textStyle));pair(371,-1);pair(372,-1);if(!style.paper&&document.settings.linearFormat!=='decimal'){pair(276,2);pair(78,0);}if(document.settings.angularFormat!=='decimal-degrees'||style.angularPrecision!==undefined){const p=style.angularPrecision??style.precision;pair(275,format.dimaunit);pair(179,document.settings.angularFormat==='dms'?Math.min(8,p+4):p);pair(79,0);}
   }
   pair(0,'ENDTAB');
   beginTable('BLOCK_RECORD', 1+sheets.length+dimensionPictures.length+userBlocks.length);
@@ -1328,8 +1572,13 @@ function writeDXF(document) {
     else if(entity.type==='INSERT'){pair(100,'AcDbBlockReference');pair(2,entity.blockName);point3(10,entity.position);pair(41,entity.scale);pair(42,entity.scale);pair(43,entity.scale);pair(50,positiveAngle(entity.rotation));point3(210,{x:0,y:0,z:1});}
     else if(entity.type==='TEXT')textRecord(entity);
     else if(entity.type==='MTEXT'){
-      pair(100,'AcDbMText');point3(10,entity.position);pair(40,entity.height);pair(41,entity.width);pair(71,1);pair(72,1);pair(7,entity.style);const[c,s]=angleBasis(entity.rotation);point3(11,{x:c,y:s});pair(73,2);pair(44,1);
-      const characters=Array.from(escapeDXFMText(entity.text));while(characters.length>=250)pair(3,characters.splice(0,250).join(''));pair(1,characters.join(''));
+      pair(100,'AcDbMText');point3(10,entity.position);pair(40,entity.height);pair(41,entity.width);pair(71,entity.richText?.attachment??1);pair(72,1);pair(7,entity.style);const[c,s]=angleBasis(entity.rotation);point3(11,{x:c,y:s});pair(73,entity.richText?.lineSpacingStyle??2);pair(44,entity.richText?.lineSpacingFactor??1);
+      const characters=Array.from(entity.richText?.source??escapeDXFMText(entity.text));while(characters.length>=250)pair(3,characters.splice(0,250).join(''));pair(1,characters.join(''));
+    }else if(entity.type==='LEADER'){
+      const info=leaderInfo.get(key);pair(100,'AcDbLeader');pair(3,info.styleName);pair(71,1);pair(72,0);pair(73,0);pair(74,0);pair(75,0);pair(40,entity.height);pair(41,textWidth(entity.text,entity.height,document.textStyles.find(s=>s.name===entity.style)));pair(76,entity.points.length);entity.points.forEach(p=>point3(10,p));pair(77,256);pair(340,info.annotation);point3(210,{x:0,y:0,z:1});point3(211,{x:1,y:0,z:0});point3(212,{x:0,y:0,z:0});point3(213,{x:0,y:0,z:0});
+      writeEntity({...entity,type:'MTEXT',position:entity.points.at(-1),width:Math.max(entity.height,textWidth(entity.text,entity.height,document.textStyles.find(s=>s.name===entity.style))),rotation:0},-1,owner,`${key}:annotation`,info.annotation,null);
+    }else if(entity.type==='IMAGE'){
+      const resource=imageDefs.get(entity.resourceId),instance=imageInstances.get(key);pair(100,'AcDbRasterImage');pair(90,0);point3(10,entity.position);point3(11,{x:entity.uVector.x/resource.resource.width,y:entity.uVector.y/resource.resource.width});point3(12,{x:entity.vVector.x/resource.resource.height,y:entity.vVector.y/resource.resource.height});pair(13,resource.resource.width);pair(23,resource.resource.height);pair(340,resource.handle);pair(70,3);pair(280,0);pair(281,50);pair(282,50);pair(283,0);pair(360,instance.reactor);pair(71,1);pair(91,2);pair(14,-.5);pair(24,-.5);pair(14,resource.resource.width-.5);pair(24,resource.resource.height-.5);pair(290,1);
     }else if(entity.type==='DIMENSION'){
       const picture=dimensionPictures.find(item=>item.key===key),geometry=picture.geometry,radial=['radius','diameter'].includes(entity.kind);
       const dimStyle=document.dimStyles.find(style=>style.name===entity.style),angularLiteral=entity.kind==='angular'&&(['decimal-minutes','decimal-seconds'].includes(document.settings.angularFormat)||document.settings.angularFormat==='dms'&&(dimStyle.angularPrecision??dimStyle.precision)>4);
@@ -1363,14 +1612,16 @@ function writeDXF(document) {
     pair(0, 'DICTIONARY'); pair(5, id); pair(330, owner); pair(100, 'AcDbDictionary'); pair(281, 1);
     for (const [name, target] of entries) { pair(3, name); pair(350, target); }
   };
-  dictionary(rootDictionary, '0', [['ACAD_GROUP', groupDictionary], ['ACAD_LAYOUT', layoutDictionary], ['ACAD_PLOTSETTINGS', plotDictionary], ['ACAD_PLOTSTYLENAME', plotStyleDictionary]]);
+  dictionary(rootDictionary, '0', [['ACAD_GROUP', groupDictionary], ['ACAD_LAYOUT', layoutDictionary], ['ACAD_PLOTSETTINGS', plotDictionary], ['ACAD_PLOTSTYLENAME', plotStyleDictionary],...(imageDictionary?[['ACAD_IMAGE_DICT',imageDictionary]]:[]),...(rasterVariables?[['ACAD_IMAGE_VARS',rasterVariables]]:[])]);
+  if(rasterVariables){pair(0,'RASTERVARIABLES');pair(5,rasterVariables);pair(330,rootDictionary);pair(100,'AcDbRasterVariables');pair(90,0);pair(70,document.rasterSettings.frame);pair(71,1);pair(72,({mm:1,cm:2,m:3,in:5,ft:6})[document.settings.units]??0);}
+  if(imageDictionary){dictionary(imageDictionary,rootDictionary,[...imageDefs.values()].map(({resource,handle})=>[resource.id,handle]));for(const{resource,handle,reactors}of imageDefs.values()){pair(0,'IMAGEDEF');pair(5,handle);pair(102,'{ACAD_REACTORS');pair(330,imageDictionary);reactors.forEach(h=>pair(330,h));pair(102,'}');pair(330,imageDictionary);pair(100,'AcDbRasterImageDef');pair(90,0);pair(1,dxfImageFileName(resource));pair(10,resource.width);pair(20,resource.height);pair(11,1);pair(21,1);pair(280,1);pair(281,0);}for(const instance of imageInstances.values()){pair(0,'IMAGEDEF_REACTOR');pair(5,instance.reactor);pair(330,instance.handle);pair(100,'AcDbRasterImageDefReactor');pair(90,2);pair(330,instance.handle);}}
   dictionary(groupDictionary, rootDictionary); dictionary(layoutDictionary, rootDictionary, [['Model', modelLayout], ...sheets.map(sheet=>[sheet.name,sheet.layoutHandle])]); dictionary(plotDictionary, rootDictionary);
   pair(0, 'ACDBDICTIONARYWDFLT'); pair(5, plotStyleDictionary); pair(330, rootDictionary); pair(100, 'AcDbDictionary'); pair(281, 1); pair(3, 'Normal'); pair(350, normalPlotStyle); pair(100, 'AcDbDictionaryWithDefault'); pair(340, normalPlotStyle);
   pair(0, 'ACDBPLACEHOLDER'); pair(5, normalPlotStyle); pair(330, plotStyleDictionary);
   for (const [name, id, record, order,sheet] of [['Model', modelLayout, modelRecord, 0,null], ...sheets.map((sheet,index)=>[sheet.name,sheet.layoutHandle,sheet.record,index+1,sheet])]) {
     pair(0, 'LAYOUT'); pair(5, id); pair(330, layoutDictionary); pair(100, 'AcDbPlotSettings');
-    pair(1, ''); pair(2, ''); pair(4, ''); pair(6, '');
-    for (const code of [40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 140, 141]) pair(code,sheet?.id&&code===44?sheet.paper.widthMm:sheet?.id&&code===45?sheet.paper.heightMm:0);
+    pair(1, ''); pair(2, sheet?.plotSettings?.deviceName??''); pair(4, sheet?.plotSettings?.mediaName??''); pair(6, '');
+    for (const code of [40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 140, 141]) pair(code,sheet?.id&&code===44?sheet.paper.widthMm:sheet?.id&&code===45?sheet.paper.heightMm:sheet?.plotSettings?({40:sheet.plotSettings.marginsMm.left,41:sheet.plotSettings.marginsMm.bottom,42:sheet.plotSettings.marginsMm.right,43:sheet.plotSettings.marginsMm.top,46:sheet.plotSettings.originMm.x,47:sheet.plotSettings.originMm.y}[code]??0):0);
     pair(142, 1); pair(143, 1); pair(70, name === 'Model' ? 1024 : sheet?.viewports.some(view=>view.plotBorder)?1:0); pair(72, 1); pair(73, 0); pair(74, 5);
     pair(100, 'AcDbLayout'); pair(1, name); pair(70, 1); pair(71, order); pair(10, 0); pair(20, 0); pair(11, sheet?.paper.widthMm??420); pair(21, sheet?.paper.heightMm??297);
     point3(12, { x: 0, y: 0 }); point3(14, name === 'Model' ? { x: box.minX, y: box.minY } : { x: 0, y: 0 }); point3(15, name === 'Model' ? { x: box.maxX, y: box.maxY } : { x: 0, y: 0 });
@@ -1390,20 +1641,23 @@ export function createEditor(initialState = {}) {
   applyActiveView();
   let nextId = 1, transactionBefore = null, transactionIds = [], transformSources = [], copyBatches = [], editingSteps = [], clipboard = null, pendingCut = null;
   const allocatedIds=new Set(document.entities.map(entity=>entity.id));
+  const allocatedLayoutIds=new Set([...document.layouts.map(layout=>layout.id),...document.sheetSets.flatMap(set=>set.entries.map(entry=>entry.layoutId))]),allocatedSheetSetIds=new Set(document.sheetSets.map(set=>set.id));
+  const reserveSheetIds=()=>{state.layouts.forEach(layout=>allocatedLayoutIds.add(layout.id));state.sheetSets.forEach(set=>{allocatedSheetSetIds.add(set.id);set.entries.forEach(entry=>allocatedLayoutIds.add(entry.layoutId));});};
   const allocatedViewportIds=new Set(document.layouts.flatMap(layout=>layout.viewports.map(view=>view.id))),objectOrder=new Map();let nextObjectOrder=0;
   const entityScopes=new Map();
   const stampScopes=()=>{for(const entity of state.entities)if(entityScopes.has(entity.id)){const layoutId=entityScopes.get(entity.id);if(layoutId)entity.layoutId=layoutId;else delete entity.layoutId;entityScopes.delete(entity.id);}};
   const undoStack = [], redoStack = [];
-  const snapshot = () => {stampScopes();return clone({ entities: state.entities, layers: state.layers, currentLayer: state.currentLayer,textStyles:state.textStyles,dimStyles:state.dimStyles,currentTextStyle:state.currentTextStyle,currentDimStyle:state.currentDimStyle,settings:state.settings,blocks:state.blocks,layouts:state.layouts,ucs:state.ucs });};
+  const snapshot = () => {stampScopes();const saved=clone({ entities: state.entities.filter(entity=>!architecturalEntity(entity)), layers: state.layers, currentLayer: state.currentLayer,textStyles:state.textStyles,dimStyles:state.dimStyles,imageResources:state.imageResources,rasterSettings:state.rasterSettings,currentTextStyle:state.currentTextStyle,currentDimStyle:state.currentDimStyle,settings:state.settings,blocks:state.blocks,layouts:state.layouts,sheetSets:state.sheetSets,ucs:state.ucs,architecture:state.architecture });saved.rasterSettings=state.rasterSettings===undefined?undefined:clone(state.rasterSettings);return saved;};
   const layerOf = entity => state.layers.find(layer => layer.name === entity.layer);
   const activeContext=()=>({space:state.activeLayoutId?'paper':'model',layoutId:state.activeLayoutId,viewportId:state.activeViewportId});
   const activeOwned=entity=>state.activeSpace==='paper'?entity.layoutId===state.activeLayoutId:!entity.layoutId;
   const visible=entity=>activeOwned(entity)&&isEntityVisible(entity,state,activeContext());
-  const editable = entity => { const layer = layerOf(entity); return layer && visible(entity) && !layer.locked; };
+  const selectable = entity => { const layer = layerOf(entity); return layer && visible(entity) && !layer.locked; };
+  const editable = entity => selectable(entity)&&!architecturalEntity(entity);
   const viewportProxy=(view,layoutId)=>viewportAsObject(view,layoutId,{entityIds:allocatedIds,settings:state.settings});
   const allObjects=()=>{stampScopes();const objects=[...state.entities,...state.layouts.flatMap(layout=>layout.viewports.map(view=>viewportProxy(view,layout.id)))];for(const object of objects)if(!objectOrder.has(object.id))objectOrder.set(object.id,nextObjectOrder++);return objects.sort((a,b)=>objectOrder.get(a.id)-objectOrder.get(b.id));};
   const objectById=value=>{const objects=allObjects();return objects.find(object=>object.id===value)??objects.find(object=>object.type==='VIEWPORT'&&object.viewportId===value&&activeOwned(object));};
-  const validateSelection = () => {const objects=new Map(allObjects().map(object=>[object.id,object]));state.selectionIds=state.selectionIds.filter(id=>objects.has(id)&&editable(objects.get(id)));};
+  const validateSelection = () => {const objects=new Map(allObjects().map(object=>[object.id,object]));state.selectionIds=state.selectionIds.filter(id=>objects.has(id)&&selectable(objects.get(id)));};
   allObjects();
   const result = (ok, message, changed = false) => {
     stampScopes();
@@ -1412,7 +1666,7 @@ export function createEditor(initialState = {}) {
     return { ok, message, changed };
   };
   const reconcileSpaces=()=>{const priorLayoutId=state.activeLayoutId;if(state.activeLayoutId&&!state.layouts.some(layout=>layout.id===state.activeLayoutId)){state.activeLayoutId=null;state.activeViewportId=null;state.activeSpace='model';}if(state.activeViewportId&&!state.layouts.find(layout=>layout.id===state.activeLayoutId)?.viewports.some(view=>view.id===state.activeViewportId)){state.activeViewportId=null;state.activeSpace=state.activeLayoutId?'paper':'model';}if(state.activeLayoutId||priorLayoutId)applyActiveView();};
-  const restore = data => { Object.assign(state, clone(data));state.entities.forEach(entity=>allocatedIds.add(entity.id));state.layouts.forEach(layout=>layout.viewports.forEach(view=>allocatedViewportIds.add(view.id)));reconcileSpaces();validateSelection(); };
+  const restore = data => { Object.assign(state, clone(data));state.rasterSettings=data.rasterSettings===undefined?undefined:clone(data.rasterSettings);reserveSheetIds();state.architectureDerived=state.architecture?generateArchitecture(state.architecture,state.settings):{entities:[],owners:{},diagnostics:[],rooms:[],roofs:[],quantities:{},validation:{}};state.entities.push(...state.architectureDerived.entities);state.entities.forEach(entity=>allocatedIds.add(entity.id));state.layouts.forEach(layout=>layout.viewports.forEach(view=>allocatedViewportIds.add(view.id)));reconcileSpaces();validateSelection(); };
   const record = before => {
     const after = snapshot();
     const beforeJSON=JSON.stringify(before),afterJSON=JSON.stringify(after);if(beforeJSON===afterJSON)return false;
@@ -1432,6 +1686,7 @@ export function createEditor(initialState = {}) {
   const id = () => { let value; do { value = `e${nextId++}`; } while (allocatedIds.has(value));allocatedIds.add(value);entityScopes.set(value,state.activeSpace==='paper'?state.activeLayoutId:null);return value; };
   const nextViewportId=(reserved=allocatedViewportIds)=>{let n=1;while(reserved.has(`vp${n}`))n++;return`vp${n}`;};
   const planObjects=(objects,replaced=[],copyObjects=false)=>{
+    if(objects.some(architecturalEntity)||replaced.some(id=>id.startsWith(ARCHITECTURE_PREFIX)))throw Error('Edit the architectural owner in Architecture, or detach it deliberately before ordinary geometry editing.');
     const frames=objects.filter(object=>object.type==='VIEWPORT'),geometry=objects.filter(object=>object.type!=='VIEWPORT'),removed=new Set(replaced),layouts=clone(state.layouts),reserved=new Set(allocatedViewportIds),created=[];
     for(const object of frames){if(state.activeSpace!=='paper'||object.layoutId!==state.activeLayoutId)throw Error('Viewport frames are edited in their paper layout.');const layout=layouts.find(layout=>layout.id===object.layoutId);if(!layout)throw Error('Viewport layout does not exist.');const viewportId=copyObjects?nextViewportId(reserved):object.viewportId;if(copyObjects){reserved.add(viewportId);created.push(viewportId);}const{type,id:selectionId,viewportId:discard,points,closed,layoutId,...definition}=object,newView={...definition,id:viewportId};if(copyObjects)layout.viewports.push(newView);else{const index=layout.viewports.findIndex(view=>view.id===viewportId);if(index<0||!removed.has(object.id))throw Error('Viewport replacement source is unavailable.');layout.viewports[index]=newView;}}
     const geometryIds=new Set(state.entities.map(entity=>entity.id)),normalizedLayouts=normalizeLayouts(layouts,state.layers,normalizeCamera3D);check3DResources(geometry,replaced.filter(value=>geometryIds.has(value)));
@@ -1440,7 +1695,9 @@ export function createEditor(initialState = {}) {
   const commitObjects=(objects,replaced=[],copyObjects=false)=>{const proposal=planObjects(objects,replaced,copyObjects),geometry=proposal.geometry.map(entity=>{const changed=clone(entity);if(copyObjects)changed.id=id();return changed;}),byId=new Map(geometry.map(entity=>[entity.id,entity]));state.entities=copyObjects?[...state.entities,...geometry]:state.entities.map(entity=>byId.get(entity.id)??entity);state.layouts=proposal.layouts;proposal.created.forEach(value=>allocatedViewportIds.add(value));const createdObjects=allObjects().filter(object=>byId.has(object.id)||object.type==='VIEWPORT'&&proposal.created.includes(object.viewportId));reconcileSpaces();return copyObjects?createdObjects.map(object=>object.id):objects.map(object=>object.id);};
   const removeObjects=ids=>{const removed=new Set(ids),retainedFrames=new Map(state.layouts.map(layout=>[layout.id,layout.viewports.filter(view=>!removed.has(viewportProxy(view,layout.id).id))]));state.entities=state.entities.filter(entity=>!removed.has(entity.id));for(const layout of state.layouts)layout.viewports=retainedFrames.get(layout.id);reconcileSpaces();};
   const acceptTransformSelection = () => {
+    if(['TRIM','EXTEND'].includes(state.command))return acceptTrimBoundaries();
     validateSelection();
+    if(state.selectionIds.some(id=>id.startsWith(ARCHITECTURE_PREFIX)))return result(false,'Generated architectural objects select their owner. Use Architecture to edit the source, or ROOFDETACH to copy ordinary geometry.');
     if (!state.selectionIds.length) return result(false, 'No objects selected. Select objects and press Enter.');
     state.commandSelectionIds = [...state.selectionIds];
     const selected = new Set(state.commandSelectionIds);
@@ -1457,7 +1714,7 @@ export function createEditor(initialState = {}) {
       if(!state.commandData.blockName||!state.commandPoints.length)throw new Error('BLOCK requires a name and base point first.');if(transformSources.some(entity=>TYPES3D.has(entity.type)||entity.type==='INSERT'))throw new Error('BLOCK supports flat planar geometry; nested references and 3D content are not supported.');
       const base=state.commandPoints[0],entities=transformSources.map(source=>{const{id:discard,layoutId:discardOwner,...local}=translateEntity(source,{x:-base.x,y:-base.y},state);return local;}),block={name:state.commandData.blockName,base:{...base},entities};
       const reference={id:id(),type:'INSERT',blockName:block.name,position:{...base},scale:1,rotation:0,layer:state.currentLayer};drawingLayerReady();
-      const proposed=normalizeDocument({...snapshot(),blocks:[...state.blocks,block],entities:[...state.entities.filter(entity=>!selected.has(entity.id)),reference],viewport:state.viewport,camera3d:state.camera3d,workspace:state.workspace});state.blocks=proposed.blocks;state.entities=proposed.entities;state.selectionIds=[reference.id];return finish(`Block ${block.name} created and source geometry converted to one INSERT.`);
+      const proposed=normalizeDocument({...snapshot(),blocks:[...state.blocks,block],entities:[...state.entities.filter(entity=>!selected.has(entity.id)&&!architecturalEntity(entity)),reference],viewport:state.viewport,camera3d:state.camera3d,workspace:state.workspace});state.blocks=proposed.blocks;state.entities=proposed.entities;state.selectionIds=[reference.id];return finish(`Block ${block.name} created and source geometry converted to one INSERT.`);
     }
     if(state.command==='EXTRUDE'){
       for(const entity of transformSources){if(entity.type==='POLY3D')spatialProfilePlane(entity);else if(entity.type==='CIRCLE3D')validateSpatialCurve(entity);else if(entity.type==='CIRCLE')validateCircle(entity.center,entity.radius);else{if(!['RECTANG','PLINE'].includes(entity.type)||entity.type==='PLINE'&&!entity.closed)throw new Error('EXTRUDE requires closed planar paths or circles.');triangulatePolygon(entity.points);}}
@@ -1512,13 +1769,14 @@ export function createEditor(initialState = {}) {
     return result(true, `${transformSources.length} objects accepted.`);
   };
   const captureClipboard = rawBase => {
+    if(state.selectionIds.some(value=>value.startsWith(ARCHITECTURE_PREFIX)))throw Error('Generated architectural objects require deliberate detachment before ordinary clipboard copy; the whole selection was preserved.');
     const sources=(transformSources.length?transformSources:allObjects().filter(entity=>state.selectionIds.includes(entity.id)&&editable(entity))).map(({layoutId,...entity})=>entity);
     if(sources.some(entity=>entity.type==='VIEWPORT'))throw Error('Viewport frames use ordinary COPY inside paper space; geometry clipboard cannot carry layout view definitions.');
     if (!sources.length) throw new Error('Select objects to copy to the clipboard.');
     const is3D=sources.some(entity=>TYPES3D.has(entity.type)),box = is3D?bounds3D(sources,state):bounds(sources,state), base = rawBase == null ? { x: box.minX, y: box.minY,...(is3D?{z:box.minZ}:{}) } : is3D?point3(rawBase):point(rawBase);
     const layerNames = new Set(sources.map(entity => entity.layer));
     const blockNames=new Set(sources.filter(entity=>entity.type==='INSERT').map(entity=>entity.blockName)),blocks=state.blocks.filter(block=>blockNames.has(block.name));blocks.forEach(block=>block.entities.forEach(entity=>{if(entity.layer!=='0')layerNames.add(entity.layer);}));
-    clipboard = normalizeClipboard({ format: 'LinecraftClipboard/1', base, entities: sources, layers: state.layers.filter(layer => layerNames.has(layer.name)),textStyles:state.textStyles,dimStyles:state.dimStyles,blocks });
+    clipboard = normalizeClipboard({ format: 'LinecraftClipboard/1', base, entities: sources, layers: state.layers.filter(layer => layerNames.has(layer.name)),textStyles:state.textStyles,dimStyles:state.dimStyles,blocks,...(state.imageResources.length?{imageResources:state.imageResources.filter(r=>[...sources,...blocks.flatMap(b=>b.entities)].some(e=>e.type==='IMAGE'&&e.resourceId===r.id))}:{}) });
     state.clipboardRevision++;
     return result(true, `${sources.length} objects copied to the geometry clipboard.`);
   };
@@ -1538,18 +1796,18 @@ export function createEditor(initialState = {}) {
     const neededBlocks=new Set(transformed.filter(entity=>entity.type==='INSERT').map(entity=>entity.blockName)),styleEntities=[...transformed,...clipboard.blocks.filter(block=>neededBlocks.has(block.name)).flatMap(block=>block.entities)];
     const newBlocks=clipboard.blocks.filter(block=>neededBlocks.has(block.name)).filter(source=>{const existing=state.blocks.find(block=>block.name===source.name);if(existing&&JSON.stringify(existing)!==JSON.stringify(source))throw new Error(`Clipboard block name ${source.name} conflicts with the destination definition.`);return !existing;});
     if(state.blocks.length+newBlocks.length>64||[...state.blocks,...newBlocks].reduce((sum,block)=>sum+block.entities.length,0)>50000)throw new Error('Pasted blocks exceed definition resource limits.');
-    const neededText=new Set(styleEntities.filter(entity=>TEXT_TYPES.has(entity.type)).map(entity=>entity.style)),neededDim=new Set(styleEntities.filter(entity=>entity.type==='DIMENSION').map(entity=>entity.style));
+    const neededText=new Set(styleEntities.filter(entity=>(TEXT_TYPES.has(entity.type)||entity.type==='LEADER')).map(entity=>entity.style)),neededDim=new Set(styleEntities.filter(entity=>entity.type==='DIMENSION').map(entity=>entity.style));
     for(const style of clipboard.dimStyles)if(neededDim.has(style.name))neededText.add(style.textStyle);
     const mergeStyles=(key,needed)=>clipboard[key].filter(source=>needed.has(source.name)).filter(source=>{
       const existing=state[key].find(style=>style.name===source.name);
       if(existing&&JSON.stringify(existing)!==JSON.stringify(source))throw new Error(`Clipboard ${key} name ${source.name} conflicts with the destination definition.`);
       return !existing;
     });
-    const newTextStyles=mergeStyles('textStyles',neededText),newDimStyles=mergeStyles('dimStyles',neededDim);
+    const newTextStyles=mergeStyles('textStyles',neededText),newDimStyles=mergeStyles('dimStyles',neededDim),neededImages=new Set(styleEntities.filter(e=>e.type==='IMAGE').map(e=>e.resourceId)),newImages=(clipboard.imageResources??[]).filter(r=>neededImages.has(r.id)).filter(r=>{const existing=state.imageResources.find(x=>x.id===r.id);if(existing&&!sameScriptData(existing,r))throw Error(`Clipboard image resource ${r.id} conflicts with the destination.`);return !existing;});normalizeImageResources([...state.imageResources,...newImages]);
     check3DResources(transformed,[],[...state.blocks,...newBlocks]);
     state.layers.push(...additions);
     state.blocks.push(...newBlocks);
-    state.textStyles.push(...newTextStyles);state.dimStyles.push(...newDimStyles);
+    state.textStyles.push(...newTextStyles);state.dimStyles.push(...newDimStyles);state.imageResources.push(...newImages);
     for (const entity of transformed) { entity.id = id(); state.entities.push(entity); }
     state.selectionIds = transformed.map(entity => entity.id); state.lastPoint = clipboard.entities.some(entity=>TYPES3D.has(entity.type))?point3(rawTarget):point(rawTarget);
     return finish(`${transformed.length} objects pasted.`);
@@ -1558,6 +1816,7 @@ export function createEditor(initialState = {}) {
     const before = editingSteps.pop();
     if (!before) return result(false, `No ${state.command} edit to undo.`);
     restore(before); state.commandPhase = state.command === 'OFFSET' ? 'object' : 'target'; state.commandData.targetKind = 'object';
+    if(['TRIM','EXTEND'].includes(state.command))trimPrompt();
     return result(true, `Last ${state.command} edit removed.`, true);
   };
   const replaceLine = (source, fragments) => {
@@ -1572,6 +1831,7 @@ export function createEditor(initialState = {}) {
   };
   const liveBoundaries=()=>state.entities.filter(entity=>state.commandSelectionIds.includes(entity.id)&&visible(entity));
   const pickEditingTarget = (rawPoint,requestedId) => {
+    if(['TRIM','EXTEND'].includes(state.command))return applyTrimPick(rawPoint,{entityId:requestedId});
     const p = point(rawPoint), entityId = requestedId??hitTest(state.entities.filter(editable), p, 8 / state.viewport.scale,state);
     const target = state.entities.find(entity => entity.id === entityId);
     if (!target||!editable(target)) return result(false, 'No editable object at that point.');
@@ -1580,20 +1840,118 @@ export function createEditor(initialState = {}) {
       state.commandData.offsetSource = clone(target); state.commandPhase = 'side'; state.commandData.targetKind = 'point';
       state.prompt = 'OFFSET Specify point on side to offset:'; return result(true, 'OFFSET object accepted.');
     }
-    if (target.type !== 'LINE') return result(false, `${state.command} currently supports LINE targets.`);
-    return state.command === 'TRIM' ? replaceLine(target, trimLine(target, liveBoundaries(), p)) : replaceLine(target, [extendLine(target, liveBoundaries(), p)]);
+    return applyTrimPick(rawPoint,{entityId:requestedId});
+  };
+  let trimViewOverride=null;
+  const trimViewContext=()=>JSON.stringify([state.activeSpace,state.activeLayoutId,state.activeViewportId,state.workspace,state.camera3d]);
+  const trimCommand=()=>['TRIM','EXTEND'].includes(state.command);
+  const trimOptions=()=>{
+    if(state.settings.trimProject==='view'&&state.workspace==='3d'&&state.camera3d.projection==='perspective')throw Error('TRIM Project View requires an orthographic view; perspective projection is not supported.');
+    const camera=state.camera3d,rad=Math.PI/180,yaw=camera.yaw*rad,pitch=camera.pitch*rad,roll=(camera.roll??0)*rad,right={x:-Math.sin(yaw),y:Math.cos(yaw),z:0},up={x:-Math.cos(yaw)*Math.sin(pitch),y:-Math.sin(yaw)*Math.sin(pitch),z:Math.cos(pitch)},view={right:{x:right.x*Math.cos(roll)+up.x*Math.sin(roll),y:right.y*Math.cos(roll)+up.y*Math.sin(roll),z:right.z*Math.cos(roll)+up.z*Math.sin(roll)},up:{x:up.x*Math.cos(roll)-right.x*Math.sin(roll),y:up.y*Math.cos(roll)-right.y*Math.sin(roll),z:up.z*Math.cos(roll)-right.z*Math.sin(roll)}},paper=state.activeSpace==='paper',top={right:{x:1,y:0,z:0},up:{x:0,y:1,z:0}},override=trimViewOverride?.context===trimViewContext()?trimViewOverride.basis:null;
+    return{project:state.settings.trimProject,edgeExtend:state.settings.trimEdgeExtend,plane:paper?presetUCS('XY'):state.ucs,view:paper?top:override??(state.workspace==='2d'?top:view)};
+  };
+  const trimPrompt=()=>{
+    state.commandPhase='target';state.commandData.targetKind='object';
+    state.prompt=state.commandData.trimErase?`${state.command} Select objects to erase or [Undo] <return>:`:`${state.command} Select object to ${state.command.toLowerCase()} or shift-select to ${state.command==='TRIM'?'extend':'trim'} [cuTting edges/Fence/Crossing/mOde/Project/${state.settings.trimExtendMode==='standard'?'Edge/':''}eRase/Undo] <finish>:`;
+  };
+  const trimBoundaryPrompt=()=>{state.commandPhase='selection';state.commandData.targetKind='object';state.prompt=`${state.command} Select cutting edges or [Add/Remove/Fence/Crossing/mOde/Project] <select all>:`;};
+  const restoreTrimOption=()=>{const previous=state.commandData.trimOptionReturn;delete state.commandData.trimOptionReturn;if(previous?.phase==='selection')trimBoundaryPrompt();else if(previous&&['trim-fence','trim-crossing-first','trim-crossing-second'].includes(previous.phase)){state.commandPhase=previous.phase;state.commandData.targetKind=previous.targetKind;state.prompt=previous.prompt;}else trimPrompt();};
+  const trimBoundaryEntities=sources=>sources.flatMap(source=>source.type==='INSERT'?trimBoundaryEntities(visibleInsertEntities(source,state)):source.type==='HATCH'?trimBoundaryEntities([{...source.boundary,id:source.id,layer:source.layer}]):['LINE','ARC','CIRCLE','PLINE','RECTANG','POLY3D'].includes(source.type)?[source]:[]);
+  const unsupportedTrimBoundaryKinds=sources=>[...new Set(sources.flatMap(source=>source.type==='INSERT'?unsupportedTrimBoundaryKinds(visibleInsertEntities(source,state)):source.type==='HATCH'?unsupportedTrimBoundaryKinds([source.boundary]):['ELLIPSE','SPLINE','ARC3D','CIRCLE3D'].includes(source.type)?[source.type]:[]))];
+  // Implicit selectors must retain unsupported curves for validation rather than
+  // presenting a silently filtered subset as the complete boundary selection.
+  const trimBoundaryCandidate=source=>trimBoundaryEntities([source]).length>0||unsupportedTrimBoundaryKinds([source]).length>0;
+  const trimBoundaries=()=>trimBoundaryEntities(state.commandData.trimAll?state.entities.filter(visible):state.entities.filter(entity=>state.commandSelectionIds.includes(entity.id)&&visible(entity)));
+  const acceptTrimBoundaries=()=>{
+    const selected=state.selectionIds.map(value=>objectById(value));
+    if(selected.some(object=>!object||!visible(object)))return result(false,'Every selected cutting boundary must still be visible and available.');
+    const unsupported=unsupportedTrimBoundaryKinds(selected);if(unsupported.length)return result(false,`Selected cutting boundaries contain unsupported ${unsupported.join(', ')} curves. Select only supported cutting edges; no boundary was approximated.`);
+    if(selected.some(object=>!trimBoundaryEntities([object]).length))return result(false,'Cutting boundaries support straight paths, finite circles/arcs, hatch boundaries and visible flat block geometry. Unsupported boundaries were not approximated.');
+    state.commandData.trimAll=selected.length===0;state.commandSelectionIds=selected.map(object=>object.id);state.selectionIds=[];state.commandData.trimErase=false;delete state.commandData.quickFenceStart;trimPrompt();return result(true,state.commandData.trimAll?'All visible supported objects are cutting boundaries.':`${selected.length} cutting boundaries accepted.`);
+  };
+  const validateTrimFragments=fragments=>{for(const entity of fragments){if(entity.type==='LINE')lineBasis(entity);else if(entity.type==='ARC')validateArc(entity);else if(entity.type==='PLINE')validatePolyline(entity.points,entity.closed);else if(entity.type==='POLY3D')validatePolyline3D(entity.points,entity.closed);else throw Error('Unsupported trim fragment.');}};
+  const commitTrimFragments=(source,fragments,{localRecord=true}={})=>{
+    validateTrimFragments(fragments);const replacements=fragments.map((fragment,index)=>({...fragment,id:index===0?source.id:id()}));
+    if(replacements.length===1&&JSON.stringify(replacements[0])===JSON.stringify(source))return result(false,`${state.command} would not alter that object.`);
+    check3DResources(replacements,[source.id]);const before=localRecord?snapshot():null;state.entities=state.entities.flatMap(entity=>entity.id===source.id?replacements:[entity]);
+    if(state.commandSelectionIds.includes(source.id))state.commandSelectionIds.push(...replacements.slice(1).map(entity=>entity.id));if(localRecord)editingSteps.push(before);validateSelection();return{...result(true,`${state.command} edit completed.`,true),entityIds:replacements.map(entity=>entity.id)};
+  };
+  const trimTargetAt=(rawPoint,requestedId)=>{const p=point3(rawPoint),entityId=requestedId??hitTest(state.entities.filter(editable),p,8/(state.activeSpace==='paper'?state.paperViewport.scale:state.viewport.scale),state);return state.entities.find(entity=>entity.id===entityId);};
+  const trimProposal=(source,rawPoint,{extend=false,erase=false}={})=>{
+    if(erase||state.commandData.trimErase)return[];
+    if(state.commandData.trimAll){
+      const unsupported=unsupportedTrimBoundaryKinds(state.entities.filter(entity=>entity.id!==source.id&&visible(entity)));
+      if(unsupported.length)throw Error(`The all-boundary result is ambiguous because visible ${unsupported.join(', ')} cutting curves are unsupported. Select explicit supported cutting edges or use Erase; the drawing is unchanged.`);
+    }
+    const extending=state.command==='EXTEND'?!extend:extend;
+    try{return trimEntityGeometry(source,trimBoundaries(),rawPoint,{...trimOptions(),extend:extending});}
+    catch(error){
+      if(!extending&&state.settings.trimExtendMode==='quick'&&/^No (cutting edge|distinct cutting interval)/.test(error.message))return[];throw error;
+    }
+  };
+  const applyTrimPick=(rawPoint,options={})=>{
+    if(!trimCommand()||state.commandPhase!=='target')return result(false,'TRIM/EXTEND is not requesting a target.');
+    const p=point3(rawPoint);
+    if(state.commandData.quickFenceStart&&!options.entityId){const first=state.commandData.quickFenceStart;delete state.commandData.quickFenceStart;return applyTrimFence([first,p],options);}
+    const source=trimTargetAt(p,options.entityId);
+    if(!source){if(state.settings.trimExtendMode==='quick'&&!options.entityId){state.commandData.quickFenceStart=p;state.prompt=`${state.command} Specify second fence point or [Undo]:`;return result(true,'First automatic fence point accepted.');}return result(false,'No editable object at that point.');}
+    if(!editable(source))return result(false,'The target must be visible, unlocked and ordinary editable geometry.');
+    const fragments=trimProposal(source,p,options),response=commitTrimFragments(source,fragments,options);state.lastPoint={...p};trimPrompt();return response;
+  };
+  const applyTrimFence=(rawPoints,options={})=>{
+    if(!trimCommand()||!['target','trim-fence','trim-crossing-first','trim-crossing-second'].includes(state.commandPhase))return result(false,'TRIM/EXTEND is not requesting a fence or target.');
+    if(state.workspace==='3d'&&state.camera3d.projection==='perspective')throw Error('TRIM fence/crossing selection requires an orthographic view; use individual None/UCS picks in perspective.');
+    if(!Array.isArray(rawPoints)||rawPoints.length<2||rawPoints.length>4096)throw Error('Fence requires 2..4096 points.');
+    let points=rawPoints.map(point3);const selectionOptions={...trimOptions(),project:'view'},projection=trimProjection(selectionOptions);
+    if(options.crossing){const first=points[0],a=projection.point(first),b=projection.point(points.at(-1));if(a.x===b.x||a.y===b.y)throw Error('Crossing needs two distinct projected rectangular corners.');const u=projection.right,v=projection.up,normal={x:u.y*v.z-u.z*v.y,y:u.z*v.x-u.x*v.z,z:u.x*v.y-u.y*v.x},depth=first.x*normal.x+first.y*normal.y+first.z*normal.z,lift=p=>({x:u.x*p.x+v.x*p.y+normal.x*depth,y:u.y*p.x+v.y*p.y+normal.y*depth,z:u.z*p.x+v.z*p.y+normal.z*depth});points=[a,{x:a.x,y:b.y},b,{x:b.x,y:a.y},a].map(lift);const projected=points.map(projection.point),area=projected.slice(0,-1).reduce((sum,p,i)=>sum+p.x*projected[i+1].y-projected[i+1].x*p.y,0);if(area>0)points=[points[0],...points.slice(1,-1).reverse(),points[0]];}
+    const selectingBoundaries=state.commandData.trimFenceBoundaries===true,targets=state.entities.filter(selectingBoundaries?selectable:editable);
+    if(selectingBoundaries){const unsupported=unsupportedTrimBoundaryKinds(targets);if(unsupported.length){state.commandPoints=[];delete state.commandData.trimFenceBoundaries;trimBoundaryPrompt();return result(false,`${options.crossing?'Crossing':'Fence'} cutting-edge selection is ambiguous because visible ${unsupported.join(', ')} curves are unsupported. Select explicit supported cutting edges; the previous selection and drawing are unchanged.`);}}
+    const shapes=selectingBoundaries?targets.flatMap(source=>trimBoundaryEntities([source]).map(shape=>({...shape,id:source.id}))):targets,hits=trimFenceHits(shapes,points,selectionOptions);
+    if(options.crossing){const a=projection.point(points[0]),b=projection.point(points[2]),minX=Math.min(a.x,b.x),maxX=Math.max(a.x,b.x),minY=Math.min(a.y,b.y),maxY=Math.max(a.y,b.y);for(const source of targets.filter(entity=>selectingBoundaries?trimBoundaryEntities([entity]).length:TRIM_TARGET_TYPES.includes(entity.type))){if(hits.some(hit=>hit.id===source.id))continue;const candidate=entityPoints(source,state)[0],q=candidate&&projection.point(candidate);if(q&&q.x>=minX&&q.x<=maxX&&q.y>=minY&&q.y<=maxY)hits.push({id:source.id,point:candidate,order:Infinity});}}
+    if(selectingBoundaries){const selected=[...new Set(hits.map(hit=>hit.id))];state.commandPoints=[];delete state.commandData.trimFenceBoundaries;trimBoundaryPrompt();editor.select(selected,{add:true});return result(true,`${selected.length} cutting boundaries found.`);}
+    const before=snapshot(),steps=editingSteps.length,ids=[...state.commandSelectionIds],descendants=new Map(targets.map(target=>[target.id,[target.id]]));let changes=0;
+    try{
+      for(const hit of hits){const candidates=state.entities.filter(entity=>(descendants.get(hit.id)||[]).includes(entity.id)&&editable(entity));let source=null;for(const candidate of candidates){const magnitude=entityPoints(candidate,state).reduce((maximum,p)=>Math.max(maximum,Math.abs(p.x),Math.abs(p.y),Math.abs(p.z??0)),1),tolerance=Number.EPSILON*128*magnitude;if(trimTargetDistance(candidate,hit.point,trimOptions())<=tolerance){source=candidate;break;}}if(!source)continue;
+        let fragments;try{fragments=trimProposal(source,hit.point,options);}catch(error){if(/^No (cutting edge|distinct cutting interval|boundary intersects)|^Pick the portion/.test(error.message))continue;throw error;}
+        const response=commitTrimFragments(source,fragments,{localRecord:false});if(response.changed){changes++;descendants.set(hit.id,[...(descendants.get(hit.id)||[]).filter(value=>value!==source.id),...response.entityIds]);}
+      }
+      if(changes)editingSteps.push(before);state.commandPoints=[];delete state.commandData.quickFenceStart;trimPrompt();return result(true,`${changes} ${state.command} fence edit${changes===1?'':'s'} completed.`,changes>0);
+    }catch(error){restore(before);editingSteps.length=steps;state.commandSelectionIds=ids;throw error;}
+  };
+  const executeTrim=(inputText,token)=>{
+    if(state.commandPhase==='trim-mode'){if(!['Q','QUICK','S','STANDARD',''].includes(token))return result(false,'Choose Quick or Standard.');if(token)editor.updateDraftingSettings({trimExtendMode:['Q','QUICK'].includes(token)?'quick':'standard'});state.selectionIds=[];state.commandData.trimErase=false;delete state.commandData.quickFenceStart;delete state.commandData.trimFenceBoundaries;state.commandPoints=[];if(state.settings.trimExtendMode==='standard'){state.commandData.trimAll=false;trimBoundaryPrompt();}else{state.commandData.trimAll=true;state.commandSelectionIds=[];trimPrompt();}return result(true,`${state.settings.trimExtendMode} mode selected.`);}
+    if(state.commandPhase==='trim-project'){const values={N:'none',NONE:'none',U:'ucs',UCS:'ucs',V:'view',VIEW:'view'};if(token&&!values[token])return result(false,'Choose None, UCS or View.');if(values[token]==='view'&&state.workspace==='3d'&&state.camera3d.projection==='perspective')return result(false,'TRIM Project View requires an orthographic view. Choose None/UCS or change the view.');if(token)editor.updateDraftingSettings({trimProject:values[token]});restoreTrimOption();return result(true,`Project ${state.settings.trimProject} selected.`);}
+    if(state.commandPhase==='trim-edge'){if(token&&!['E','EXTEND','N','NO','NOEXTEND','NO EXTEND'].includes(token))return result(false,'Choose Extend or No extend.');if(token)editor.updateDraftingSettings({trimEdgeExtend:['E','EXTEND'].includes(token)});restoreTrimOption();return result(true,`Implied cutting edges ${state.settings.trimEdgeExtend?'enabled':'disabled'}.`);}
+    if(state.commandPhase==='selection'&&typeof inputText==='string'&&objectById(inputText))return editor.select([inputText],{add:true});
+    if(['F','FENCE','C','CROSSING'].includes(token)){const crossing=['C','CROSSING'].includes(token);state.commandData.trimFenceBoundaries=state.commandPhase==='selection';state.commandPhase=crossing?'trim-crossing-first':'trim-fence';state.commandPoints=[];state.commandData.targetKind='point';state.prompt=`${state.command} Specify first ${crossing?'crossing corner':'fence point'}:`;return result(true,`${crossing?'Crossing':'Fence'} selection started.`);}
+    if(['O','MO','MODE'].includes(token)){state.commandPhase='trim-mode';state.commandData.targetKind='none';state.prompt=`${state.command} Enter [Quick/Standard] <${state.settings.trimExtendMode}>:`;return result(true,'Choose the trim/extend mode.');}
+    if(['P','PROJECT'].includes(token)){state.commandData.trimOptionReturn={phase:state.commandPhase,prompt:state.prompt,targetKind:state.commandData.targetKind};state.commandPhase='trim-project';state.commandData.targetKind='none';state.prompt=`${state.command} Enter projection [None/UCS/View] <${state.settings.trimProject}>:`;return result(true,'Choose projection.');}
+    if(['E','EDGE'].includes(token)&&state.settings.trimExtendMode==='standard'){state.commandData.trimOptionReturn={phase:state.commandPhase,prompt:state.prompt,targetKind:state.commandData.targetKind};state.commandPhase='trim-edge';state.commandData.targetKind='none';state.prompt=`${state.command} Enter implied edge [Extend/No extend] <${state.settings.trimEdgeExtend?'Extend':'No extend'}>:`;return result(true,'Choose implied cutting edges.');}
+    if(['U','UNDO'].includes(token)){delete state.commandData.quickFenceStart;return editingUndo();}
+    if(state.commandPhase==='selection'){if(inputText==='')return acceptTrimBoundaries();if(['A','ADD','R','REMOVE'].includes(token)){state.commandData.trimRemoving=['R','REMOVE'].includes(token);return result(true,state.commandData.trimRemoving?'Remove cutting boundaries from the selection.':'Add cutting boundaries to the selection.');}if(['ALL','SELECT ALL'].includes(token))return editor.select(state.entities.filter(entity=>selectable(entity)&&trimBoundaryCandidate(entity)).map(entity=>entity.id),{add:true});if(['LAST','L'].includes(token)){const source=state.entities.filter(entity=>selectable(entity)&&trimBoundaryCandidate(entity)).at(-1);return source?editor.select([source.id],{add:true}):result(false,'No cutting-boundary candidates available.');}if(typeof inputText==='string'&&objectById(inputText))return editor.select([inputText],{add:true});return editor.submitPoint(parseCoordinate(inputText,state.lastPoint));}
+    if(['T','CUTTING','CUTTING EDGES','CUTTINGEDGES'].includes(token)){trimBoundaryPrompt();state.commandData.trimAll=false;state.commandData.trimRemoving=false;state.selectionIds=[];delete state.commandData.quickFenceStart;return result(true,'Select additional cutting boundaries.');}
+    if(['R','ERASE'].includes(token)){state.commandData.trimErase=true;trimPrompt();return result(true,'Select ordinary editable objects to erase; Enter returns to trim.');}
+    if(inputText===''){if(state.commandPhase==='trim-fence')return applyTrimFence(state.commandPoints);if(state.commandData.trimErase){state.commandData.trimErase=false;trimPrompt();return result(true,'Erase selection ended.');}state.selectionIds=[];return finish(`${state.command} completed.`);}
+    return editor.submitPoint(parseCoordinate(inputText,state.commandPoints.at(-1)??state.lastPoint));
   };
   const startCommand = command => {
     if(state.activeSpace==='paper'&&DRAW3D.has(command))return result(false,'Activate model space before constructing 3D geometry.');
     const plane=editor.getConstructionPlane(),spatial=state.activeSpace!=='paper'&&(state.settings.constructionPlane!=='XY'||Object.values(plane.origin).some(n=>n!==0));
-    if(spatial&&['ELLIPSE','SPLINE','HATCH','FILLET','CHAMFER','STRETCH','BLOCK','INSERT','TEXT','MTEXT',...DIM_COMMANDS].includes(command))return result(false,'This command uses World XY geometry; restore UCS World and zero elevation, or use spatial paths and mesh construction.');
+    if(spatial&&['ELLIPSE','SPLINE','HATCH','FILLET','CHAMFER','STRETCH','BLOCK','INSERT','TEXT','MTEXT','LEADER',...DIM_COMMANDS].includes(command))return result(false,'This command uses World XY geometry; restore UCS World and zero elevation, or use spatial paths and mesh construction.');
     validateSelection();
     state.command = command;
     state.commandPhase = null; state.commandData = {}; state.commandSelectionIds = [];
     state.commandPoints = [];
     transactionBefore = snapshot();
     transactionIds = []; transformSources = []; copyBatches = []; editingSteps = [];
+    if(['TRIMEXTENDMODE','EDGEMODE','PROJMODE'].includes(command)){state.commandPhase='trim-system-variable';state.commandData.targetKind='none';state.prompt=`${command} Enter ${command==='PROJMODE'?'0(None), 1(UCS) or 2(View)':'0 or 1'}:`;return result(true,'Change the drawing trim/extend preference.');}
+    if(['TRIM','EXTEND'].includes(command)){
+      state.commandData={targetKind:'object',trimAll:state.settings.trimExtendMode==='quick',trimErase:false,threeD:state.activeSpace!=='paper'};
+      if(state.settings.trimExtendMode==='quick'&&!state.selectionIds.length){trimPrompt();return result(true,`${command} Quick mode: all visible supported objects are boundaries.`);}
+      trimBoundaryPrompt();if(state.selectionIds.length)return acceptTrimBoundaries();return result(true,`${command} Standard boundary selection.`);
+    }
     if(['LINE','PLINE','RECTANG','CIRCLE','ARC',...DRAW3D].includes(command)){state.commandData.plane=clone(plane);state.commandData.spatial=spatial;if(spatial)state.commandData.threeD=true;}
+    if(command==='IMAGEFRAME'){state.commandPhase='image-frame';state.commandData.targetKind='none';state.prompt=`IMAGEFRAME Enter0(hidden),1(display and plot),or2(display only) <${state.rasterSettings?.frame??0}>:`;return result(true,'Change drawing-wide image frame policy.');}
     if(command==='LAYOUT'){state.commandPhase='layout-option';state.commandData.targetKind='none';state.prompt='LAYOUT Enter [New/Set/Delete/Rename]:';return result(true,'Manage named paper layouts.');}
     if(command==='MVIEW'){if(state.activeSpace!=='paper'){idle();return result(false,'Enter paper space before creating a model viewport.');}state.commandPhase='viewport-first';state.commandData.targetKind='point';state.prompt='MVIEW Specify first paper corner or [Polygonal/Object] (mm):';return result(true,'Create a rectangular or simple polygonal scaled model viewport.');}
     if(command==='UCS'){state.commandPhase='ucs-choice';state.commandData.targetKind='none';state.prompt='UCS Enter [World/XY/XZ/YZ/3point/Face] <World>:';return result(true,'Choose an orthonormal world, three-point or mesh-face construction plane.');}
@@ -1611,6 +1969,7 @@ export function createEditor(initialState = {}) {
     if(command==='3DORBITCTR'){state.commandPhase='orbit-center';state.commandData={targetKind:'point',threeD:true};state.prompt='3DORBITCTR Specify orbit center (X,Y,Z):';return result(true,'Specify an explicit 3D orbit target.');}
     if(command==='VPOINT'){state.commandPhase='view-vector';state.commandData={targetKind:'none',threeD:true};state.prompt='VPOINT Specify nonzero XYZ view direction:';return result(true,'Specify an XYZ vector from the target toward the viewer.');}
     if(command==='PLAN'){state.commandPhase='plan-choice';state.commandData.targetKind='none';state.prompt='PLAN Enter [Current/World] <Current>:';return result(true,'View perpendicular to the current UCS or World.');}
+    if(command==='LEADER'){const dim=state.dimStyles.find(s=>s.name===state.currentDimStyle);state.selectionIds=[];state.commandPhase='leader-point';state.commandData={targetKind:'point',style:dim.textStyle,height:dim.textHeight*dim.scale,arrowSize:dim.arrowSize*dim.scale,arrowType:dim.arrowType??'closed-filled'};state.prompt='LEADER Specify arrow point:';return result(true,'Create a straight leader with a single-line text landing.');}
     if(command==='TEXT'||command==='MTEXT'){
       const style=state.textStyles.find(style=>style.name===state.currentTextStyle);state.selectionIds=[];
       state.commandData={style:style.name,height:style.defaultHeight,rotation:style.defaultRotation,targetKind:'point'};
@@ -1789,13 +2148,180 @@ export function createEditor(initialState = {}) {
 
   const editor = {
     state,
+    getTrimState(){return{active:trimCommand(),mode:state.settings.trimExtendMode,quick:state.settings.trimExtendMode==='quick',project:state.settings.trimProject,edgeExtend:state.settings.trimEdgeExtend,phase:state.commandPhase,target:trimCommand()&&state.commandPhase==='target',selection:trimCommand()&&(state.commandPhase==='selection'||state.commandData.trimFenceBoundaries===true),erase:state.commandData.trimErase===true,allBoundaries:state.commandData.trimAll===true,automaticFence:state.commandData.quickFenceStart?clone(state.commandData.quickFenceStart):null,targetTypes:[...TRIM_TARGET_TYPES]};},
+    setTrimProjectionView(view){try{trimProjection({project:'view',view});trimViewOverride={basis:{right:point3(view.right),up:point3(view.up)},context:trimViewContext()};return result(true,'Trim view projection synchronized.');}catch(error){return result(false,error.message);}},
+    trimPick(rawPoint,options={}){try{if(!options||typeof options!=='object'||Array.isArray(options)||Object.keys(options).some(key=>!['extend','erase','entityId'].includes(key))||['extend','erase'].some(key=>options[key]!==undefined&&typeof options[key]!=='boolean')||options.entityId!==undefined&&typeof options.entityId!=='string')throw Error('Invalid trim pick options.');return applyTrimPick(rawPoint,options);}catch(error){return result(false,error.message);}},
+    trimFence(points,options={}){try{if(!options||typeof options!=='object'||Array.isArray(options)||Object.keys(options).some(key=>!['extend','erase','crossing'].includes(key))||Object.keys(options).some(key=>typeof options[key]!=='boolean'))throw Error('Invalid trim fence options.');return applyTrimFence(points,options);}catch(error){return result(false,error.message);}},
+    getScriptingLayerCapabilities(){
+      const {name,...defaults}=normalizeLayer({name:'0'});
+      return {actions:['create','update','set-current'],createPatchFields:[...SCRIPT_LAYER_PROPERTIES],updatePatchFields:['name',...SCRIPT_LAYER_PROPERTIES],setCurrentFields:['op','action','name'],propertyTypes:{name:'string',color:'six-digit-hex-string',lineweight:'finite-number',linetype:'enum',...Object.fromEntries(SCRIPT_LAYER_BOOLEANS.map(key=>[key,'boolean']))},linetypes:[...LINETYPES],lineweight:{minimum:0,maximum:10,units:'mm'},names:{caseSensitive:true,maximumLength:255,nonblank:true,preservedExactly:true},defaults,createChangesCurrentLayer:false,renameReport:'deleted-and-added'};
+    },
+    getScriptingLayoutCapabilities(){
+      return {actions:['create','update'],createFields:['op','action','name','patch'],updateFields:['op','action','layoutId','patch'],createPatchFields:['paper'],updatePatchFields:['name','paper'],paperFields:[...SCRIPT_LAYOUT_PAPER_FIELDS],paperSizes:clone(PAPER_SIZES),orientations:['portrait','landscape'],customSize:'Custom',dimensions:{minimum:10,maximum:5000,units:'mm'},defaults:{paper:normalizePaper()},maximumLayouts:32,names:{caseSensitive:false,maximumLength:255,nonblank:true,preservedExactly:true,reserved:['Model']},identity:'layoutId',createChangesActiveSpace:false,paperUpdate:'merge-existing-and-normalize',report:'net-by-id',reportOrder:'existing-layout-order-then-added'};
+    },
+    getScriptingViewportCapabilities(){
+      return {actions:['create','update'],createFields:['op','action','layoutId','patch'],updateFields:['op','action','layoutId','viewportId','patch'],patchFields:[...SCRIPT_VIEWPORT_FIELDS],frameFields:['x','y','width','height'],boundaryPointFields:['x','y'],modelCenterFields:['x','y','z'],views:clone(SCRIPT_VIEWPORT_VIEWS),defaults:{modelCenter:{x:0,y:0,z:0},scaleDenominator:100,locked:false,frozenLayers:[],workspace:'2d',view:'top',plotBorder:false,layer:'0'},geometryRequiredOnCreate:true,frame:{units:'mm',coordinateMinimum:-1e9,coordinateMaximum:1e9,dimensionMinimum:.01,dimensionMaximum:1e9},boundary:{minimumVertices:3,maximumVertices:64,simple:true,firstVertexStoredOnce:true,frame:'axis-aligned-bounds',rectangleReset:false},scaleDenominator:{minimum:1e-6,maximum:1e9,physicalRatio:true},lineweight:{minimum:0,maximum:10,units:'mm'},linetypes:[...LINETYPES],maximumPerLayout:16,identity:['layoutId','viewportId'],freezeIdentity:'exact-layer-name',createChangesActiveSpace:false,createAutoFits:false,namedView:'orthographic-3d-preserves-other-camera-fields',lockPolicy:'navigation-only-explicit-property-updates-allowed',borderEditPolicy:'source-layer-visible-in-paper-and-unlocked',resizePolicy:'paper-anchored-unless-modelCenter-explicit',movePolicy:'retain-modelCenter',report:'net-by-layout-and-viewport-id',reportOrder:'existing-layout-and-viewport-order-then-added'};
+    },
+    getScriptingSheetSetCapabilities(){
+      return {actions:['create','update','delete'],createFields:['op','action','patch'],updateFields:['op','action','sheetSetId','patch'],deleteFields:['op','action','sheetSetId'],patchFields:['name','layoutIds'],createRequiredPatchFields:['name','layoutIds'],maximumSheetSets:32,layoutIds:{minimum:1,maximum:32,distinct:true,ordered:true,identity:'exact-persisted-layout-id',mustExistOnReplacement:true},names:{caseSensitive:false,maximumLength:255,nonblank:true,preservedExactly:true},identity:'sheetSetId',createAllocatesId:true,renameOnlyRetainsMissing:true,report:'net-by-id',reportOrder:'existing-sheet-set-order-then-added',reportPresent:'sheetSet-step-or-actual-definition-change',resolve:{method:'resolveSheetSet',paramsFields:['sheetSetId'],readOnly:true,allowedWhileBusy:true,missingReferences:'reject-with-inspection',baseToken:'current-document-snapshot-not-output-reservation'},deleteSupported:true,reorderDefinitionsSupported:false};
+    },
+    getScriptingAnnotationStyleCapabilities(){return{operations:['textStyle','dimStyle'],actions:['create','update','current'],fields:['op','action','name','patch'],currentFields:['op','action','name'],textPatchFields:[...TEXT_STYLE_FIELDS],dimensionPatchFields:[...DIM_STYLE_FIELDS],fontFamilies:[...FONT_FAMILIES],arrowTypes:['closed-filled','architectural-tick'],createRequiresUnusedName:true,updateRequiresExistingName:true,geometryUnits:'model units or paper millimeters',fontMetrics:'registered fixed-family metrics; no font file access',report:'net-by-style-name'};},
+    /** Stage a revision privately, validate it, then retain one ordinary Undo entry. */
+    applyRevision({label,steps,dryRun=false}={}) {
+      if(state.command)return result(false,'Finish or cancel the active command before scripting.');
+      try {
+        if(typeof label!=='string'||!label.trim()||label.length>200)throw Error('A revision label of 1–200 characters is required.');
+        if(!Array.isArray(steps)||!steps.length||steps.length>500)throw Error('A revision needs 1–500 steps.');
+        // Reject structured resource accessors before the size measurement serializes input.
+        let hasSheetSetStep=false;
+        for(let index=0;index<steps.length;index++){
+          const entry=Object.getOwnPropertyDescriptor(steps,String(index));if(entry&&!Object.hasOwn(entry,'value'))throw Error(`Step ${index+1}: operation must be plain data.`);
+          const step=entry?.value;let operation=step&&typeof step==='object'?Object.getOwnPropertyDescriptor(step,'op'):null;
+          if(!operation&&step&&typeof step==='object')for(let owner=Object.getPrototypeOf(step);owner&&!operation;owner=Object.getPrototypeOf(owner))operation=Object.getOwnPropertyDescriptor(owner,'op');
+          if(operation&&!Object.hasOwn(operation,'value'))throw Error(`Step ${index+1}: operation must be plain data.`);
+          if(operation?.value==='layer')try{validateScriptLayerStep(step);}catch(error){throw Error(`Step ${index+1}: ${error.message}`);}
+          if(operation?.value==='layout')try{validateScriptLayoutStep(step);}catch(error){throw Error(`Step ${index+1}: ${error.message}`);}
+          if(operation?.value==='viewport')try{validateScriptViewportStep(step);}catch(error){throw Error(`Step ${index+1}: ${error.message}`);}
+          if(operation?.value==='sheetSet')try{validateScriptSheetSetStep(step);hasSheetSetStep=true;}catch(error){throw Error(`Step ${index+1}: ${error.message}`);}
+          if(['textStyle','dimStyle'].includes(operation?.value))try{validateScriptAnnotationStyleStep(step);hasSheetSetStep=true;}catch(error){throw Error(`Step ${index+1}: ${error.message}`);}
+        }
+        if(hasSheetSetStep)validateScriptStepList(steps);
+        if(JSON.stringify(steps).length>1000000)throw Error('Revision steps exceed the one-million-character limit.');
+        // Native files nest paper objects by sheet, but the live ordered array
+        // can interleave model and paper objects. Preserve that staging order.
+        const stageSource=snapshot(),staged=createEditor({...JSON.parse(editor.serialize()),entities:stageSource.entities,layouts:stageSource.layouts});
+        for(const value of allocatedLayoutIds)editorLayoutReservations.get(staged).add(value);
+        for(const value of allocatedSheetSetIds)editorSheetSetReservations.get(staged).add(value);
+        const select=ids=>{if(!Array.isArray(ids)||!ids.length||ids.length>10000||ids.some(value=>typeof value!=='string'))throw Error('Explicit object IDs are required.');staged.select(ids);if(ids.some(value=>!staged.state.selectionIds.includes(value)))throw Error('An object is missing, locked, hidden or outside the active space.');};
+        const keys={text:['op','id','patch'],dimension:['op','id','patch'],grip:['op','id','index','point'],radius:['op','id','radius'],properties:['op','ids','patch'],select:['op','ids'],commands:['op','tokens'],architecture:['op','operation'],space:['op','space','layoutId','viewportId'],layer:['op','action','name','patch'],layout:['op','action','name','layoutId','patch'],viewport:['op','action','layoutId','viewportId','patch'],sheetSet:['op','action','sheetSetId','patch'],textStyle:['op','action','name','patch'],dimStyle:['op','action','name','patch']};
+        let index=0;
+        for(const step of steps){
+          index++;if(!step||typeof step!=='object'||Array.isArray(step)||!keys[step.op]||Object.keys(step).some(key=>!keys[step.op].includes(key)))throw Error(`Step ${index}: unsupported operation or field.`);
+          let response;
+          switch(step.op){
+            case 'text':response=staged.setTextProperties(step.id,step.patch);break;
+            case 'dimension':response=staged.setDimensionProperties(step.id,step.patch);break;
+            case 'grip':response=staged.moveGrip(step.id,step.index,step.point);break;
+            case 'radius':response=staged.setCircleRadius(step.id,step.radius);break;
+            case 'properties':select(step.ids);response=staged.setSelectionProperties(step.patch);break;
+            case 'select':select(step.ids);response={ok:true};break;
+            case 'space':response=staged.setSpace(step.space,step.layoutId,step.viewportId);break;
+            case 'architecture':response=staged.applyArchitecture(step.operation);break;
+            case 'layer':
+              try{validateScriptLayerStep(step);}catch(error){throw Error(`Step ${index}: ${error.message}`);}
+              response=step.action==='create'?staged.addLayer(step.name,step.patch):step.action==='update'?staged.updateLayer(step.name,step.patch):staged.setCurrentLayer(step.name);break;
+            case 'layout':
+              try{validateScriptLayoutStep(step,staged.state.layouts.find(layout=>layout.id===step.layoutId)?.paper);}catch(error){throw Error(`Step ${index}: ${error.message}`);}
+              response=step.action==='create'?staged.addLayout(step.name,step.patch.paper):staged.updateLayout(step.layoutId,step.patch);break;
+            case 'viewport':{
+              validateScriptViewportStep(step);
+              const layout=staged.state.layouts.find(layout=>layout.id===step.layoutId),source=layout?.viewports.find(view=>view.id===step.viewportId),{view,...patch}=step.patch;
+              if(view!==undefined){const{target,...camera}=source?.camera3d??DEFAULT_CAMERA3D;patch.workspace='3d';patch.camera3d={...camera,...SCRIPT_VIEWPORT_VIEWS[view],mode:view,projection:'orthographic'};}
+              if(step.action==='create'){const frame=patch.frame??viewportFrameFromPoints(patch.boundary);response=staged.addViewport(step.layoutId,frame,patch);}
+              else response=staged.updateViewport(step.layoutId,step.viewportId,patch);
+              break;
+            }
+            case 'sheetSet':
+              validateScriptSheetSetStep(step);
+              response=step.action==='create'?staged.createSheetSet(step.patch):step.action==='update'?staged.updateSheetSet(step.sheetSetId,step.patch):staged.deleteSheetSet(step.sheetSetId);break;
+            case 'textStyle':case 'dimStyle':{
+              validateScriptAnnotationStyleStep(step);const field=step.op==='textStyle'?'textStyles':'dimStyles',exists=staged.state[field].some(style=>style.name===step.name);if(step.action==='create'&&exists)throw Error(`Step ${index}: style already exists.`);if(step.action!=='create'&&!exists)throw Error(`Step ${index}: style does not exist.`);
+              response=step.action==='current'?staged.updateDrawingSettings({[step.op==='textStyle'?'currentTextStyle':'currentDimStyle']:step.name}):step.op==='textStyle'?staged.updateTextStyle(step.name,step.patch):staged.updateDimensionStyle(step.name,step.patch);break;
+            }
+            case 'commands':
+              if(!Array.isArray(step.tokens)||!step.tokens.length||step.tokens.length>1000||step.tokens.some(token=>typeof token!=='string'||token.length>10000))throw Error(`Step ${index}: bounded command text is required.`);
+              for(const token of step.tokens){response=staged.execute(token);if(!response.ok)break;}
+              break;
+          }
+          if(!response?.ok)throw Error(`Step ${index}: ${response?.message||'Operation rejected.'}`);
+        }
+        if(staged.state.command)throw Error('The revision left an unfinished command. No changes were applied.');
+        const before=snapshot(),after=clone(Object.fromEntries(Object.keys(before).map(key=>[key,key==='entities'?staged.state.entities.filter(entity=>!architecturalEntity(entity)):staged.state[key]])));
+        after.rasterSettings=staged.state.rasterSettings===undefined?undefined:clone(staged.state.rasterSettings);
+        const changes={entities:[],layers:[],layouts:[],viewports:[],documentFields:[]},oldObjects=new Map(before.entities.map(entity=>[entity.id,entity])),newObjects=new Map(after.entities.map(entity=>[entity.id,entity]));
+        for(const field of ['textStyles','dimStyles'])if(steps.some(step=>step.op===(field==='textStyles'?'textStyle':'dimStyle'))||!sameScriptData(before[field],after[field])){const old=new Map(before[field].map(v=>[v.name,v])),fresh=new Map(after[field].map(v=>[v.name,v]));changes[field]=[];for(const name of new Set([...old.keys(),...fresh.keys()]))if(!sameScriptData(old.get(name),fresh.get(name)))changes[field].push({name,kind:old.has(name)?fresh.has(name)?'updated':'deleted':'added',before:clone(old.get(name)??null),after:clone(fresh.get(name)??null)});}
+        for(const value of new Set([...oldObjects.keys(),...newObjects.keys()])){const old=oldObjects.get(value),next=newObjects.get(value);if(!sameScriptData(old,next))changes.entities.push({id:value,kind:old?next?'updated':'deleted':'added',before:clone(old??null),after:clone(next??null)});}
+        const oldLayers=new Map(before.layers.map(layer=>[layer.name,layer])),newLayers=new Map(after.layers.map(layer=>[layer.name,layer]));
+        // Layer names are their identities; a rename is reported as deletion plus addition.
+        for(const name of new Set([...oldLayers.keys(),...newLayers.keys()])){const old=oldLayers.get(name),next=newLayers.get(name);if(!sameScriptData(old,next))changes.layers.push({name,kind:old?next?'updated':'deleted':'added',before:clone(old??null),after:clone(next??null)});}
+        const layoutRecords=data=>new Map(data.layouts.map(layout=>[layout.id,{...layout,entities:data.entities.filter(entity=>entity.layoutId===layout.id).map(({layoutId,...entity})=>entity)}])),oldLayouts=layoutRecords(before),newLayouts=layoutRecords(after);
+        for(const id of new Set([...oldLayouts.keys(),...newLayouts.keys()])){const old=oldLayouts.get(id),next=newLayouts.get(id);if(!sameScriptData(old,next))changes.layouts.push({id,kind:old?next?'updated':'deleted':'added',before:clone(old??null),after:clone(next??null)});}
+        const viewportRecords=data=>new Map(data.layouts.flatMap(layout=>layout.viewports.map(view=>[JSON.stringify([layout.id,view.id]),{layoutId:layout.id,view}]))),oldViewports=viewportRecords(before),newViewports=viewportRecords(after);
+        for(const key of new Set([...oldViewports.keys(),...newViewports.keys()])){const old=oldViewports.get(key),next=newViewports.get(key);if(!sameScriptData(old?.view,next?.view))changes.viewports.push({layoutId:(old??next).layoutId,id:(old??next).view.id,kind:old?next?'updated':'deleted':'added',before:clone(old?.view??null),after:clone(next?.view??null)});}
+        const oldSets=new Map(before.sheetSets.map(set=>[set.id,set])),newSets=new Map(after.sheetSets.map(set=>[set.id,set])),sheetSetChanges=[];
+        for(const id of new Set([...oldSets.keys(),...newSets.keys()])){const old=oldSets.get(id),next=newSets.get(id);if(!sameScriptData(old,next))sheetSetChanges.push({id,kind:old?next?'updated':'deleted':'added',before:clone(old??null),after:clone(next??null)});}
+        if(sheetSetChanges.length||hasSheetSetStep)changes.sheetSets=sheetSetChanges;
+        for(const key of Object.keys(before).filter(key=>key!=='entities'))if(!sameScriptData(before[key],after[key]))changes.documentFields.push(key);
+        const changed=!sameScriptData(before,after);
+        if(!dryRun&&changed){restore(after);record(before);}
+        return {...result(true,dryRun?`Preview: ${label}`:`Revision: ${label}`,!dryRun&&changed),label,dryRun,changes,wouldChange:changed};
+      }catch(error){return result(false,error.message);}
+    },
+    applyArchitecture(operation){
+      if(operation?.type==='exportSection')return editor.addRoomSection(operation);
+      if(state.command)return result(false,'Finish or cancel the active command before editing Architecture.');
+      if(state.activeSpace==='paper')return result(false,'Architectural source is edited in model space.');
+      try{
+        const source=operation?.type==='regenerate'?state.architecture:applyArchitectureEdit(state.architecture,operation,state.settings);
+        const before=snapshot(),normalized=normalizeDocument({...state,...before,architecture:source});
+        Object.assign(state,normalized);normalized.entities.forEach(entity=>allocatedIds.add(entity.id));validateSelection();
+        return result(true,normalized.architectureDerived.diagnostics?.length?'Architectural source accepted. Review generation diagnostics in Architecture.':'Architectural model updated.',record(before));
+      }catch(error){return result(false,`Architecture rejected: ${error.message}`);}
+    },
+    getArchitectureOwner(entityId){return clone(state.architectureDerived?.owners?.[entityId]??null);},
+    getArchitectureReport(){return clone({schemaVersion:state.architecture?.schemaVersion??6,modelUnits:state.settings.units,source:state.architecture,derived:state.architectureDerived,spaces:state.architectureDerived?.spaces??[],roofGeometryFingerprint:state.architectureDerived?.roofGeometryFingerprint??null,framingStatus:'unverified',trussDesignManufacturingComplexitySurcharge:0});},
+    addRoomSection(options={}){
+      if(state.command)return result(false,'Finish or cancel the active command before exporting a room section.');
+      if(state.activeSpace==='paper')return result(false,'Export architectural sections in model space.');
+      try{
+        drawingLayerReady();if(!state.architecture)throw Error('An architectural model is required.');
+        const intent=state.architecture.rooms.find(room=>room.id===options.roomId),region=state.architectureDerived.rooms.find(room=>room.id===options.roomId),analysis=state.architectureDerived.spaces?.find(room=>room.roomId===options.roomId);
+        if(!intent||!region||!analysis||!['ok','infeasible'].includes(analysis.status))throw Error('A complete supported room clearance analysis is required for a dimensioned section.');
+        const room={...region,...intent,boundary:region.boundary},section=buildRoomSection({analysis,room,axis:options.axis??'x',coordinate:options.coordinate});
+        if(section.status!=='ok')throw Error(section.message??section.diagnostics?.map(d=>d.message??d).join(' ')??'The requested section is unsupported.');
+        const origin=point(options.origin??{x:0,y:0}),unit=25.4/physicalScale(state.settings),height=3*unit,gap=12*unit,floor=room.floorElevation;
+        const station=p=>section.axis==='y'?p.y-section.start.y:p.x-section.start.x;
+        const project=p=>point({x:origin.x+station(p),y:origin.y+p.z-floor});
+        const generated=[],line=(a,b)=>{const start=project(a),end=project(b);if(!samePoint(start,end))generated.push({id:id(),type:'LINE',layer:state.currentLayer,start,end});};
+        for(const segment of section.segments??[])line(segment.start,segment.end);
+        for(const segment of section.roofSegments??[])line(segment.start,segment.end);
+        const profiles=section.profileSegments??section.profiles??{};for(const profile of Object.values(profiles)){if(Array.isArray(profile)&&profile.length===2&&profile[0]?.x!==undefined)line(profile[0],profile[1]);else if(Array.isArray(profile))for(const interval of profile)if(Array.isArray(interval)&&interval.length===2)line(interval[0],interval[1]);}
+        const title=`${room.label} | ${section.axis.toUpperCase()} section | ${room.ceilingType==='tray'&&section.acceptedCeilingFeasible===false?'INFEASIBLE accepted tray | ':analysis.status==='infeasible'?'INFEASIBLE declared clearance | ':''}fixed-roof geometry, framing unverified`;
+        generated.push({id:id(),type:'TEXT',layer:state.currentLayer,position:{x:origin.x,y:origin.y-gap},text:title,height,rotation:0,style:state.currentTextStyle});
+        const dimension=(value,index,label)=>{if(!finite(value)||value<=floor)return;generated.push({id:id(),type:'DIMENSION',kind:'aligned',layer:state.currentLayer,p1:{x:origin.x,y:origin.y},p2:{x:origin.x,y:origin.y+value-floor},placement:{x:origin.x-gap*(index+1),y:origin.y+(value-floor)/2},style:state.currentDimStyle,scale:1,textOverride:`${label}: <>`});};
+        dimension(room.ceilingElevation,0,room.ceilingType==='tray'?'Tray base':'Current');if(section.dimensions.currentRaisedCeilingElevation!=null){dimension(section.dimensions.currentRaisedCeilingElevation,1,'Tray raised');dimension(room.targetCeilingElevation,2,'Flat target');dimension(analysis.maxFlatCeilingElevation,3,'Maximum flat');}else{dimension(room.targetCeilingElevation,1,'Target');dimension(analysis.maxFlatCeilingElevation,2,'Maximum');}
+        if(!(section.length>0)||!generated.length)throw Error('The requested section contains no drawable interval.');
+        generated.push({id:id(),type:'DIMENSION',kind:'aligned',layer:state.currentLayer,p1:{x:origin.x,y:origin.y},p2:{x:origin.x+section.length,y:origin.y},placement:{x:origin.x+section.length/2,y:origin.y-gap*2},style:state.currentDimStyle,scale:1});
+        const before=snapshot(),normalized=normalizeDocument({...state,...before,entities:[...before.entities,...generated]});Object.assign(state,normalized);normalized.entities.forEach(entity=>allocatedIds.add(entity.id));state.selectionIds=generated.map(entity=>entity.id);validateSelection();
+        return {...result(true,'Dimensioned static section exported as ordinary model-space geometry. Roof and architectural source are unchanged.',record(before)),section:clone(section),entityIds:generated.map(entity=>entity.id)};
+      }catch(error){return result(false,`Section rejected: ${error.message}`);}
+    },
+    detachArchitectureSelection(){
+      if(state.command)return result(false,'Finish or cancel the active command before detaching.');
+      const selected=state.entities.filter(entity=>state.selectionIds.includes(entity.id)&&architecturalEntity(entity)&&selectable(entity));
+      if(!selected.length)return result(false,'Select generated architectural objects to copy to ordinary geometry.');
+      try{const copies=selected.map(entity=>({...clone(entity),id:id()}));check3DResources(copies);const before=snapshot();state.entities.push(...copies);state.selectionIds=copies.map(entity=>entity.id);return result(true,'Detached ordinary copies created; the architectural source remains authoritative.',record(before));}catch(error){return result(false,error.message);}
+    },
     execute(input,options={}) {
       const inputText = typeof input === 'string' ? state.commandPhase==='text'?input:input.trim() : input;
       const priorPrompt = state.prompt;
       let response;
       try {
-        const token = typeof inputText === 'string' ? inputText.toUpperCase().replace(/^[_.]+/, '') : '';
+        const normalizedToken = typeof inputText === 'string' ? inputText.toUpperCase().replace(/^[_.]+/, '') : '';
+        const token=state.command?normalizedToken:IDLE_COMMAND_ALIASES[normalizedToken]??normalizedToken;
         if (['ESC', 'ESCAPE', 'CANCEL'].includes(token)) response = editor.cancel();
+        else if(state.commandPhase==='trim-system-variable'){
+          const value=scalar(inputText,state.command),limit=state.command==='PROJMODE'?2:1;if(!Number.isInteger(value)||value<0||value>limit)throw Error(`${state.command} requires an integer from zero through ${limit}.`);
+          const patch=state.command==='TRIMEXTENDMODE'?{trimExtendMode:value?'quick':'standard'}:state.command==='EDGEMODE'?{trimEdgeExtend:Boolean(value)}:{trimProject:['none','ucs','view'][value]};editor.updateDraftingSettings(patch);response=finish('Trim/extend preference updated.');
+        }
+        else if(trimCommand())response=executeTrim(inputText,token);
+        else if(state.command==='WALL'){
+          if(inputText===''||['C','CLOSE'].includes(token)){
+            const points=clone(state.commandPoints),closed=['C','CLOSE'].includes(token);if(points.length<(closed?3:2))throw Error('WALL requires at least two points, or three to close.');
+            response=commandAPI(()=>editor.applyArchitecture({type:'addWalls',points,closed,thickness:parseLength('6"',state.settings),baseElevation:0,bearingElevation:parseLength("9'",state.settings),referenceFace:'center',role:'unknown'}));
+          }else if(['U','UNDO'].includes(token)){state.commandPoints.pop();response=result(true,'Last wall point removed.');}
+          else response=editor.submitPoint(parsePoint2D(inputText,state.commandPoints.at(-1)??{x:0,y:0},state.settings));
+        }
         else if(state.commandPhase==='text')response=editor.submitText(typeof input==='string'?input:String(input));
         else if(state.command==='MVIEW'){
           if(state.commandPhase==='viewport-first'&&['P','POLYGONAL'].includes(token)){state.commandPhase='viewport-polygon';state.commandPoints=[];state.commandData.targetKind='point';state.prompt='MVIEW Specify polygon vertex (mm), then Close:';response=result(true,'Collect a simple closed straight viewport boundary.');}
@@ -1860,6 +2386,11 @@ export function createEditor(initialState = {}) {
           else if(state.commandPhase==='layout-rename'){response=commandAPI(()=>editor.updateLayout(state.commandData.layoutId,{name:inputText}));}
           else{const option=state.commandData.layoutOption,layout=state.layouts.find(item=>item.name.toLowerCase()===inputText.toLowerCase());if(option==='new')response=commandAPI(()=>editor.addLayout(inputText));else if(!layout)response=result(false,'Layout does not exist.');else if(option==='rename'){state.commandData.layoutId=layout.id;state.commandPhase='layout-rename';state.prompt='LAYOUT Enter new name:';response=result(true,'Existing layout accepted.');}else response=commandAPI(()=>option==='delete'?editor.deleteLayout(layout.id):editor.setSpace('paper',layout.id));}
         }
+        else if(state.command==='LEADER'){
+          if(inputText===''){if(state.commandPoints.length<2)response=result(false,'LEADER needs at least two points.');else{state.commandPhase='text';state.commandData.targetKind='none';state.commandData.textEntity={type:'TEXT',position:{...state.commandPoints.at(-1)},text:'',height:state.commandData.height,rotation:0,style:state.commandData.style};state.prompt='LEADER Enter single-line text:';response=result(true,'Leader landing accepted.');}}
+          else if(['U','UNDO'].includes(token)){if(!state.commandPoints.length)response=result(false,'No LEADER point to undo.');else{state.commandPoints.pop();response=result(true,'Leader point removed.');}}
+          else response=editor.submitPoint(parseCoordinate(inputText,state.commandPoints.at(-1)??state.lastPoint));
+        }
         else if(state.command==='MVIEW')response=editor.submitPoint(parseInputPoint(inputText));
         else if(state.command==='UCS'){
           if(state.commandPhase==='ucs-choice'){if(inputText===''||['W','WORLD','XY','XZ','YZ'].includes(token))response=commandAPI(()=>editor.setUCS(inputText===''||['W','WORLD'].includes(token)?'WORLD':token));else if(['3','3P','3POINT'].includes(token)){state.commandPhase='ucs-origin';state.commandData.targetKind='point';state.prompt='UCS Specify WCS origin (X,Y,Z):';response=result(true,'Specify three noncollinear WCS points.');}else if(['F','FACE'].includes(token)){state.commandPhase='ucs-face';state.commandData.targetKind='object';state.prompt='UCS Choose a MESH entity ID, then its zero-based face index:';response=result(true,'Align to an existing planar mesh face.');}else response=result(false,'UCS supports World, XY, XZ, YZ, 3point or Face.');}
@@ -1909,6 +2440,7 @@ export function createEditor(initialState = {}) {
             else{const origins=state.commandPoints,base=origins[0];let area=0,perimeter=0;origins.forEach((p,index)=>{const q=origins[(index+1)%origins.length];area+=(p.x-base.x)*(q.y-base.y)-(q.x-base.x)*(p.y-base.y);perimeter+=Math.hypot(q.x-p.x,q.y-p.y);});if(!finite(area)||!finite(perimeter))throw new Error('Measurement exceeds the supported numeric range.');response=finishMeasurement({kind:'area',area:Math.abs(area)/2,perimeter});}
           }else response=editor.submitPoint(parseCoordinate(inputText,state.commandPoints.at(-1)??state.lastPoint));
         }
+        else if(state.command==='IMAGEFRAME'){if(inputText===''){idle();response=result(true,'Image frame policy unchanged.');}else if(/^[012]$/.test(inputText))response=commandAPI(()=>editor.updateRasterSettings({frame:Number(inputText)}));else response=result(false,'IMAGEFRAME accepts only0,1,or2.');}
         else if (state.command === 'ZOOM') {
           if (token === 'E' || token === 'EXTENTS') {
             response=commandAPI(()=>editor.fitView());
@@ -2033,7 +2565,24 @@ export function createEditor(initialState = {}) {
             }
           } else if(['LINE','PLINE'].includes(state.command)&&state.commandPoints.length&&scalarInput(inputText))response=editor.submitPoint(distancePoint(inputText,options));
           else response = editor.submitPoint(parseCoordinate(inputText, state.commandPoints.at(-1) ?? state.lastPoint));
-        } else if (['L', 'LINE'].includes(token)) response = startCommand('LINE');
+        } else if(token==='WALL'){
+          if(state.activeSpace==='paper'||state.settings.units==='unitless')throw Error('Assign physical drawing units and enter model space before WALL.');
+          state.command='WALL';state.commandPhase='wall-points';state.commandData={targetKind:'point'};state.commandPoints=[];state.prompt='WALL Building-local XY first point (6 inch centered wall, unknown support, bearing 9 feet):';response=result(true,'Enter local XY coordinates; Enter completes, Close closes the path. Architecture provides full wall properties.');
+        }
+        else if(token==='ROOFUPDATE')response=editor.applyArchitecture({type:'regenerate'});
+        else if(token==='ROOFREPORT')response={...result(true,'Architectural source, geometric quantities and unverified framing status.'),report:editor.getArchitectureReport()};
+        else if(token==='ROOFDETACH')response=editor.detachArchitectureSelection();
+        else if(token==='ROOFSPACE'){
+          const selectedRooms=new Set(state.selectionIds.map(value=>state.architectureDerived?.owners?.[value]).filter(owner=>owner?.kind==='room').map(owner=>owner.id)),spaces=(state.architectureDerived?.spaces??[]).filter(space=>!selectedRooms.size||selectedRooms.has(space.roomId)),declared=spaces.filter(space=>['ok','infeasible'].includes(space.status)&&space.declared);
+          response={...result(declared.length>0,declared.length?declared.map(space=>`${state.architecture.rooms.find(room=>room.id===space.roomId)?.label??space.roomId}: maximum flat ceiling ${formatLength(space.maxFlatCeilingElevation,state.settings)}, ${space.status}; ${space.assumptions?.analysisMode==='mathematical-zero-thickness'?'zero-thickness mathematical model':'entered thickness offsets applied'}.`).join(' '):'No complete mathematical ceiling-space report is available. Use Architecture > Space study to resolve room and roof coverage; thickness is optional.'),spaces:clone(spaces)};
+        }
+        else if(token==='ROOFSECTION'){
+          const selectedRooms=[...new Set(state.selectionIds.map(value=>state.architectureDerived?.owners?.[value]).filter(owner=>owner?.kind==='room').map(owner=>owner.id))];
+          if(selectedRooms.length!==1)response=result(false,'Select one generated room boundary to export its default X section, or choose Architecture > Ceiling space for axis, crossing coordinate and origin. The explicit API is addRoomSection({roomId, axis, coordinate, origin}).');
+          else{const room=state.architectureDerived.rooms.find(room=>room.id===selectedRooms[0]);response=editor.addRoomSection({roomId:selectedRooms[0],axis:'x',origin:{x:Math.max(...room.boundary.map(p=>p.x))+parseLength('24"',state.settings),y:Math.min(...room.boundary.map(p=>p.y))}});}
+        }
+        else if(token==='ROOFOPTIMIZE')response=result(false,'Open Architecture > Alternatives to set finite bounds, run the asynchronous study and review a configuration. Headless clients use createArchitectureAlternativeSearch and the checked applyAlternative revision; this token alone does not choose or apply a proposal.');
+        else if (['L', 'LINE'].includes(token)) response = startCommand('LINE');
         else if(['ELLIPSE','EL','SPLINE','SPL','HATCH','H','FILLET','F','CHAMFER','CHA','ARRAYRECT','AR','STRETCH','S','PEDIT','PE','BLOCK','B','INSERT','I'].includes(token))response=startCommand(({EL:'ELLIPSE',SPL:'SPLINE',H:'HATCH',F:'FILLET',CHA:'CHAMFER',AR:'ARRAYRECT',S:'STRETCH',PE:'PEDIT',B:'BLOCK',I:'INSERT'})[token]??token);
         else if(['PSPACE','PS'].includes(token)){if(!state.layouts.length){const created=editor.addLayout('Layout1');if(!created.ok)response=created;else response=editor.setSpace('paper',created.layoutId);}else response=editor.setSpace('paper');}
         else if(['MSPACE','MS'].includes(token))response=editor.setSpace('model');
@@ -2044,6 +2593,8 @@ export function createEditor(initialState = {}) {
         else if (['PL', 'PLINE', 'POLYLINE'].includes(token)) response = startCommand('PLINE');
         else if(['TEXT','DT','DTEXT'].includes(token))response=startCommand('TEXT');
         else if(['MTEXT','-MTEXT','MT','T'].includes(token))response=startCommand('MTEXT');
+        else if(token==='IMAGEFRAME')response=startCommand('IMAGEFRAME');
+        else if(['LEADER','LE'].includes(token))response=startCommand('LEADER');
         else if(['TEXTEDIT','DDEDIT','ED'].includes(token))response=startCommand('TEXTEDIT');
         else if(['DIMLINEAR','DLI','DIMALIGNED','DAL','DIMRADIUS','DRA','DIMDIAMETER','DDI','DIMANGULAR','DAN'].includes(token))response=startCommand(({DLI:'DIMLINEAR',DAL:'DIMALIGNED',DRA:'DIMRADIUS',DDI:'DIMDIAMETER',DAN:'DIMANGULAR'})[token]??token);
         else if(['DIST','DI','ID','AREA','AA'].includes(token))response=startCommand(({DI:'DIST',AA:'AREA'})[token]??token);
@@ -2057,6 +2608,7 @@ export function createEditor(initialState = {}) {
         else if (['SC', 'SCALE'].includes(token)) response = startCommand('SCALE');
         else if (['MI', 'MIRROR'].includes(token)) response = startCommand('MIRROR');
         else if (['TR', 'TRIM'].includes(token)) response = startCommand('TRIM');
+        else if (['TRIMEXTENDMODE','EDGEMODE','PROJMODE'].includes(token)) response = startCommand(token);
         else if (['EX', 'EXTEND'].includes(token)) response = startCommand('EXTEND');
         else if (['O', 'OFFSET'].includes(token)) response = startCommand('OFFSET');
         else if (['BR', 'BREAK'].includes(token)) response = startCommand('BREAK');
@@ -2080,6 +2632,13 @@ export function createEditor(initialState = {}) {
     submitPoint(raw) {
       try {
         const p = threeDPointMode()?point3(raw):point(raw);
+        if(trimCommand()){
+          if(state.commandPhase==='trim-fence'){state.commandPoints.push({...p});state.prompt=`${state.command} Specify next fence point or Enter to apply:`;return result(true,'Fence point accepted.');}
+          if(state.commandPhase==='trim-crossing-first'){state.commandPoints=[{...p}];state.commandPhase='trim-crossing-second';state.prompt=`${state.command} Specify opposite crossing corner:`;return result(true,'First crossing corner accepted.');}
+          if(state.commandPhase==='trim-crossing-second')return applyTrimFence([state.commandPoints[0],p],{crossing:true});
+          if(state.commandPhase==='target')return applyTrimPick(p);
+        }
+        if(state.command==='WALL'){if(state.commandPoints.length>=64)throw Error('WALL path is limited to 64 points.');if(state.commandPoints.length&&samePoint(state.commandPoints.at(-1),p))throw Error('Wall points must differ.');state.commandPoints.push(p);state.lastPoint={...p};state.prompt='WALL Next building-local XY point or [Close/Undo] <finish>:';return result(true,'Wall source point accepted.');}
         if(state.command==='UCS'){
           if(state.commandPhase==='ucs-choice')return result(false,'Choose a UCS option in the command line.');
           const points=[...state.commandPoints,p];if(points.length===3){const ucs=ucsFromThreePoints(...points);return commandAPI(()=>editor.setUCS(ucs));}
@@ -2137,6 +2696,7 @@ export function createEditor(initialState = {}) {
           return result(false,'Enter the requested 3D point or numeric value.');
         }
         if(state.command==='EXTRUDE'&&state.commandPhase==='height')return completePrimitive(worldToPlane(p,state.commandData.plane).z-worldToPlane(state.commandData.heightBase,state.commandData.plane).z);
+        if(state.command==='LEADER'){drawingLayerReady();if(state.commandPoints.length>=64)throw Error('LEADER supports at most 64 points.');if(state.commandPoints.length&&samePoint(state.commandPoints.at(-1),p))throw Error('Adjacent LEADER points must differ.');state.commandPoints.push(p);state.lastPoint={...p};state.prompt='LEADER Specify next point or Enter for text:';return result(true,'Leader point accepted.');}
         if(state.command==='TEXT'||state.command==='MTEXT'){
           drawingLayerReady();
           if(['position','first-corner'].includes(state.commandPhase)){state.commandPoints=[p];state.lastPoint={...p};state.commandPhase=state.command==='TEXT'?'height':'second-corner';state.prompt=state.command==='TEXT'?'TEXT Specify height:':'MTEXT Specify opposite corner or [Height]:';return result(true,'Text origin accepted.');}
@@ -2294,6 +2854,7 @@ export function createEditor(initialState = {}) {
           const frame=viewportFrameFromPoints(points),layout=state.layouts.find(item=>item.id===state.activeLayoutId),view=normalizePaperViewport({id:'preview',frame,layer:state.currentLayer,...(polygon?{boundary:normalizeViewportBoundary(points)}:{})},layout.paper,state.layers,normalizeCamera3D);return[viewportAsObject(view,layout.id,state)];
         }
         if(state.commandData.spatial&&['LINE','PLINE','RECTANG'].includes(state.command)&&state.commandPoints.length){const first=state.commandPoints[0];if(state.command==='RECTANG'){const plane=state.commandData.plane,a=worldToPlane(first,plane),b=worldToPlane(p,plane),points=[a,{x:b.x,y:a.y,z:a.z},{x:b.x,y:b.y,z:a.z},{x:a.x,y:b.y,z:a.z}].map(q=>planeToWorld(q,plane));return[{type:'POLY3D',points,closed:true,layer:state.currentLayer}];}return[{type:'POLY3D',points:[state.commandPoints.at(-1),p],closed:false,layer:state.currentLayer}];}
+        if(state.command==='LEADER'&&state.commandPoints.length){const points=[...clone(state.commandPoints),p];if(points.length>=2&&!samePoint(points.at(-1),points.at(-2)))return[{type:'LEADER',points,text:' ',...Object.fromEntries(['style','height','arrowSize','arrowType'].map(k=>[k,state.commandData[k]])),layer:state.currentLayer}];}
         if(state.command==='STRETCH'&&state.commandPhase==='target')return stretchGeometry(p);
         if(state.command==='INSERT'&&state.commandPhase==='position')return[preparedInsert(p)];
         if(state.command==='SPLINE'&&state.commandPoints.length){const controls=[...clone(state.commandPoints),p];if(controls.length>=4){const entity={type:'SPLINE',controlPoints:controls,degree:3,knots:makeClampedKnots(controls.length),closed:false,layer:state.currentLayer};validateSpline(entity);return[entity];}return[{type:'PLINE',points:controls,closed:false,layer:state.currentLayer}];}
@@ -2309,11 +2870,7 @@ export function createEditor(initialState = {}) {
         if(state.command==='ARC'&&state.commandPhase==='arc-third')return [state.commandData.spatial?preparedSpatialArc(p):{...arcThroughPoints(state.commandPoints[0],state.commandPoints[1],p),layer:state.currentLayer}];
         if (state.command === 'PASTECLIP') return clipboardGeometry(p);
         if (state.command === 'OFFSET' && state.commandPhase === 'side') return [offsetEntity(state.commandData.offsetSource, state.commandData.distance, p)];
-        if (['TRIM', 'EXTEND'].includes(state.command) && state.commandPhase === 'target') {
-          const entityId = hitTest(state.entities.filter(editable), p, 8 / state.viewport.scale,state), target = state.entities.find(entity => entity.id === entityId);
-          if (!target || target.type !== 'LINE') return [];
-          return state.command === 'TRIM' ? trimLine(target, liveBoundaries(), p) : [extendLine(target, liveBoundaries(), p)];
-        }
+        if (trimCommand() && state.commandPhase === 'target') {const target=trimTargetAt(p);return target?trimProposal(target,p):[];}
         if (state.command === 'CIRCLE' && state.commandPhase === 'radius') {
           const center = state.commandPoints[0], distance = Math.hypot(p.x - center.x, p.y - center.y,...(state.commandData.spatial?[p.z-center.z]:[]));
           const radius = state.commandData.diameter ? distance / 2 : distance;
@@ -2355,7 +2912,8 @@ export function createEditor(initialState = {}) {
       restore(entry.after); undoStack.push(entry); return result(true, 'Redo completed.', true);
     },
     select(ids, options = {}) {
-      const objects=allObjects(),byId=new Map(objects.map(object=>[object.id,object])),aliases=new Map(objects.filter(object=>object.type==='VIEWPORT'&&activeOwned(object)).map(object=>[object.viewportId,object]));const valid=[...new Set(ids.map(value=>byId.get(value)??aliases.get(value)).filter(object=>object&&editable(object)).map(object=>object.id))];
+      if(trimCommand()&&(state.commandPhase==='selection'||state.commandData.trimFenceBoundaries)&&state.commandData.trimRemoving){const remove=new Set(ids);state.selectionIds=state.selectionIds.filter(id=>!remove.has(id));return result(true,`${state.selectionIds.length} cutting boundaries selected.`);}
+      const objects=allObjects(),byId=new Map(objects.map(object=>[object.id,object])),aliases=new Map(objects.filter(object=>object.type==='VIEWPORT'&&activeOwned(object)).map(object=>[object.viewportId,object]));const valid=[...new Set(ids.map(value=>byId.get(value)??aliases.get(value)).filter(object=>object&&selectable(object)).map(object=>object.id))];
       const selected = new Set(options.add || options.toggle ? state.selectionIds : []);
       for (const id of valid) { if (options.toggle && selected.has(id)) selected.delete(id); else selected.add(id); }
       state.selectionIds = [...selected];
@@ -2375,19 +2933,20 @@ export function createEditor(initialState = {}) {
         return result(false,'The active command is not requesting an object pick.');
       }catch(error){return result(false,error.message);}
     },
-    previewObject(entityId,rawPoint){
-      try{const source=state.entities.find(entity=>entity.id===entityId);if(!source||!visible(source))return[];const p=point(rawPoint);
+    previewObject(entityId,rawPoint,options={}){
+      try{const source=state.entities.find(entity=>entity.id===entityId);if(!source||!visible(source))return[];if(trimCommand()&&state.commandPhase==='target'&&editable(source))return trimProposal(source,point3(rawPoint),options);const p=point(rawPoint);
         if(state.command==='HATCH'&&state.commandPhase==='boundary'){const boundary=normalizeHatchBoundary(source),entity={type:'HATCH',boundary,origin:boundary.center?{...boundary.center}:{...boundary.points[0]},pattern:state.commandData.pattern,angle:state.commandData.angle,spacing:state.commandData.spacing,layer:state.currentLayer};validateHatch(entity);return[entity];}
         if(['FILLET','CHAMFER'].includes(state.command)&&state.commandPhase==='second-line'&&editable(source)){const first=state.commandData.cornerFirst,live=state.entities.find(entity=>entity.id===first.source.id);if(!live||!editable(live)||JSON.stringify(live)!==JSON.stringify(first.source))return[];const prepared=state.command==='FILLET'?filletLines(first.source,source,first.pick,p,state.commandData.radius):chamferLines(first.source,source,first.pick,p,state.commandData.distance1,state.commandData.distance2),extra=cornerConnector(prepared,first.source,source);return[prepared.first,prepared.second,...(extra?[extra]:[])];}
-        if(['TRIM','EXTEND'].includes(state.command)&&state.commandPhase==='target'&&editable(source)&&source.type==='LINE')return state.command==='TRIM'?trimLine(source,liveBoundaries(),p):[extendLine(source,liveBoundaries(),p)];return[];
+        return[];
       }catch{return[];}
     },
     submitText(raw){
       try{
-        if(state.commandPhase!=='text'||!['TEXT','MTEXT','TEXTEDIT'].includes(state.command))return result(false,'No text entry is pending.');
+        if(state.commandPhase!=='text'||!['TEXT','MTEXT','TEXTEDIT','LEADER'].includes(state.command))return result(false,'No text entry is pending.');
+        if(state.command==='LEADER'){drawingLayerReady();const entity={id:id(),type:'LEADER',points:clone(state.commandPoints),text:raw,style:state.commandData.style,height:state.commandData.height,arrowSize:state.commandData.arrowSize,arrowType:state.commandData.arrowType,layer:state.currentLayer};validateLeader(entity,state);check3DResources([entity]);state.entities.push(entity);return finish('LEADER completed.');}
         if(state.command==='TEXTEDIT'){
           const source=transformSources[0],live=state.entities.find(entity=>entity.id===source.id);if(!live||!editable(live))throw new Error('Text object is no longer editable.');
-          const edited={...clone(live),text:raw};validateText(edited,state);check3DResources([edited],[live.id]);state.entities=state.entities.map(entity=>entity.id===live.id?edited:entity);state.selectionIds=[];return finish('Text edited.');
+          const edited={...clone(live),text:raw};delete edited.richText;validateText(edited,state);check3DResources([edited],[live.id]);state.entities=state.entities.map(entity=>entity.id===live.id?edited:entity);state.selectionIds=[];return finish('Text edited.');
         }
         drawingLayerReady();
         const entity={id:id(),type:state.command,position:state.command==='TEXT'?{...state.commandPoints[0]}:{...state.commandData.position},text:raw,height:state.commandData.height,rotation:state.commandData.rotation%360,style:state.commandData.style,layer:state.currentLayer};if(state.command==='MTEXT')entity.width=state.commandData.width;
@@ -2406,7 +2965,7 @@ export function createEditor(initialState = {}) {
     },
     updateDraftingSettings(patch){
       try{
-        const allowed=['gridEnabled','snapEnabled','orthoEnabled','snapModes','gridAdaptive','gridSpacing','constructionElevation','constructionPlane'];
+        const allowed=['gridEnabled','snapEnabled','orthoEnabled','snapModes','gridAdaptive','gridSpacing','constructionElevation','constructionPlane','trimExtendMode','trimProject','trimEdgeExtend'];
         if(!patch||typeof patch!=='object'||Array.isArray(patch)||Object.keys(patch).some(key=>!allowed.includes(key)))throw new Error('Quick drafting settings accept only grid/snap/ortho fields.');
         if(state.command&&state.command!=='3DPOLY'&&(patch.constructionPlane!==undefined||patch.constructionElevation!==undefined))throw new Error('Finish or cancel this command before changing its construction plane.');
         const normalized=normalizeSettings({...state.settings,...patch}),changed=JSON.stringify(normalized)!==JSON.stringify(state.settings);if(patch.constructionPlane!==undefined){if(patch.constructionPlane==='custom'&&state.settings.constructionPlane!=='custom')throw new Error('Define a custom UCS before selecting its plane.');if(patch.constructionPlane!=='custom')state.ucs=presetUCS(patch.constructionPlane,state.ucs.origin);}state.settings=normalized;
@@ -2417,20 +2976,20 @@ export function createEditor(initialState = {}) {
       }catch(error){return result(false,error.message);}
     },
     updateTextStyle(name,patch={}){
-      if(!patch||Object.keys(patch).some(key=>!Object.hasOwn(DEFAULT_TEXT_STYLE,key)))return result(false,'Unsupported text style property.');
+      if(!patch||Object.keys(patch).some(key=>!Object.hasOwn(DEFAULT_TEXT_STYLE,key)&&key!=='metrics'))return result(false,'Unsupported text style property.');
       const existing=state.textStyles.find(style=>style.name===name),styles=state.textStyles.filter(style=>style.name!==name);
       styles.push({...DEFAULT_TEXT_STYLE,...existing,...patch,name});return editor.updateDrawingSettings({textStyles:styles});
     },
     updateDimensionStyle(name,patch={}){
-      if(!patch||Object.keys(patch).some(key=>!Object.hasOwn(DEFAULT_DIM_STYLE,key)&&!['fractionPrecision','angularPrecision'].includes(key)))return result(false,'Unsupported dimension style property.');
+      if(!patch||Object.keys(patch).some(key=>!Object.hasOwn(DEFAULT_DIM_STYLE,key)&&!['fractionPrecision','angularPrecision','arrowType'].includes(key)))return result(false,'Unsupported dimension style property.');
       const existing=state.dimStyles.find(style=>style.name===name),styles=state.dimStyles.filter(style=>style.name!==name);
       styles.push({...DEFAULT_DIM_STYLE,...existing,...patch,name});return editor.updateDrawingSettings({dimStyles:styles});
     },
     setTextProperties(entityId,patch){
       if(state.command)return result(false,'Finish or cancel the active command before editing text.');
       try{const source=state.entities.find(entity=>entity.id===entityId);if(!source||!TEXT_TYPES.has(source.type)||!editable(source))throw new Error('Choose an editable text object.');
-        if(!patch||Object.keys(patch).some(key=>!['position','text','height','rotation','style',...(source.type==='MTEXT'?['width']:[])].includes(key)))throw new Error('Unsupported text property.');
-        const edited={...clone(source),...patch};validateText(edited,state);edited.rotation%=360;check3DResources([edited],[entityId]);const before=snapshot();state.entities=state.entities.map(entity=>entity.id===entityId?edited:entity);return result(true,'Text properties updated.',record(before));
+        if(!patch||Object.keys(patch).some(key=>!['position','text','height','rotation','style',...(source.type==='MTEXT'?['width','richText']:[])].includes(key)))throw new Error('Unsupported text property.');
+        const edited={...clone(source),...patch};if(Object.hasOwn(patch,'text')&&!Object.hasOwn(patch,'richText'))delete edited.richText;if(Object.hasOwn(patch,'richText')&&!Object.hasOwn(patch,'text'))edited.text=parseRichText(patch.richText.source,{...state.textStyles.find(s=>s.name===edited.style),height:edited.height}).text;validateText(edited,state);edited.rotation%=360;check3DResources([edited],[entityId]);const before=snapshot();state.entities=state.entities.map(entity=>entity.id===entityId?edited:entity);return result(true,'Text properties updated.',record(before));
       }catch(error){return result(false,error.message);}
     },
     setDimensionProperties(entityId,patch){
@@ -2441,14 +3000,28 @@ export function createEditor(initialState = {}) {
         const edited={...clone(source),...patch};validateDimension(edited,state);if(edited.kind==='linear')edited.axisAngle%=360;check3DResources([edited],[entityId]);const before=snapshot();state.entities=state.entities.map(entity=>entity.id===entityId?edited:entity);return result(true,'Dimension properties updated.',record(before));
       }catch(error){return result(false,error.message);}
     },
+    setLeaderProperties(entityId,patch){
+      if(state.command)return result(false,'Finish or cancel the active command before editing a leader.');
+      try{const source=state.entities.find(e=>e.id===entityId);if(source?.type!=='LEADER'||!editable(source))throw Error('Choose an editable LEADER.');scriptRecordFields(patch,['points','text','style','height','arrowSize','arrowType'],[],'Leader properties');const edited={...clone(source),...clone(patch)};validateLeader(edited,state);check3DResources([edited],[entityId]);const before=snapshot();state.entities=state.entities.map(e=>e.id===entityId?edited:e);return result(true,'Leader properties updated.',record(before));}catch(error){return result(false,error.message);}
+    },
+    setImageProperties(entityId,patch){
+      if(state.command)return result(false,'Finish or cancel the active command before editing an image.');
+      try{const source=state.entities.find(e=>e.id===entityId);if(source?.type!=='IMAGE'||!editable(source))throw Error('Choose an editable IMAGE.');scriptRecordFields(patch,['position','uVector','vVector','resourceId'],[],'Image properties');const edited={...clone(source),...clone(patch)};validateImage(edited,state);const before=snapshot();state.entities=state.entities.map(e=>e.id===entityId?edited:e);return result(true,'Image properties updated.',record(before));}catch(error){return result(false,error.message);}
+    },
+    updateRasterSettings(patch){if(state.command)return result(false,'Finish or cancel the active command before changing image frames.');try{const next=normalizeRasterSettings(patch),before=snapshot();state.rasterSettings=next;return result(true,'Drawing image frame policy updated.',record(before));}catch(error){return result(false,error.message);}},
+    updateImageResource(resourceId,patch){
+      if(state.command)return result(false,'Finish or cancel the active command before resolving an image.');
+      try{scriptRecordFields(patch,['name','width','height','sourceName','mimeType','sha256','dataURL'],[],'Image resource patch');if(!state.imageResources.some(r=>r.id===resourceId))throw Error('Image resource does not exist.');const resources=normalizeImageResources(state.imageResources.map(r=>r.id===resourceId?{...r,...patch}:r)),before=snapshot();state.imageResources=resources;return result(true,'Image resource updated.',record(before));}catch(error){return result(false,error.message);}
+    },
     setAdvancedProperties(entityId,patch){
       if(state.command)return result(false,'Finish or cancel the active command before editing geometry properties.');
       try{const source=state.entities.find(entity=>entity.id===entityId);if(!source||!editable(source)||!['ELLIPSE','SPLINE','HATCH','INSERT'].includes(source.type))throw new Error('Choose an editable ellipse, spline, hatch or block reference.');
         const allowed=({ELLIPSE:['center','major','ratio'],SPLINE:['controlPoints'],HATCH:['pattern','angle','spacing','origin','boundary'],INSERT:['blockName','position','scale','rotation']})[source.type];if(!patch||typeof patch!=='object'||Array.isArray(patch)||Object.keys(patch).some(key=>!allowed.includes(key)))throw new Error('Unsupported advanced geometry property.');
-        const proposal={...clone(source),...patch},proposedEntities=state.entities.map(entity=>entity.id===entityId?proposal:entity);validateExpandedResources({entities:proposedEntities,blocks:state.blocks,dimStyles:state.dimStyles});const normalized=normalizeDocument({...snapshot(),entities:proposedEntities,viewport:state.viewport,camera3d:state.camera3d,workspace:state.workspace}).entities.find(entity=>entity.id===entityId),before=snapshot();state.entities=state.entities.map(entity=>entity.id===entityId?normalized:entity);return result(true,'Geometry properties updated.',record(before));
+        const proposal={...clone(source),...patch},proposedEntities=state.entities.map(entity=>entity.id===entityId?proposal:entity);validateExpandedResources({entities:proposedEntities,blocks:state.blocks,dimStyles:state.dimStyles});const normalized=normalizeDocument({...snapshot(),entities:proposedEntities.filter(entity=>!architecturalEntity(entity)),viewport:state.viewport,camera3d:state.camera3d,workspace:state.workspace}).entities.find(entity=>entity.id===entityId),before=snapshot();state.entities=state.entities.map(entity=>entity.id===entityId?normalized:entity);return result(true,'Geometry properties updated.',record(before));
       }catch(error){return result(false,error.message);}
     },
     getClipboard() { return clipboard ? clone(clipboard) : null; },
+    getDXFImageAssets(){const used=new Set([...state.entities,...state.blocks.flatMap(b=>b.entities)].filter(e=>e.type==='IMAGE').map(e=>e.resourceId));return state.imageResources.filter(r=>used.has(r.id)&&r.dataURL&&r.sha256).map(r=>({fileName:dxfImageFileName(r),dataURL:r.dataURL,sha256:r.sha256}));},
     setClipboard(data) {
       try {
         if (state.command && !['PASTECLIP'].includes(state.command)) return result(false, 'Finish or cancel the active command before replacing clipboard geometry.');
@@ -2483,6 +3056,7 @@ export function createEditor(initialState = {}) {
       if (state.command) return result(false, 'Finish or cancel the active command before erasing.');
       validateSelection();
       if (!state.selectionIds.length) return result(false, 'Select objects to erase.');
+      if(state.selectionIds.some(value=>value.startsWith(ARCHITECTURE_PREFIX)))return result(false,'Use Architecture to remove the semantic owner. Generated geometry cannot be erased independently.');
       const before = snapshot(), count = state.selectionIds.length, selected = new Set(state.selectionIds);
       removeObjects(selected);state.selectionIds = [];
       record(before); return result(true, `${count} objects erased.`, true);
@@ -2513,6 +3087,7 @@ export function createEditor(initialState = {}) {
       try {
         validateSelection();
         if (!state.selectionIds.length) return result(false, 'Select objects to change properties.');
+        if(state.selectionIds.some(value=>value.startsWith(ARCHITECTURE_PREFIX)))throw Error('Generated objects use architectural source properties. Edit the owner or detach ordinary copies.');
         if (properties.layer != null && !state.layers.some(layer => layer.name === properties.layer)) return result(false, 'Target layer does not exist.');
         if (properties.color != null && properties.color !== 'BYLAYER' && !/^#[0-9a-f]{6}$/i.test(properties.color)) return result(false, 'Color must be a six-digit hex value or BYLAYER.');
         if (properties.lineweight != null && properties.lineweight !== 'BYLAYER' && (!finite(properties.lineweight) || properties.lineweight < 0 || properties.lineweight > 10)) return result(false, 'Lineweight must be between 0 and 10 mm or BYLAYER.');
@@ -2520,7 +3095,7 @@ export function createEditor(initialState = {}) {
         const before = snapshot(), selected = new Set(state.selectionIds);
         const proposals=allObjects().filter(entity=>selected.has(entity.id)).map(source=>{const entity=clone(source);
           if (properties.layer != null) entity.layer = properties.layer;
-          if (Object.hasOwn(properties, 'color')) { if (properties.color == null || properties.color === 'BYLAYER') delete entity.color; else entity.color = properties.color; }
+          if (Object.hasOwn(properties, 'color')) { if (properties.color == null || properties.color === 'BYLAYER') {delete entity.color;delete entity.colorSource;} else {entity.color = properties.color;if(entity.colorSource!==undefined)entity.colorSource='true-color';} }
           if (Object.hasOwn(properties, 'lineweight')) { if (properties.lineweight == null || properties.lineweight === 'BYLAYER') delete entity.lineweight; else entity.lineweight = properties.lineweight; }
           if(Object.hasOwn(properties,'linetype')){if(properties.linetype==null||properties.linetype==='BYLAYER')delete entity.linetype;else entity.linetype=properties.linetype;}return entity;});
         commitObjects(proposals,proposals.map(entity=>entity.id));
@@ -2543,7 +3118,7 @@ export function createEditor(initialState = {}) {
         if(!properties||typeof properties!=='object'||Array.isArray(properties)||Object.keys(properties).some(key=>!['name','color','visible','locked','lineweight','modelVisible','paperVisible','linetype','plot'].includes(key)))return result(false,'Unsupported layer property.');
         const nextName=Object.hasOwn(properties,'name')?properties.name:name;
         if(nextName!==name&&(name==='0'||state.layers.some(layer=>layer.name===nextName)))return result(false,name==='0'?'Layer 0 cannot be renamed.':'Target layer name already exists.');
-        const layer = normalizeLayer({ ...state.layers[index], ...properties, name:nextName });
+        const layer = normalizeLayer({ ...state.layers[index], ...properties, ...(Object.hasOwn(properties,'color')&&state.layers[index].colorSource!==undefined?{colorSource:'true-color'}:{}), name:nextName });
         const before = snapshot(); state.layers[index] = layer;
         if(nextName!==name){for(const entity of state.entities)if(entity.layer===name)entity.layer=nextName;for(const block of state.blocks)for(const entity of block.entities)if(entity.layer===name)entity.layer=nextName;for(const layout of state.layouts)for(const view of layout.viewports){if(view.layer===name)view.layer=nextName;view.frozenLayers=view.frozenLayers.map(layer=>layer===name?nextName:layer);}if(state.currentLayer===name)state.currentLayer=nextName;}
         const changed = record(before); validateSelection();
@@ -2593,13 +3168,37 @@ export function createEditor(initialState = {}) {
         return result(true,layout?`${layout.name}: ${space==='paper'?'paper space':`model viewport ${view.id}`}.`:'Model space.');
       }catch(error){return result(false,error.message);}
     },
+    listSheetSets(){return state.sheetSets.map(set=>editor.inspectSheetSet(set.id));},
+    inspectSheetSet(sheetSetId){
+      const source=state.sheetSets.find(set=>set.id===sheetSetId);if(!source)return{ok:false,error:'Sheet set does not exist.'};
+      const entries=source.entries.map(entry=>{const layout=state.layouts.find(layout=>layout.id===entry.layoutId);return{...entry,currentName:layout?.name??null,missing:!layout};});
+      const missingLayoutIds=entries.filter(entry=>entry.missing).map(entry=>entry.layoutId);
+      return{ok:true,id:source.id,name:source.name,layoutIds:entries.map(entry=>entry.layoutId),entries,missingLayoutIds,valid:missingLayoutIds.length===0};
+    },
+    resolveSheetSet(sheetSetId){
+      const inspected=editor.inspectSheetSet(sheetSetId);if(!inspected.ok)return inspected;
+      if(!inspected.valid)return{ok:false,error:`Sheet set ${inspected.name} has missing layouts. Repair and update its selection before publication.`,missingLayoutIds:inspected.missingLayoutIds};
+      return{ok:true,sheetSetId:inspected.id,name:inspected.name,layoutIds:inspected.layoutIds};
+    },
+    createSheetSet(options){
+      if(state.command)return result(false,'Finish or cancel the active command before creating a sheet set.');
+      try{scriptRecordFields(options,['name','layoutIds'],['name','layoutIds'],'New sheet set');const entries=sheetSetEntries(options.layoutIds,state.layouts);let n=1;while(allocatedSheetSetIds.has(`sheetset${n}`))n++;const sheetSetId=`sheetset${n}`,proposal=normalizeSheetSets([...state.sheetSets,{id:sheetSetId,name:options.name,entries}]),before=snapshot();state.sheetSets=proposal;reserveSheetIds();return{...result(true,'Sheet set created.',record(before)),sheetSetId,sheetSet:editor.inspectSheetSet(sheetSetId)};}catch(error){return result(false,error.message);}
+    },
+    updateSheetSet(sheetSetId,patch){
+      if(state.command)return result(false,'Finish or cancel the active command before editing a sheet set.');
+      try{scriptRecordFields(patch,['name','layoutIds'],[],'Sheet-set patch');const source=state.sheetSets.find(set=>set.id===sheetSetId);if(!source)throw Error('Sheet set does not exist.');const entries=Object.hasOwn(patch,'layoutIds')?sheetSetEntries(patch.layoutIds,state.layouts):source.entries,name=Object.hasOwn(patch,'name')?patch.name:source.name,proposal=normalizeSheetSets(state.sheetSets.map(set=>set.id===sheetSetId?{id:sheetSetId,name,entries}:set)),before=snapshot();state.sheetSets=proposal;reserveSheetIds();return{...result(true,'Sheet set updated.',record(before)),sheetSetId,sheetSet:editor.inspectSheetSet(sheetSetId)};}catch(error){return result(false,error.message);}
+    },
+    deleteSheetSet(sheetSetId){
+      if(state.command)return result(false,'Finish or cancel the active command before deleting a sheet set.');
+      if(!state.sheetSets.some(set=>set.id===sheetSetId))return result(false,'Sheet set does not exist.');const before=snapshot();state.sheetSets=state.sheetSets.filter(set=>set.id!==sheetSetId);return{...result(true,'Sheet set deleted.',record(before)),sheetSetId};
+    },
     addLayout(name,paper={size:'A3',orientation:'landscape'}){
       if(state.command)return result(false,'Finish or cancel the active command before creating a layout.');
-      try{let n=1;while(state.layouts.some(layout=>layout.id===`layout${n}`))n++;const layoutId=`layout${n}`,proposal=normalizeLayouts([...state.layouts,{id:layoutId,name,paper,entities:[],viewports:[]}],state.layers,normalizeCamera3D),before=snapshot();state.layouts=proposal;return{...result(true,`Layout ${name} created.`,record(before)),layoutId,layout:clone(proposal.at(-1))};}catch(error){return result(false,error.message);}
+      try{let n=1;while(allocatedLayoutIds.has(`layout${n}`))n++;const layoutId=`layout${n}`,proposal=normalizeLayouts([...state.layouts,{id:layoutId,name,paper,entities:[],viewports:[]}],state.layers,normalizeCamera3D),before=snapshot();state.layouts=proposal;reserveSheetIds();return{...result(true,`Layout ${name} created.`,record(before)),layoutId,layout:clone(proposal.at(-1))};}catch(error){return result(false,error.message);}
     },
     updateLayout(layoutId,patch){
       if(state.command)return result(false,'Finish or cancel the active command before editing a layout.');
-      try{const source=state.layouts.find(layout=>layout.id===layoutId);if(!source)throw new Error('Layout does not exist.');if(!patch||Object.keys(patch).some(key=>!['name','paper'].includes(key)))throw new Error('Layout accepts name and paper properties.');let paper=source.paper;if(patch.paper){paper={...source.paper,...patch.paper};if(paper.size!=='Custom'&&(patch.paper.size!==undefined||patch.paper.orientation!==undefined)){delete paper.widthMm;delete paper.heightMm;}}const proposed=normalizeLayouts(state.layouts.map(layout=>layout.id===layoutId?{...layout,...patch,paper}:layout),state.layers,normalizeCamera3D),before=snapshot();state.layouts=proposed;return result(true,'Layout updated.',record(before));}catch(error){return result(false,error.message);}
+      try{const source=state.layouts.find(layout=>layout.id===layoutId);if(!source)throw new Error('Layout does not exist.');if(!patch||Object.keys(patch).some(key=>!['name','paper'].includes(key)))throw new Error('Layout accepts name and paper properties.');let paper=source.paper;if(patch.paper){paper={...source.paper,...patch.paper};if(paper.size!=='Custom'&&(patch.paper.size!==undefined||patch.paper.orientation!==undefined)){delete paper.widthMm;delete paper.heightMm;}}const proposed=normalizeLayouts(state.layouts.map(layout=>layout.id===layoutId?{...layout,...patch,paper}:layout),state.layers,normalizeCamera3D),before=snapshot();state.layouts=proposed;if(source.name!==proposed.find(layout=>layout.id===layoutId).name)state.sheetSets=state.sheetSets.map(set=>({...set,entries:set.entries.map(entry=>entry.layoutId===layoutId?{...entry,lastKnownName:proposed.find(layout=>layout.id===layoutId).name}:entry)}));return result(true,'Layout updated.',record(before));}catch(error){return result(false,error.message);}
     },
     deleteLayout(layoutId){if(state.command)return result(false,'Finish or cancel the active command before deleting a layout.');if(!state.layouts.some(layout=>layout.id===layoutId))return result(false,'Layout does not exist.');const before=snapshot();state.layouts=state.layouts.filter(layout=>layout.id!==layoutId);state.entities=state.entities.filter(entity=>entity.layoutId!==layoutId);reconcileSpaces();validateSelection();return result(true,'Layout and its paper geometry deleted.',record(before));},
     addViewport(layoutId,frame,options={}){
@@ -2630,13 +3229,13 @@ export function createEditor(initialState = {}) {
     setWorkspace(mode){if(!['2d','3d'].includes(mode))return result(false,'Workspace must be 2d or 3d.');if(state.activeSpace==='paper'&&mode==='3d')return result(false,'Paper geometry uses 2D sheet coordinates; choose a model viewport for 3D.');if(state.activeViewportId)return editor.updateViewport(state.activeLayoutId,state.activeViewportId,{workspace:mode});state.workspace=mode;return result(true,`${mode.toUpperCase()} workspace active.`);},
     set3DView(patch){try{if(!patch||typeof patch!=='object'||Array.isArray(patch)||Object.keys(patch).some(key=>!Object.hasOwn(DEFAULT_CAMERA3D,key)))throw new Error('Unsupported 3D view property.');const camera3d=normalizeCamera3D({...state.camera3d,...patch});if(state.activeViewportId)return editor.updateViewport(state.activeLayoutId,state.activeViewportId,{camera3d,modelCenter:camera3d.target},{navigation:true});state.camera3d=camera3d;return result(true,'3D view updated.');}catch(error){return result(false,error.message);}},
     getModelView(){return clone(state.activeLayoutId?modelView:{viewport:state.viewport,workspace:state.workspace,camera3d:state.camera3d});},
-    serialize() { const data=snapshot(),view=editor.getModelView();data.layouts=data.layouts.map(layout=>({...layout,entities:data.entities.filter(entity=>entity.layoutId===layout.id).map(({layoutId,...entity})=>entity)}));data.entities=data.entities.filter(entity=>!entity.layoutId);return JSON.stringify({ format: 'Linecraft/1', ...data, ...view,activeSpace:state.activeSpace,activeLayoutId:state.activeLayoutId,activeViewportId:state.activeViewportId,paperViewport:clone(state.paperViewport) }, null, 2); },
+    serialize() { const data=snapshot(),view=editor.getModelView();if(!data.sheetSets.length)delete data.sheetSets;if(!data.imageResources.length)delete data.imageResources;if(data.rasterSettings===undefined)delete data.rasterSettings;data.layouts=data.layouts.map(layout=>({...layout,entities:data.entities.filter(entity=>entity.layoutId===layout.id).map(({layoutId,...entity})=>entity)}));data.entities=data.entities.filter(entity=>!entity.layoutId);return JSON.stringify({ format: state.architecture?'Linecraft/2':'Linecraft/1', ...data, ...view,activeSpace:state.activeSpace,activeLayoutId:state.activeLayoutId,activeViewportId:state.activeViewportId,paperViewport:clone(state.paperViewport) }, null, 2); },
     importJSON(source) {
       if (state.command) return result(false, 'Finish or cancel the active command before importing.');
       try {
         const imported = normalizeDocument(typeof source === 'string' ? JSON.parse(source) : source);
         imported.entities.forEach(entity=>allocatedIds.add(entity.id));
-        const before = snapshot(); Object.assign(state, imported); state.selectionIds = []; state.lastPoint = { x: 0, y: 0 };
+        const before = snapshot(); Object.assign(state, imported);reserveSheetIds(); state.selectionIds = []; state.lastPoint = { x: 0, y: 0 };
         modelView={viewport:clone(imported.viewport),workspace:imported.workspace,camera3d:clone(imported.camera3d)};applyActiveView();
         const changed = record(before); return result(true, `Loaded ${state.entities.length} objects.`, changed);
       } catch (error) { return result(false, `Import rejected: ${error.message}`); }
@@ -2644,7 +3243,7 @@ export function createEditor(initialState = {}) {
     exportDXF() {
       return writeDXF(state);
     },
-    getExportWarnings(){const warnings=[...dxfUnitFormat(state.settings).warnings];if(state.settings.angularFormat==='dms'&&state.dimStyles.some(style=>(style.angularPrecision??style.precision)>4)&&!warnings.some(warning=>warning.includes('four decimal places')))warnings.push('Native DXF DMS dimension precision is limited to four decimal places of seconds; original labels retain the selected precision as explicit text.');if(state.layers.some(layer=>layer.modelVisible===false))warnings.push('DXF preserves global layer visibility; independent Model-tab visibility is retained in Linecraft and PDF.');if(state.layouts.some(layout=>layout.viewports.some(view=>view.plotBorder)&&layout.viewports.some(view=>!view.plotBorder)))warnings.push('DXF maps mixed viewport-border plotting choices to one layout border flag; Linecraft and PDF retain each viewport choice.');return warnings;},
+    getExportWarnings(){const warnings=[...dxfUnitFormat(state.settings).warnings];const unresolved=new Set(state.entities.filter(entity=>entity.type==='IMAGE'&&!state.imageResources.find(resource=>resource.id===entity.resourceId)?.dataURL).map(entity=>entity.resourceId));if(unresolved.size)warnings.push(`${unresolved.size} raster image resource(s) are unresolved; resolve them before export to retain the actual image.`);if(state.sheetSets.length)warnings.push('Named sheet-set definitions are retained in Linecraft native files; DXF preserves layouts but does not retain these publication sets.');if(state.architecture)warnings.push('DXF flattens current architectural derivatives to ordinary geometry and does not retain walls, rooms, roof associations or constraints. Failed geometric roofs are excluded. Explicit review-only roof surfaces retain their unapproved status.');if(state.settings.angularFormat==='dms'&&state.dimStyles.some(style=>(style.angularPrecision??style.precision)>4)&&!warnings.some(warning=>warning.includes('four decimal places')))warnings.push('Native DXF DMS dimension precision is limited to four decimal places of seconds; original labels retain the selected precision as explicit text.');if(state.layers.some(layer=>layer.modelVisible===false))warnings.push('DXF preserves global layer visibility; independent Model-tab visibility is retained in Linecraft and PDF.');if(state.layouts.some(layout=>layout.viewports.some(view=>view.plotBorder)&&layout.viewports.some(view=>!view.plotBorder)))warnings.push('DXF maps mixed viewport-border plotting choices to one layout border flag; Linecraft and PDF retain each viewport choice.');return warnings;},
     get canUndo() {
       if(state.command==='SPLINE')return state.commandPoints.length>0;
       if(state.command==='PEDIT')return editingSteps.length>0;
@@ -2655,5 +3254,7 @@ export function createEditor(initialState = {}) {
     },
     get canRedo() { return !state.command && redoStack.length > 0; },
   };
+  editorLayoutReservations.set(editor,allocatedLayoutIds);
+  editorSheetSetReservations.set(editor,allocatedSheetSetIds);
   return editor;
 }

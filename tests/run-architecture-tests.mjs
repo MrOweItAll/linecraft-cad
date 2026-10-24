@@ -1,0 +1,18 @@
+import {spawnSync} from 'node:child_process';
+import {readFileSync,readdirSync,writeFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+const root=fileURLToPath(new URL('../',import.meta.url));
+const tests=['tests/architecture-model.test.mjs','tests/architecture-integration.test.mjs','tests/architecture-core-independent.test.mjs','tests/roof-hip.test.mjs'];
+const files=['core.mjs',...readdirSync(path.join(root,'architecture')).filter(f=>f.endsWith('.mjs')).map(f=>`architecture/${f}`),...tests,'tests/run-architecture-tests.mjs','docs/roof-space/H_HIP_4_12_ANALYTICAL_FIXTURE.json'];
+const hash=()=>Object.fromEntries(files.map(f=>[f,createHash('sha256').update(readFileSync(path.join(root,f))).digest('hex')]));
+const before=hash(),startedAt=new Date().toISOString(),started=Date.now();
+const result=spawnSync(process.execPath,['--test','--test-reporter=tap',...tests],{cwd:root,encoding:'utf8',windowsHide:true,maxBuffer:8*1024*1024});
+const output=(result.stdout??'')+(result.stderr??'');process.stdout.write(output);
+const number=label=>Number([...output.matchAll(new RegExp(`^# ${label} (\\d+)$`,'gm'))].at(-1)?.[1]??0);
+const after=hash(),changed=files.filter(f=>before[f]!==after[f]);
+const report={framework:'Roof + Space R0-R2 independent pure geometry and integration',startedAt,completedAt:new Date().toISOString(),durationMs:Date.now()-started,total:number('tests'),passed:number('pass'),failed:number('fail'),exitCode:result.status,error:result.error?.message,sourceStable:changed.length===0,changedDuringRun:changed,sourceSHA256:before,output,scope:'Actual original source engine and roof generator. No desktop UI, native Autodesk runtime, framing solver or structural approval is exercised.'};
+report.status=result.status===0&&report.total>0&&report.failed===0&&!changed.length?'passed':'failed';
+writeFileSync(path.join(root,'tests/architecture-pure-results.json'),JSON.stringify(report,null,2)+'\n');
+process.exitCode=report.status==='passed'?0:1;

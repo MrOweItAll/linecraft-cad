@@ -1,0 +1,13 @@
+{
+  "format": "LinecraftUpstreamSourceSupplement/1",
+  "component": "GNU LibreDWG",
+  "version": "0.13.4",
+  "tag": "0.13.4",
+  "tagObject": "278a079918ef9ab0a90d7588d3a4d459816bb0c9",
+  "commit": "e3774bd4020fcfebb68150361db74b8b34d170fe",
+  "archive": "libredwg-0.13.4-upstream.tar.gz",
+  "sha256": "26a03e30d0f88fedf64be8ceb797193cbfcda7efdabba5eb9694af864e41b4d2",
+  "bytes": 21001798,
+  "source": "https://codeload.github.com/LibreDWG/libredwg/tar.gz/e3774bd4020fcfebb68150361db74b8b34d170fe",
+  "role": "Additional official Windows/CMake recipes alongside the released GNU configure source. Not an application runtime dependency or a binary reproducibility claim."
+}

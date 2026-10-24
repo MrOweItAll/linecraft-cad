@@ -1,21 +1,99 @@
-# Public synthetic tests
+# Public generated test profile
 
-Run npm ci --no-audit --no-fund, then npm test from the repository root. The 25-stage pure gate covers synthetic engine regression, independent physical unit/mesh/conic/cubic/paper/plane/camera mathematics, viewport objects and anchored resize, immutable common scale presets, physical scale/XP parsing, raw DXF ownership, bounded decoding, and mocked native trust/clipboard/PDF/file contracts using production validation and temporary files.
+The default public gate runs generated fixtures and independent numerical checks.
+It does not require private client drawings or the author's desktop recordings.
+Older already-public tests and samples are retained for provenance and further
+development; they are historical material, not additional qualified default stages.
+Do not run every test by glob and interpret that as the supported public gate.
 
-npm run test:desktop adds nine stages: fixed reader resource identity; five actual hidden unit, layout/UCS, rectangle/polygon viewport, active-command navigation and common-scale GUI suites; and three real production Chromium PDF producers. Native choices use deterministic owned paths. GUI suites reject visible windows/show events, use deterministic hidden dimensions and guard pointer hit targets. PDF producers preserve physical scales, polygon clips, page edges and Publish order. The scale producer tests original 24-foot rulers at 1/8, 1/4, 1/16 and 3/32 inch per foot in inch/foot/mm/m models, with real PDF files and unchanged input files.
+## Prerequisites
 
-npm run unpacked runs all 34 source stages, builds the application, runs five suites against that executable and verifies packaged converter/license/source identities (41 stages). npm run build adds NSIS compilation from the tested application (42 stages). Both builder invocations explicitly use --publish never. Only the later successful CI release step receives publication credentials. Development checks do not install or upgrade the user's application.
+Use Node.js 24 LTS and `npm ci`. The lockfile pins Electron 44.9.3,
+electron-builder 26.15.3 and Playwright 1.62.1. Dependencies must be installed in
+this checkout; patched fast-uri and both undici major versions have exact compatible
+overrides in package.json. No personal module path, global runtime or node_modules junction
+is used. Ordinary application users do not need these development dependencies.
 
-Focused commands include test:core, test:units-math, test:layouts-math, test:viewport-math, test:viewport-security, test:units-desktop, test:layouts-desktop, test:viewports-desktop, test:viewport-navigation, test:paper-pdf, test:viewport-pdf, test:viewport-export, test:scale-catalog, test:scale-math, test:scale-security, test:scales and test:scale-pdf.
+`npm test` is portable and needs no Python. Desktop tests/builds require Windows
+x64. Their independent PDF reader also needs Python and PyMuPDF 1.28.0:
 
-Optional independent readers can inspect the real generated PDFs/DXF after the relevant producers. A separate Python test environment with PyMuPDF 1.28.0 and ezdxf 1.4.3 can run:
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r tests/requirements-dev.txt
+```
 
-    python tests/audit-viewport-pdf-v17.py
-    python tests/audit-viewport-dxf-v17.py samples/viewport-v17-reference.dxf --drawing samples/viewport-v17-reference.linecraft --output work/viewport-dxf-external-audit-results.json
-    python tests/audit-viewport-scales-pdf-v18.py
+The runner uses that project venv. `CAD_PYTHON` can instead identify an explicitly
+owned Python environment with the pinned requirement. Electron44's npm package
+downloads its binary lazily; desktop commands explicitly bootstrap its pinned
+local `install.js` when needed, validating the installed version. This initial
+download requires network access (or Electron's verified download cache).
+No separate browser download is needed: Playwright controls that runtime.
 
-The scale audit independently checks four physical ruler lengths and labels per page, including all four Publish pages, at 0.01 mm geometry and 0.3 mm page-quantization tolerances. The older polygon PDF audit also checks painted clipping at 0.16 mm. The DXF audit uses a separate semantic decoder and raw group codes. These readers are test-only, not application or mandatory Windows build dependencies; a mandatory gate pass does not imply their execution.
+## Commands and exact scope
 
-Results, screenshots, generated PDFs/drawings, isolated profiles and logs remain outside committed source. Original synthetic examples are deliberately included. Version-named drivers remain regressions. Counts overlap and are not independent feature totals. Synthetic DOM wheel bursts, actual hidden application behavior, physical OS gestures and native CAD observations are separate evidence.
+```powershell
+npm test
+npm run test:desktop
+npm run unpacked
+npm run release
+```
 
-Native drawing fixtures, private corpora, observations and internal release results are absent. Mathematical fixtures and synthetic DXF records are original code/data. PUBLIC-SOURCE.json discloses public adaptations and exact runtime identity; public tests do not claim to reproduce excluded native observations.
+- `npm test`: regenerate the independently authored numerical advanced sample;
+  run **306 generated core cases** and explicitly exclude **12 private recording
+  cases**, listed by full name in `public-core-exclusions.json`. Node24 omits
+  excluded selections from TAP totals:306 executed +12 declared exclusions
+  accounts for all318 original test declarations. References are never counted
+  as passing. Then eleven named generated suites run without skips: ordinary
+  grip coordinate policy, Perpendicular, command completion, TRIM, units,
+  advanced geometry, layouts, viewport objects, viewport scales, equal-eave
+  roofs and fixed-roof clearance.
+- `test:desktop`: **32 actual hidden Electron application checks** and **9
+  independent checks of the PDF actually saved by that application**. Fixtures
+  are generated, not taken from client projects. The flow includes real pointer
+  events, latched grip previews, confirmed edits, grouped Undo/Redo, snap and
+  paper-scale preservation, native Save/reopen and PDF generation.
+- `unpacked`: rerun the generated profile and source desktop flow, build a new
+  Windows x64 application, verify the original **59 runtime files and 12 bundled
+  resources**, then repeat the 32/PDF9 flow against that actual unpacked build.
+- `release`: the same checks, then compile NSIS from that tested unpacked build.
+  This creates `Windows-Release/Linecraft-CAD-1.36.0-Setup.exe`; it does not
+  install it or modify file associations.
+
+The gate fingerprints its explicit input closure and checks that it stays
+unchanged. Source identity is verified before and after every gate; packaged
+identity is verified before and after actual packaged/installed checks.
+
+`npm run dev` launches source without an installer and with an isolated drawing
+profile in `work/development-profile`. Renderer changes reload through the
+current development watcher; main/preload changes require a restart. This makes
+the edit/test cycle independent of installing release builds.
+
+## Reports and evidence boundaries
+
+The portable summary is `work/public-pure-results.json`. Gate summaries are
+`work/public-test-results.json`, `work/public-test-desktop-results.json`,
+`work/public-unpacked-results.json` and `work/public-release-results.json`.
+Every attempt also retains its own logs and immutable results in
+`work/public-gate-<command>-<timestamp>`.
+
+Actual application reports are `tests/ordinary-grip-public-source-results.json`
+and `tests/ordinary-grip-public-unpacked-results.json`. Native drawings, actual
+PDFs, audit results and captures are under the report's unique
+`work/acceptance/<prefix>-<timestamp>` folder. Profiles can contain temporary
+control secrets; do not publish the profile directory. CI should upload only
+selected reports, drawing/PDF and image evidence.
+
+Native Open/Save/discard chooser responses are fixed test-owned stubs. The real
+editor, native validation, filesystem writes and isolated PDF host still run.
+Tests prevent the application from showing a window or reading/writing the OS
+clipboard, and verify no HTTP requests. Hidden tests do **not** establish DPI,
+focus, ordinary native chooser, physical mouse or installed human acceptance.
+The runner-only installer CI may invoke:
+
+```powershell
+node desktop/dev-tools.cjs test-installed "C:\path\to\Linecraft CAD.exe"
+```
+
+That is a separate32/PDF9 hidden installed-binary test, not a claim of human
+review or equivalence between Windows Server runners and a client workstation.
+`tests/ordinary-grip-public-installed-results.json` records that flow.

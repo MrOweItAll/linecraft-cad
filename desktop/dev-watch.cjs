@@ -4,8 +4,8 @@ const path = require('node:path');
 
 /** Development only: renderer edits reload; main/preload edits require an explicit restart. */
 function watchDevelopment(root, getWindow, {debounceMs = 180, log = console.log} = {}) {
-  const rendererFiles = new Set(['app.mjs', 'core.mjs', 'units.mjs', 'paper-space.mjs', 'drawing-plane.mjs', 'viewport-scales.mjs', '3d-view.mjs', 'advanced-geometry.mjs', 'dwg-import.mjs', 'plot-document.mjs', 'styles.css', 'index.html', 'favicon.svg']);
-  const hostFiles = new Set(['main.cjs', 'preload.cjs', 'import-files.cjs', 'plot-files.cjs', 'dev-watch.cjs']);
+  const rendererFiles = new Set(['app.mjs', 'context-menu-policy.mjs', 'command-completion.mjs', 'ordinary-grip-input.mjs', 'object-snaps.mjs', 'trim-geometry.mjs', 'linecraft-scripting.mjs', 'core.mjs', 'font-metrics.mjs', 'rich-text.mjs', 'units.mjs', 'paper-space.mjs', 'drawing-plane.mjs', 'viewport-scales.mjs', '3d-view.mjs', 'advanced-geometry.mjs', 'dwg-import.mjs', 'plot-document.mjs', 'styles.css', 'index.html', 'favicon.svg']);
+  const hostFiles = new Set(['main.cjs', 'script-control.cjs', 'preload.cjs', 'import-files.cjs', 'plot-files.cjs', 'structural-files.cjs', 'dev-watch.cjs']);
   const pending = new Set();
   const watchers = [];
   let timer = null, closed = false;
@@ -25,6 +25,8 @@ function watchDevelopment(root, getWindow, {debounceMs = 180, log = console.log}
   watchers.push(fs.watch(path.join(root, 'desktop'), (_event, name) => {
     if (name && hostFiles.has(String(name))) log(`[Linecraft dev] Host file changed: desktop/${name}. Restart launch-dev.cmd explicitly to load it; the development profile retains its drawing checkpoint.`);
   }));
+  const architectureRoot=path.join(root,'architecture');
+  if(fs.existsSync(architectureRoot))watchers.push(fs.watch(architectureRoot,(_event,name)=>{if(!name||!/^[a-z0-9-]+\.mjs$/i.test(String(name)))return;pending.add(`architecture/${name}`);clearTimeout(timer);timer=setTimeout(flush,debounceMs);}));
   for (const watcher of watchers) watcher.on('error', error => log(`[Linecraft dev] Watch error: ${error.message}`));
   log('[Linecraft dev] Watching app/core/3D/import modules, styles, index, and original favicon. No installer is used.');
   return {close() {closed = true; clearTimeout(timer); for (const watcher of watchers) watcher.close();}};

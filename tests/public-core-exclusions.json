@@ -1,0 +1,104 @@
+{
+  "format": "LinecraftPublicCoreExclusions/1",
+  "coreFile": "tests/core.test.mjs",
+  "totalCoreCases": 318,
+  "generatedCases": 306,
+  "excludedPrivateCases": 12,
+  "exactExcludedCases": [
+    {
+      "name": "native DXF reference: rectangle ROTATE/MOVE/COPY/negative ROTATE matches measured corners",
+      "line": 657,
+      "missingPrivateEvidence": [
+        "../evidence/study-1.1/observed-geometry.json"
+      ]
+    },
+    {
+      "name": "native DXF reference: LINE command-local Undo and Close reproduce measured triangle",
+      "line": 668,
+      "missingPrivateEvidence": [
+        "../evidence/study-1.1/observed-geometry.json"
+      ]
+    },
+    {
+      "name": "full native DXF fixture: independent sequence reproduces all ten measured entities",
+      "line": 676,
+      "missingPrivateEvidence": [
+        "../evidence/study-1.1/observed-geometry.json",
+        "../evidence/study-1.1/AutoCAD-observed-geometry.dxf"
+      ]
+    },
+    {
+      "name": "actual LT 2027 editing DXF: fourteen measured entities match TRIM/EXTEND/OFFSET/SCALE/MIRROR/ERASE/BREAK/PLINE",
+      "line": 1136,
+      "missingPrivateEvidence": [
+        "../evidence/study-1.2/editing-observed-geometry.json",
+        "../evidence/study-1.2/AutoCAD-editing-geometry.dxf"
+      ]
+    },
+    {
+      "name": "actual LT 2027 combined DXF: clipboard base placement, atomic Cut adapter, ARC, JOIN and EXPLODE match all twenty-five measured entities",
+      "line": 1214,
+      "missingPrivateEvidence": [
+        "../evidence/study-1.2/editing-observed-geometry.json",
+        "../evidence/study-1.2/clipboard-curves-observed-geometry.json",
+        "../evidence/study-1.2/AutoCAD-clipboard-curves-geometry.dxf"
+      ]
+    },
+    {
+      "name": "actual LT 2027 annotation DXF: two TEXT, MTEXT and five dimensions match measured definitions with disclosed context adapters",
+      "line": 1359,
+      "missingPrivateEvidence": [
+        "../evidence/study-1.3/annotation-observed.json",
+        "../evidence/study-1.3/AutoCAD-annotation-geometry.dxf",
+        "../evidence/study-1.3/annotation-corrected-sequences.scr"
+      ]
+    },
+    {
+      "name": "paper BLOCK definitions are owner-neutral while inserted children inherit sheet millimeter labels and scope",
+      "line": 1982,
+      "missingPrivateEvidence": [
+        "../evidence/study-1.6/native-layout-observed.json"
+      ]
+    },
+    {
+      "name": "actual native viewport SCALE DXF retains scale but compensates model view center to keep paper projection anchored",
+      "line": 2076,
+      "missingPrivateEvidence": [
+        "../evidence/study-1.7/native-scale.dxf"
+      ]
+    },
+    {
+      "name": "actual native corner grip and subsequent MOVE retain physical ratio with resize compensation versus whole-window translation",
+      "line": 2086,
+      "missingPrivateEvidence": [
+        "../evidence/study-1.7/native-viewport-values.json",
+        "../evidence/study-1.7/${name}`"
+      ]
+    },
+    {
+      "name": "actual native MVIEW Polygon supplies the exact concave clip, AABB and enabled clipping pointer with an explicit initial-view adapter",
+      "line": 2090,
+      "missingPrivateEvidence": [
+        "../evidence/study-1.7/native-viewport-values.json",
+        "../evidence/study-1.7/native-polygon.dxf"
+      ]
+    },
+    {
+      "name": "actual LT UCS reference: local LINE, analytic CIRCLE and RECTANG reproduce exact measured WCS geometry",
+      "line": 1994,
+      "missingPrivateEvidence": [
+        "../evidence/study-1.6/native-layout-observed.json",
+        "its bound native DXF"
+      ]
+    },
+    {
+      "name": "actual LT layout reference: authored paper line and two viewport frames/scales/lock/freeze match independently parsed native values",
+      "line": 2008,
+      "missingPrivateEvidence": [
+        "../evidence/study-1.6/native-layout-observed.json",
+        "its bound native DXF"
+      ]
+    }
+  ],
+  "policy": "Only these exact historical native-recording cases are excluded from selection. Node24 omits excluded tests from its count; the public report explicitly accounts for all318 declared cases as306 executed and12 unavailable references. Excluded references are never counted as passed."
+}
