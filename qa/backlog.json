@@ -47,6 +47,14 @@
         ],
         "installedAcceptance": "not run",
         "dailyUseReady": false
+      },
+      "cumulativeBeta3Verification": {
+        "version": "1.36.1-beta.3",
+        "testedCommit": "3b5df3419b091e29f097ddd946f962da7a979ab6",
+        "importerUnchangedFromBeta2": true,
+        "sourceAndUnpackedImportSaveReopenPDF": "passed",
+        "nativeAcceptance": "not run",
+        "installedAcceptance": "not run"
       }
     },
     {
@@ -89,6 +97,14 @@
         "installedAcceptance": "not run",
         "dailyUseReady": false,
         "nativeEditCheck": "MOVE (5,7), full Undo/Redo/Undo states and 40-unit ruler length preserved"
+      },
+      "cumulativeBeta3Verification": {
+        "version": "1.36.1-beta.3",
+        "testedCommit": "3b5df3419b091e29f097ddd946f962da7a979ab6",
+        "importerUnchangedFromBeta2": true,
+        "sourceAndUnpackedImportSaveReopenPDF": "passed",
+        "nativeAcceptance": "not run",
+        "installedAcceptance": "not run"
       }
     },
     {
@@ -123,7 +139,7 @@
       "reproduction": "Load tests/tick-width-fixture.mjs: two saved 1:50/1:100 viewports distinguish scaled model width from fixed paper width; independent tick control is absent in beta2",
       "fixtureClass": "public independently authored synthetic fixture; private intake preserved separately",
       "acceptance": "Native persistence and actual PDF stroke measurement",
-      "status": "fixing",
+      "status": "verified",
       "attempts": 2,
       "evidence": [
         "tests/tick-width-fixture.mjs",
@@ -134,17 +150,33 @@
         "tests/audit-tick-width-pdf.py",
         "docs/TICK-WIDTH-IMPLEMENTATION.md"
       ],
-      "nextAction": "Run exact beta3 candidate gate; visible native and installed upgrade acceptance remain separate",
+      "nextAction": "Focused visible native beta3 tick-width acceptance; installed upgrade and daily-use promotion require separate authorization",
       "preparationVerification": {
         "date": "2026-10-24",
         "baselineVersion": "1.36.1-beta.2",
         "referenceChecks": "4/4",
         "runtimeChanged": false,
         "independentWidthImplemented": false,
-        "domainDecision": "pending"
+        "domainDecisionAtPreparation": "pending",
+        "domainDecisionResolution": "User selected viewport-scaled geometric width on 2026-10-25"
       },
       "selectedPolicy": "User selected viewport-scaled geometric width on 2026-10-25; existing style and object annotation scales apply",
-      "candidateVersion": "1.36.1-beta.3"
+      "candidateVersion": "1.36.1-beta.3",
+      "testedCommit": "3b5df3419b091e29f097ddd946f962da7a979ab6",
+      "installedAcceptance": "not run",
+      "nativeCandidateAcceptance": "not run",
+      "beta3Verification": {
+        "gate": "27/27",
+        "selectedPortableChecks": 595,
+        "sourceAndUnpackedTickUI": "10/10 each",
+        "sourceAndUnpackedPDF": "three modes and30measurements each; opaque ink and paint-order controls",
+        "legacyNativePreservation": "passed",
+        "DXF": "explicit width not retained; warning and legacy exchange output verified",
+        "olderReaders": "drop only new width; presentation loss documented",
+        "nativeAcceptance": "not run",
+        "installedAcceptance": "not run",
+        "dailyUseReady": false
+      }
     }
   ]
 }

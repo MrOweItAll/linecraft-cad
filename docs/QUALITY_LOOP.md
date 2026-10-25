@@ -5,9 +5,9 @@ and the pinned Python PDF reader described in tests/README.md. No installation o
 the daily-use app is part of these commands.
 
 ```
-npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.2.json
-npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.2.json
-npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.2.json
+npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.3.json
+npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.3.json
+npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.3.json
 ```
 
 These reuse desktop/dev-tools.cjs. Fast selects the existing bounded public core
@@ -105,3 +105,15 @@ acceptance with native input, normal dialogs, exact persistence and independent
 PDF measurement/render review. See [the acceptance record](NATIVE-BETA2-ACCEPTANCE.md).
 This does not waive the separate installed/upgrade checks, broader platform
 qualification or release authorization. No app code changed during this session.
+
+## Active beta3 tick-width coverage
+
+Beta3 preserves the beta2 importer and adds optional geometric dimension tick
+width. Its explicit cumulative manifest names all five changed baseline runtime
+files; four are new tick-width changes. Baseline/beta1/beta2 identities stay intact.
+Candidate gates also select tick-width-reference.test.mjs and tick-width.test.mjs,
+and run tick-width-workflow.cjs against source and unpacked applications. This
+adds native-service persistence/UI checks and independent legacy/explicit/cleared
+PDF audits with opacity, paint-order and geometric-width negative controls.
+The one-file manifest creation example above remains a bounded single-file tool;
+multi-file changes require deliberate review of every cumulative manifest entry.

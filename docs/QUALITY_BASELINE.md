@@ -2,7 +2,7 @@
 
 Baseline commit: f37aba5ebe19f27088847cd8f983ecf5facf8eac, version1.36.0,
 origin https://github.com/MrOweItAll/linecraft-cad.git. Local ownership branch:
-codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; active candidate1.36.1-beta.2. Exact local paths and
+codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; active candidate1.36.1-beta.3. Exact local paths and
 checkpoint/installer hashes are in the private session report, outside this tree.
 
 Verified on2026-10-24: Windows x64, host Node24.13.0/npm11.6.2, local Electron44.9.3,
@@ -135,3 +135,31 @@ quit normally. Earlier native-pending statements describe previous checkpoints;
 installed/upgrade acceptance, broader desktop usability and separate release
 authorization remain pending. No runtime change or rerun of the unchanged passing
 automated gate was required.
+
+## Viewport-scaled tick width - October 25, 2026
+
+The user selected geometric width that scales with the viewport. Candidate
+1.36.1-beta.3 implements optional dimension-style tickWidth, using existing
+style/object annotation scales. Unset widths retain complete legacy behavior.
+See [the implementation record](TICK-WIDTH-IMPLEMENTATION.md) for semantics,
+native compatibility and explicit DXF limitations.
+
+The fresh full gate passed27/27 stages and595 selected portable checks. Existing
+source/unpacked32/PDF9 and10-check loopback workflows passed. New source and
+unpacked tick workflows passed10 checks each, plus three actual PDFs/30independent
+measurements each: legacy, explicit and cleared widths. Explicit ticks measure
+about0.24mm at1:50 and0.12mm at1:100 while ordinary strokes remain0.1mm.
+Cancel, one-field Apply, complete Undo/Redo, Save As/New/Open and clearing passed.
+
+A first27-stage run is retained but superseded: review exposed a PDF-reader gap
+for transparent ink and late white overpaint. The independent reader was corrected
+with opaque black solid-ink checks, ordered backgrounds and negative controls;
+the entire gate was then rerun. Runtime code and tolerances did not change for
+that audit correction. Earlier fixture/reader failures remain private evidence.
+
+Older1.36/beta1/beta2 readers discard the new width property and its appearance;
+this is not full backward persistence. Cleared and unchanged legacy drawings
+remain exact. The installed application, original inputs and earlier candidate
+artifacts remain unchanged. Beta2 visible acceptance is historical; beta3 visible
+native and installed/upgrade acceptance remain pending. No release, installation,
+push, remote CI execution or scheduler change occurred.
