@@ -1,5 +1,5 @@
 """Independent actual-PDF tick coverage, perpendicular width and legacy audit."""
-import argparse, hashlib, json, math
+import argparse, copy, hashlib, json, math, re
 from datetime import datetime, timezone
 from pathlib import Path
 import fitz
@@ -67,6 +67,94 @@ def tick(fills,start,end,width):
     actual_area=sum(polygon_area(fills[index])for index in selected);near(actual_area,width*length,.005)
     return {'a':a,'b':b,'centerlineLengthMm':math.dist(a,b),'perpendicularWidthMm':sum(measured)/2,'filledAreaMm2':actual_area,'filledPathIndices':selected,'coverage':'complete quadrilateral; paired triangles share one diagonal'if len(selected)==2 else'complete quadrilateral path'}
 
+def opaque(value,label):
+    assert isinstance(value,(int,float))and not isinstance(value,bool)and math.isfinite(value)and value==1,(label,value)
+
+def black(color,label):
+    assert isinstance(color,(tuple,list))and color and all(isinstance(v,(int,float))and math.isfinite(v)and 0<=v<=1 for v in color)and max(color)<.01,(label,color)
+
+def classify_paint(drawings,enforce_visible=True):
+    """Classify the ordered drawing stream; old mode reproduces prior omissions."""
+    strokes=[];fills=[];backgrounds=[];proof=[];foreground=False;previous_seq=-1
+    for index,drawing in enumerate(drawings):
+        kind=drawing['type'];seq=drawing.get('seqno')
+        if enforce_visible:
+            assert kind in ['s','f','fs'],('Unsupported paint record',kind)
+            assert isinstance(seq,int)and not isinstance(seq,bool)and seq>previous_seq,('Unknown/unordered paint sequence',seq,previous_seq)
+            previous_seq=seq
+        row={'drawingIndex':index,'seqno':seq,'type':kind}
+        if kind in ['s','fs']:
+            if enforce_visible:
+                assert 'stroke_opacity'in drawing,'Missing stroke opacity'
+                opaque(drawing['stroke_opacity'],'Stroke must be opaque')
+                black(drawing.get('color'),'Stroke must be black')
+                assert isinstance(drawing.get('dashes'),str)and re.fullmatch(r'\[\s*\]\s*[+-]?0(?:\.0*)?',drawing['dashes'].strip()),('Stroke must be solid/undashed',drawing.get('dashes'))
+                assert drawing['items']and all(item[0]=='l'for item in drawing['items']),('Unsupported stroke operator',drawing['items'])
+            foreground=True;row.update({'foreground':True,'strokeOpacity':drawing.get('stroke_opacity'),'strokeColor':drawing.get('color'),'dashes':drawing.get('dashes')})
+            for item in drawing['items']:
+                if item[0]=='l':strokes.append({'a':point(item[1]),'b':point(item[2]),'widthMm':drawing['width']*MM})
+        if kind in ['f','fs']:
+            assert drawing['fill']
+            if enforce_visible:
+                assert 'fill_opacity'in drawing,'Missing fill opacity'
+                opaque(drawing['fill_opacity'],'Fill must be opaque')
+            if min(drawing['fill'])>.99:
+                assert kind=='f'and len(drawing['items'])==1 and drawing['items'][0][0]=='re'
+                bounds=tuple(value*MM for value in drawing['rect'])
+                for actual,expected in zip(bounds,[0,0,420,297]):near(actual,expected,.3)
+                if enforce_visible:assert not foreground,('White page overpaint follows foreground ink',seq)
+                backgrounds.append(bounds);row.update({'whiteFullPageBackground':True,'beforeForeground':not foreground,'fillOpacity':drawing.get('fill_opacity'),'boundsMm':bounds})
+            else:
+                if enforce_visible:black(drawing['fill'],'Fill must be black')
+                else:assert max(drawing['fill'])<.01,('Unexpected colored fill',drawing['fill'])
+                foreground=True;row.update({'foreground':True,'fillOpacity':drawing.get('fill_opacity'),'fillColor':drawing['fill']});fills.extend(polygons(drawing))
+        proof.append(row)
+    return strokes,fills,backgrounds,proof
+
+def validate_geometry(strokes,fills,mode):
+    """Exactly the existing literal geometry/width checks, also used by probes."""
+    measured=[]
+    for denominator,role,start,end,length in body:measured.append({'denominator':denominator,'role':role,**stroke(strokes,start,end,length,.1)})
+    if mode=='explicit':
+        assert len(strokes)==6,len(strokes);used=[]
+        for denominator,role,start,end,length,width in ticks:
+            result=tick(fills,start,end,width);used.extend(result['filledPathIndices']);measured.append({'denominator':denominator,'role':role,'expectedWidthMm':width,**result})
+        assert sorted(used)==list(range(len(fills))),'Every filled path must belong to one expected tick'
+    else:
+        assert not fills and len(strokes)==10
+        for denominator,role,start,end,length,_ in ticks:measured.append({'denominator':denominator,'role':role,**stroke(strokes,start,end,length,.1)})
+    return measured
+
+def paint_negative_controls(original,mode):
+    """Mutate copies of parsed paint only; actual PDF/native bytes stay intact."""
+    results=[];baseline_old=classify_paint(original,False)
+    validate_geometry(baseline_old[0],baseline_old[1],mode)
+    first_stroke=next(i for i,row in enumerate(original)if row['type']in ['s','fs'])
+    first_fill=next((i for i,row in enumerate(original)if row['type']in ['f','fs']and row.get('fill')and max(row['fill'])<.01),None)
+    fill_index=first_fill if first_fill is not None else next(i for i,row in enumerate(original)if row['type']=='f')
+    cases=[('late opaque white full-page overpaint','late-white',None,None),('transparent fill','fill_opacity',0,fill_index),('translucent fill','fill_opacity',.5,fill_index),('transparent stroke','stroke_opacity',0,first_stroke),('translucent stroke','stroke_opacity',.5,first_stroke),('white stroke','color',(1.,1.,1.),first_stroke),('dashed stroke','dashes','[3 2] 0',first_stroke),('unknown stroke opacity','stroke_opacity','remove',first_stroke),('unknown fill opacity','fill_opacity','remove',fill_index),('unsupported paint record','unsupported-paint',None,None),('unsupported stroke operator','unsupported-stroke',None,None)]
+    for name,key,value,index in cases:
+        mutated=copy.deepcopy(original)
+        if key=='late-white':
+            overlay=copy.deepcopy(next(row for row in original if row['type']=='f'and min(row['fill'])>.99));overlay['seqno']=max(row['seqno']for row in original)+1;mutated.append(overlay);changed_seq=overlay['seqno']
+        elif key in ['unsupported-paint','unsupported-stroke']:
+            extra=copy.deepcopy(original[first_stroke]);extra['seqno']=max(row['seqno']for row in original)+1
+            if key=='unsupported-paint':extra['type']='unsupported'
+            else:extra['items']=[('unsupported-curve',)]
+            mutated.append(extra);changed_seq=extra['seqno']
+        else:
+            changed_seq=mutated[index]['seqno']
+            if value=='remove':del mutated[index][key]
+            else:mutated[index][key]=value
+        old=classify_paint(mutated,False);assert old[:2]==baseline_old[:2]
+        assert len(validate_geometry(old[0],old[1],mode))==10
+        try:
+            current=classify_paint(mutated,True);validate_geometry(current[0],current[1],mode)
+        except AssertionError as error:rejection=str(error)
+        else:raise AssertionError(('Corrected reader accepted invisible/overpainted/dashed output',name))
+        results.append({'control':name,'mutatedDrawingSeqno':changed_seq,'oldReaderAcceptedAll10GeometryChecks':True,'newReaderRejected':True,'rejection':rejection,'actualPDFBytesModified':False})
+    return results
+
 try:
     assert producer['status']=='passed' and producer['sourceUnchanged'];assert sha(native)==binding['nativeSHA256'] and sha(pdf_file)==binding['pdfSHA256']
     document=json.loads(native.read_text());entity=document['entities'][0];style=next(row for row in document['dimStyles']if row['name']==entity['style'])
@@ -77,44 +165,26 @@ try:
     assert document['settings']['units']=='mm' and len(document['entities'])==1 and len(document['layouts'])==1
     for viewport,x,denominator in zip(document['layouts'][0]['viewports'],[20,220],[50,100]):assert viewport['frame']=={'x':x,'y':30,'width':160,'height':100} and viewport['modelCenter']=={'x':500,'y':200,'z':0} and viewport['scaleDenominator']==denominator and viewport['locked']is True and viewport['plotBorder']is False
     pdf=fitz.open(pdf_file);assert len(pdf)==1;page=pdf[0];near(page.rect.width*MM,420,.3);near(page.rect.height*MM,297,.3);assert not page.get_images()
-    strokes=[];fills=[];page_backgrounds=[]
-    for drawing in page.get_drawings():
-        if drawing['type']in ['s','fs']:
-            for item in drawing['items']:
-                if item[0]=='l':strokes.append({'a':point(item[1]),'b':point(item[2]),'widthMm':drawing['width']*MM})
-        if drawing['type']in ['f','fs']:
-            assert drawing['fill']
-            if min(drawing['fill'])>.99:
-                # Independently observed Chromium page backgrounds are white,
-                # single full-page rectangles. No arbitrary white mask is ignored.
-                assert drawing['type']=='f' and len(drawing['items'])==1 and drawing['items'][0][0]=='re'
-                bounds=tuple(value*MM for value in drawing['rect'])
-                for actual,expected in zip(bounds,[0,0,420,297]):near(actual,expected,.3)
-                page_backgrounds.append(bounds)
-            else:
-                assert max(drawing['fill'])<.01,('Unexpected colored fill',drawing['fill'])
-                fills.extend(polygons(drawing))
+    paint_stream=page.get_drawings()
+    strokes,fills,page_backgrounds,paint_proof=classify_paint(paint_stream)
     report['whiteFullPageBackgrounds']=page_backgrounds
+    report['paintOrderProof']=paint_proof
+    report['paintVisibilityPolicy']='Known opaque black solid strokes and opaque black filled geometry only; white opaque full-page rectangles permitted only before foreground paths. Unknown opacity fails.'
     body=[(50,'extension-left',(90,220.8),(90,216.4),4.4),(50,'extension-right',(110,220.8),(110,216.4),4.4),(50,'dimension',(90,217),(110,217),20),(100,'extension-left',(295,218.9),(295,216.7),2.2),(100,'extension-right',(305,218.9),(305,216.7),2.2),(100,'dimension',(295,217),(305,217),10)]
     ticks=[(50,'tick-left',(89.5,217.5),(90.5,216.5),math.sqrt(2),.24),(50,'tick-right',(110.5,216.5),(109.5,217.5),math.sqrt(2),.24),(100,'tick-left',(294.75,217.25),(295.25,216.75),math.sqrt(.5),.12),(100,'tick-right',(305.25,216.75),(304.75,217.25),math.sqrt(.5),.12)]
-    for denominator,role,start,end,length in body:report['measurements'].append({'denominator':denominator,'role':role,**stroke(strokes,start,end,length,.1)})
+    report['measurements']=validate_geometry(strokes,fills,args.mode)
     if args.mode=='explicit':
-        assert len(strokes)==6,len(strokes);used=[]
-        for denominator,role,start,end,length,width in ticks:
-            result=tick(fills,start,end,width);used.extend(result['filledPathIndices']);report['measurements'].append({'denominator':denominator,'role':role,'expectedWidthMm':width,**result})
-        assert sorted(used)==list(range(len(fills))),'Every filled path must belong to one expected tick'
         first=tick(fills,ticks[0][2],ticks[0][3],.24);omitted=first['filledPathIndices'][0]
         probes=[lambda:tick([poly for i,poly in enumerate(fills)if i!=omitted],ticks[0][2],ticks[0][3],.24),lambda:tick(fills,ticks[2][2],ticks[2][3],.24),lambda:tick(fills,ticks[0][2],ticks[0][3],.1),lambda:stroke(strokes,(90,217),(110,217),20,.24)]
         report['negativeControls']=['missing/partial tick ink','fixed paper width at1:100','inherited body width on tick','tick width leaking into ordinary dimension line']
     else:
-        assert not fills and len(strokes)==10
-        for denominator,role,start,end,length,_ in ticks:report['measurements'].append({'denominator':denominator,'role':role,**stroke(strokes,start,end,length,.1)})
         probes=[lambda:stroke(strokes,ticks[0][2],ticks[0][3],math.sqrt(2),.24),lambda:stroke(strokes,ticks[0][2],ticks[0][3],math.sqrt(.5),.1)]
         report['negativeControls']=['explicit width incorrectly used for legacy tick','wrong legacy tick length']
     for probe in probes:
         try:probe()
         except AssertionError:pass
         else:raise AssertionError('Independent negative control incorrectly accepted')
+    report['paintNegativeControls']=paint_negative_controls(paint_stream,args.mode)
     page.get_pixmap(matrix=fitz.Matrix(3,3),alpha=False).save(args.render);report['render']={'file':str(args.render),'sha256':sha(args.render)}
     for binding in report['bindings'].values():assert sha(Path(binding['file']))==binding['sha256']
     report['status']='passed'
