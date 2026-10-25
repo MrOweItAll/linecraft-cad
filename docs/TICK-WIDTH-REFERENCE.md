@@ -67,3 +67,10 @@ be discarded by older readers, and exchange support requires explicit checks;
 do not imply complete backward or DXF compatibility from native persistence.
 Leader ticks are a separate scope. No installer or client drawing is part of
 this reference-preparation work.
+
+## Policy selected - October 25, 2026
+
+The user selected width that scales with the viewport, matching the recorded
+reference. The earlier pending-policy paragraphs are preparation history. See
+[TICK-WIDTH-IMPLEMENTATION.md](TICK-WIDTH-IMPLEMENTATION.md) for the optional
+style field, annotation-scale behavior, compatibility limits and candidate scope.

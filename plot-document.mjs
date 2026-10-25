@@ -212,7 +212,7 @@ function renderEntities(entities,document,options,map,scale,is3D=false,perspecti
       const g=core.annotationPrimitives(entity,document);
       for(const warning of g.warnings||[]){const message=`Annotation ${entity.id}: ${warning}.`;if(!warnings.includes(message))warnings.push(message);}
       if(g.texts.some(text=>text.metricStatus==='fallback')){const message=`Annotation ${entity.id} uses approximate text metrics because a requested local font profile is unavailable.`;if(!warnings.includes(message))warnings.push(message);}
-      body=(['DIMENSION','LEADER'].includes(entity.type)?g.segments||[]:g.decorationSegments||[]).map(([a,b])=>segment(a,b,attrs)).join('')+(g.arrows||[]).map(points=>path(points,true,color,'stroke="none"')).join('');
+      body=(['DIMENSION','LEADER'].includes(entity.type)?g.segments||[]:g.decorationSegments||[]).filter((_,index)=>!g.tickSegmentIndices?.includes(index)).map(([a,b])=>segment(a,b,attrs)).join('')+(g.arrows||[]).map(points=>path(points,true,color,'stroke="none"')).join('');
       body+=g.texts.map(label).join('');
     }else if(entity.type==='CIRCLE'&&!is3D){const p=map(entity.center);body=`<circle cx="${numeric(p.x)}" cy="${numeric(p.y)}" r="${numeric(entity.radius*scale)}" fill="none" ${attrs}/>`;
     }else if(entity.type==='ARC'&&!is3D){

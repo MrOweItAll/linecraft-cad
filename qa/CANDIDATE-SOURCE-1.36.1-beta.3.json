@@ -1,0 +1,414 @@
+{
+  "format": "LinecraftCandidateSource/1",
+  "version": "1.36.1-beta.3",
+  "baselineCommit": "f37aba5ebe19f27088847cd8f983ecf5facf8eac",
+  "baselineManifestSHA256": "c7cb2c46702e7e88b7ddd84aa83b038bf52aa0a5901d3154bf3fb60bba41b5c7",
+  "scope": "Private/local reviewable cumulative candidate; not a release or daily-use acceptance receipt.",
+  "desktopRuntimePin": "44.9.3",
+  "runtimeFiles": [
+    {
+      "file": "3d-view.mjs",
+      "sha256": "369b78d2ecdc0bdbb95e878b0a3d017a4c694aeeb0c3a529c7c0324f3a64e19f",
+      "bytes": 17790
+    },
+    {
+      "file": "LICENSE",
+      "sha256": "155eae99601ecc2325927203fa7e8450e688cf131772d0986a1a3daab0df09bb",
+      "bytes": 1083
+    },
+    {
+      "file": "advanced-geometry.mjs",
+      "sha256": "b7d2bc3072a88ae4dd5bd1692e0ef041ac752c021f68d2b97fbe89e60ede3167",
+      "bytes": 12289
+    },
+    {
+      "file": "app.mjs",
+      "sha256": "6bdc9e10c5e5e2cb2d27ee9d3958764a7d4db51f8dd521af46b51f5fcca1afe8",
+      "bytes": 553977
+    },
+    {
+      "file": "architecture/alternative-report.mjs",
+      "sha256": "a72f6d8e75b2973f0518447fae5f177143932df0de38d007fdafca9f4bfe70fc",
+      "bytes": 5233
+    },
+    {
+      "file": "architecture/alternatives.mjs",
+      "sha256": "6051f957703f1d5333b253c06671cdd6dbdcc9b52ed0f6db5bd92e6a65d70050",
+      "bytes": 25042
+    },
+    {
+      "file": "architecture/ceiling-candidates.mjs",
+      "sha256": "ebeed2e266b30a3d3f9223e1552532bfea78579a701b5807c72245b93b3f6bb3",
+      "bytes": 19821
+    },
+    {
+      "file": "architecture/clearance.mjs",
+      "sha256": "d1b5ee02902a13e0878b8d82450233022979d0d8934591d155206ff87606a851",
+      "bytes": 16935
+    },
+    {
+      "file": "architecture/editor-adapter.mjs",
+      "sha256": "569409028cc1cd6b69e5b82ba9bb2beee241493b7b82b683b244f45046f6b74f",
+      "bytes": 51143
+    },
+    {
+      "file": "architecture/model.mjs",
+      "sha256": "beb16a509e6c5cf2ed4405dab2cf94d1f2752d0e6cf8389fb7fbe834661e9043",
+      "bytes": 21424
+    },
+    {
+      "file": "architecture/plan-topology.mjs",
+      "sha256": "7de49e0a0d96631310d03d3e01cd1c64b59ee8783f6bffe727f328ed939eb4c1",
+      "bytes": 9839
+    },
+    {
+      "file": "architecture/quantities.mjs",
+      "sha256": "3d58e956d9cf55e1a55bb0bc69e13d5bc06ba0502123296d2852d8c35db42c24",
+      "bytes": 12372
+    },
+    {
+      "file": "architecture/roof-bearing.mjs",
+      "sha256": "c0451fd43daa287a69d6f7f452ba8391dc13d62fe2eea56719217753e28e3f56",
+      "bytes": 29740
+    },
+    {
+      "file": "architecture/roof-boundary.mjs",
+      "sha256": "90788cade13cb1e0d06f64450cb35298a0adc9064618b5b3567346e8f3e78bcf",
+      "bytes": 6766
+    },
+    {
+      "file": "architecture/roof-component-edit.mjs",
+      "sha256": "70488eeff0de548611db493779bb8cd9741a66939d95a8f43aad7bef98ff1d04",
+      "bytes": 4849
+    },
+    {
+      "file": "architecture/roof-drag-preview.mjs",
+      "sha256": "4d254ffb2644bda5a72ee1ebd0f858f7f5cd84ebea153fc7362a9f72a5ba2cfe",
+      "bytes": 3677
+    },
+    {
+      "file": "architecture/roof-gable.mjs",
+      "sha256": "01ab42cc63fab2de8f57f0abad51faa8177ebf367e625b99ab4de11ec1ed6415",
+      "bytes": 13922
+    },
+    {
+      "file": "architecture/roof-grip-input.mjs",
+      "sha256": "a80bd199eed0e359bce41946c4ec50c75e723f6950df90003375f9506bf58ec8",
+      "bytes": 1951
+    },
+    {
+      "file": "architecture/roof-hip.mjs",
+      "sha256": "a3df79213e4cd85aed14a42dd8dee51c1312eec123053f0dfc914bbfc9cf4a74",
+      "bytes": 17638
+    },
+    {
+      "file": "architecture/roof-interaction.mjs",
+      "sha256": "c69ea039421a5e36d96180504700782e3aeb8851e41bab250c95163dc7b4dad2",
+      "bytes": 4939
+    },
+    {
+      "file": "architecture/roof-joined.mjs",
+      "sha256": "9ebe2ef77e782cf721ee56d0421d4b24e6d4d30e7afceeb7084f9a0824c38cb4",
+      "bytes": 32691
+    },
+    {
+      "file": "architecture/roof-pitch.mjs",
+      "sha256": "bc2ad6c73f144df25eb96da8dda11ac240cdfe3a620ad8be2bc5ca1a4d5ff2ab",
+      "bytes": 14580
+    },
+    {
+      "file": "architecture/roof-preview-client.mjs",
+      "sha256": "73a0a4e7a172c0ae1736f0429bd6238ee2af312a976598c28a4d42b2299fc2d3",
+      "bytes": 14114
+    },
+    {
+      "file": "architecture/roof-preview-worker.mjs",
+      "sha256": "df7a05e3e677502f00f3dd3d0406889028a17d46c518b361ff2e7536ceef955a",
+      "bytes": 2289
+    },
+    {
+      "file": "architecture/roof-validate.mjs",
+      "sha256": "c0ace3fc24b6fd22c051f94e455b0db4fbea4d2cf81a62546648f44bb946da2a",
+      "bytes": 15846
+    },
+    {
+      "file": "architecture/sections.mjs",
+      "sha256": "58e50983f5b808ee841b40dc039d2174534ea7bb9287a5fb094a1ccf155cc2c3",
+      "bytes": 6768
+    },
+    {
+      "file": "architecture/structural-assignments.mjs",
+      "sha256": "778a9a387326b34f59ef66f638e9579f052338eb9a9e0255b0b4906dac07fb0f",
+      "bytes": 14493
+    },
+    {
+      "file": "architecture/structural-boundaries.mjs",
+      "sha256": "707f173cb35396a785699117bab3821c9f0a56590fab9908d72c6c6326d03d26",
+      "bytes": 20702
+    },
+    {
+      "file": "architecture/structural-bridge.mjs",
+      "sha256": "ceacba686877b3c4bd27c40883d746fb7a4086f02317d8d29291c75464dc943f",
+      "bytes": 20702
+    },
+    {
+      "file": "architecture/units-adapter.mjs",
+      "sha256": "47aa78e4cb3f8aa3b29beb213fa54db0472adf14fcfcaa40c87e8824d5bcc145",
+      "bytes": 1004
+    },
+    {
+      "file": "architecture/view-adapter.mjs",
+      "sha256": "46101bbba64e27cab909b1407d53ec33de5b333c7996e3be99cbb6bdf65cd356",
+      "bytes": 3643
+    },
+    {
+      "file": "architecture/wall-geometry.mjs",
+      "sha256": "3a911f52ee7810d1bd6d4663f841c4b1250bff59ba1bc7ab397335c819884190",
+      "bytes": 3627
+    },
+    {
+      "file": "command-completion.mjs",
+      "sha256": "1b3798afeea0c41bf204c8221ef245a534748fe1054e5a736e8decb20823ea85",
+      "bytes": 6548
+    },
+    {
+      "file": "context-menu-policy.mjs",
+      "sha256": "274d37344e6830fd8f20e2eff24e3ed51273d06c8e29a20d9a29f5d5786e9af7",
+      "bytes": 10545
+    },
+    {
+      "file": "core.mjs",
+      "sha256": "1bd85cf443001f3ca27e43185bd51a89f0155dd043adef2c33c4ec826e4b21d9",
+      "bytes": 406820
+    },
+    {
+      "file": "desktop/drawing-resources.cjs",
+      "sha256": "282f0da5fe91f60ee07275ad19cd96ee7887000db4d54fac5da5dfd7d5088eb2",
+      "bytes": 20587
+    },
+    {
+      "file": "desktop/icon.ico",
+      "sha256": "2c979f490efa29b4ecd9a2771fefffa0ad3a86f097c05b310d642488c179ddda",
+      "bytes": 19692
+    },
+    {
+      "file": "desktop/import-files.cjs",
+      "sha256": "864499054c083f5332e1fe50437a529b5b009163f9c9c7ec543d6210117c94d3",
+      "bytes": 7738
+    },
+    {
+      "file": "desktop/main.cjs",
+      "sha256": "fc4e12b6831a5e9feb4e91b4cd7c8d167e7290315dd38ce5963efe0e56e13fcf",
+      "bytes": 44049
+    },
+    {
+      "file": "desktop/open-files.cjs",
+      "sha256": "444e40a2c05486f748db1731b428c7e648d6cdf469e5c510fed50f59202c6c47",
+      "bytes": 9216
+    },
+    {
+      "file": "desktop/plot-files.cjs",
+      "sha256": "5a0a46e8e9af4f1fa82f180d35014827d7dea774da945365526b43a6e2dd4bcf",
+      "bytes": 8650
+    },
+    {
+      "file": "desktop/preload.cjs",
+      "sha256": "334445d1594c624516f8faf5b80e0da6a7e83b0b8e48347b10846635006c38b2",
+      "bytes": 3080
+    },
+    {
+      "file": "desktop/script-control.cjs",
+      "sha256": "4d98f467346c8fa34b2b81c167c0387ac0cb66e0834d593b5045fe02e9534dec",
+      "bytes": 3995
+    },
+    {
+      "file": "desktop/structural-files.cjs",
+      "sha256": "967872f6ddbdb18ce47c8dec12c344456cefb830c54876bf0ae80efb7835af6a",
+      "bytes": 6848
+    },
+    {
+      "file": "drawing-plane.mjs",
+      "sha256": "518ec8370666bfe797e8923cfeb13796af4bbf732de39f54d7e28e138392fb7b",
+      "bytes": 6947
+    },
+    {
+      "file": "dwg-import.mjs",
+      "sha256": "4c966f6f5896cc561526f7aa4a8147e9c8e68fdf90e3f58a48063ce820a24f93",
+      "bytes": 44949
+    },
+    {
+      "file": "favicon.svg",
+      "sha256": "174509e4f53db6334b62f292e9d5f0d28373df5e22f987d9bddf18412ad02bd5",
+      "bytes": 255
+    },
+    {
+      "file": "font-metrics.mjs",
+      "sha256": "2bd1f367197030aa3dc8ac0f46cf5f4ef8108eee62f49702f1eff6ab23d23ba3",
+      "bytes": 10235
+    },
+    {
+      "file": "index.html",
+      "sha256": "672ca6ba2a35e693d9e82987b5b31ba26b48db2eb242a38ec913978f63aef6d3",
+      "bytes": 86965
+    },
+    {
+      "file": "linecraft-scripting.mjs",
+      "sha256": "e149c0250272817ec34bc9494f9c6ba655223a2faf1dac4e0d1e4709e434ac43",
+      "bytes": 8238
+    },
+    {
+      "file": "object-snaps.mjs",
+      "sha256": "ff8040757cdc6da8b971daa06b31df00ec4a2c4053c6d51cc4177562b26497e3",
+      "bytes": 4659
+    },
+    {
+      "file": "ordinary-grip-input.mjs",
+      "sha256": "9b7519787d5508cb650a4bb5efb5baf88427f28d3809e301facfb4aa4b50fcd3",
+      "bytes": 2753
+    },
+    {
+      "file": "paper-space.mjs",
+      "sha256": "f0a081245bd9255d6acdb868a066d899825d2b49c1e6cd3555dcda75d441ae3d",
+      "bytes": 15903
+    },
+    {
+      "file": "plot-document.mjs",
+      "sha256": "4d631f4b756d795d9af12f8749fd07113588e11ae5e28224bbe7aebf5c84eddf",
+      "bytes": 29256
+    },
+    {
+      "file": "rich-text.mjs",
+      "sha256": "39fcbe8b184138d9e3e1d03c8fd1455e76da2f098a9adbb604ed2c46b2eecb8f",
+      "bytes": 11169
+    },
+    {
+      "file": "styles.css",
+      "sha256": "027a2168e896f923f2d08e15dda79a520ed153cf7101293359e25ba22e572ea4",
+      "bytes": 60723
+    },
+    {
+      "file": "trim-geometry.mjs",
+      "sha256": "222187930666d678acb2824f8cb6847cb5f604fde67a6894ceac32487cbee414",
+      "bytes": 16603
+    },
+    {
+      "file": "units.mjs",
+      "sha256": "8185ed2bc0e549a2e981361615fb2a77917941988445c60e55a630a640192d1c",
+      "bytes": 10227
+    },
+    {
+      "file": "viewport-scales.mjs",
+      "sha256": "b78f658a01343fd21224442b5cb2c69d1e057f8d31bb102157e17f76df4ab592",
+      "bytes": 5396
+    }
+  ],
+  "extraResources": [
+    {
+      "file": "third-party/libredwg/COPYING",
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "bytes": 35147
+    },
+    {
+      "file": "third-party/libredwg/NOTICE.md",
+      "sha256": "16ea391cd40bf9d053994bf664d966e78a22167102345dd121391d59ed094ce8",
+      "bytes": 1269
+    },
+    {
+      "file": "third-party/libredwg/dist.sha256",
+      "sha256": "5793a78a7fb58a4440cc8ea11f32e24a04b8b8838d2d4d8754307bc0c87c6fec",
+      "bytes": 362
+    },
+    {
+      "file": "third-party/libredwg/libiconv-1.18.tar.gz",
+      "sha256": "3b08f5f4f9b4eb82f151a7040bfd6fe6c6fb922efe4b1659c66ea933276965e8",
+      "bytes": 5822590
+    },
+    {
+      "file": "third-party/libredwg/libiconv-COPYING",
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "bytes": 35147
+    },
+    {
+      "file": "third-party/libredwg/libiconv-COPYING.LIB",
+      "sha256": "20e50fe7aae3e56378ebf0417d9de904f55a0e61e4df315333e632a4d3555d95",
+      "bytes": 26419
+    },
+    {
+      "file": "third-party/libredwg/libredwg-0.13.4.tar.xz",
+      "sha256": "7e153ea4dac4cbf3dc9c50b9ef7a5604e09cdd4c5520bcf8017877bbe1422cd5",
+      "bytes": 10997280
+    },
+    {
+      "file": "third-party/libredwg/manifest.json",
+      "sha256": "e5e1b83191fb56be8004f596109442d5b206b35e3a51b862796ebf0cb2f177ad",
+      "bytes": 2184
+    },
+    {
+      "file": "third-party/libredwg/runtime/dwgread.exe",
+      "sha256": "88f3c398bc1ff5a83c365fe8180018ef26947a63fff21fad8a032dd056a47c94",
+      "bytes": 311139
+    },
+    {
+      "file": "third-party/libredwg/runtime/libiconv-2.dll",
+      "sha256": "ff31fa811f9c07cc7fdaa68c9e8bca3a7b4fdf6e0a079a58175ea58ba139c7ae",
+      "bytes": 1136529
+    },
+    {
+      "file": "third-party/libredwg/runtime/libredwg-0.dll",
+      "sha256": "20cf92d51abc8c27f1af623f68aa4f4d90cf4993737ceac4bc482b237f1f781b",
+      "bytes": 35993761
+    },
+    {
+      "file": "tools/linecraft-structural-adapter.py",
+      "sha256": "09c5e2261ca0557c57b511fd078d9bca05d95c45a66fc29e215a56850f88368c",
+      "bytes": 45044
+    }
+  ],
+  "reviewedChanges": [
+    {
+      "file": "app.mjs",
+      "issue": "LC-MON-001",
+      "reason": "LC-MON-001 optional width style controls and projected filled tick rendering; unset preserves legacy",
+      "beforeSHA256": "cb3fb38b1b577f1de2297a14b475b61e2e4dbdd44b1f347fe73b0aa7ccb1a76d",
+      "afterSHA256": "6bdc9e10c5e5e2cb2d27ee9d3958764a7d4db51f8dd521af46b51f5fcca1afe8"
+    },
+    {
+      "file": "core.mjs",
+      "issue": "LC-MON-001",
+      "reason": "LC-MON-001 optional model-scaled dimension tick width, filled triangles, native validation/history and honest DXF warning/fallback",
+      "beforeSHA256": "79e1c4033be0775273ffd3172cfa42349db0cd89d33257cc996238a28dd2a937",
+      "afterSHA256": "1bd85cf443001f3ca27e43185bd51a89f0155dd043adef2c33c4ec826e4b21d9"
+    },
+    {
+      "file": "dwg-import.mjs",
+      "issue": "LC-MON-002+LC-MON-003",
+      "reason": "Retain exact redundant HATCH vertex normalization; correct only existing untwisted World Top center as target plus raw DCS XY",
+      "beforeSHA256": "ab10caf9be1d2ca7c29cdedaeeb5e417463fb937b453173070e381ca7bffd959",
+      "afterSHA256": "4c966f6f5896cc561526f7aa4a8147e9c8e68fdf90e3f58a48063ce820a24f93"
+    },
+    {
+      "file": "index.html",
+      "issue": "LC-MON-001",
+      "reason": "LC-MON-001 independent tick-width control in drawing units with blank inheritance",
+      "beforeSHA256": "eafc073aced9551e63db2fc32c509a53db1382a74fec5b2020207dfc5542755f",
+      "afterSHA256": "672ca6ba2a35e693d9e82987b5b31ba26b48db2eb242a38ec913978f63aef6d3"
+    },
+    {
+      "file": "plot-document.mjs",
+      "issue": "LC-MON-001",
+      "reason": "LC-MON-001 render projected filled tick geometry independently from physical body lineweight",
+      "beforeSHA256": "7fc7e63e41391622407b6e949d3818727ed35451534784383cff158f9525d10e",
+      "afterSHA256": "4d631f4b756d795d9af12f8749fd07113588e11ae5e28224bbe7aebf5c84eddf"
+    }
+  ],
+  "parentCandidate": {
+    "file": "qa/CANDIDATE-SOURCE-1.36.1-beta.2.json",
+    "sha256": "f35de1c84480377b472b46a1a0e215975772aaf79aba13932497454ea8391ed5",
+    "runtimeDelta": [
+      "app.mjs",
+      "core.mjs",
+      "index.html",
+      "plot-document.mjs"
+    ]
+  }
+}

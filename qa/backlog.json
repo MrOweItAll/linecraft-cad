@@ -123,14 +123,18 @@
       "reproduction": "Load tests/tick-width-fixture.mjs: two saved 1:50/1:100 viewports distinguish scaled model width from fixed paper width; independent tick control is absent in beta2",
       "fixtureClass": "public independently authored synthetic fixture; private intake preserved separately",
       "acceptance": "Native persistence and actual PDF stroke measurement",
-      "status": "needs-domain-review",
-      "attempts": 0,
+      "status": "fixing",
+      "attempts": 2,
       "evidence": [
         "tests/tick-width-fixture.mjs",
         "tests/tick-width-reference.test.mjs:4 baseline checks passed",
-        "docs/TICK-WIDTH-REFERENCE.md"
+        "docs/TICK-WIDTH-REFERENCE.md",
+        "tests/tick-width.test.mjs",
+        "tests/tick-width-workflow.cjs",
+        "tests/audit-tick-width-pdf.py",
+        "docs/TICK-WIDTH-IMPLEMENTATION.md"
       ],
-      "nextAction": "Choose model-scaled width versus fixed paper-mm width, then implement a focused regression and fix; no new width default selected",
+      "nextAction": "Run exact beta3 candidate gate; visible native and installed upgrade acceptance remain separate",
       "preparationVerification": {
         "date": "2026-10-24",
         "baselineVersion": "1.36.1-beta.2",
@@ -138,7 +142,9 @@
         "runtimeChanged": false,
         "independentWidthImplemented": false,
         "domainDecision": "pending"
-      }
+      },
+      "selectedPolicy": "User selected viewport-scaled geometric width on 2026-10-25; existing style and object annotation scales apply",
+      "candidateVersion": "1.36.1-beta.3"
     }
   ]
 }

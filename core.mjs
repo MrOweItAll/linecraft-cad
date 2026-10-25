@@ -67,7 +67,8 @@ function normalizeDimStyle(raw,textStyles){
   if(new TextEncoder().encode(`${escapeDXFMText(style.prefix)}<>${escapeDXFMText(style.suffix)}`).length>2048)throw new Error('Dimension prefix/suffix exceed the encoded exchange limit.');
   for(const key of ['fractionPrecision','angularPrecision'])if(raw?.[key]!==undefined&&(!Number.isInteger(raw[key])||raw[key]<0||raw[key]>8))throw new Error(`${key} must be an integer from zero through eight.`);
   if(raw?.arrowType!==undefined&&!['closed-filled','architectural-tick'].includes(raw.arrowType))throw Error('Unsupported dimension arrow type.');
-  return {...Object.fromEntries(Object.keys(DEFAULT_DIM_STYLE).map(key=>[key,style[key]])),...Object.fromEntries(['fractionPrecision','angularPrecision','arrowType'].filter(key=>raw?.[key]!==undefined).map(key=>[key,raw[key]]))};
+  if(raw?.tickWidth!=null)positive(raw.tickWidth,'Tick width');
+  return {...Object.fromEntries(Object.keys(DEFAULT_DIM_STYLE).map(key=>[key,style[key]])),...Object.fromEntries(['fractionPrecision','angularPrecision','arrowType'].filter(key=>raw?.[key]!==undefined).map(key=>[key,raw[key]])),...(raw?.tickWidth!=null?{tickWidth:raw.tickWidth}:{})};
 }
 function normalizeSettings(raw={}){
   if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new Error('Drawing settings must be an object.');
@@ -170,7 +171,7 @@ export function annotationPrimitives(entity,rawDocument={}){
   }
   if(entity.type!=='DIMENSION')return{segments:[],arrows:[],texts:[],boundsPoints:[]};
   const style=document.dimStyles.find(item=>item.name===entity.style)??DEFAULT_DIM_STYLE,factor=style.scale*entity.scale,h=style.textHeight*factor,arrow=style.arrowSize*factor,gap=style.gap*factor;
-  const{measurement,label}=formatDimension(entity,document),segments=[],arrows=[],definition=[];let q1,q2,u,v,labelPosition,rotation;
+  const{measurement,label}=formatDimension(entity,document),segments=[],arrows=[],definition=[],tickSegmentIndices=[];let q1,q2,u,v,labelPosition,rotation;
   const shifted=(p,direction,amount)=>point({x:p.x+direction.x*amount,y:p.y+direction.y*amount});
   if(entity.kind==='angular'){
     const{start,sweep,radius}=angularDefinition(entity),count=Math.max(16,Math.ceil(Math.abs(sweep)/3)),arc=Array.from({length:count+1},(_,i)=>{const[c,s]=angleBasis(start+sweep*i/count);return shifted(entity.vertex,{x:c,y:s},radius);});q1=arc[0];q2=arc.at(-1);segments.push(...arc.slice(0,-1).map((p,i)=>[p,arc[i+1]]));
@@ -196,14 +197,23 @@ export function annotationPrimitives(entity,rawDocument={}){
   }
   rotation=readableAngle(rotation);
   if(style.arrowType==='architectural-tick'&&entity.kind!=='angular'){
-    for(const triangle of arrows){const p=triangle[0],bx=midpoint(triangle[1].x,triangle[2].x)-p.x,by=midpoint(triangle[1].y,triangle[2].y)-p.y,length=Math.hypot(bx,by),dx=arrow*(bx-by)/length,dy=arrow*(by+bx)/length;segments.push([point({x:p.x-dx,y:p.y-dy}),point({x:p.x+dx,y:p.y+dy})]);}arrows.length=0;
+    const triangles=[...arrows];arrows.length=0;
+    const halfWidth=style.tickWidth===undefined?null:positive(positive(style.tickWidth*factor,'Effective tick width')/2,'Half tick width');
+    for(const triangle of triangles){const p=triangle[0],bx=midpoint(triangle[1].x,triangle[2].x)-p.x,by=midpoint(triangle[1].y,triangle[2].y)-p.y,length=Math.hypot(bx,by),dx=arrow*(bx-by)/length,dy=arrow*(by+bx)/length;
+      const a=point({x:p.x-dx,y:p.y-dy}),b=point({x:p.x+dx,y:p.y+dy});segments.push([a,b]);
+      if(halfWidth!==null){
+        const length=positive(Math.hypot(b.x-a.x,b.y-a.y),'Tick direction length'),ox=-(b.y-a.y)/length*halfWidth,oy=(b.x-a.x)/length*halfWidth;
+        const corners=[point({x:a.x+ox,y:a.y+oy}),point({x:b.x+ox,y:b.y+oy}),point({x:b.x-ox,y:b.y-oy}),point({x:a.x-ox,y:a.y-oy})];
+        tickSegmentIndices.push(segments.length-1);arrows.push([corners[0],corners[1],corners[2]],[corners[0],corners[2],corners[3]]);
+      }
+    }
   }
   if(['linear','aligned'].includes(entity.kind)){const[c,s]=angleBasis(rotation);labelPosition=shifted({x:midpoint(q1.x,q2.x),y:midpoint(q1.y,q2.y)},{x:-s,y:c},gap+h*.6);}
   const textStyle=document.textStyles.find(item=>item.name===style.textStyle)??DEFAULT_TEXT_STYLE;
   const width=textWidth(label,h,textStyle),[c,s]=angleBasis(rotation),textOrigin=point({x:labelPosition.x-width/2*c,y:labelPosition.y-width/2*s});
   const layout=textLayout({type:'TEXT',position:textOrigin,text:label,height:h,rotation,style:style.textStyle},document);
   const fontFields=layout.lines[0].metricStatus?Object.fromEntries(['metricStatus','fontCapRatio','fontSHA256','renderText'].filter(k=>layout.lines[0][k]!==undefined).map(k=>[k,layout.lines[0][k]])):{};
-  return{segments,arrows,texts:[{text:label,position:labelPosition,width,height:h,rotation,fontFamily:textStyle.fontFamily,widthFactor:textStyle.widthFactor,align:'center',...fontFields}],boundsPoints:[...segments.flat(),...arrows.flat(),...layout.corners],definitionPoints:definition,measurement,label,dimensionLine:[q1,q2]};
+  return{segments,arrows,texts:[{text:label,position:labelPosition,width,height:h,rotation,fontFamily:textStyle.fontFamily,widthFactor:textStyle.widthFactor,align:'center',...fontFields}],boundsPoints:[...segments.flat(),...arrows.flat(),...layout.corners],definitionPoints:definition,measurement,label,dimensionLine:[q1,q2],...(tickSegmentIndices.length?{tickSegmentIndices}:{})};
 }
 export const dimensionGeometry=annotationPrimitives;
 function validateLeader(entity,document){
@@ -762,7 +772,7 @@ export function entityDisplayPrimitives(entity,document={}){
   if(entity.type==='HATCH')return hatchGeometry(entity);
   if(['ELLIPSE','SPLINE'].includes(entity.type))return{...empty,paths:[{points:sampleCurve(entity,128),closed:entity.type==='ELLIPSE'}],...(entity.type==='SPLINE'?{beziers:splineBezierSegments(entity)}:{})};
   if(TEXT_TYPES.has(entity.type))return{...empty,texts:textLayout(entity,document).lines};
-  if(entity.type==='DIMENSION'){const p=annotationPrimitives(entity,document);return{...empty,segments:p.segments,texts:p.texts,fills:p.arrows.map(points=>({points,closed:true}))};}
+  if(entity.type==='DIMENSION'){const p=annotationPrimitives(entity,document);return{...empty,segments:p.segments.filter((_,index)=>!p.tickSegmentIndices?.includes(index)),texts:p.texts,fills:p.arrows.map(points=>({points,closed:true}))};}
   if(entity.type==='MESH')return{...empty,segments:entityEdges(entity,document),fills:entity.faces.map(face=>({points:face.map(index=>entity.vertices[index]),closed:true}))};
   if(['PLINE','RECTANG','POLY3D'].includes(entity.type))return{...empty,paths:[{points:entity.points,closed:entity.type==='RECTANG'||entity.closed}]};
   if(entity.type==='CIRCLE'){const points=boundaryPolygon(entity,128);return{...empty,paths:[{points,closed:true}]};}
@@ -1184,7 +1194,7 @@ export function validateScriptSheetSetStep(step){
 }
 export function validateScriptStepList(steps){scriptDataArray(steps,'Revision steps',500);}
 const TEXT_STYLE_FIELDS=Object.freeze(['fontFamily','defaultHeight','defaultRotation','widthFactor','metrics']);
-const DIM_STYLE_FIELDS=Object.freeze([...Object.keys(DEFAULT_DIM_STYLE).filter(k=>k!=='name'),'fractionPrecision','angularPrecision','arrowType']);
+const DIM_STYLE_FIELDS=Object.freeze([...Object.keys(DEFAULT_DIM_STYLE).filter(k=>k!=='name'),'fractionPrecision','angularPrecision','arrowType','tickWidth']);
 export function validateScriptAnnotationStyleStep(step){
   scriptRecordFields(step,['op','action','name','patch'],['op','action','name'],'Annotation style operation');
   if(!['textStyle','dimStyle'].includes(step.op)||!['create','update','current'].includes(step.action)||!validLayerName(step.name))throw Error('Annotation style requires textStyle/dimStyle, create/update/current and an exact valid name.');
@@ -1405,6 +1415,8 @@ function assertExportableSingleLineText(text,kind){
 
 /** Original DXF serializer using the published R2013 database record schema. */
 function writeDXF(document) {
+  // The existing DXF path has no independent geometric tick-width representation.
+  if(document.dimStyles.some(style=>style.tickWidth!==undefined))document={...document,dimStyles:document.dimStyles.map(({tickWidth,...style})=>style)};
   const unitFormat=dxfUnitFormat(document.settings);
   // Reject before serialization or a native file chooser can adopt a path.
   // Source/JSON annotation content is broader than plain native TEXT exchange.
@@ -2981,7 +2993,7 @@ export function createEditor(initialState = {}) {
       styles.push({...DEFAULT_TEXT_STYLE,...existing,...patch,name});return editor.updateDrawingSettings({textStyles:styles});
     },
     updateDimensionStyle(name,patch={}){
-      if(!patch||Object.keys(patch).some(key=>!Object.hasOwn(DEFAULT_DIM_STYLE,key)&&!['fractionPrecision','angularPrecision','arrowType'].includes(key)))return result(false,'Unsupported dimension style property.');
+      if(!patch||Object.keys(patch).some(key=>!Object.hasOwn(DEFAULT_DIM_STYLE,key)&&!['fractionPrecision','angularPrecision','arrowType','tickWidth'].includes(key)))return result(false,'Unsupported dimension style property.');
       const existing=state.dimStyles.find(style=>style.name===name),styles=state.dimStyles.filter(style=>style.name!==name);
       styles.push({...DEFAULT_DIM_STYLE,...existing,...patch,name});return editor.updateDrawingSettings({dimStyles:styles});
     },
@@ -3243,7 +3255,7 @@ export function createEditor(initialState = {}) {
     exportDXF() {
       return writeDXF(state);
     },
-    getExportWarnings(){const warnings=[...dxfUnitFormat(state.settings).warnings];const unresolved=new Set(state.entities.filter(entity=>entity.type==='IMAGE'&&!state.imageResources.find(resource=>resource.id===entity.resourceId)?.dataURL).map(entity=>entity.resourceId));if(unresolved.size)warnings.push(`${unresolved.size} raster image resource(s) are unresolved; resolve them before export to retain the actual image.`);if(state.sheetSets.length)warnings.push('Named sheet-set definitions are retained in Linecraft native files; DXF preserves layouts but does not retain these publication sets.');if(state.architecture)warnings.push('DXF flattens current architectural derivatives to ordinary geometry and does not retain walls, rooms, roof associations or constraints. Failed geometric roofs are excluded. Explicit review-only roof surfaces retain their unapproved status.');if(state.settings.angularFormat==='dms'&&state.dimStyles.some(style=>(style.angularPrecision??style.precision)>4)&&!warnings.some(warning=>warning.includes('four decimal places')))warnings.push('Native DXF DMS dimension precision is limited to four decimal places of seconds; original labels retain the selected precision as explicit text.');if(state.layers.some(layer=>layer.modelVisible===false))warnings.push('DXF preserves global layer visibility; independent Model-tab visibility is retained in Linecraft and PDF.');if(state.layouts.some(layout=>layout.viewports.some(view=>view.plotBorder)&&layout.viewports.some(view=>!view.plotBorder)))warnings.push('DXF maps mixed viewport-border plotting choices to one layout border flag; Linecraft and PDF retain each viewport choice.');return warnings;},
+    getExportWarnings(){const warnings=[...dxfUnitFormat(state.settings).warnings];if([...state.entities,...state.blocks.flatMap(block=>block.entities)].some(entity=>entity.type==='DIMENSION'&&entity.kind!=='angular'&&state.dimStyles.some(style=>style.name===entity.style&&style.arrowType==='architectural-tick'&&style.tickWidth!==undefined)))warnings.push('DXF does not retain independent model-scaled architectural tick width. Keep the Linecraft native file and PDF for the declared appearance.');const unresolved=new Set(state.entities.filter(entity=>entity.type==='IMAGE'&&!state.imageResources.find(resource=>resource.id===entity.resourceId)?.dataURL).map(entity=>entity.resourceId));if(unresolved.size)warnings.push(`${unresolved.size} raster image resource(s) are unresolved; resolve them before export to retain the actual image.`);if(state.sheetSets.length)warnings.push('Named sheet-set definitions are retained in Linecraft native files; DXF preserves layouts but does not retain these publication sets.');if(state.architecture)warnings.push('DXF flattens current architectural derivatives to ordinary geometry and does not retain walls, rooms, roof associations or constraints. Failed geometric roofs are excluded. Explicit review-only roof surfaces retain their unapproved status.');if(state.settings.angularFormat==='dms'&&state.dimStyles.some(style=>(style.angularPrecision??style.precision)>4)&&!warnings.some(warning=>warning.includes('four decimal places')))warnings.push('Native DXF DMS dimension precision is limited to four decimal places of seconds; original labels retain the selected precision as explicit text.');if(state.layers.some(layer=>layer.modelVisible===false))warnings.push('DXF preserves global layer visibility; independent Model-tab visibility is retained in Linecraft and PDF.');if(state.layouts.some(layout=>layout.viewports.some(view=>view.plotBorder)&&layout.viewports.some(view=>!view.plotBorder)))warnings.push('DXF maps mixed viewport-border plotting choices to one layout border flag; Linecraft and PDF retain each viewport choice.');return warnings;},
     get canUndo() {
       if(state.command==='SPLINE')return state.commandPoints.length>0;
       if(state.command==='PEDIT')return editingSteps.length>0;
