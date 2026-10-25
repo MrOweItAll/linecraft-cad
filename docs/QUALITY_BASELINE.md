@@ -163,3 +163,26 @@ remain exact. The installed application, original inputs and earlier candidate
 artifacts remain unchanged. Beta2 visible acceptance is historical; beta3 visible
 native and installed/upgrade acceptance remain pending. No release, installation,
 push, remote CI execution or scheduler change occurred.
+
+## Native beta3 tick-width acceptance - October 25, 2026
+
+The exact unpacked beta3 from the recorded 27-stage gate passed focused visible
+Windows acceptance for LC-MON-001. Native input and real dialogs completed Cancel,
+settings submission with Enter, full Undo/Redo, Save As/New/Open and actual PDF
+output for legacy, explicit and cleared widths. Independent audits passed ten
+measurements and eleven paint negative controls per PDF. Explicit ticks measure
+about 0.24 mm at 1:50 and 0.12 mm at 1:100; ordinary lines remain 0.1 mm. All three
+actual PDF renders and six detail clips were visually inspected.
+
+Current and preserved older source readers made twelve comparisons of the actual
+native-saved files: nine exact full-state results and three expected explicit-width
+presentation losses. Cleared and legacy native bytes and PDF renders match exactly.
+See [the acceptance record](NATIVE-BETA3-ACCEPTANCE.md) for exact identity and limits.
+
+The candidate quit normally. Installed binaries, recorded normal-profile settings,
+source inputs and original fixtures stayed unchanged; only owned synthetic drawings
+were opened. Earlier beta3 native-pending statements record historical checkpoints.
+Installed/upgrade acceptance and broader human/DPI/client fidelity remain pending;
+daily-use readiness remains false. Importer native coverage remains the historical
+beta2 session, not a fresh beta3 native import test. No runtime change, rebuild or
+repeat of the unchanged automated gate was required.

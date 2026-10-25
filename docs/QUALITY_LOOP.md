@@ -117,3 +117,14 @@ adds native-service persistence/UI checks and independent legacy/explicit/cleare
 PDF audits with opacity, paint-order and geometric-width negative controls.
 The one-file manifest creation example above remains a bounded single-file tool;
 multi-file changes require deliberate review of every cumulative manifest entry.
+
+## Recorded native beta3 tick-width acceptance
+
+The exact unpacked 1.36.1-beta.3 has passed focused visible Windows tick-width
+acceptance with native settings input, normal dialogs, complete persistence and
+independent actual PDF measurement/render review. See [the acceptance record](NATIVE-BETA3-ACCEPTANCE.md).
+The recorded passing automated gate and runtime remain unchanged. Installed/upgrade
+checks, broader human/DPI/client fidelity and separate release authorization remain
+pending. This session does not replace historical beta2 importer coverage with a
+fresh beta3 native import claim. Manual invocation ready; unattended execution not
+enabled.

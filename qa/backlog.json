@@ -148,9 +148,10 @@
         "tests/tick-width.test.mjs",
         "tests/tick-width-workflow.cjs",
         "tests/audit-tick-width-pdf.py",
-        "docs/TICK-WIDTH-IMPLEMENTATION.md"
+        "docs/TICK-WIDTH-IMPLEMENTATION.md",
+        "docs/NATIVE-BETA3-ACCEPTANCE.md"
       ],
-      "nextAction": "Focused visible native beta3 tick-width acceptance; installed upgrade and daily-use promotion require separate authorization",
+      "nextAction": "Focused unpacked native tick-width acceptance complete; separate promotion/installation decision or next bounded backlog item. Installed upgrade and broader qualification remain pending.",
       "preparationVerification": {
         "date": "2026-10-24",
         "baselineVersion": "1.36.1-beta.2",
@@ -164,7 +165,21 @@
       "candidateVersion": "1.36.1-beta.3",
       "testedCommit": "3b5df3419b091e29f097ddd946f962da7a979ab6",
       "installedAcceptance": "not run",
-      "nativeCandidateAcceptance": "not run",
+      "nativeCandidateAcceptance": {
+        "version": "1.36.1-beta.3",
+        "testedCommit": "3b5df3419b091e29f097ddd946f962da7a979ab6",
+        "form": "unpacked",
+        "status": "passed",
+        "date": "2026-10-25",
+        "method": "Visible agent-driven Windows input, native settings form and real Open/Save As/PDF dialogs; controller describe/snapshot observations only",
+        "scope": "Optional tick width: Cancel; native Enter submit; complete Undo/Redo; explicit and cleared Save As/New/Open; three actual PDFs and independent visual/physical audits",
+        "evidence": [
+          "docs/NATIVE-BETA3-ACCEPTANCE.md",
+          "Private native receipts and output hashes"
+        ],
+        "installedAcceptance": "not run",
+        "dailyUseReady": false
+      },
       "beta3Verification": {
         "gate": "27/27",
         "selectedPortableChecks": 595,
@@ -173,7 +188,7 @@
         "legacyNativePreservation": "passed",
         "DXF": "explicit width not retained; warning and legacy exchange output verified",
         "olderReaders": "drop only new width; presentation loss documented",
-        "nativeAcceptance": "not run",
+        "nativeAcceptance": "passed focused tick-width workflow on exact unpacked candidate",
         "installedAcceptance": "not run",
         "dailyUseReady": false
       }
