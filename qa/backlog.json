@@ -4,6 +4,32 @@
   "baselineCommit": "f37aba5ebe19f27088847cd8f983ecf5facf8eac",
   "issues": [
     {
+      "id": "LC-MON-007",
+      "priority": 1,
+      "symptom": "A valid planar paper-space SOLID causes the whole drawing import to be rejected",
+      "expected": "Preserve a zero-thickness filled paper SOLID in its original XY position and layout without losing other entities; continue rejecting unsupported non-XY paper geometry",
+      "sourceVersion": "1.36.0",
+      "reproducedVersion": "1.36.1-beta.3",
+      "sourceCommit": "f37aba5ebe19f27088847cd8f983ecf5facf8eac",
+      "reproduction": "Independent synthetic DXF: one 40 by 20 mm paper-space SOLID, final transformed Z=0, on an ordinary owned layout; unchanged model LINE sentinel",
+      "fixtureClass": "Independently authored public-safe synthetic geometry; original client CAD not accessed in development triage",
+      "acceptance": "Literal filled area 800 mm2 and exact paper corners/layout; reject nonplanar/elevated/thick paper input; preserve model SOLID behavior, unrelated entities, style/resource/layout/scale state; source/unpacked/native Open, bounded edit/history, Save/New/Open and actual PDF measurement",
+      "status": "reproduced; unfixed",
+      "attempts": 0,
+      "evidence": [
+        "docs/PAPER-SOLID-IMPORT-TRIAGE.md",
+        "Private source triage: ten checks across hash-verified 1.36 and beta3 readers; installed importer/core members byte-identical to 1.36 source"
+      ],
+      "rootCause": "SOLID/TRACE/3DFACE importer branch unconditionally emits MESH; paper ownership is retained and core rejects all paper-space 3D types before vertex-planarity checks",
+      "verifiedScope": "Source reproduction and read-only installed source identity. Installed native failure is the authorized source-chat report, not rerun in this triage.",
+      "proposedScope": "Importer-only conversion for deliberately qualified zero-thickness paper SOLID after all transforms, using the existing filled planar representation; retain strict core validation and model-space behavior. TRACE/3DFACE require separate explicit qualification.",
+      "nextAction": "Next bounded repair: failing correctness regression, narrow importer fix, relevant controls, full exact-candidate source/unpacked/PDF gate and focused native acceptance; no install or client edits as a side effect",
+      "installedAcceptance": "not run",
+      "nativeCandidateAcceptance": "not run",
+      "dailyUseReady": false,
+      "reproducedCommit": "0cf9bd273b69c7cced5baf36f78027cd40e98fb9"
+    },
+    {
       "id": "LC-MON-002",
       "priority": 1,
       "symptom": "Supported solid HATCH omitted when the boundary repeats adjacent or closing vertices",

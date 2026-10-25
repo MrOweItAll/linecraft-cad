@@ -186,3 +186,18 @@ Installed/upgrade acceptance and broader human/DPI/client fidelity remain pendin
 daily-use readiness remains false. Importer native coverage remains the historical
 beta2 session, not a fresh beta3 native import test. No runtime change, rebuild or
 repeat of the unchanged automated gate was required.
+
+## Paper SOLID import blocker - October 25, 2026
+
+LC-MON-007/P1 is reproduced and unfixed. A literal all-Z=0 40 by 20 mm
+paper-space SOLID rejects the whole import in both hash-verified 1.36 and beta3
+source readers. Model-space SOLID, ordinary planar paper LINE and independently
+authored filled planar native geometry controls succeed; nonplanar paper SOLID
+remains rejected. Ten defined source checks completed. Read-only installed ASAR
+members match the preserved 1.36 importer/core bytes. No app was launched here.
+
+See [the triage record](PAPER-SOLID-IMPORT-TRIAGE.md). The installed native error
+is the authorized source-chat report, not a fresh native test in this session.
+Existing focused beta3 tick-width acceptance retains its scope, while this new
+open/import blocker remains unresolved. No runtime change, rebuild, installation,
+client drawing access or rerun of the prior unchanged gate occurred.
