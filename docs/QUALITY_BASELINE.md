@@ -287,3 +287,22 @@ See [the detailed record](MULTISHEET-QUALITY.md). Earlier scheduler-pending stat
 are historical. Installed application/settings, client CAD, existing artifacts and
 prior evidence remain protected. The extended full candidate gate, remote CI and
 broader font/client/installed acceptance remain not run or unqualified.
+
+## Scheduled DWG feasibility - October 26, 2026
+
+An hourly scheduled wake inventoried existing official LibreDWG 0.13.4 writers
+and ran two bounded synthetic converter attempts. Both unchanged current DXFs
+failed on common layout group 410. A narrowly validated diagnostic derivative
+encoded R2000, but readback logged errors; independent corrected audits passed
+model 6/6 and multi-sheet 7/10. Inch units survive. The multi-sheet decoded graph
+has duplicate ENDBLK 24 and both floating viewport IDs become 1, despite retained
+frames/targets/lock flags. The writer/readback source of those changes is unisolated.
+See [the feasibility record](DWG-WRITE-FEASIBILITY.md). Application DWG export remains
+unavailable; native editability and independent binary consumer checks were not run.
+
+Only synthetic fixtures, this documentation and the sanitized backlog changed.
+No runtime/manifest change or unchanged gate rerun occurred. Installed app/profile,
+existing candidate/installer and original drawing files remain protected. Earlier
+four-hour cadence statements are historical: the owner now requests hourly wakes.
+Broader native/client/font/installed acceptance and daily-use readiness remain
+unqualified. The next ordered safe item is synthetic font/template/layout inventory.

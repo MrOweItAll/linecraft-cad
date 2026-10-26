@@ -321,6 +321,31 @@
       "nextAction": "Extend coverage deliberately to mixed paper and representative plan/detail content; full fonts/templates/client/native acceptance remains separate",
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-FMT-001",
+      "priority": 1,
+      "symptom": "Existing GNU writer rejects current DXF group410; diagnostic readback fails multi-sheet handle and floating viewport requirements",
+      "expected": "A qualified editable DWG route preserves typed geometry, units, unique ownership, layouts and working viewports, with clean diagnostics and independent consumer acceptance",
+      "sourceVersion": "1.36.1-beta.4",
+      "sourceCommit": "d175b39397cdad418c9e0a99840fea31fcd71b9e",
+      "reproduction": "Two exact public synthetic DXFs; dxf2dwg0.13.4 --as r2000 rejects originals. Removing only independently validated redundant common410 tags in separate copies permits encoding but not qualification.",
+      "fixtureClass": "Fresh synthetic core exports only; no original drawing passed to a converter",
+      "status": "feasibility milestone complete; application DWG export unqualified",
+      "attempts": 2,
+      "acceptance": "Retained original failures; unchanged originals and tools; explicit derivative scope; independent literal raw-DXF geometry/unit/layout/handle/viewport audit; no inference of native editability from shared-library readback",
+      "evidence": [
+        "docs/DWG-WRITE-FEASIBILITY.md",
+        "tests/fixtures/dwg-writer-feasibility-model.dxf",
+        "tests/fixtures/dwg-writer-feasibility-multisheet.dxf",
+        "Private immutable commands, output hashes, corrected independent reader and preserved initial failed receipts"
+      ],
+      "verifiedScope": "Direct conversion fails2/2. Derived R2000 encode/readback exits0 but logs errors. Independent corrected audit model6/6, multi-sheet7/10: inch units survive; duplicate decoded ENDBLK24 and two floating viewport IDs become1. Binary-writer versus reader attribution remains unisolated.",
+      "nextAction": "Retain barriers for focused qualification before app integration; next safe ordered item is controlled font/template/layout gap inventory",
+      "runtimeChanged": false,
+      "nativeEditability": "not run",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }
