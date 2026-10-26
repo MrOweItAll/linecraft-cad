@@ -116,3 +116,68 @@ the word template above describes original paper geometry only. User conventions
 client/AutoCAD comparisons, installed/upgrade acceptance, native desktop input
 and daily-use readiness remain unqualified. Installed app/profile, client drawings,
 original fixtures, manifests and prior artifacts remain protected.
+
+## Architectural-font follow-up - October 26, 2026
+
+LC-QA-005 extends the same fixture/workflow/auditor with an explicit architectural
+profile. Source and the exact existing unpacked beta4 each passed four application
+checks, nine independent PDF measurements and seventeen rejected observation
+controls. The new profile substitutes regular ARCHITXT, regular Technic and
+0.75-width ARCHITXT into the original three `HHHH` positions. Complete native
+styles/content, actual PDF Unicode H characters and selected faces are preserved.
+No application runtime, schema, font installation or manifest changed.
+
+The independent [architectural reference](../tests/architectural_font_reference.py)
+resolves only the two fixed registered font names under supported installed-font
+roots. It reads existing faces in place and binds their hashes to the actual main
+plot inventory. Neither face supplies OS/2 sCapHeight: both use OS/2 version 0.
+The independent SFNT reader therefore establishes the mapped H glyph's bounding
+height and hmtx advance, then cross-checks the mapped glyph with MuPDF.
+
+ARCHITXT maps Unicode H to glyph 43: 677 advance units, 1000 units/em and H bounds
+y=-4..688, giving a 692-unit cap basis. Technic uses the verified Windows-symbol
+alias U+F048 for glyph 42: 627 advance units and H bounds y=-9..678, giving a
+687-unit basis. Asking MuPDF for unsupported ASCII H directly would silently use
+a fallback advance; that is explicitly excluded from the reference. The actual
+PDF must still contain the requested Unicode U+0048, rather than silently accepting
+private-use text. Both actual PDFs contain twelve U+0048 characters with faces
+`ARchitxt` and `Technic`.
+
+Expected adjacent H origins at the declared 5 mm height are 4.8916184971 mm,
+4.5633187773 mm and 3.6687138728 mm for normal ARCHITXT, Technic and condensed
+ARCHITXT. Actual first-to-fourth origins are 14.6727935579, 13.6868664424 and
+11.0045931498 mm. Existing 0.04 mm position and 0.02 mm advance/length tolerances
+remain unchanged. All nine measurements and both full/detail render hashes match
+across source/unpacked output. Fresh source renders were inspected; the three
+distinct rows, border, divider and ruler are visible and unclipped.
+
+Five [resource controls](../tests/font-resources.test.mjs) cover unsupported-family
+rejection before I/O, missing registrations without file access, honest unreadable
+inventory diagnostics without raw-error disclosure, cached-profile invalidation
+after simulated registration removal, and approximate-metric warnings preserving
+requested names and drawing state. These use injected synthetic services or a
+pure isolated plot, without changing Windows fonts/registry. They do not establish
+native unavailable-font UI behavior or missing-glyph diagnostics within an otherwise
+available profile.
+
+The new pure suite is selected by candidate fast checks. A fresh gate passed
+22/22 stages and 639 selected portable checks, with unchanged inputs. The new reference helper is fingerprinted. The architectural workflow is an
+explicit local acceptance profile, invoked with a distinct prefix and checked
+profile identity. It requires those existing registered faces and fails if they
+are unavailable. The default candidate application/CI profile retains regular
+Arial/Times coverage, so this change does not add proprietary architectural-font
+prerequisites to generic CI. No fonts are provisioned. The full application/
+candidate gates and rebuild were not run. Hosted architectural-profile acceptance
+was not run; its required font environment was not verified or provisioned.
+
+The regular fixture's serialized bytes still match the previous immutable input.
+The current reader passed nine measurements and seventeen rejection controls on
+the preserved regular PDF, with unchanged regular expectations. That compatibility
+read is separate from a new regular application run. Prior receipts remain intact.
+
+Only these repeated-H samples are qualified. General glyph repertoires, actual
+ink height, rich text/variants, dimensions/leaders, client conventions and DWT/
+template/native/installed/AutoCAD fidelity remain open. A bounded missing-glyph
+diagnostic investigation is next: distinguish an absent glyph in an available
+face from an unavailable metric profile before proposing any product change.
+All source font paths remain in private audit bindings; public summaries omit them.

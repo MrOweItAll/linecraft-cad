@@ -326,3 +326,24 @@ state and previous artifacts remain protected. Native input, broader glyphs,
 ARCHITXT/Technic appearance, DWT/templates, client/AutoCAD and installed/upgrade
 acceptance remain unqualified. Continue with a focused synthetic architectural-font
 glyph milestone; all attachment requirements and daily-use readiness are not complete.
+
+## Scheduled architectural-font milestone - October 26, 2026
+
+LC-QA-005 adds a separately identified ARCHITXT/Technic repeated-H profile plus
+five injected/pure font-resource fallback controls. A fresh fast gate passed
+22/22 stages and 639 selected portable checks. Targeted actual hidden source and
+existing-unpacked runs each passed 4 app checks, 9 independent PDF measurements
+and 17 rejected reader controls. Both actual PDFs retain twelve Unicode H characters
+with the requested ARchitxt/Technic faces. Independent mapped-glyph SFNT metrics
+avoid the Technic ASCII-H fallback trap. Native bytes, measurements and both render
+pairs match exactly; fresh source full/detail images were inspected.
+
+The regular fixture bytes remain identical to the earlier input, and the current
+reader passes 9/17 on the preserved regular PDF with unchanged expectations. That
+is compatibility evidence, not a new regular app run. See the appended
+[coverage record](FONT-LAYOUT-QUALITY.md). No runtime, schema, manifest, fonts,
+installed/profile/client state or prior artifacts changed. Full application/
+candidate gates and rebuild were not rerun. Only the declared H samples are
+qualified; ink height, general glyphs, annotations and template/native/installed
+fidelity remain open. Next: independently reproduce any missing-glyph diagnostic
+gap in an available fixed font before proposing a product fix.

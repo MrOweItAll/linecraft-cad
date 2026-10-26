@@ -184,3 +184,14 @@ See [the coverage record](FONT-LAYOUT-QUALITY.md) for the independent installed-
 reference, exact scope, initial environment failure and unqualified features.
 The extended full gates were not rerun. Font availability, measured output,
 native desktop input and general client/template fidelity remain distinct claims.
+
+The optional `--architectural-fonts` workflow profile adds independently verified
+ARCHITXT/Technic repeated-H output and keeps the regular profile as the default.
+Use a distinct result prefix and require architectural profile identity for this
+explicit local acceptance command. Default candidate application/CI selection
+retains the regular profile and adds no architectural-font prerequisite.
+The new font-resources pure suite covers five injected/pure fallback boundaries;
+the fresh extended fast gate passed 22/22 with 639 selected portable checks. Targeted
+architectural source/unpacked flows each passed 4 app checks, 9 measurements and 17
+rejected reader controls. See the appended [coverage record](FONT-LAYOUT-QUALITY.md)
+for symbol-cmap handling, regular compatibility and the limited glyph scope.

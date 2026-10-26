@@ -14,6 +14,8 @@ const manifestOption=process.argv.find(a=>a.startsWith('--manifest='))?.slice(11
 const {manifest,manifestFile,candidate}=require('../tools/source-manifest.cjs').loadManifest(manifestOption);
 auxiliaries.push('tests/multisheet-fixture.mjs','tests/multisheet-reference.test.mjs','tests/multisheet-workflow.cjs','tests/audit-multisheet-pdf.py');
 auxiliaries.push('tests/font-layout-fixture.mjs','tests/font-layout-workflow.cjs','tests/audit-font-layout-pdf.py');
+auxiliaries.push('tests/architectural_font_reference.py');
+if(candidate)suites.push('tests/font-resources.test.mjs');
 if(candidate)suites.push('tests/hatch-normalization.test.mjs','tests/quality-reference.test.mjs','tests/qa-controls.test.cjs','tests/viewport-center-import.test.mjs','tests/tick-width-reference.test.mjs','tests/tick-width.test.mjs','tests/paper-solid-import.test.mjs','tests/multisheet-reference.test.mjs');
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const hashFiles=names=>Object.fromEntries(names.map(n=>[n,sha(fs.readFileSync(path.join(root,n)))]));

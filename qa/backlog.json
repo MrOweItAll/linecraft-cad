@@ -371,6 +371,33 @@
       "fullGates": "extended selection recorded; unchanged complete gates not rerun",
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-QA-005",
+      "priority": 1,
+      "symptom": "Architectural fonts and font-resource fallback boundaries were inventory-only in selected quality checks",
+      "expected": "Synthetic ARCHITXT/Technic annotations preserve complete native state, requested Unicode characters, actual PDF faces and independently established advances; unavailable resources produce honest diagnostics",
+      "sourceVersion": "1.36.1-beta.4",
+      "sourceCommit": "a9ad2d314874ce65cb7afceedebc5e7eeb040a2b",
+      "reproduction": "Previous registered font profile exercises regular Arial/Times only, with no selected unavailable/stale-registry controls",
+      "fixtureClass": "Original public synthetic repeated-H A4 profile and injected resources; no copied font/client/template assets",
+      "status": "verified bounded ARCHITXT/Technic source and existing-unpacked glyph coverage",
+      "attempts": 1,
+      "acceptance": "Source/unpacked4 app,9 PDF and17 rejected controls each; exact native/output/Unicode face/advance checks; independent legacy SFNT symbol/cap reference;5 pure fallback boundaries; current fast selection and regular compatibility",
+      "evidence": [
+        "tests/font-layout-fixture.mjs",
+        "tests/font-layout-workflow.cjs",
+        "tests/audit-font-layout-pdf.py",
+        "tests/architectural_font_reference.py",
+        "tests/font-resources.test.mjs",
+        "docs/FONT-LAYOUT-QUALITY.md"
+      ],
+      "verifiedScope": "Fresh fast22/22,639 selected portable. Both actual architecture profiles4/4,9 measurements,17 rejected controls; requested UnicodeH retained with correct ARchitxt/Technic faces. Symbol-H advance uses verified U+F048 glyph, never unsupported ASCII fallback. Native bytes, measurements and render pairs match; fresh source images inspected. Regular default fixture and saved-PDF oracle retain prior expectations.",
+      "nextAction": "Bounded investigation of absent glyph diagnostics in otherwise available fixed fonts, before any product change. General glyphs, rich text/variants, dimensions/leaders, actual ink height, client/template/native/installed fidelity remain unqualified.",
+      "runtimeChanged": false,
+      "fullApplicationAndCandidateGates": "not rerun; targeted new profile executed against source and exact existing unpacked candidate",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }

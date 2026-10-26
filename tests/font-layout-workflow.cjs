@@ -7,11 +7,14 @@ const {execFile, spawnSync} = require('node:child_process');
 const {promisify} = require('node:util'), {pathToFileURL} = require('node:url');
 const execute = promisify(execFile), sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const root = path.resolve(__dirname, '..');
-const [executableArgument, entry = '', prefix, manifestName] = process.argv.slice(2);
+const [executableArgument, entry = '', prefix, manifestName, profileArgument] = process.argv.slice(2);
+const architectural=profileArgument==='--architectural-fonts';
+assert.ok(profileArgument===undefined||architectural,'Only --architectural-fonts is an optional profile flag.');
+const families=architectural?['ARCHITXT','Technic']:['Arial','Times New Roman'];
 assert.equal(process.platform, 'win32'); assert.equal(process.arch, 'x64');
 assert.ok(executableArgument && /^ordinary-grip-[a-z0-9-]+$/.test(prefix) && manifestName,
   'Usage: node tests/font-layout-workflow.cjs EXE SOURCE_ENTRY_OR_EMPTY UNIQUE_PREFIX CANDIDATE_MANIFEST');
-assert.equal(process.argv.length, 6);
+assert.equal(process.argv.length, architectural?7:6);
 const executable = path.resolve(executableArgument);
 const {manifest, manifestFile, candidate} = require('../tools/source-manifest.cjs').loadManifest(manifestName);
 assert.equal(candidate, true, 'Use an explicit reviewed candidate manifest.');
@@ -25,10 +28,10 @@ const profile = path.join(run, 'profile'), connection = path.join(run, 'control.
 const input = path.join(run, 'font-layout-input.linecraft'), native = path.join(run, 'font-layout-accepted.linecraft');
 const pdf = path.join(run, 'font-layout.pdf'), producerFile = path.join(run, 'producer-results.json');
 const report = {format:'LinecraftFontLayoutWorkflow/1', status:'running', startedAt:new Date().toISOString(),
-  version:manifest.version, manifestFile, run, application:null, pdfAudit:null,
+  version:manifest.version, manifestFile, run, profile:architectural?'architectural':'regular', application:null, pdfAudit:null,
   scope:'Actual hidden source/unpacked application, authenticated controller, owned chooser replies and production PDF bridge. No installed/native human acceptance.'};
 const appReport = {format:'LinecraftFontLayoutApplication/1', status:'running', startedAt:new Date().toISOString(),
-  source:root, executable, entry:entry || null, version:manifest.version, manifestFile, tests:[], errors:[], network:[], outputs:{},
+  source:root, executable, entry:entry || null, fontProfile:architectural?'architectural':'regular', version:manifest.version, manifestFile, tests:[], errors:[], network:[], outputs:{},
   scope:'Owned synthetic native drawing; actual Open/Save As/New/Open; production PDF bridge with registered typography; full-state and actual PDF acceptance. No geometry or viewport repair.'};
 report.tests=appReport.tests;
 report.manifestSHA256=sha(sync.readFileSync(path.join(root,manifestFile)));
@@ -41,7 +44,7 @@ async function fingerprint() {
     assert.equal(bytes.length, row.bytes, row.file); assert.equal(sha(bytes), row.sha256, row.file); result[row.file] = row.sha256;
   }
   for (const name of [manifestFile, 'PUBLIC-SOURCE.json', 'package.json', 'package-lock.json',
-    'tests/font-layout-fixture.mjs', 'tests/font-layout-workflow.cjs', 'tests/audit-font-layout-pdf.py', 'tests/electron-test-options.cjs']) {
+    'tests/font-layout-fixture.mjs', 'tests/font-layout-workflow.cjs', 'tests/audit-font-layout-pdf.py', 'tests/architectural_font_reference.py', 'tests/electron-test-options.cjs']) {
     result[name] = sha(await fs.readFile(path.join(root, name)));
   }
   return result;
@@ -85,8 +88,9 @@ function assertFixture(document) {
   assert.equal(document.layouts.length,1);const sheet=document.layouts[0];
   assert.equal(sheet.id,'font-sheet');assert.equal(sheet.name,'SYNTHETIC FONT SHEET');
   assert.equal(sheet.paper.widthMm,297);assert.equal(sheet.paper.heightMm,210);assert.equal(sheet.entities.length,6);assert.equal(sheet.viewports.length,0);
-  assert.deepEqual(sheet.entities.filter(e=>e.type==='TEXT').map(e=>[e.text,e.position.x,e.position.y,e.height,e.style]),[['HHHH',20,160,5,'Measured Arial'],['HHHH',20,130,5,'Measured Times'],['HHHH',20,100,5,'Condensed Arial']]);
-  for(const [name,family,width]of [['Measured Arial','Arial',1],['Measured Times','Times New Roman',1],['Condensed Arial','Arial',.75]]){const s=document.textStyles.find(s=>s.name===name);assert.equal(s.fontFamily,family);assert.equal(s.metrics,'registered');assert.equal(s.widthFactor,width);}
+  const styles=architectural?['Measured ARCHITXT','Measured Technic','Condensed ARCHITXT']:['Measured Arial','Measured Times','Condensed Arial'];
+  assert.deepEqual(sheet.entities.filter(e=>e.type==='TEXT').map(e=>[e.text,e.position.x,e.position.y,e.height,e.style]),[['HHHH',20,160,5,styles[0]],['HHHH',20,130,5,styles[1]],['HHHH',20,100,5,styles[2]]]);
+  for(const [name,family,width]of [[styles[0],families[0],1],[styles[1],families[1],1],[styles[2],families[0],.75]]){const s=document.textStyles.find(s=>s.name===name);assert.equal(s.fontFamily,family);assert.equal(s.metrics,'registered');assert.equal(s.widthFactor,width);}
 }
 async function application() {
   try {
@@ -101,9 +105,9 @@ async function application() {
     }
     await fs.mkdir(profile, {recursive:true}); sourceBefore = await fingerprint(); packagedBefore = await packagedIdentity();
     appReport.sourceSHA256 = sourceBefore; appReport.packagedBefore = packagedBefore;
-    const {syntheticFontLayoutDrawing}=await import(pathToFileURL(path.join(root,'tests/font-layout-fixture.mjs')));
+    const {syntheticFontLayoutDrawing,syntheticArchitecturalFontDrawing}=await import(pathToFileURL(path.join(root,'tests/font-layout-fixture.mjs')));
     const {createEditor}=await import(pathToFileURL(path.join(root,'core.mjs')));
-    const text=createEditor(syntheticFontLayoutDrawing()).serialize();
+    const text=createEditor(architectural?syntheticArchitecturalFontDrawing():syntheticFontLayoutDrawing()).serialize();
     await fs.writeFile(input,text,{flag:'wx'}); inputSHA256=sha(await fs.readFile(input));
     const args = [`--user-data-dir=${profile}`, `--linecraft-control-file=${connection}`];
     if (entry) args.unshift(path.resolve(entry), '--linecraft-no-watch');
@@ -146,11 +150,11 @@ async function application() {
       const savedSHA=sha(await fs.readFile(native));assert.ok(!sync.existsSync(pdf));
       await page.waitForFunction(()=>window.linecraft.getAnnotationFontState().status==='checked');
       appReport.rendererFontState=await page.evaluate(()=>window.linecraft.getAnnotationFontState());
-      for(const family of ['Arial','Times New Roman']){const row=appReport.rendererFontState.fonts.find(r=>r.fontFamily===family&&!r.bold&&!r.italic);assert.equal(row?.available,true,family);assert.equal(row.localFaceLoaded,true,family);assert.equal(row.metricError,null);}
+      for(const family of families){const row=appReport.rendererFontState.fonts.find(r=>r.fontFamily===family&&!r.bold&&!r.italic);assert.equal(row?.available,true,family);assert.equal(row.localFaceLoaded,true,family);assert.equal(row.metricError,null);}
       await app.evaluate((_,file)=>globalThis.__fontLayoutQA.save=file,pdf);
       const response=await page.evaluate(async()=>window.linecraftDesktop.plotPDF({text:window.linecraft.editor.serialize(),options:{space:'layout',layoutId:'font-sheet',colorMode:'monochrome',lineweights:true}}));
       assert.equal(response.ok,true,response.error);assert.equal(response.pages,1);appReport.fontInventory=response.report.fontInventory;appReport.plotResponse=response;
-      for(const family of ['Arial','Times New Roman']){const row=appReport.fontInventory.find(r=>r.fontFamily===family&&!r.bold&&!r.italic),renderer=appReport.rendererFontState.fonts.find(r=>r.fontFamily===family&&!r.bold&&!r.italic);assert.equal(row?.available,true,family);assert.equal(row.sha256,renderer.sha256,family);}
+      for(const family of families){const row=appReport.fontInventory.find(r=>r.fontFamily===family&&!r.bold&&!r.italic),renderer=appReport.rendererFontState.fonts.find(r=>r.fontFamily===family&&!r.bold&&!r.italic);assert.equal(row?.available,true,family);assert.equal(row.sha256,renderer.sha256,family);}
       assert.deepEqual(await doc(),accepted);assert.equal(sha(await fs.readFile(native)),savedSHA);
       const bytes=await fs.readFile(pdf);assert.equal(bytes.subarray(0,5).toString(),'%PDF-');
       appReport.outputs={input,native,pdf,inputSHA256,nativeSHA256:savedSHA,pdfSHA256:sha(bytes)};
@@ -187,7 +191,7 @@ async function application() {
     report.sourceSHA256=sourceBefore; report.sourceUnchanged=appReport.sourceUnchanged; report.inputUnchanged=appReport.inputUnchanged;
     const receipt=path.join(run,'pdf-audit.json'),render=path.join(run,'renders');
     const python=process.env.CAD_PYTHON || path.join(root,'.venv/Scripts/python.exe');
-    const result=spawnSync(python,[path.join(root,'tests/audit-font-layout-pdf.py'),'--producer',producerFile,'--receipt',receipt,'--render-directory',render],
+    const result=spawnSync(python,[path.join(root,'tests/audit-font-layout-pdf.py'),'--profile',architectural?'architectural':'regular','--producer',producerFile,'--receipt',receipt,'--render-directory',render],
       {cwd:root,encoding:'utf8',windowsHide:true,timeout:30000,maxBuffer:4*1024*1024});
     await fs.writeFile(path.join(run,'pdf-audit.log'),(result.stdout || '')+(result.stderr || ''),{flag:'wx'});
     assert.equal(result.status,0,result.error?.message || result.stderr || result.stdout);

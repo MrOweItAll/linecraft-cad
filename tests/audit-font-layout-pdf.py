@@ -299,19 +299,29 @@ def negative_controls(pages, references):
 
 
 def main():
+    global SAMPLES
     parser = argparse.ArgumentParser()
+    parser.add_argument('--profile', choices=['regular', 'architectural'], default='regular')
     for name in ['producer', 'receipt', 'render-directory']:
         parser.add_argument('--' + name, type=Path, required=True)
     args = parser.parse_args()
     assert not args.receipt.exists() and not args.render_directory.exists(), 'Preserve prior evidence'
     producer = json.loads(args.producer.read_text(encoding='utf-8-sig'))
+    reference_reader = font_reference
+    selected_families = tuple(FONT_FILES)
+    if args.profile == 'architectural':
+        from architectural_font_reference import font_reference as architectural_reference
+        reference_reader = architectural_reference
+        selected_families = ('ARCHITXT', 'Technic')
+        SAMPLES = [{**row, 'family': selected_families[1] if index == 1 else selected_families[0]}
+                   for index, row in enumerate(SAMPLES)]
     outputs = producer['outputs']
     bindings = {'producer': {'file': str(args.producer), 'sha256': sha(args.producer)}}
     for name in ['native', 'pdf']:
         file = Path(outputs[name])
         assert sha(file) == outputs[name + 'SHA256']
         bindings[name] = {'file': str(file), 'sha256': sha(file)}
-    report = {'format': 'LinecraftIndependentFontLayoutPDF/1', 'status': 'running',
+    report = {'format': 'LinecraftIndependentFontLayoutPDF/1', 'status': 'running', 'profile': args.profile,
         'startedAt': datetime.now(timezone.utc).isoformat(), 'bindings': bindings,
         'scope': 'Actual PDF, literal glyph origins and faces, installed-font independent advances, template geometry and paint; no copied fonts, native consumer or general font/client parity claim.',
         'tolerancesMm': {'position': POSITION_TOLERANCE_MM, 'advance': ADVANCE_TOLERANCE_MM,
@@ -319,13 +329,14 @@ def main():
         'measurements': [], 'negativeControls': [], 'renders': []}
     try:
         assert producer['status'] == 'passed'
+        assert producer.get('fontProfile', 'regular') == args.profile
         native_document(json.loads(Path(outputs['native']).read_text(encoding='utf-8-sig')))
-        references = {family: font_reference(family, producer['fontInventory']) for family in FONT_FILES}
+        references = {family: reference_reader(family, producer['fontInventory']) for family in selected_families}
         report['fontReferences'] = references
         report['inventoryOnlyFaces'] = [
             {key: row[key] for key in ['family', 'fontFamily', 'bold', 'italic', 'available', 'sha256'] if key in row}
             for row in producer['fontInventory']
-            if not (row.get('family', row.get('fontFamily')) in FONT_FILES
+            if not (row.get('family', row.get('fontFamily')) in selected_families
                     and row.get('bold') is False and row.get('italic') is False)]
         pdf = fitz.open(outputs['pdf'])
         pages = [extract(page) for page in pdf]
@@ -340,7 +351,7 @@ def main():
         for row in bindings.values():
             assert sha(row['file']) == row['sha256']
         for family, reference in references.items():
-            assert sha(FONT_FILES[family]) == reference['sha256']
+            assert sha(reference['sourceFile'] if args.profile == 'architectural' else FONT_FILES[family]) == reference['sha256']
         report['visualReview'] = 'Pending fresh full and typography render inspection'
         report['notQualified'] = ['Actual ink cap-height from glyph outlines', 'Other glyphs, rich text and font variants',
             'ARCHITXT/Technic appearance or general six-family parity', 'Native CAD edit/save or client/template/DWT fidelity']

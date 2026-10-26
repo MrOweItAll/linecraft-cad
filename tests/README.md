@@ -141,3 +141,14 @@ It checks literal repeated-H advances/faces, baseline placement and synthetic A4
 geometry, with nine measurements and seventeen negative reader controls. See
 [the coverage record](../docs/FONT-LAYOUT-QUALITY.md). This is production PDF bridge
 coverage with test-owned choosers, not plot-form/native-input or DWT acceptance.
+
+Append `--architectural-fonts` after the manifest to select the separate ARCHITXT/
+Technic repeated-H profile; use a different unique prefix for each profile. Its
+independent `architectural_font_reference.py` resolves only those fixed registered
+names, reads their existing faces in place and handles the verified Technic symbol
+cmap without treating MuPDF's missing-ASCII-glyph fallback as an expected advance.
+The regular fixture and reader defaults retain their original expectations.
+
+`node --test tests/font-resources.test.mjs` exercises five synthetic service/plot
+boundaries without actual font or registry changes. Candidate fast selection also
+includes it. Missing-font/profile controls are distinct from missing-glyph coverage.

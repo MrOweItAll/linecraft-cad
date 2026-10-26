@@ -14,3 +14,15 @@ export function syntheticFontLayoutDrawing() {
         ...[['arial',160,'Measured Arial'],['times',130,'Measured Times'],['condensed',100,'Condensed Arial']].map(([id,y,style])=>({id:'font-'+id,type:'TEXT',layer:'0',color:'#000000',position:{x:20,y},height:5,rotation:0,style,text:'HHHH'}))]}],
     activeSpace:'paper',activeLayoutId:'font-sheet',activeViewportId:null};
 }
+
+export function syntheticArchitecturalFontDrawing() {
+  const drawing=syntheticFontLayoutDrawing();
+  drawing.textStyles=[{name:'Standard',fontFamily:'Arial'},
+    {name:'Measured ARCHITXT',fontFamily:'ARCHITXT',metrics:'registered',widthFactor:1},
+    {name:'Measured Technic',fontFamily:'Technic',metrics:'registered',widthFactor:1},
+    {name:'Condensed ARCHITXT',fontFamily:'ARCHITXT',metrics:'registered',widthFactor:.75}];
+  const styles={'Measured Arial':'Measured ARCHITXT','Measured Times':'Measured Technic','Condensed Arial':'Condensed ARCHITXT'};
+  const ids={'font-arial':'font-architxt','font-times':'font-technic','font-condensed':'font-architxt-condensed'};
+  drawing.layouts[0].entities=drawing.layouts[0].entities.map(entity=>entity.type==='TEXT'?{...entity,id:ids[entity.id],style:styles[entity.style]}:entity);
+  return drawing;
+}
