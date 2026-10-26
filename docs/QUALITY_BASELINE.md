@@ -272,3 +272,18 @@ The recurring trigger is enabled; its first actual scheduled execution has not y
 been observed. That is distinct from this successful manual policy trial. See
 [the run contract](UNATTENDED-DEVELOPMENT.md). Installed application, normal
 profile and client drawings remain protected; daily-use readiness remains false.
+
+## Scheduled multi-sheet milestone - October 26, 2026
+
+An actual scheduled wake completed the bounded two-sheet/title-block coverage
+milestone, after the initial wake had been interrupted before source ownership.
+The normal four-hour schedule was restored. No application runtime or manifest
+changed. Fast21/21(634 selected portable) and source application5/5 passed; the new
+targeted exact existing-unpacked workflow passed four checks plus actual PDF18 and
+13 rejected reader probes. Stored B,A tab order plots A,B with127/63.5mm model
+rulers and complete synthetic title blocks. Source/unpacked native bytes and all
+four rendered-image pairs match exactly; fresh source renders were inspected.
+See [the detailed record](MULTISHEET-QUALITY.md). Earlier scheduler-pending statements
+are historical. Installed application/settings, client CAD, existing artifacts and
+prior evidence remain protected. The extended full candidate gate, remote CI and
+broader font/client/installed acceptance remain not run or unqualified.

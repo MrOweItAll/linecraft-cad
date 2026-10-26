@@ -111,3 +111,13 @@ It uses isolated hidden processes, owned chooser replies, the real controller
 and production file/PDF services. The PDF reader keeps fixed 0.04 mm endpoint and
 0.02 mm dimension tolerances plus opaque paint/order and 0.995 raster coverage.
 These checks are separate from native Windows dialogs and installed acceptance.
+
+## Ordered multi-sheet candidate coverage
+
+The explicit candidate fast profile selects multisheet-reference.test.mjs. Candidate
+application profiles run multisheet-workflow.cjs against their source/unpacked
+executable, using hidden isolated profiles and owned chooser replies. Its independent
+audit-multisheet-pdf.py checks actual page order, literal geometry, paper title-block
+markers/ink and13 negative reader probes. The gate fingerprints all four new files.
+See [the coverage record](../docs/MULTISHEET-QUALITY.md) for executed results and
+the distinction from native, installed and client/font qualification.

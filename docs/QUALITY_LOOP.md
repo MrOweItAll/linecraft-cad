@@ -161,3 +161,13 @@ rebuild or repeat of the unchanged automated gate occurred. LC-MON-008 separatel
 tracks pre-existing import-report wording. Installed/upgrade and broader human/DPI/
 client fidelity remain pending. Manual invocation ready; unattended execution not
 enabled. Separate installation/promotion/release authorization remains required.
+
+## Ordered multi-sheet coverage
+
+Candidate fast selection now includes multisheet-reference.test.mjs. Source and
+unpacked application selection includes multisheet-workflow.cjs and its independent
+actual two-page PDF audit. The four new files are explicitly fingerprinted.
+See [the coverage record](MULTISHEET-QUALITY.md) for literals, output bindings,
+reader controls and limits. This milestone executed fast21/21, source application5/5
+and the new targeted existing-unpacked workflow; the extended33-stage candidate
+build was not rerun. Public fixture coverage does not establish client/font parity.

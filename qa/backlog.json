@@ -297,6 +297,30 @@
         "Private first policy trial receipts"
       ],
       "nextAction": "Keep explicit CI manifest selection current with deliberate candidate reviews; remote GitHub execution still requires an authorized push and actual run"
+    },
+    {
+      "id": "LC-QA-003",
+      "priority": 1,
+      "symptom": "Selected actual application/PDF profile lacked independent ordered multi-sheet title-block coverage",
+      "expected": "A requested PDF page order distinct from stored tabs preserves complete drawing state, physical scales, sheet markers and title-block ink",
+      "sourceVersion": "1.36.1-beta.4",
+      "sourceCommit": "0d89055557dce84791f24c2de90f2e97944a8cf1",
+      "reproduction": "Previously selected source/unpacked profiles exercised reduced single-sheet calibration outputs; no selected independent actual two-page order/title-block audit",
+      "fixtureClass": "Independently authored public-safe synthetic two-A3-sheet fixture",
+      "acceptance": "StoredB,A and requestedA,B; complete Open/SaveAs/New/Open and postplot equality; actual source/unpacked PDF literal geometry/text/paint and negativecontrols; fresh render review",
+      "status": "verified bounded synthetic source/unpacked coverage",
+      "attempts": 1,
+      "evidence": [
+        "tests/multisheet-fixture.mjs",
+        "tests/multisheet-reference.test.mjs",
+        "tests/multisheet-workflow.cjs",
+        "tests/audit-multisheet-pdf.py",
+        "docs/MULTISHEET-QUALITY.md"
+      ],
+      "verifiedScope": "Three pure checks; fresh21-stagefast634portable and5-stage source app; existing unpacked targeted4checks/PDF18/13controls. No runtime change.",
+      "nextAction": "Extend coverage deliberately to mixed paper and representative plan/detail content; full fonts/templates/client/native acceptance remains separate",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }
