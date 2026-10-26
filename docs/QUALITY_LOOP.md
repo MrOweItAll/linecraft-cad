@@ -218,3 +218,14 @@ rejected controls. New scripts are fingerprinted auxiliaries, not default timing
 gate stages. See [the measurement baseline](PERFORMANCE-BASELINE.md) for actual
 boundaries, raw data, variation and limits. No arbitrary usability threshold,
 physical-input or product speed improvement claim is made.
+
+## Explicit development recovery coverage
+
+The separate reload-workflow.cjs checks actual watched-file source reload and
+controlled dirty source-host restart, preserving complete accepted drawing/view
+and dirty/name while clearing active prompt/selection/Undo/Redo. Its unpacked
+profile separately checks dev-reload disabled and explicit saved-file Open after
+normal clean process restart. See [the qualification record](DEVELOPMENT-RECOVERY-QUALITY.md).
+The three files are fingerprinted auxiliaries, not default CI/application stages.
+Acquire shared source ownership before the metadata-only watcher trigger. Native
+input, crash durability and installed/upgrade acceptance remain separate.

@@ -382,3 +382,18 @@ optimization occurred. Full unchanged beta5 gates/builds were not repeated.
 Installed/profile/client/native state and prior artifacts remain protected;
 native beta5 and installed acceptance remain pending, daily-use readiness false.
 Next safe queue item: isolated development reload/restart preservation.
+
+## Development recovery milestone - October26,2026
+
+LC-DEV-001 passed4/4 actual source stages across3 hidden launches and2/2 existing
+unpacked beta5 stages across2 launches. Independent source12/unpacked8 measurements
+and12 rejected controls each verify literal geometry and complete native states.
+Two real stylesheet watcher reloads preserve dirty/clean accepted content/view and
+settings, cancel prompts and clear real history/selection. Controlled dirty host
+restart preserves the saved target and allows Save without a chooser. Intentional
+clean close clears recovery. Packaged restart begins blank and requires explicit
+Open; development reload is a verified no-op. See [the record](DEVELOPMENT-RECOVERY-QUALITY.md).
+No runtime/schema/manifest, installation/profile/client/native input or original
+fixture/result changed. Existing complete candidate gates/builds were not repeated.
+Crash durability, broader/draft/error recovery, native beta5 and installed/upgrade
+acceptance remain open; daily-use readiness is false. Next: local relay protocol.

@@ -456,6 +456,31 @@
       "nativeCandidateAcceptance": "not run",
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-DEV-001",
+      "priority": 2,
+      "symptom": "Existing broad development suite lacked current bounded complete-state recovery and packaged restart evidence",
+      "expected": "Source reload/controlled restart preserve accepted native content/view and saved baseline while canceling prompts/resetting history; packaged saved-file restart remains distinct",
+      "sourceVersion": "1.36.1-beta.5",
+      "sourceCommit": "9833b7717ca00b22e751ea4431628827c817ccbd",
+      "fixtureClass": "Original two-A3-sheet synthetic definitions with fixed model ruler/navigation and typed50/10/20-inch lines; no client data",
+      "status": "bounded source development recovery and unpacked saved restart verified",
+      "attempts": 1,
+      "acceptance": "Source4/4 stages over3hidden launches,unpacked2/2 over2; independent12/8 measurements,12 rejected controls each; complete parsed native state and literal expected geometry, dirty/name/history/selection and file hashes",
+      "evidence": [
+        "tests/reload-fixture.mjs",
+        "tests/reload-workflow.cjs",
+        "tests/audit-reload.py",
+        "docs/DEVELOPMENT-RECOVERY-QUALITY.md"
+      ],
+      "verifiedScope": "Two actual source watcher mtime events; exact accepted state/settings/view; active prompt/history/selection reset; dirty controlled restart and Save without chooser; intentional clean close clears recovery. Unpacked dev-reloadfalse and explicit saved-file reopen after normal restart. Stylesheet bytes/mtime restored.",
+      "nextAction": "Durable local drafting/development request/progress protocol; broader draft/error/crash/native recovery needs separate references",
+      "runtimeChanged": false,
+      "fullGates": "existing unchanged37-stage/648portable candidate gate preserved, not rerun",
+      "nativeCandidateAcceptance": "not run",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }

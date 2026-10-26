@@ -178,3 +178,16 @@ rejection controls. Benchmark files are fingerprinted but timing is not a defaul
 gate or usability criterion. See [the baseline](../docs/PERFORMANCE-BASELINE.md)
 for exact reproduction, saved-file reread scope, raw CSV, cache/frame boundaries
 and unqualified workloads. Use only disposable source/QA-unpacked profiles.
+
+## Explicit bounded reload/restart checks
+
+reload-workflow.cjs uses the executable/source-entry/unique-prefix/manifest argument
+shape above. Source mode requires shared exclusive development ownership: it
+triggers the real watcher through stylesheet mtime and restores bytes/mtime. It
+checks complete content/view, dirty/name, active-command cancellation and history/
+selection reset, then controlled source-host profile recovery and intentional clean
+close. Packaged mode checks disabled development reload and explicit saved-file
+Open after a normal clean restart. The stdlib audit-reload.py binds all complete
+files and rejects12 corrupt observations per variant. Existing historical suites
+and results are preserved. See [scope and commands](../docs/DEVELOPMENT-RECOVERY-QUALITY.md);
+crash/power-loss, draft/error recovery and native installed acceptance are distinct.
