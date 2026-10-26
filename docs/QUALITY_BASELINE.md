@@ -2,8 +2,14 @@
 
 Baseline commit: f37aba5ebe19f27088847cd8f983ecf5facf8eac, version1.36.0,
 origin https://github.com/MrOweItAll/linecraft-cad.git. Local ownership branch:
-codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; active candidate1.36.1-beta.3. Exact local paths and
+codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; active candidate1.36.1-beta.4. Exact local paths and
 checkpoint/installer hashes are in the private session report, outside this tree.
+
+The opening baseline observations and dated sections below retain their historical
+scope. Current beta4 focused native acceptance is recorded in
+[NATIVE-BETA4-ACCEPTANCE.md](NATIVE-BETA4-ACCEPTANCE.md). Local scheduling state and
+its first policy trial are recorded separately; a completed wake does not complete
+all drafting requirements or establish installed/daily-use readiness.
 
 Verified on2026-10-24: Windows x64, host Node24.13.0/npm11.6.2, local Electron44.9.3,
 Playwright1.62.1/electron-builder26.15.3, Python3.14.6/PyMuPDF1.28.0. Installed app
@@ -246,3 +252,23 @@ defect, now separately recorded as LC-MON-008. Earlier native-pending statements
 are historical. Installed/upgrade, broad human/DPI and actual DWG/client fidelity
 remain pending; daily-use readiness remains false. No unchanged full-gate rerun,
 installation, release, push, outbound message or scheduler change occurred.
+
+## Local recurring development authorization - October 26, 2026
+
+The owner authorized a bounded local recurring development task in the existing
+chat. The exact ACTIVE task, four-hour cadence, private runbook/ordered queue and
+disable procedure are recorded in the private quality pointer. The old drafting
+report monitor remains paused. This changes local scheduling authorization;
+earlier statements that unattended work was disabled remain historical.
+
+The first manual policy trial repaired LC-QA-002: both CI jobs selected beta2
+against current beta4 source. The pre-change fast command failed with the expected
+version mismatch before any suite ran. The corrected beta4 command passed 20/20
+fast stages, and source application checks passed 4/4 stages, with fresh actual
+application/PDF receipts and unchanged bound inputs. No runtime or manifest change,
+candidate rebuild, installation, publication or remote CI execution occurred.
+
+The recurring trigger is enabled; its first actual scheduled execution has not yet
+been observed. That is distinct from this successful manual policy trial. See
+[the run contract](UNATTENDED-DEVELOPMENT.md). Installed application, normal
+profile and client drawings remain protected; daily-use readiness remains false.

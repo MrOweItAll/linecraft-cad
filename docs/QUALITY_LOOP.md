@@ -4,6 +4,11 @@ Use Node24, the pinned local dependencies, Windows x64 for application/build che
 and the pinned Python PDF reader described in tests/README.md. No installation of
 the daily-use app is part of these commands.
 
+These commands do not install a scheduler. See
+[unattended development](UNATTENDED-DEVELOPMENT.md) for the bounded local scheduling
+contract; exact local state belongs in the private quality pointer. Earlier dated
+manual/unattended statements below retain their historical scope.
+
 ```
 npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.4.json
 npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.4.json

@@ -278,6 +278,25 @@
         "Private native import-report observation and complete-state receipts"
       ],
       "nextAction": "Address separately in a bounded repair session; no runtime modification during beta4 acceptance"
+    },
+    {
+      "id": "LC-QA-002",
+      "priority": 1,
+      "symptom": "Quality-loop CI still selects beta2 while the reviewed current candidate is beta4",
+      "expected": "Fast and Windows application jobs select the reviewed manifest matching the current package version; old identities remain immutable",
+      "sourceVersion": "1.36.1-beta.4",
+      "sourceCommit": "c4f99ac2772d3384fbd814dc1729494017683b73",
+      "reproduction": "Run the pre-change workflow fast command with the beta2 manifest against current beta4 source; required version identity fails before any test stage",
+      "fixtureClass": "Public-safe source/configuration identity check",
+      "acceptance": "Retain expected failing version-mismatch receipt; verify both explicit CI pins match package/manifest identity; fresh current fast and source application checks; unchanged runtime/candidate/installed inputs",
+      "status": "verified local configuration; remote CI not run",
+      "attempts": 1,
+      "evidence": [
+        ".github/workflows/quality-loop.yml",
+        "docs/UNATTENDED-DEVELOPMENT.md",
+        "Private first policy trial receipts"
+      ],
+      "nextAction": "Keep explicit CI manifest selection current with deliberate candidate reviews; remote GitHub execution still requires an authorized push and actual run"
     }
   ]
 }
