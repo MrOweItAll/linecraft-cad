@@ -121,3 +121,23 @@ audit-multisheet-pdf.py checks actual page order, literal geometry, paper title-
 markers/ink and13 negative reader probes. The gate fingerprints all four new files.
 See [the coverage record](../docs/MULTISHEET-QUALITY.md) for executed results and
 the distinction from native, installed and client/font qualification.
+
+## Registered-font candidate coverage
+
+Candidate application selection also runs font-layout-workflow.cjs against source
+and unpacked executables. For a focused invocation, supply an approved isolated
+executable, the source entry or an empty argument for unpacked execution, a unique
+`ordinary-grip-` prefix, and the explicit candidate manifest:
+
+```text
+node tests/font-layout-workflow.cjs EXE SOURCE_ENTRY_OR_EMPTY UNIQUE_PREFIX qa/CANDIDATE-SOURCE-1.36.1-beta.4.json
+```
+
+This needs Windows, the pinned PDF reader and locally registered regular Arial
+and Times New Roman. Required unavailable fonts fail the stage; fallback is not
+accepted as successful face fidelity. The independent auditor reads those fixed
+installed font files in place under the system root, without packaging fonts.
+It checks literal repeated-H advances/faces, baseline placement and synthetic A4
+geometry, with nine measurements and seventeen negative reader controls. See
+[the coverage record](../docs/FONT-LAYOUT-QUALITY.md). This is production PDF bridge
+coverage with test-owned choosers, not plot-form/native-input or DWT acceptance.

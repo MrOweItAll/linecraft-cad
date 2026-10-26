@@ -306,3 +306,23 @@ existing candidate/installer and original drawing files remain protected. Earlie
 four-hour cadence statements are historical: the owner now requests hourly wakes.
 Broader native/client/font/installed acceptance and daily-use readiness remain
 unqualified. The next ordered safe item is synthetic font/template/layout inventory.
+
+## Scheduled registered-font milestone - October 26, 2026
+
+The first controlled LC-FNT-LAYOUT milestone closes LC-QA-004: regular registered
+Arial/Times and width-factor typography now have actual hidden source and existing
+unpacked persistence/PDF coverage. Both targeted runs passed four app checks,
+nine independent measurements and seventeen rejected reader controls. Source and
+unpacked native bytes, measurements and both render pairs match exactly; fresh
+source full/detail renders were inspected. The paper ruler measures 99.9983185874 mm.
+All nine fixed font-face records were available locally, but seven are inventory-only.
+See [the coverage record](FONT-LAYOUT-QUALITY.md) for independent font bindings,
+initial sandbox launch failure, temporary-profile warning and remaining limits.
+
+The candidate app profile selects the new workflow and fingerprints its three
+files. Two gate-control tests passed. No runtime, manifest or font asset changed,
+and no unchanged full gate or candidate rebuild occurred. Installed/profile/client
+state and previous artifacts remain protected. Native input, broader glyphs,
+ARCHITXT/Technic appearance, DWT/templates, client/AutoCAD and installed/upgrade
+acceptance remain unqualified. Continue with a focused synthetic architectural-font
+glyph milestone; all attachment requirements and daily-use readiness are not complete.

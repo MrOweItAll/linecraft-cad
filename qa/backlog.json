@@ -346,6 +346,31 @@
       "nativeEditability": "not run",
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-QA-004",
+      "priority": 1,
+      "symptom": "Selected application/PDF checks did not exercise registered font metrics or Times New Roman output",
+      "expected": "Controlled synthetic registered typography preserves complete native styles/layouts and emits independently verified faces, glyph origins and physical geometry",
+      "sourceVersion": "1.36.1-beta.4",
+      "sourceCommit": "8cbfeff2e2ff84c806cc7300b2cf8e82eaa2783d",
+      "reproduction": "Previously selected ordered-sheet reference uses legacy Standard Arial; no selected registered-style/font inventory PDF oracle",
+      "fixtureClass": "Original public synthetic A4 paper typography and template geometry; no copied client/font/template assets",
+      "status": "verified bounded regular Arial/Times source and existing-unpacked coverage",
+      "attempts": 1,
+      "acceptance": "Four actual hidden app checks, complete Open/SaveAs/New/Open and postplot preservation; nine independent PDF measurements and seventeen rejected observation controls; fresh render review and exact source/unpacked comparisons",
+      "evidence": [
+        "tests/font-layout-fixture.mjs",
+        "tests/font-layout-workflow.cjs",
+        "tests/audit-font-layout-pdf.py",
+        "docs/FONT-LAYOUT-QUALITY.md"
+      ],
+      "verifiedScope": "Both targeted source/unpacked4/4, PDF9/9 with17/17 rejected controls. Independent OS/2cap/name fields plus MuPDF H advance; required Arial/Times SHA bindings, renderer/main agreement, correct actual PDF faces and opaque glyphs. All9 available faces observed, other7 inventory-only. Initial sandbox launch failure retained; approved execution passed.",
+      "nextAction": "Extend independent synthetic ARCHITXT/Technic glyph coverage and annotation/template gaps; keep general client/native/DWT/installed acceptance separate",
+      "runtimeChanged": false,
+      "fullGates": "extended selection recorded; unchanged complete gates not rerun",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }

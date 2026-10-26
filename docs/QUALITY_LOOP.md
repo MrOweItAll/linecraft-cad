@@ -171,3 +171,16 @@ See [the coverage record](MULTISHEET-QUALITY.md) for literals, output bindings,
 reader controls and limits. This milestone executed fast21/21, source application5/5
 and the new targeted existing-unpacked workflow; the extended33-stage candidate
 build was not rerun. Public fixture coverage does not establish client/font parity.
+
+## Registered font and layout coverage
+
+Candidate application selection now includes font-layout-workflow.cjs for source
+and unpacked execution; its fixture, workflow and independent auditor are bound by
+the gate fingerprint. The synthetic A4 reference checks regular registered Arial
+and Times New Roman plus condensed Arial, actual complete persistence and the
+production PDF bridge. Each new targeted source/unpacked run passed four app
+checks, nine independent measurements and seventeen rejected reader controls.
+See [the coverage record](FONT-LAYOUT-QUALITY.md) for the independent installed-font
+reference, exact scope, initial environment failure and unqualified features.
+The extended full gates were not rerun. Font availability, measured output,
+native desktop input and general client/template fidelity remain distinct claims.
