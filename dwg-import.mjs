@@ -239,7 +239,14 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
         }
         if(record.type==='3DFACE'||record.type==='SOLID'||record.type==='TRACE'){
           const basis=ocs(record),p=[10,11,12,13].map(code=>record.type==='3DFACE'?transform(xyz(record,code)):transform(basis.point(xyz(record,code))));
-          if(record.type!=='3DFACE'){[p[2],p[3]]=[p[3],p[2]];}else if(num(record,70,0))warn('face-hidden-edges','Source face edge invisibility is not retained in wireframe display.');const vertices=compact(p,true);publish({...common,type:'MESH',vertices,faces:[vertices.map((_,index)=>index)]});continue;
+          if(record.type!=='3DFACE'){[p[2],p[3]]=[p[3],p[2]];}else if(num(record,70,0))warn('face-hidden-edges','Source face edge invisibility is not retained in wireframe display.');const vertices=compact(p,true);
+          if(currentPaperLayout&&record.type==='SOLID'&&record.groups.filter(([code])=>code===39).every(([,value])=>String(value).trim()!==''&&Number.isFinite(Number(value))&&Number(value)===0)&&vertices.every(point=>point.z===0)){
+            // Defer polygon validation to the final document check, so a bad
+            // paper fill rejects the import rather than becoming a skipped item.
+            const points=vertices.map(({x,y})=>({x,y}));publish({...common,type:'HATCH',boundary:{type:'PLINE',points,closed:true},pattern:'solid',angle:0,spacing:1,origin:points[0]});
+            warn('paper-solid-import','Planar zero-thickness paper SOLIDs import as nonassociative solid fills.');continue;
+          }
+          publish({...common,type:'MESH',vertices,faces:[vertices.map((_,index)=>index)]});continue;
         }
         if(record.type==='INSERT'){
           const name=first(record,2,'').trim(),block=blocks.get(name);if(!block){skip('INSERT-missing','An INSERT references a missing block.');continue;}if(block.flags&4){skip('INSERT-xref','External reference files are not followed or loaded.');continue;}if(ancestry.includes(name))throw Error('Cyclic block references.');

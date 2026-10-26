@@ -5,9 +5,9 @@ and the pinned Python PDF reader described in tests/README.md. No installation o
 the daily-use app is part of these commands.
 
 ```
-npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.3.json
-npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.3.json
-npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.3.json
+npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.4.json
+npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.4.json
+npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.4.json
 ```
 
 These reuse desktop/dev-tools.cjs. Fast selects the existing bounded public core
