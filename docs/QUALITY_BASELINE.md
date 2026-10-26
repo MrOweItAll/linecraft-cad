@@ -222,3 +222,27 @@ bytes in hash-verified 1.36/beta1/beta2/beta3 source readers: 4 comparisons. Ins
 app/binaries and client drawings stayed unchanged; no installed downgrade claim
 is made. See [the implementation record](PAPER-SOLID-IMPLEMENTATION.md). Exact
 beta4 visible native acceptance and separate release/promotion remain pending.
+
+## Recorded native beta4 paper SOLID acceptance - October 26, 2026
+
+The exact unpacked beta4 from the recorded 30-stage gate passed focused visible
+Windows acceptance of LC-MON-007 using disposable synthetic ASCII DXF. Six actual
+native checkpoints cover identity/Open, MOVE of only the fill by (5,7), complete
+Undo/Redo/Undo, Save As/New/Open, actual PDF output and atomic rejected nonplanar
+Open against the accepted nonempty drawing. No runtime change or rebuild occurred.
+
+The unchanged independent PDF auditor passed two measurements and seven negative
+controls. The fill measures 39.99972254 by 19.99987742 mm; the sentinel measures
+9.99993064 mm. Interior dark fraction is 1.0 against the predeclared 0.995 minimum.
+Fresh full-page and detail PDF renders were visually inspected. All four preserved
+source readers retain the actual native-saved file as exact state and serialized
+bytes, with each 59-file reader closure unchanged before and after.
+
+The candidate quit normally. Installed binaries, recorded normal-profile files,
+128 recorded source inputs and original fixtures stayed unchanged through native
+closure. No client drawing was accessed. See [the acceptance record](NATIVE-BETA4-ACCEPTANCE.md)
+for the explicit navigation-fit comparison and pre-existing import-report wording
+defect, now separately recorded as LC-MON-008. Earlier native-pending statements
+are historical. Installed/upgrade, broad human/DPI and actual DWG/client fidelity
+remain pending; daily-use readiness remains false. No unchanged full-gate rerun,
+installation, release, push, outbound message or scheduler change occurred.

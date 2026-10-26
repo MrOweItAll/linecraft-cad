@@ -14,7 +14,7 @@
       "reproduction": "Independent synthetic DXF: one 40 by 20 mm paper-space SOLID, final transformed Z=0, on an ordinary owned layout; unchanged model LINE sentinel",
       "fixtureClass": "Independently authored public-safe synthetic geometry; original client CAD not accessed in development triage",
       "acceptance": "Literal filled area 800 mm2 and exact paper corners/layout; reject nonplanar/elevated/thick paper input; preserve model SOLID behavior, unrelated entities, style/resource/layout/scale state; source/unpacked/native Open, bounded edit/history, Save/New/Open and actual PDF measurement",
-      "status": "verified source/unpacked candidate",
+      "status": "verified source/unpacked/native candidate",
       "attempts": 1,
       "evidence": [
         "docs/PAPER-SOLID-IMPORT-TRIAGE.md",
@@ -23,17 +23,31 @@
         "tests/paper-solid-import.test.mjs:36 checks",
         "tests/paper-solid-workflow.cjs:actual source and unpacked workflows",
         "tests/audit-paper-solid-pdf.py:literal fill, sentinel, paint and raster checks",
-        "docs/PAPER-SOLID-IMPLEMENTATION.md"
+        "docs/PAPER-SOLID-IMPLEMENTATION.md",
+        "docs/NATIVE-BETA4-ACCEPTANCE.md"
       ],
       "rootCause": "SOLID/TRACE/3DFACE importer branch unconditionally emits MESH; paper ownership is retained and core rejects all paper-space 3D types before vertex-planarity checks",
-      "verifiedScope": "Source reproduction and read-only installed source identity. Installed native failure is the authorized source-chat report, not rerun in this triage.",
+      "verifiedScope": "Source and unpacked candidate verification plus focused visible unpacked beta4 native ASCII-DXF Open/edit/history/persistence/PDF and rejected nonplanar Open. Installed/upgrade, actual DWG/client fidelity and broader human/DPI acceptance remain unqualified.",
       "proposedScope": "Importer-only conversion for deliberately qualified zero-thickness paper SOLID after all transforms, using the existing filled planar representation; retain strict core validation and model-space behavior. TRACE/3DFACE require separate explicit qualification.",
-      "nextAction": "Focused visible native acceptance of exact beta4 on disposable synthetic files; preserve installed app and client drawings. Installed upgrade and promotion/release remain separately authorized.",
+      "nextAction": "Separate installed upgrade/promotion/release decision or next bounded backlog item; preserve installed application and client drawings until explicitly authorized.",
       "installedAcceptance": "not run",
       "nativeCandidateAcceptance": {
         "version": "1.36.1-beta.4",
-        "status": "not run",
-        "previousNativeEvidence": "Beta3 tick-width and beta2 importer sessions retain their historical scopes only"
+        "testedCommit": "474b97a0b202169d38a8d1e2778a15995d92b9f7",
+        "form": "unpacked",
+        "status": "passed",
+        "date": "2026-10-26",
+        "method": "Visible native input and real Windows Open/Save As/PDF dialogs; read-only controller observations only",
+        "scope": "Six actual native checkpoints: identity/Open, MOVE, complete Undo/Redo/Undo, Save As/New/Open, actual PDF state preservation and atomic rejected nonplanar Open against a nonempty accepted document",
+        "independentPDF": "2 measurements,7 rejected negative controls,interior dark fraction1.0; unchanged auditor and tolerances; full/detail visual review passed",
+        "nativeReaderCompatibility": "Actual native-saved file preserved exactly by four hash-verified older source readers, parsed state and serialized bytes",
+        "navigationFit": "Only paperViewport.scale differs from hidden packaged baseline because normal native DXF Open fits navigation to canvas; explicit review binds exact values and all other serialized fields. Subsequent comparisons include every field.",
+        "evidence": [
+          "docs/NATIVE-BETA4-ACCEPTANCE.md",
+          "Private native checkpoint, preservation, compatibility and actual PDF audit receipts"
+        ],
+        "installedAcceptance": "not run",
+        "dailyUseReady": false
       },
       "dailyUseReady": false,
       "reproducedCommit": "0cf9bd273b69c7cced5baf36f78027cd40e98fb9",
@@ -49,9 +63,10 @@
         "runtimeDeltaFromBeta3": [
           "dwg-import.mjs"
         ],
-        "nativeAcceptance": "not run",
+        "nativeAcceptance": "passed focused unpacked native; six actual checkpoints plus independent PDF and render review",
         "installedAcceptance": "not run",
-        "dailyUseReady": false
+        "dailyUseReady": false,
+        "nativeSavedReaderCompatibility": "4 exact complete-state and serialized-byte comparisons; each 59-file reader closure unchanged before/after"
       }
     },
     {
@@ -243,6 +258,26 @@
         "installedAcceptance": "not run",
         "dailyUseReady": false
       }
+    },
+    {
+      "id": "LC-MON-008",
+      "priority": 3,
+      "symptom": "DXF import headline labels the total supported-object count as model-space objects",
+      "expected": "Headline distinguishes total, model and paper counts consistently with the import report and actual document",
+      "sourceVersion": "1.36.0",
+      "reproducedVersion": "1.36.1-beta.4",
+      "sourceCommit": "f37aba5ebe19f27088847cd8f983ecf5facf8eac",
+      "reproduction": "Independent synthetic DXF contains one model LINE and two paper entities. Native headline says 3 supported objects in model space; detail row and complete document correctly retain two paper entities.",
+      "fixtureClass": "Public-safe independently authored synthetic geometry",
+      "status": "reproduced; presentation wording only",
+      "attempts": 0,
+      "verifiedScope": "Observed in exact beta4 native acceptance; same headline text confirmed in immutable baseline source. Geometry and ownership are correct.",
+      "acceptance": "Correct summary wording/counts for mixed model/paper import without geometry, ownership or persistence changes",
+      "evidence": [
+        "docs/NATIVE-BETA4-ACCEPTANCE.md",
+        "Private native import-report observation and complete-state receipts"
+      ],
+      "nextAction": "Address separately in a bounded repair session; no runtime modification during beta4 acceptance"
     }
   ]
 }

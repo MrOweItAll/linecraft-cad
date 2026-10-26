@@ -83,9 +83,14 @@ The actual packaged native file passed all four preserved source readers. These
 pure-reader comparisons do not establish installed upgrade/downgrade behavior.
 
 The [beta3 native tick-width acceptance](NATIVE-BETA3-ACCEPTANCE.md) retains its
-historical, focused scope. Exact beta4 visible native paper-SOLID acceptance,
-installed/upgrade qualification, broad DPI/font/mouse and human drafting checks,
-and separate daily-use promotion/release authorization remain pending.
+historical, focused scope. On October 26, the exact unpacked beta4 completed
+[focused visible native paper-SOLID acceptance](NATIVE-BETA4-ACCEPTANCE.md): six
+actual native workflow checkpoints, the unchanged independent actual PDF audit,
+fresh render review and four exact older-reader comparisons of the native-saved
+file. Installed/upgrade qualification, broad DPI/font/mouse and human drafting
+checks, actual DWG/client fidelity, and separate daily-use promotion/release
+authorization remain pending. The pre-existing import-report headline wording is
+tracked separately as LC-MON-008; no runtime change occurred during acceptance.
 
 Only independently authored synthetic CAD was used. No client CAD was accessed,
 and the installed application was not started, installed over or otherwise

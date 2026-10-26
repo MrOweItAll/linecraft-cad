@@ -142,3 +142,17 @@ baseline; only dwg-import.mjs changes relative to beta3. Older identities remain
 immutable. Fresh automated candidate acceptance does not replace exact beta4
 visible native input/dialog checks, installed upgrade acceptance or release
 authorization. Manual invocation ready; unattended execution not enabled.
+
+## Recorded native beta4 paper SOLID acceptance
+
+The exact unpacked 1.36.1-beta.4 passed focused visible native paper-SOLID Open,
+edit/history, real Save As/New/Open and PDF dialogs, and atomic rejected nonplanar
+Open. Six actual native checkpoint receipts are counted separately from the
+unchanged independent PDF auditor's two measurements and seven negative controls.
+Complete-state comparisons, actual-file hashes, fresh PDF render review, four
+exact older-reader comparisons and normal-quit preservation are recorded in
+[the acceptance record](NATIVE-BETA4-ACCEPTANCE.md). No runtime or tolerance change,
+rebuild or repeat of the unchanged automated gate occurred. LC-MON-008 separately
+tracks pre-existing import-report wording. Installed/upgrade and broader human/DPI/
+client fidelity remain pending. Manual invocation ready; unattended execution not
+enabled. Separate installation/promotion/release authorization remains required.
