@@ -16,6 +16,8 @@ auxiliaries.push('tests/multisheet-fixture.mjs','tests/multisheet-reference.test
 auxiliaries.push('tests/font-layout-fixture.mjs','tests/font-layout-workflow.cjs','tests/audit-font-layout-pdf.py');
 auxiliaries.push('tests/architectural_font_reference.py');
 if(candidate)suites.push('tests/font-resources.test.mjs');
+auxiliaries.push('tests/missing-glyph-fixture.mjs','tests/missing-glyph-workflow.cjs','tests/audit-missing-glyph-pdf.py','qa/CANDIDATE-SOURCE-1.36.1-beta.5.json');
+if(candidate)suites.push('tests/missing-glyph.test.mjs');
 if(candidate)suites.push('tests/hatch-normalization.test.mjs','tests/quality-reference.test.mjs','tests/qa-controls.test.cjs','tests/viewport-center-import.test.mjs','tests/tick-width-reference.test.mjs','tests/tick-width.test.mjs','tests/paper-solid-import.test.mjs','tests/multisheet-reference.test.mjs');
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const hashFiles=names=>Object.fromEntries(names.map(n=>[n,sha(fs.readFileSync(path.join(root,n)))]));

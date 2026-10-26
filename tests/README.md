@@ -105,7 +105,7 @@ Run `node --test --test-reporter=tap tests/paper-solid-import.test.mjs` for the
 of five old model-face outputs only; literal coordinates/areas establish the
 new planar fill expectations independently. No private CAD is needed.
 
-`npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.4.json` also
+`npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.5.json` also
 runs the actual paper-SOLID workflow against source and unpacked applications.
 It uses isolated hidden processes, owned chooser replies, the real controller
 and production file/PDF services. The PDF reader keeps fixed 0.04 mm endpoint and
@@ -130,7 +130,7 @@ executable, the source entry or an empty argument for unpacked execution, a uniq
 `ordinary-grip-` prefix, and the explicit candidate manifest:
 
 ```text
-node tests/font-layout-workflow.cjs EXE SOURCE_ENTRY_OR_EMPTY UNIQUE_PREFIX qa/CANDIDATE-SOURCE-1.36.1-beta.4.json
+node tests/font-layout-workflow.cjs EXE SOURCE_ENTRY_OR_EMPTY UNIQUE_PREFIX qa/CANDIDATE-SOURCE-1.36.1-beta.5.json
 ```
 
 This needs Windows, the pinned PDF reader and locally registered regular Arial
@@ -152,3 +152,18 @@ The regular fixture and reader defaults retain their original expectations.
 `node --test tests/font-resources.test.mjs` exercises five synthetic service/plot
 boundaries without actual font or registry changes. Candidate fast selection also
 includes it. Missing-font/profile controls are distinct from missing-glyph coverage.
+
+## Missing glyphs in an available registered profile
+
+`node --test tests/missing-glyph.test.mjs` uses a deliberately sparse synthetic
+profile to verify nine warning and preservation cases. Candidate fast checks select
+this suite. Five expected failures are retained from pre-fix beta4.
+
+The explicit `missing-glyph-workflow.cjs` takes the same executable/source-entry/
+unique-prefix/manifest arguments as the registered-font workflow. It needs an
+existing registered Technic face and checks real native persistence and production
+PDF warning transport. It does not alter fonts or add that prerequisite to generic
+CI. Its independent auditor checks eight measurements and eighteen rejection
+controls, using a separately established unmapped U+2205 case. See
+[the diagnostic record](../docs/MISSING-GLYPH-DIAGNOSTICS.md). Native input and
+unsupported fallback-glyph shape/spacing remain separate acceptance work.

@@ -10,9 +10,9 @@ contract; exact local state belongs in the private quality pointer. Earlier date
 manual/unattended statements below retain their historical scope.
 
 ```
-npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.4.json
-npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.4.json
-npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.4.json
+npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.5.json
+npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.5.json
+npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.5.json
 ```
 
 These reuse desktop/dev-tools.cjs. Fast selects the existing bounded public core
@@ -195,3 +195,15 @@ the fresh extended fast gate passed 22/22 with 639 selected portable checks. Tar
 architectural source/unpacked flows each passed 4 app checks, 9 measurements and 17
 rejected reader controls. See the appended [coverage record](FONT-LAYOUT-QUALITY.md)
 for symbol-cmap handling, regular compatibility and the limited glyph scope.
+
+## Active beta5 missing-glyph diagnostics
+
+Beta5 changes only core.mjs relative to beta4, preserving existing missing-glyph
+diagnostics across plain TEXT/MTEXT, leaders and dimensions. The new nine-check
+portable suite is selected; its synthetic fixture, actual workflow and independent
+PDF auditor are fingerprinted. A fresh exact-candidate gate passed 37/37 with648
+selected portable checks, including all current source/unpacked default workflows.
+The separate local Technic case passed 4 app/8 PDF/18 rejected controls against
+source and the new unpacked build. See [the diagnostic record](MISSING-GLYPH-DIAGNOSTICS.md).
+Actual glyph replacement/appearance, import/DXF diagnostics and native beta5
+acceptance are distinct and remain outside this verification claim.

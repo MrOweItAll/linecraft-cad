@@ -398,6 +398,37 @@
       "fullApplicationAndCandidateGates": "not rerun; targeted new profile executed against source and exact existing unpacked candidate",
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-FNT-001",
+      "priority": 1,
+      "symptom": "Available registered fonts with an unmapped character silently lose missing-glyph warnings for plain text, leaders and dimensions",
+      "expected": "Every affected annotation reports the existing family diagnostic once while preserving original text, geometry and native/PDF presentation; unavailable-profile warnings remain distinct",
+      "sourceVersion": "1.36.1-beta.4",
+      "sourceCommit": "accdcb35609356b77df149efe9a1aacc33e2aaac",
+      "candidateVersion": "1.36.1-beta.5",
+      "reproduction": "Original synthetic H U+2205 H in Technic across TEXT, plain/rich MTEXT, LEADER and DIMENSION. Independent full-cmap proof of no encoded U+2205; real beta4 source PDF returns only rich warning1/5.",
+      "fixtureClass": "Independently specified synthetic labels/geometry and sparse numeric font profile; no copied client/font/template assets",
+      "status": "verified source and newly built unpacked candidate; native acceptance pending",
+      "attempts": 1,
+      "acceptance": "Retained9-check4pass/5expectedfail and real source1/5 warning failure; all9 pass afterfix. Actual source/newunpacked4app/8PDF/18controls each, exact native/geometry/SVGHTML/raster preservation and full candidate gate",
+      "evidence": [
+        "tests/missing-glyph-fixture.mjs",
+        "tests/missing-glyph.test.mjs",
+        "tests/missing-glyph-workflow.cjs",
+        "tests/audit-missing-glyph-pdf.py",
+        "qa/CANDIDATE-SOURCE-1.36.1-beta.5.json",
+        "docs/MISSING-GLYPH-DIAGNOSTICS.md"
+      ],
+      "rootCause": "Plain textLayout drops measured missingGlyphs; LEADER/DIMENSION also drop layout warnings. Rich text and production warning transport already exist.",
+      "verifiedScope": "One core-only runtime repair from beta4. Candidate37/37 and648 selected portable; both explicit actual cases4/8/18, correct Unicode and five unique diagnostics. Before/after native bytes and2renders exact; source/unpacked match. Unsupported glyph appearance/spacing not fixed.",
+      "runtimeDeltaFromBeta4": [
+        "core.mjs"
+      ],
+      "nextAction": "Coordinated focused beta5 native warning acceptance or next safe automated queue item; do not install/promote or equate scripted acceptance with daily-use readiness",
+      "nativeCandidateAcceptance": "not run",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }

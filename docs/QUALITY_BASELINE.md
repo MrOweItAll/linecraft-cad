@@ -347,3 +347,23 @@ candidate gates and rebuild were not rerun. Only the declared H samples are
 qualified; ink height, general glyphs, annotations and template/native/installed
 fidelity remain open. Next: independently reproduce any missing-glyph diagnostic
 gap in an available fixed font before proposing a product fix.
+
+## Beta5 missing-glyph diagnostics - October 26, 2026
+
+LC-FNT-001 was reproduced with independent full-cmap evidence, five expected
+regression failures and an actual beta4 PDF response reporting only 1/5 affected
+annotations. One core-only repair preserves missing-glyph warnings for plain
+TEXT/MTEXT and forwards leader/dimension layout diagnostics. All 9 regressions
+pass. The new beta5 exact-candidate gate passed 37/37 stages and 648 selected
+portable checks, built/tested the unpacked application and compiled its installer.
+Both explicit local source/newunpacked cases passed 4 app/8 PDF/18 rejected controls.
+Native bytes, geometry, SVG/HTML and before/after rendered images remain exact;
+only diagnostics improve from 1 to 5. Source/unpacked measurements and render pairs match.
+
+See [the diagnostic record](MISSING-GLYPH-DIAGNOSTICS.md). Beta4 manifests/artifacts
+and installed/profile/client state remain protected. The beta5 manifest reviews
+all 59 runtime/12 resources; only core.mjs differs from beta4. Native beta5 input/dialog
+acceptance and installed/upgrade/promotion are not performed. Import/DXF diagnostic
+coverage, unsupported glyph appearance/spacing and broader font/template/client
+fidelity remain unqualified. Daily-use readiness remains false. Next safe automated
+queue item: deterministic larger-drawing performance measurement.

@@ -126,7 +126,8 @@ export function textLayout(entity,rawDocument={}){
   }
   const widths=lines.map(line=>textWidth(line,entity.height,style,entity.type==='MTEXT'?'mtext':'cap')),width=Math.max(entity.type==='MTEXT'?entity.width:0,...widths),height=entity.height*(entity.type==='MTEXT'?Math.max(1,lines.length)*1.35:1.35);
   const top=entity.type==='MTEXT'?0:entity.height,bottom=entity.type==='MTEXT'?-height:-entity.height*.35;
-  return{lines:lines.map((text,index)=>{const m=usesFontMetrics(style)?measureFontText(text,entity.height,style.fontFamily,{widthFactor:style.widthFactor,heightMode:entity.type==='MTEXT'?'mtext':'cap'}):null;return{text,position:textWorld(entity,0,entity.type==='MTEXT'?-entity.height*(index*1.35+1):0),width:widths[index],height:entity.height,rotation:entity.rotation??0,fontFamily:style.fontFamily,widthFactor:style.widthFactor,align:'left',...(usesFontMetrics(style)?{metricStatus:m?'registered':'fallback',...(m?{fontCapRatio:m.capHeight/m.unitsPerEm,fontSHA256:m.fontSHA256,renderText:m.renderText}:{})}:{})};}),corners:[[0,bottom],[width,bottom],[width,top],[0,top]].map(([x,y])=>textWorld(entity,x,y)),width,height,origin:{...entity.position},rotation:entity.rotation??0,fontFamily:style.fontFamily,widthFactor:style.widthFactor};
+  const warnings=new Set();
+  return{lines:lines.map((text,index)=>{const m=usesFontMetrics(style)?measureFontText(text,entity.height,style.fontFamily,{widthFactor:style.widthFactor,heightMode:entity.type==='MTEXT'?'mtext':'cap'}):null;if(m?.missingGlyphs)warnings.add(`missing-glyph:${style.fontFamily}`);return{text,position:textWorld(entity,0,entity.type==='MTEXT'?-entity.height*(index*1.35+1):0),width:widths[index],height:entity.height,rotation:entity.rotation??0,fontFamily:style.fontFamily,widthFactor:style.widthFactor,align:'left',...(usesFontMetrics(style)?{metricStatus:m?'registered':'fallback',...(m?{fontCapRatio:m.capHeight/m.unitsPerEm,fontSHA256:m.fontSHA256,renderText:m.renderText}:{})}:{})};}),corners:[[0,bottom],[width,bottom],[width,top],[0,top]].map(([x,y])=>textWorld(entity,x,y)),width,height,origin:{...entity.position},rotation:entity.rotation??0,fontFamily:style.fontFamily,widthFactor:style.widthFactor,...(warnings.size?{warnings:[...warnings]}:{})};
 }
 function validateDimension(entity,document){
   if(!['linear','aligned','radius','diameter','angular'].includes(entity.kind))throw new Error('Unsupported dimension kind.');
@@ -167,7 +168,7 @@ export function annotationPrimitives(entity,rawDocument={}){
     if(entity.arrowType==='architectural-tick'){const k=size;segments.push([{x:a.x-k*(u.x+v.x),y:a.y-k*(u.y+v.y)},{x:a.x+k*(u.x+v.x),y:a.y+k*(u.y+v.y)}]);}
     else arrows.push([a,{x:a.x+u.x*size+v.x*size*.35,y:a.y+u.y*size+v.y*size*.35},{x:a.x+u.x*size-v.x*size*.35,y:a.y+u.y*size-v.y*size*.35}]);
     const layout=textLayout({type:'TEXT',position:entity.points.at(-1),text:entity.text,height:entity.height,rotation:0,style:entity.style},document);
-    return{segments,arrows,texts:layout.lines,boundsPoints:[...segments.flat(),...arrows.flat(),...layout.corners],definitionPoints:entity.points};
+    return{segments,arrows,texts:layout.lines,boundsPoints:[...segments.flat(),...arrows.flat(),...layout.corners],definitionPoints:entity.points,...(layout.warnings?.length?{warnings:layout.warnings}:{})};
   }
   if(entity.type!=='DIMENSION')return{segments:[],arrows:[],texts:[],boundsPoints:[]};
   const style=document.dimStyles.find(item=>item.name===entity.style)??DEFAULT_DIM_STYLE,factor=style.scale*entity.scale,h=style.textHeight*factor,arrow=style.arrowSize*factor,gap=style.gap*factor;
@@ -213,7 +214,7 @@ export function annotationPrimitives(entity,rawDocument={}){
   const width=textWidth(label,h,textStyle),[c,s]=angleBasis(rotation),textOrigin=point({x:labelPosition.x-width/2*c,y:labelPosition.y-width/2*s});
   const layout=textLayout({type:'TEXT',position:textOrigin,text:label,height:h,rotation,style:style.textStyle},document);
   const fontFields=layout.lines[0].metricStatus?Object.fromEntries(['metricStatus','fontCapRatio','fontSHA256','renderText'].filter(k=>layout.lines[0][k]!==undefined).map(k=>[k,layout.lines[0][k]])):{};
-  return{segments,arrows,texts:[{text:label,position:labelPosition,width,height:h,rotation,fontFamily:textStyle.fontFamily,widthFactor:textStyle.widthFactor,align:'center',...fontFields}],boundsPoints:[...segments.flat(),...arrows.flat(),...layout.corners],definitionPoints:definition,measurement,label,dimensionLine:[q1,q2],...(tickSegmentIndices.length?{tickSegmentIndices}:{})};
+  return{segments,arrows,texts:[{text:label,position:labelPosition,width,height:h,rotation,fontFamily:textStyle.fontFamily,widthFactor:textStyle.widthFactor,align:'center',...fontFields}],boundsPoints:[...segments.flat(),...arrows.flat(),...layout.corners],definitionPoints:definition,measurement,label,dimensionLine:[q1,q2],...(tickSegmentIndices.length?{tickSegmentIndices}:{}),...(layout.warnings?.length?{warnings:layout.warnings}:{})};
 }
 export const dimensionGeometry=annotationPrimitives;
 function validateLeader(entity,document){
