@@ -1,6 +1,6 @@
 # LC-MON-007: planar paper SOLID import rejection
 
-Status: **reproduced, unresolved; P1 drawing-open blocker**. Triage completed on
+Historical triage status: **reproduced, unresolved; P1 drawing-open blocker**. Triage completed on
 October 25, 2026. No product fix, application launch, installation or client-file
 access was performed for this investigation.
 
@@ -111,3 +111,10 @@ promotion/release authorization also remain outstanding.
 
 Only sanitized issue documentation is added by this triage. Private reports,
 diagnostic observations and fixture receipts remain outside the public source.
+
+## Candidate resolution
+
+Candidate 1.36.1-beta.4 implements and verifies the bounded paper SOLID repair.
+See [the implementation record](PAPER-SOLID-IMPLEMENTATION.md). The triage above
+remains the original failure record. Exact beta4 visible native acceptance and
+installed/upgrade qualification remain pending; installed 1.36 stays unchanged.

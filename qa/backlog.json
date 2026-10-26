@@ -14,20 +14,45 @@
       "reproduction": "Independent synthetic DXF: one 40 by 20 mm paper-space SOLID, final transformed Z=0, on an ordinary owned layout; unchanged model LINE sentinel",
       "fixtureClass": "Independently authored public-safe synthetic geometry; original client CAD not accessed in development triage",
       "acceptance": "Literal filled area 800 mm2 and exact paper corners/layout; reject nonplanar/elevated/thick paper input; preserve model SOLID behavior, unrelated entities, style/resource/layout/scale state; source/unpacked/native Open, bounded edit/history, Save/New/Open and actual PDF measurement",
-      "status": "reproduced; unfixed",
-      "attempts": 0,
+      "status": "verified source/unpacked candidate",
+      "attempts": 1,
       "evidence": [
         "docs/PAPER-SOLID-IMPORT-TRIAGE.md",
-        "Private source triage: ten checks across hash-verified 1.36 and beta3 readers; installed importer/core members byte-identical to 1.36 source"
+        "Private source triage: ten checks across hash-verified 1.36 and beta3 readers; installed importer/core members byte-identical to 1.36 source",
+        "tests/paper-solid-fixture.mjs",
+        "tests/paper-solid-import.test.mjs:36 checks",
+        "tests/paper-solid-workflow.cjs:actual source and unpacked workflows",
+        "tests/audit-paper-solid-pdf.py:literal fill, sentinel, paint and raster checks",
+        "docs/PAPER-SOLID-IMPLEMENTATION.md"
       ],
       "rootCause": "SOLID/TRACE/3DFACE importer branch unconditionally emits MESH; paper ownership is retained and core rejects all paper-space 3D types before vertex-planarity checks",
       "verifiedScope": "Source reproduction and read-only installed source identity. Installed native failure is the authorized source-chat report, not rerun in this triage.",
       "proposedScope": "Importer-only conversion for deliberately qualified zero-thickness paper SOLID after all transforms, using the existing filled planar representation; retain strict core validation and model-space behavior. TRACE/3DFACE require separate explicit qualification.",
-      "nextAction": "Next bounded repair: failing correctness regression, narrow importer fix, relevant controls, full exact-candidate source/unpacked/PDF gate and focused native acceptance; no install or client edits as a side effect",
+      "nextAction": "Focused visible native acceptance of exact beta4 on disposable synthetic files; preserve installed app and client drawings. Installed upgrade and promotion/release remain separately authorized.",
       "installedAcceptance": "not run",
-      "nativeCandidateAcceptance": "not run",
+      "nativeCandidateAcceptance": {
+        "version": "1.36.1-beta.4",
+        "status": "not run",
+        "previousNativeEvidence": "Beta3 tick-width and beta2 importer sessions retain their historical scopes only"
+      },
       "dailyUseReady": false,
-      "reproducedCommit": "0cf9bd273b69c7cced5baf36f78027cd40e98fb9"
+      "reproducedCommit": "0cf9bd273b69c7cced5baf36f78027cd40e98fb9",
+      "candidateVersion": "1.36.1-beta.4",
+      "testedCommit": "474b97a0b202169d38a8d1e2778a15995d92b9f7",
+      "beta4Verification": {
+        "gate": "30/30",
+        "selectedPortableChecks": 631,
+        "focusedPureChecks": "36/36; frozen beta3 had 13 expected failures among 36",
+        "sourceAndUnpackedPaperWorkflow": "6 app checks,2 PDF measurements and 7 negative controls each",
+        "visibleFillRaster": "1.0 interior dark fraction; minimum 0.995 frozen before execution",
+        "legacyReaderCompatibility": "Actual packaged native file: 4 exact complete-state and serialized-text comparisons, each 59 runtime files verified before/after",
+        "runtimeDeltaFromBeta3": [
+          "dwg-import.mjs"
+        ],
+        "nativeAcceptance": "not run",
+        "installedAcceptance": "not run",
+        "dailyUseReady": false
+      }
     },
     {
       "id": "LC-MON-002",

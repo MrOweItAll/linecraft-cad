@@ -201,3 +201,24 @@ is the authorized source-chat report, not a fresh native test in this session.
 Existing focused beta3 tick-width acceptance retains its scope, while this new
 open/import blocker remains unresolved. No runtime change, rebuild, installation,
 client drawing access or rerun of the prior unchanged gate occurred.
+
+## Paper SOLID candidate - October 25, 2026
+
+Candidate 1.36.1-beta.4 fixes LC-MON-007 with one importer runtime change relative
+to beta3. Zero-thickness final-XY paper SOLIDs become existing editable solid
+HATCH geometry. Core validation remains strict; unsupported paper faces reject
+the complete import, and model/TRACE/3DFACE paths remain unchanged.
+
+The fresh exact-candidate gate passed 30/30 stages and 631 selected portable
+checks. The new 36-check correctness suite passes after 13 expected failures on frozen
+beta3. Both actual source and unpacked workflows passed 6 app checks, 2 independent
+PDF measurements and 7 negative controls, in addition to all prior selected checks.
+The PDF fill measures 39.99972254 by 19.99987742 mm at the declared paper position;
+its 10 mm sentinel measures 9.99993064 mm. Interior raster dark fraction is 1.0 against
+a predeclared 0.995 minimum. Both actual renders were visually inspected.
+
+The actual packaged native file reopens with exact complete state and serialized
+bytes in hash-verified 1.36/beta1/beta2/beta3 source readers: 4 comparisons. Installed
+app/binaries and client drawings stayed unchanged; no installed downgrade claim
+is made. See [the implementation record](PAPER-SOLID-IMPLEMENTATION.md). Exact
+beta4 visible native acceptance and separate release/promotion remain pending.

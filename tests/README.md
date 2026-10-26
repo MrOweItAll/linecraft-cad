@@ -97,3 +97,17 @@ node desktop/dev-tools.cjs test-installed "C:\path\to\Linecraft CAD.exe"
 That is a separate32/PDF9 hidden installed-binary test, not a claim of human
 review or equivalence between Windows Server runners and a client workstation.
 `tests/ordinary-grip-public-installed-results.json` records that flow.
+
+## Planar paper SOLID regression
+
+Run `node --test --test-reporter=tap tests/paper-solid-import.test.mjs` for the
+36 synthetic source checks. Frozen beta3 digests in that suite prove preservation
+of five old model-face outputs only; literal coordinates/areas establish the
+new planar fill expectations independently. No private CAD is needed.
+
+`npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.4.json` also
+runs the actual paper-SOLID workflow against source and unpacked applications.
+It uses isolated hidden processes, owned chooser replies, the real controller
+and production file/PDF services. The PDF reader keeps fixed 0.04 mm endpoint and
+0.02 mm dimension tolerances plus opaque paint/order and 0.995 raster coverage.
+These checks are separate from native Windows dialogs and installed acceptance.

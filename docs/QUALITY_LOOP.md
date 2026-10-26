@@ -128,3 +128,17 @@ checks, broader human/DPI/client fidelity and separate release authorization rem
 pending. This session does not replace historical beta2 importer coverage with a
 fresh beta3 native import claim. Manual invocation ready; unattended execution not
 enabled.
+
+## Active beta4 paper SOLID coverage
+
+Beta4 adds the selected 36-check paper-solid-import.test.mjs suite and an actual
+paper-solid-workflow.cjs stage for source and unpacked applications. The four new
+fixture/test/auditor files are bound by the gate input fingerprint. The imported
+layout is plotted unchanged, with literal fill position and 40 by 20 mm area geometry,
+opaque paint/order checks, actual raster coverage and negative controls.
+
+The cumulative manifest still lists five changes against the immutable 1.36
+baseline; only dwg-import.mjs changes relative to beta3. Older identities remain
+immutable. Fresh automated candidate acceptance does not replace exact beta4
+visible native input/dialog checks, installed upgrade acceptance or release
+authorization. Manual invocation ready; unattended execution not enabled.
