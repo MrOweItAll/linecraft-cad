@@ -367,3 +367,18 @@ acceptance and installed/upgrade/promotion are not performed. Import/DXF diagnos
 coverage, unsupported glyph appearance/spacing and broader font/template/client
 fidelity remain unqualified. Daily-use readiness remains false. Next safe automated
 queue item: deterministic larger-drawing performance measurement.
+
+## Deterministic drawing measurements - October 26, 2026
+
+LC-QA-006 freezes a 2,000-line inch drawing and an explicit navigation profile.
+Actual hidden source and existing beta5 unpacked operations each yield42 timing
+rows: one warm-up and five measured seven-operation rounds. Independent audits
+pass exact geometry/content and six state-transition rounds, hash-bound files,
+seven recomputed summaries and15 rejected observation controls. Raw CSV and
+min/median/max values are recorded in [the baseline](PERFORMANCE-BASELINE.md).
+These are CDP/IPC operation round trips plus a separate renderer-frame-drain
+boundary, not physical latency or approved usability. No runtime change or
+optimization occurred. Full unchanged beta5 gates/builds were not repeated.
+Installed/profile/client/native state and prior artifacts remain protected;
+native beta5 and installed acceptance remain pending, daily-use readiness false.
+Next safe queue item: isolated development reload/restart preservation.

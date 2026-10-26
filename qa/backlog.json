@@ -429,6 +429,33 @@
       "nativeCandidateAcceptance": "not run",
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-QA-006",
+      "priority": 2,
+      "symptom": "No comparable raw larger-drawing operation measurement baseline",
+      "expected": "Fixed synthetic input and finite repeated actual source/unpacked observations with independent correctness and honest timing boundaries",
+      "sourceVersion": "1.36.1-beta.5",
+      "sourceCommit": "9236c734e833a288cd91332bb249b2c990e9c115",
+      "reproduction": "Frozen2000 LINE inch profile; one warmup plus five measured rounds for Open, SelectAll, ESC, pan, zoom, SaveAs and saved-file reload",
+      "fixtureClass": "Existing original synthetic large fixture with fixed navigation profile; no client data",
+      "status": "bounded synthetic measurement baseline verified; usability unqualified",
+      "attempts": 1,
+      "acceptance": "Each variant42 rows,6 transition rounds,7 independently recomputed summaries,43 content files and15 rejected observation controls; warmup excluded from exact min/median/max",
+      "evidence": [
+        "tests/performance-fixture.mjs",
+        "tests/performance-workflow.cjs",
+        "tests/audit-performance.py",
+        "tests/fixtures/performance-baseline-beta5.csv",
+        "docs/PERFORMANCE-BASELINE.md"
+      ],
+      "verifiedScope": "Actual hidden source and existing beta5 unpacked PASS. Content/navigation outputs match; all timing variation retained. No threshold or optimization claim. Runtime59/resources12 and source inputs unchanged during runs.",
+      "nextAction": "Isolated development reload/restart preservation; future larger/richer workloads and human usability need explicit references",
+      "runtimeChanged": false,
+      "fullGates": "unchanged existing candidate gate preserved; not rerun",
+      "nativeCandidateAcceptance": "not run",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }

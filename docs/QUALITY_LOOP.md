@@ -207,3 +207,14 @@ The separate local Technic case passed 4 app/8 PDF/18 rejected controls against
 source and the new unpacked build. See [the diagnostic record](MISSING-GLYPH-DIAGNOSTICS.md).
 Actual glyph replacement/appearance, import/DXF diagnostics and native beta5
 acceptance are distinct and remain outside this verification claim.
+
+## Optional deterministic drawing measurements
+
+The explicit performance-workflow.cjs records fixed synthetic open/select/clear/
+pan/zoom/save/file-reload observations, with one warm-up and five measured rounds
+in source and an existing unpacked candidate. Its independent stdlib auditor checks
+exact geometry/content, navigation arithmetic, timing/statistic validity and15
+rejected controls. New scripts are fingerprinted auxiliaries, not default timing
+gate stages. See [the measurement baseline](PERFORMANCE-BASELINE.md) for actual
+boundaries, raw data, variation and limits. No arbitrary usability threshold,
+physical-input or product speed improvement claim is made.

@@ -167,3 +167,14 @@ CI. Its independent auditor checks eight measurements and eighteen rejection
 controls, using a separately established unmapped U+2205 case. See
 [the diagnostic record](../docs/MISSING-GLYPH-DIAGNOSTICS.md). Native input and
 unsupported fallback-glyph shape/spacing remain separate acceptance work.
+
+## Optional synthetic performance observations
+
+performance-workflow.cjs accepts the same four executable/source-entry/unique-prefix/
+manifest arguments. It measures seven actual hidden operations across one warm-up
+and five measured rounds, against a frozen2,000-line profile. The separate stdlib
+audit-performance.py reads hash-bound complete states and raw measurements with15
+rejection controls. Benchmark files are fingerprinted but timing is not a default
+gate or usability criterion. See [the baseline](../docs/PERFORMANCE-BASELINE.md)
+for exact reproduction, saved-file reread scope, raw CSV, cache/frame boundaries
+and unqualified workloads. Use only disposable source/QA-unpacked profiles.
