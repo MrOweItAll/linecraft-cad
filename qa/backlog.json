@@ -575,6 +575,34 @@
       "nativeCandidateAcceptance": "not run",
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-QA-009",
+      "parent": "LC-QA-005",
+      "priority": 1,
+      "symptom": "Existing annotation evidence lacked independent rotated aligned-dimension and leader geometry/baseline qualification",
+      "expected": "Frozen60-80-100 alignedgeometry and45degreeleader preserve complete native state and emit literal arrows/extensions/semantictext through two locked scales",
+      "sourceVersion": "1.36.1-beta.6",
+      "sourceCommit": "5be7e0a657b9e1ee553b07239b5c6fb2456b9016",
+      "fixtureClass": "Original public synthetic default-Arial calibration; no client/font/template assets",
+      "status": "verified bounded rotated annotation source/existing-unpacked coverage",
+      "attempts": 1,
+      "productFixAttempts": 0,
+      "acceptance": "Source/unpacked4app42PDF28controls each;4newpure/2QAcontrols; nativebytes,42measurements,4renderpairs exact;14local1728dpi actualink/clear sites eachpage",
+      "evidence": [
+        "tests/rotated-annotation-fixture.mjs",
+        "tests/rotated-annotation-reference.test.mjs",
+        "tests/rotated-annotation-workflow.cjs",
+        "tests/audit-rotated-annotation-pdf.py",
+        "docs/ROTATED-ANNOTATION-QUALITY.md"
+      ],
+      "verifiedScope": "13solidsegments,3filledtriangles,semanticALIGNED8ft4in/leadernote/markers,dimensionbaseline(.6,-.8),leaderbaseline(1,0),off-stroke arrowpaint at1:48/1:96; no actualglyphinkheight/styleapproval",
+      "nextAction": "Bound existing rich-MTEXT supported formatting reference before actual app coverage. Keep native/installed/client/DWG/domain acceptance separate",
+      "runtimeChanged": false,
+      "fullGates": "Newpure/aux selection recorded; unchanged40/40/655candidate retained under originalclosure; extendedfullgate/build not rerun",
+      "nativeCandidateAcceptance": "not run",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }

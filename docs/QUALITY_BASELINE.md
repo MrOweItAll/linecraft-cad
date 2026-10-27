@@ -454,3 +454,16 @@ extendedfullgate/build occurred. Nativebeta6/installed acceptance and broader
 font/DWG/template/client fidelity remain pending; daily-use readiness false.
 The next concrete existing font/annotation gap is rotated aligned-dimension and
 leader geometry, with independent defaults/calibration references first.
+
+## Rotated annotation coverage - October26,2026 local session
+
+LC-QA-009 adds independent default aligned-dimension and45degree leader geometry
+through two locked A3 scales. Both first source/existingbeta6unpacked runs pass
+4app/42PDF/28rejectedcontrols;4newpure and2QA controls pass. Complete native bytes,
+42measurementobjects and4renderpairs match. Actual baseline directions and14local
+1728dpi raster sites perpage include filled-arrow interiors away from stroke.
+Fresh full/annotation renders were reviewed. See [the record](ROTATED-ANNOTATION-QUALITY.md).
+No runtime/schema/manifest/installer/installed/client/native-input change occurred.
+Fullunchanged gates/build were not repeated. Nativebeta6/installed acceptance,
+broad font/template/client/DWG fidelity and production relay remain separate;
+daily-use readiness false. Rich-MTEXT formatting remains an existing focused gap.

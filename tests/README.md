@@ -234,3 +234,12 @@ strict plan-detail reader profile. Independent50measurements/28controls include
 16solidsegments,3polygonfills,11/22filled rounded-dash components and37/59 actual
 432dpi raster samples. Original regular/mixed commands stay unchanged. See
 [scope, failures and actual results](../docs/PLAN-DETAIL-QUALITY.md).
+
+## Rotated annotation calibration
+
+node --test tests/rotated-annotation-reference.test.mjs runs4 new tests. Explicit
+rotated-annotation-workflow.cjs uses executable/entry/prefix/manifest arguments;
+audit-rotated-annotation-pdf.py requires the matching profile and checks42
+measurements plus28controls, including13segments/3filledarrows,exact semantictext,
+independent text-baseline directions and14actual local1728dpi samples perpage.
+Existing application profiles stay unchanged. See [scope](../docs/ROTATED-ANNOTATION-QUALITY.md).

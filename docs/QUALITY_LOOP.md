@@ -272,3 +272,16 @@ literal wall/block/dimension/fill geometry, rounded4on2off physical dashes and
 See [the record](PLAN-DETAIL-QUALITY.md) for the preserved reader failure/correction,
 unchanged tolerances and scope. Default application stages, runtime/manifest and
 existing40-stage gate remain unchanged; extended fullgates/build were not rerun.
+
+## Explicit rotated annotation calibration
+
+The dedicated rotated-annotation-workflow.cjs checks default aligned dimensions
+and45degree leaders at locked1:48/1:96. Four new pure references and all four new
+files are selected/fingerprinted without changing default application stages.
+Targeted source/existingbeta6unpacked cases each pass4app/42PDF/28controls;14actual
+local1728dpi sites perpage include off-stroke arrowinteriors. Native bytes,
+measurement objects and4renderpairs match; full/annotation renders inspected.
+See [the record](ROTATED-ANNOTATION-QUALITY.md) for independent60-80-100 geometry,
+semanticbaselines,tolerances and unqualified typography/native/client claims.
+Existing40/40/655candidate closure remains unchanged; extended fullgates/build
+were not rerun.

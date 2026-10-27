@@ -26,6 +26,8 @@ auxiliaries.push('tests/mixed-paper-fixture.mjs','tests/mixed-paper-reference.te
 if(candidate)suites.push('tests/mixed-paper-reference.test.mjs');
 auxiliaries.push('tests/plan-detail-fixture.mjs','tests/plan-detail-reference.test.mjs','tests/plan-detail-workflow.cjs','tests/audit-plan-detail-pdf.py');
 if(candidate)suites.push('tests/plan-detail-reference.test.mjs');
+auxiliaries.push('tests/rotated-annotation-fixture.mjs','tests/rotated-annotation-reference.test.mjs','tests/rotated-annotation-workflow.cjs','tests/audit-rotated-annotation-pdf.py');
+if(candidate)suites.push('tests/rotated-annotation-reference.test.mjs');
 if(candidate)suites.push('tests/import-headline.test.cjs');
 if(candidate)suites.push('tests/hatch-normalization.test.mjs','tests/quality-reference.test.mjs','tests/qa-controls.test.cjs','tests/viewport-center-import.test.mjs','tests/tick-width-reference.test.mjs','tests/tick-width.test.mjs','tests/paper-solid-import.test.mjs','tests/multisheet-reference.test.mjs');
 const sha=b=>createHash('sha256').update(b).digest('hex');

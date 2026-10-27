@@ -181,3 +181,14 @@ template/native/installed/AutoCAD fidelity remain open. A bounded missing-glyph
 diagnostic investigation is next: distinguish an absent glyph in an available
 face from an unavailable metric profile before proposing any product change.
 All source font paths remain in private audit bindings; public summaries omit them.
+
+## Default rotated annotation geometry
+
+The synthetic rotation calibration independently verifies aligned dimension and
+45degree leader segments, filled arrows and text baselines at1:48/1:96. Source
+and existingbeta6unpacked each pass4app/42PDF/28controls with actual off-stroke
+arrow raster evidence; all native/measurement/renderpairs match. See
+[the record](ROTATED-ANNOTATION-QUALITY.md). This is default Standard Arial geometry
+and semantic output, not actual glyph inkheight, Jon's styles or general native/
+client fidelity. Earlier font references and all default workflows stay intact.
+The existing rich-MTEXT formatting gap needs a narrow supported reference next.
