@@ -411,3 +411,17 @@ intake/automatic pickup/file transfer/chat relay/authentication and crash/powerl
 remain unqualified. No runtime/schema/manifest/install/profile/client/native input
 change, full gate rerun or rebuild occurred. Native beta5 and installed acceptance
 remain pending; daily-use readiness is false. Next safe item: LC-MON-008 headline.
+
+## Beta6 import headline fix - October26,2026 local session
+
+LC-MON-008 now labels accepted3total/1model/2paper geometry correctly. Seven actual
+renderer-function checks pass after six retained expected failures. Actual beta5
+headline acceptance fails while preserving geometry/persistence; fresh source and
+new beta6 unpacked pass3checks each. All9imported/native/reopened streams are byte
+identical, as are nonheadline report rows. The fresh exact-candidate gate passes
+40/40 with655selected portable and compiles the uninstalled installer. See
+[the record](IMPORT-HEADLINE-COUNTS.md). Runtime delta from beta5 is app.mjs only;
+all59runtime/12resources and cumulative manifest changes are reviewed. Native beta6,
+inherited missing-glyph warning and installed/upgrade acceptance remain pending;
+daily-use readiness false. Mixed A4/A3 output is a useful existing synthetic
+follow-up, so the authorized safe queue is not exhausted.

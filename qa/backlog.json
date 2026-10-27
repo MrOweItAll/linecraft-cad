@@ -269,15 +269,26 @@
       "sourceCommit": "f37aba5ebe19f27088847cd8f983ecf5facf8eac",
       "reproduction": "Independent synthetic DXF contains one model LINE and two paper entities. Native headline says 3 supported objects in model space; detail row and complete document correctly retain two paper entities.",
       "fixtureClass": "Public-safe independently authored synthetic geometry",
-      "status": "reproduced; presentation wording only",
-      "attempts": 0,
-      "verifiedScope": "Observed in exact beta4 native acceptance; same headline text confirmed in immutable baseline source. Geometry and ownership are correct.",
-      "acceptance": "Correct summary wording/counts for mixed model/paper import without geometry, ownership or persistence changes",
+      "status": "verified renderer-only source/new-unpacked fix; native candidate acceptance pending",
+      "attempts": 1,
+      "verifiedScope": "app.mjs-only runtime delta from beta5. Total3/model1/paper2/source1 actualmixedDXF; all9before/source/unpacked native/snapshot streams byte-identical and nonheadlineDOM text unchanged. Other metadata variants are VM renderer cases.",
+      "acceptance": "Six retained expected renderer failures; actual pre-fix wrong headline with preserved geometry/persistence; post7/7 and fresh source/newunpacked3checks each; candidate40/40,655portable",
       "evidence": [
         "docs/NATIVE-BETA4-ACCEPTANCE.md",
-        "Private native import-report observation and complete-state receipts"
+        "Private native import-report observation and complete-state receipts",
+        "tests/import-headline.test.cjs",
+        "tests/import-headline-workflow.cjs",
+        "qa/CANDIDATE-SOURCE-1.36.1-beta.6.json",
+        "docs/IMPORT-HEADLINE-COUNTS.md"
       ],
-      "nextAction": "Address separately in a bounded repair session; no runtime modification during beta4 acceptance"
+      "nextAction": "Coordinated beta6 headline/warning and inherited missing-glyph acceptance, or existing synthetic mixed-paper follow-up; no install/promotion",
+      "candidateVersion": "1.36.1-beta.6",
+      "runtimeDeltaFromBeta5": [
+        "app.mjs"
+      ],
+      "nativeCandidateAcceptance": "not run",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     },
     {
       "id": "LC-QA-002",

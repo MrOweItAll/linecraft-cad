@@ -10,9 +10,9 @@ contract; exact local state belongs in the private quality pointer. Earlier date
 manual/unattended statements below retain their historical scope.
 
 ```
-npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.5.json
-npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.5.json
-npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.5.json
+npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.6.json
+npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.6.json
+npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.6.json
 ```
 
 These reuse desktop/dev-tools.cjs. Fast selects the existing bounded public core
@@ -239,3 +239,14 @@ checks and separate18-CLI/8-event scenario are local-only; an independent stdlib
 reader verifies11 measurements and12 rejected controls. See [the protocol](LOCAL-DEVELOPMENT-RELAY.md).
 Five files are fingerprinted auxiliaries; no default gate stage or transport is
 enabled. Real intake/pickup/files/messages and domain authorization remain separate.
+
+## Active beta6 import headline coverage
+
+Beta6 changes only app.mjs from beta5 to distinguish accepted total/model/paper
+geometry and source records in the existing headline. The selected7-check renderer
+suite retains1pass/6expected pre-fix failures; both source/newunpacked actual
+headline/persistence workflows pass3checks. A fresh candidate gate passed40/40 and
+655selected portable, with exact before/after native bytes and unchanged nonheadline
+report text. See [the fix record](IMPORT-HEADLINE-COUNTS.md). No importer/core/schema
+change, installed use or native human acceptance is implied. Next safe existing
+follow-up: synthetic mixed-paper output coverage; keep the hourly loop active.

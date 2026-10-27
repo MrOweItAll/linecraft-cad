@@ -105,7 +105,7 @@ Run `node --test --test-reporter=tap tests/paper-solid-import.test.mjs` for the
 of five old model-face outputs only; literal coordinates/areas establish the
 new planar fill expectations independently. No private CAD is needed.
 
-`npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.5.json` also
+`npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.6.json` also
 runs the actual paper-SOLID workflow against source and unpacked applications.
 It uses isolated hidden processes, owned chooser replies, the real controller
 and production file/PDF services. The PDF reader keeps fixed 0.04 mm endpoint and
@@ -130,7 +130,7 @@ executable, the source entry or an empty argument for unpacked execution, a uniq
 `ordinary-grip-` prefix, and the explicit candidate manifest:
 
 ```text
-node tests/font-layout-workflow.cjs EXE SOURCE_ENTRY_OR_EMPTY UNIQUE_PREFIX qa/CANDIDATE-SOURCE-1.36.1-beta.5.json
+node tests/font-layout-workflow.cjs EXE SOURCE_ENTRY_OR_EMPTY UNIQUE_PREFIX qa/CANDIDATE-SOURCE-1.36.1-beta.6.json
 ```
 
 This needs Windows, the pinned PDF reader and locally registered regular Arial
@@ -203,3 +203,15 @@ local-development-relay-workflow.cjs takes a unique ordinary-grip- prefix and ch
 These files are fingerprinted but not selected as default gate stages. See
 [the protocol and limits](../docs/LOCAL-DEVELOPMENT-RELAY.md). No drawing execution,
 production intake, outbound messaging or automatic worker is enabled.
+
+## Import headline counts
+
+node --test tests/import-headline.test.cjs selects seven tests of the actual
+renderer function in a small text DOM. Literal report metadata covers six count/
+format cases; warning/detail/modal text and nonmutation are separate compatibility
+assertions. Candidate pure selection includes this suite. Candidate application
+selection adds import-headline-workflow.cjs for source/newunpacked: actual original
+synthetic DXF Open, independent model1/paper2 geometry, fresh headline/log and
+complete SaveAs/New/Open. The three-check stage uses the same executable/entry/
+unique-prefix/manifest argument shape above. See [the record](../docs/IMPORT-HEADLINE-COUNTS.md);
+VM DWG labels are not actual DWG import or native fidelity evidence.
