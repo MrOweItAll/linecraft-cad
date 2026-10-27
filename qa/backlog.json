@@ -481,6 +481,33 @@
       "nativeCandidateAcceptance": "not run",
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-DEV-002",
+      "priority": 2,
+      "symptom": "No durable local synthetic request/progress protocol between drafting and development workflows",
+      "expected": "Bounded private ledger retains requests, progress, owner generations and decision-needed state across process restarts; retries do not append duplicate transitions",
+      "sourceVersion": "1.36.1-beta.5",
+      "sourceCommit": "217cd313271e14990ac95fce8fd2c57124d20cb9",
+      "fixtureClass": "Original synthetic two-marker metadata request and local worker/decision scenario; no client data or outbound messages",
+      "status": "verified local synthetic ledger foundation; production relay unimplemented",
+      "attempts": 1,
+      "acceptance": "15focused checks; actual18CLI/8event scenario with4replays/4rejections; independent11measurements/12controls; true two-process claim race and fresh-process capability recovery",
+      "evidence": [
+        "tools/local-development-relay.cjs",
+        "tests/local-development-relay.test.cjs",
+        "tests/local-development-relay-workflow.cjs",
+        "tests/audit-local-relay.py",
+        "tests/fixtures/local-relay-request.json",
+        "docs/LOCAL-DEVELOPMENT-RELAY.md"
+      ],
+      "verifiedScope": "Canonical payload/op dedup, exclusive immutable publication, revision CAS, owner epoch fencing, progress/decision/terminal states, private capability persistence, synthetic artifacts metadata only. Initial sandbox hardlink EPERM retained; unchanged approved-access suite15/15.",
+      "nextAction": "LC-MON-008 wording fix; real relay intake/pickup/file delivery/authenticated transport/app execution require separate scoped authorization and verification",
+      "runtimeChanged": false,
+      "fullGates": "unchanged existing candidate37/37 and648portable preserved; not rerun",
+      "nativeCandidateAcceptance": "not run",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }

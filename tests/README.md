@@ -191,3 +191,15 @@ Open after a normal clean restart. The stdlib audit-reload.py binds all complete
 files and rejects12 corrupt observations per variant. Existing historical suites
 and results are preserved. See [scope and commands](../docs/DEVELOPMENT-RECOVERY-QUALITY.md);
 crash/power-loss, draft/error recovery and native installed acceptance are distinct.
+
+## Local synthetic development ledger
+
+node --test tests/local-development-relay.test.cjs runs15 focused protocol checks
+using retained disposable stores, including a real two-child claim race, fresh CLI
+replay and simulated orphan pending-file recovery. It needs approved hardlink and
+junction/symlink access on the chosen local filesystem. The explicit
+local-development-relay-workflow.cjs takes a unique ordinary-grip- prefix and checks
+18 actual CLI calls/8 immutable events, followed by audit-local-relay.py (stdlib).
+These files are fingerprinted but not selected as default gate stages. See
+[the protocol and limits](../docs/LOCAL-DEVELOPMENT-RELAY.md). No drawing execution,
+production intake, outbound messaging or automatic worker is enabled.

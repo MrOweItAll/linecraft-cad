@@ -1,0 +1,13 @@
+{
+  "key": "synthetic-titleblock-001",
+  "title": "Synthetic title-block review",
+  "detail": "Check the synthetic sheet marker count.",
+  "fixtureClass": "synthetic",
+  "artifacts": [
+    {
+      "name": "reference.json",
+      "sha256": "5f197471bb4637d5bba3f268b4b338be722e1d62cf3c6b26f21abb494bf17aed",
+      "bytes": 14
+    }
+  ]
+}

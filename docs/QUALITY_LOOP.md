@@ -229,3 +229,13 @@ normal clean process restart. See [the qualification record](DEVELOPMENT-RECOVER
 The three files are fingerprinted auxiliaries, not default CI/application stages.
 Acquire shared source ownership before the metadata-only watcher trigger. Native
 input, crash durability and installed/upgrade acceptance remain separate.
+
+## Local synthetic relay protocol
+
+The explicit tools/local-development-relay.cjs ledger and actual workflow add
+durable synthetic request/progress state, revision/owner fencing, replay and
+decision-needed gates without app execution or outbound integration. The15 focused
+checks and separate18-CLI/8-event scenario are local-only; an independent stdlib
+reader verifies11 measurements and12 rejected controls. See [the protocol](LOCAL-DEVELOPMENT-RELAY.md).
+Five files are fingerprinted auxiliaries; no default gate stage or transport is
+enabled. Real intake/pickup/files/messages and domain authorization remain separate.

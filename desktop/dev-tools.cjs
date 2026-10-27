@@ -20,6 +20,7 @@ auxiliaries.push('tests/missing-glyph-fixture.mjs','tests/missing-glyph-workflow
 if(candidate)suites.push('tests/missing-glyph.test.mjs');
 auxiliaries.push('tests/performance-fixture.mjs','tests/performance-workflow.cjs','tests/audit-performance.py');
 auxiliaries.push('tests/reload-fixture.mjs','tests/reload-workflow.cjs','tests/audit-reload.py');
+auxiliaries.push('tools/local-development-relay.cjs','tests/local-development-relay.test.cjs','tests/local-development-relay-workflow.cjs','tests/audit-local-relay.py','tests/fixtures/local-relay-request.json');
 if(candidate)suites.push('tests/hatch-normalization.test.mjs','tests/quality-reference.test.mjs','tests/qa-controls.test.cjs','tests/viewport-center-import.test.mjs','tests/tick-width-reference.test.mjs','tests/tick-width.test.mjs','tests/paper-solid-import.test.mjs','tests/multisheet-reference.test.mjs');
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const hashFiles=names=>Object.fromEntries(names.map(n=>[n,sha(fs.readFileSync(path.join(root,n)))]));

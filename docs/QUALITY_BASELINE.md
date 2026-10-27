@@ -397,3 +397,17 @@ No runtime/schema/manifest, installation/profile/client/native input or original
 fixture/result changed. Existing complete candidate gates/builds were not repeated.
 Crash durability, broader/draft/error recovery, native beta5 and installed/upgrade
 acceptance remain open; daily-use readiness is false. Next: local relay protocol.
+
+## Local synthetic relay milestone - October26,2026
+
+LC-DEV-002 passed15/15 focused checks, including actual two-process claim race and
+fresh-process replay/recovery. A separate18-CLI scenario commits8 events, with4
+replays and4 expected rejections preserving committed bytes. Independent11measurements/
+12controls verify the literal request/reference, state/owner/decision/outcome and
+hash bindings. The initial sandbox2pass/13EPERM hardlink result is retained;
+unchanged code passed with approved filesystem access. See [the record](LOCAL-DEVELOPMENT-RELAY.md).
+This tools-only synthetic ledger performs no CAD, app or outbound actions. Real
+intake/automatic pickup/file transfer/chat relay/authentication and crash/powerloss
+remain unqualified. No runtime/schema/manifest/install/profile/client/native input
+change, full gate rerun or rebuild occurred. Native beta5 and installed acceptance
+remain pending; daily-use readiness is false. Next safe item: LC-MON-008 headline.
