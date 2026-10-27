@@ -225,3 +225,12 @@ reader receives explicit --profile mixed-paper and requires producer identity;
 regular remains the default. Mixed20measurements/23controls include raw page boxes,
 rotation and literal physical geometry. The four pure checks are selected; default
 application stage remains regular. See [scope and actual results](../docs/MIXED-PAPER-QUALITY.md).
+
+## Synthetic plan/detail profile
+
+node --test tests/plan-detail-reference.test.mjs runs4 new references. The separate
+plan-detail-workflow.cjs uses executable/entry/prefix/manifest arguments and the
+strict plan-detail reader profile. Independent50measurements/28controls include
+16solidsegments,3polygonfills,11/22filled rounded-dash components and37/59 actual
+432dpi raster samples. Original regular/mixed commands stay unchanged. See
+[scope, failures and actual results](../docs/PLAN-DETAIL-QUALITY.md).

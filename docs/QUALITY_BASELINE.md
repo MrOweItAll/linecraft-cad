@@ -439,3 +439,18 @@ No runtime/schema/manifest/build/installed/client/native input change or extende
 fullgate rerun occurred. Nativebeta6/installed acceptance and general font/client/
 DWG/template fidelity remain pending. Existing synthetic plan/detail coverage has
 a deliberate next child; daily-use readiness remains false.
+
+## Synthetic plan/detail coverage - October26,2026 local session
+
+LC-QA-008 completes the bounded original-detail child at locked1:48/1:24. Both
+final source/existingbeta6unpacked runs pass4app/50PDF/28rejectedcontrols; complete
+native bytes, measurements and4renderpairs match. Fresh full/detail renders were
+inspected. The reader now verifies Chromium filled-cubic rounded dashes against
+independent4on2off/.7mm expectations plus37/59 actualraster points. The initial
+unsupported-curve failure and authoring/environment failures remain preserved.
+Combined pure11/11 and QAcontrols2/2 pass. See [the record](PLAN-DETAIL-QUALITY.md).
+No runtime, schema, manifest, installer, installed/client/native-input change or
+extendedfullgate/build occurred. Nativebeta6/installed acceptance and broader
+font/DWG/template/client fidelity remain pending; daily-use readiness false.
+The next concrete existing font/annotation gap is rotated aligned-dimension and
+leader geometry, with independent defaults/calibration references first.

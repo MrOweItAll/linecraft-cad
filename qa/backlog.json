@@ -546,6 +546,35 @@
       "nativeCandidateAcceptance": "not run",
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-QA-008",
+      "parent": "LC-QA-003",
+      "priority": 1,
+      "symptom": "Ordered sheet coverage lacked original detail wall/opening/block/dimension/fill/dash content through two scales",
+      "expected": "Independent physical geometry, paint and declared annotation semantics survive complete app persistence and ordered PDF output",
+      "sourceVersion": "1.36.1-beta.6",
+      "sourceCommit": "bccbf3ee3657bf1443c1d58a572060e2b667451f",
+      "fixtureClass": "New child of unchanged public qualityFixture(detail); no client/font/template assets",
+      "status": "verified bounded synthetic source/existing-unpacked plan/detail coverage",
+      "attempts": 1,
+      "productFixAttempts": 0,
+      "acceptance": "Final source/unpacked4app50PDF28controls each; complete nativebytes and4renderpairs exact;11combined pure and2QA controls; independent raster/curve validity review",
+      "evidence": [
+        "tests/plan-detail-fixture.mjs",
+        "tests/plan-detail-reference.test.mjs",
+        "tests/plan-detail-workflow.cjs",
+        "tests/audit-plan-detail-pdf.py",
+        "docs/PLAN-DETAIL-QUALITY.md"
+      ],
+      "verifiedScope": "Fivewalls/opening,dimension/extensions/filledarrows,INSERT,solidHATCH,semanticnote/dimension/markers,16solidstrokes,3polygonfills,11/22roundcapsules,37/59actualrasterpoints; unchangedphysicaltolerances",
+      "readerCorrection": "InitialactualPDF C operator failure retained; Chromium expands rounded dashes into filledcurves. Independent extraction verifies geometry; revisedreader preserves expectations and adds raster clipping controls.",
+      "nextAction": "Existing LC-FNT-LAYOUT child: freeze rotated aligned-dimension and leader geometry/defaults first. Broad typography/client/native/DWG acceptance separate",
+      "runtimeChanged": false,
+      "fullGates": "Newpure/aux selection recorded; unchanged40/40/655candidate retained with originalclosure; extendedfullgate/build not rerun",
+      "nativeCandidateAcceptance": "not run",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }

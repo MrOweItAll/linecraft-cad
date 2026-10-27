@@ -99,3 +99,13 @@ render pairs match. Nominal page dimensions are checked against measured MediaBo
 CropBox with the original0.3mm tolerance. Regular18/13 reader observations remain
 exact on the preserved PDF. Current cadence is hourly. Production plan/detail,
 client/font/template/native/DWG acceptance remains distinct.
+
+## Original detail child
+
+The original model from qualityFixture('detail') now has an independent two-scale
+child without changing this original fixture/workflow or the mixed-paper profile.
+See [plan/detail coverage](PLAN-DETAIL-QUALITY.md): source/existingbeta6unpacked
+4app/50PDF/28controls each, complete persistence and4renderpairs exact. Geometry,
+dashcaps/fills and declared ink/gap points are qualified; broad native/client/font
+or production drafting conventions remain separate. The next scoped annotation
+reference is rotated aligned dimensions/leaders, not another unchanged sheet run.

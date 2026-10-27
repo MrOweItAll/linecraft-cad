@@ -260,3 +260,15 @@ rotation. Default regular behavior retains18/13; a preserved actual regular PDF
 re-audit matches prior arrays exactly. Four new pure references are selected and
 fingerprinted. Targeted source/existingunpacked4/20/23 and7combined pure references
 passed; extended full gates/build were not rerun. See [the record](MIXED-PAPER-QUALITY.md).
+
+## Explicit synthetic plan/detail child
+
+The dedicated plan-detail-workflow.cjs preserves the existing regular/mixed flows.
+Its new child retains the original detail model and adds locked1:48/1:24 A3 sheets.
+Four new pure references are selected; all four files are fingerprinted auxiliaries.
+Actual targeted source/existingunpacked4app/50PDF/28controls passed, including
+literal wall/block/dimension/fill geometry, rounded4on2off physical dashes and
+37/59 actual432dpi ink/gap samples. Combined pure11/11 and QAcontrols2/2 passed.
+See [the record](PLAN-DETAIL-QUALITY.md) for the preserved reader failure/correction,
+unchanged tolerances and scope. Default application stages, runtime/manifest and
+existing40-stage gate remain unchanged; extended fullgates/build were not rerun.
