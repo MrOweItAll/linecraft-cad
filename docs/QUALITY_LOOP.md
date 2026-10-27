@@ -308,3 +308,14 @@ it must not rerun conversion, rebuild, repair viewport IDs or infer native
 editability. Existing application gates need no repeat for this docs-only audit.
 Independent binary consumer, exact build lineage, client/domain/native and
 installed/upgrade acceptance remain explicit open requirements.
+
+## Completed finite DWG source allocation audit
+
+The [allocation record](DWG-ALLOCATION-ATTRIBUTION.md) distinguishes source-path
+consistency from exact compiled lineage and native/consumer acceptance. Preserve
+all original attempts, files, diagnostics and the two-attempt writer cap. No new
+writer/readback/rebuild or app gate is needed for this docs-only checkpoint.
+Reconcile the private queue and pause when no authorized safe item is ready. A
+future converter repair needs independent failing regression, build prerequisites
+and explicit new attempt accounting; it must not reuse old passing observations
+as proof of a repaired binary. Native/client/installed checks remain separate.

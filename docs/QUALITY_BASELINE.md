@@ -491,3 +491,15 @@ null/off/empty VX/layout observations keep the pipeline unqualified. Fifteen
 private copy-only controls validate bounded observations. No runtime change,
 third converter attempt, gate/build rerun or native/installed acceptance occurred.
 Beta.6 candidate receipts retain their original closure and readiness limits.
+
+## Pinned DWG allocation trace, 2026-10-27
+
+[DWG-ALLOCATION-ATTRIBUTION.md](DWG-ALLOCATION-ATTRIBUTION.md) records source paths
+consistent with placeholder 0x1F, fallback VX_CONTROL 0xB and the asterisk name.
+Independent raw input counts are 34/34 and 50/50 unique declarations. The private
+worksheet binds 91 preserved files and rejects seven tampered copies; these are
+source/observation checks, not executed C or independent binary tests. No new
+writer, reader, rebuild, product/runtime/manifest change or unchanged app gate
+occurred. Editable DWG, native/installed acceptance and daily-use readiness remain
+unqualified. Further converter work requires a fresh bounded regression/build/
+attempt scope; no further current unattended source-only item is ready.

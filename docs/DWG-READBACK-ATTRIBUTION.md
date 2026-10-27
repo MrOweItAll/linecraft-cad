@@ -110,3 +110,13 @@ specific collision classes. Trace those branches against the preserved unique
 input declarations and process diagnostics without a third converter attempt,
 reader rerun, rebuild or automatic viewport-ID repair. Exact compiled lineage,
 independent binary decoding and native acceptance remain separate prerequisites.
+
+## Allocation trace, 2026-10-27
+
+[The pinned allocation audit](DWG-ALLOCATION-ATTRIBUTION.md) supplies source paths
+consistent with the 0x1F placeholder collision, model-only 0xB VX-control collision
+and truncated placeholder name. Lookup/cache and string/version distinctions
+remain explicit; this is not exact binary or native qualification. It reuses
+preserved evidence with no new writer/readback/rebuild or runtime repair. The
+finite source-only queue is complete; further converter repair or independent
+consumer acceptance needs its own bounded scope and prerequisites.

@@ -659,6 +659,36 @@
       "nativeCandidateAcceptance": "not run",
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-FMT-003",
+      "parent": "LC-FMT-002",
+      "priority": 1,
+      "symptom": "Preserved R2000 JSON has placeholder1F and model-only VX_CONTROLB collisions plus asterisk placeholder name",
+      "expected": "Identify source allocation/string/lookup paths with independent raw references before scoping a converter repair",
+      "sourceVersion": "1.36.1-beta.6",
+      "sourceCommit": "85727bb92970376a0228aaa8c0d3414b7de46229",
+      "fixtureClass": "Preserved original synthetic model/multi-sheet inputs and captured readbacks; no client data",
+      "status": "verified finite pinned-source allocation attribution; binary pipeline remains unqualified",
+      "attempts": 1,
+      "productFixAttempts": 0,
+      "newWriterAttempts": 0,
+      "newReaderRuns": 0,
+      "previousWriterAttempts": 2,
+      "acceptance": "Independent eight-member source oracle; archive-bound linkage ranges; four raw input forms with34/50unique declarations;91preservedfiles;7rejected copy-only observation controls; separate read-only validity/privacy/compatibility review",
+      "evidence": [
+        "docs/DWG-ALLOCATION-ATTRIBUTION.md",
+        "docs/DWG-READBACK-ATTRIBUTION.md"
+      ],
+      "verifiedScope": "Source-consistent placeholder1F/reuse mismatch, assigned-value/map distinction, fallbackB versus NULL/empty VX creation and TU/TV name path; no exact compiled or binary-stage proof",
+      "nextAction": "Finite safe queue exhausted. Scope converter repair separately with independent failing regression/build lineage/attempt accounting, or coordinate independent native consumer acceptance. No automatic handle/string repair.",
+      "runtimeChanged": false,
+      "fullGates": "Not rerun for docs-only audit; beta6 candidate retains original scope",
+      "exactCompiledLineage": "not established",
+      "independentBinaryConsumer": "not run",
+      "nativeCandidateAcceptance": "not run",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }
