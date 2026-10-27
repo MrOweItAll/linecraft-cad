@@ -603,6 +603,34 @@
       "nativeCandidateAcceptance": "not run",
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-QA-010",
+      "parent": "LC-QA-005",
+      "priority": 1,
+      "symptom": "Font references lacked an independent retained-source rich-MTEXT regular/bold/italic paragraph output calibration",
+      "expected": "Three supported no-wrap paragraphs preserve exact native source/plain/flags/spacing and emit independently referenced glyphfaces/metrics/ink",
+      "sourceVersion": "1.36.1-beta.6",
+      "sourceCommit": "f4dac3d2ac29118bd434d0ec68e5e5e0404322a1",
+      "fixtureClass": "Original public synthetic Times3paragraph child; no copied client/template/font assets",
+      "status": "verified bounded registered rich-MTEXT source/existing-unpacked coverage",
+      "attempts": 1,
+      "productFixAttempts": 0,
+      "acceptance": "Eachsource/unpacked4app12PDF26controls;4pure/2QA;nativebytes,12measurements,2renderpairs exact;3directSFNTfonts/12positiveinkclips/3clearsites",
+      "evidence": [
+        "tests/richtext-fixture.mjs",
+        "tests/richtext-reference.test.mjs",
+        "tests/richtext-workflow.cjs",
+        "tests/audit-richtext-pdf.py",
+        "docs/RICHTEXT-QUALITY.md"
+      ],
+      "verifiedScope": "Retainedrawsource/plain/flags; actualTimesregular/bold/italic face hashes and expectedAapex/hmtx origins/advances/emsize; exact3paragraphspacing;positiveink only. No generalwrapping,mixedruns,actualinkheight or domainapproval.",
+      "nextAction": "Reconcile finite safequeue; coordinate pendingnativebeta6 acceptance separately. Installed/upgrade,DWGconsumer/domain/client/productionrelay prerequisites remain explicit; do not mark allrequirements complete",
+      "runtimeChanged": false,
+      "fullGates": "Newpure/aux selection recorded; unchanged40/40/655candidate retained with originalclosure; extendedfullgate/build not rerun",
+      "nativeCandidateAcceptance": "not run",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }

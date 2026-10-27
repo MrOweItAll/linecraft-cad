@@ -243,3 +243,13 @@ audit-rotated-annotation-pdf.py requires the matching profile and checks42
 measurements plus28controls, including13segments/3filledarrows,exact semantictext,
 independent text-baseline directions and14actual local1728dpi samples perpage.
 Existing application profiles stay unchanged. See [scope](../docs/ROTATED-ANNOTATION-QUALITY.md).
+
+## Registered rich-MTEXT calibration
+
+node --test tests/richtext-reference.test.mjs runs4 references. Explicit
+richtext-workflow.cjs accepts executable/entry/prefix/manifest arguments, requires
+3available fixedTimesfaces with matchingrenderer/servicehashes and uses actual
+persistence/PDFbridge. The independent auditor requires --profile richtext and
+passes12measurements/26controls with directSFNTglyphmetrics andpositiveinkguards.
+No fontassets are copied; no native Plot form/dialog claim. See
+[scope](../docs/RICHTEXT-QUALITY.md). Existing default workflows stay unchanged.

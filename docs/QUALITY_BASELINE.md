@@ -467,3 +467,16 @@ No runtime/schema/manifest/installer/installed/client/native-input change occurr
 Fullunchanged gates/build were not repeated. Nativebeta6/installed acceptance,
 broad font/template/client/DWG fidelity and production relay remain separate;
 daily-use readiness false. Rich-MTEXT formatting remains an existing focused gap.
+
+## Registered rich-MTEXT coverage - October26,2026 local session
+
+LC-QA-010 completes the finite three-paragraph Times formatting child. Both first
+source/existingbeta6unpacked runs pass4app/12PDF/26rejectedcontrols;4newpure and
+2QA tests pass. Complete native bytes,12measurementobjects and2renderpairs match.
+IndependentSFNT/registration references precede application output; A-apex basis,
+bold/italic actualfaces,origins/advances/emsize/exactspacing and positiveglyphink
+checks pass. Fresh full/typography renders inspected. See [the record](RICHTEXT-QUALITY.md).
+No runtime/schema/manifest/fontasset/installed/client/native-input change occurred.
+Unchanged fullgate/build not rerun. Nativebeta6/installed/upgrade,broader client/
+template/DWG fidelity and production relay remain pending;daily-use readiness false.
+Remaining coordinated/environment/domain prerequisites are recorded privately.

@@ -285,3 +285,15 @@ See [the record](ROTATED-ANNOTATION-QUALITY.md) for independent60-80-100 geometr
 semanticbaselines,tolerances and unqualified typography/native/client claims.
 Existing40/40/655candidate closure remains unchanged; extended fullgates/build
 were not rerun.
+
+## Explicit registered rich-MTEXT calibration
+
+The dedicated richtext-workflow.cjs and independent audit-richtext-pdf.py qualify
+three single-run/no-wrap Times regular/bold/italic paragraphs. Both targeted
+source/existingbeta6unpacked cases pass4app/12PDF/26controls;4newpure and2QA tests
+pass. Native source/plain/settings,12measurementobjects and2renderpairs match.
+DirectSFNT A-apex/hmtx/name/cmap references bind3requiredfaces and each glyph's
+position/advance/emsize; positiveinkclips do not establish fulloutline/inkheight.
+See [the record](RICHTEXT-QUALITY.md). Default application stages and runtime/
+manifest remain unchanged; extendedfullgates/build were not rerun. Current private
+queue/automation state and pending coordinated checks live in the quality pointer.

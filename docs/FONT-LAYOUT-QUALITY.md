@@ -192,3 +192,13 @@ arrow raster evidence; all native/measurement/renderpairs match. See
 and semantic output, not actual glyph inkheight, Jon's styles or general native/
 client fidelity. Earlier font references and all default workflows stay intact.
 The existing rich-MTEXT formatting gap needs a narrow supported reference next.
+
+## Three registered rich-MTEXT paragraphs
+
+The new child preserves earlier fixtures and qualifies only Times regularHHHH,
+boldBBBB anditalicIIII single-run paragraphs with exact25/3mm baseline spacing.
+Both source/existingbeta6unpacked pass4app/12PDF/26controls and match nativebytes,
+measurementobjects and2renders. DirectSFNT A-apex/hmtx/name/cmap values bindall3
+faces. Glyphinkclips prove positivepresence only,notoutline/actualinkheight.
+See [scope and measured output](RICHTEXT-QUALITY.md). Generalrich wrapping/mixed
+runs,domain/clienttemplate/native fidelity and installed acceptance remain separate.
