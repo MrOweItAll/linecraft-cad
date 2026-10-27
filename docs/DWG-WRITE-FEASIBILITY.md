@@ -133,3 +133,13 @@ test occurred. Application DWG writing remains unavailable; daily-use readiness 
 unqualified. Next safe queue item: controlled synthetic
 font/template/layout gap inventory; retain the DWG barriers for a future focused
 qualification milestone.
+
+## Follow-up attribution, 2026-10-27
+
+[The preserved-artifact audit](DWG-READBACK-ATTRIBUTION.md) refines the historical
+viewport and diagnostic attribution above without rewriting its receipts or
+check outcomes. Pinned DXF output synthesizes VIEWPORT id/on_off=1; that group69
+value alone does not prove encoded R2000 floating-role corruption. The retained
+errors are in encode-process logs. Fresh same-library JSON exposes duplicate
+object handles and unqualified VX/layout state. No new writer attempt, runtime
+change or native qualification occurred; DWG output remains unavailable.

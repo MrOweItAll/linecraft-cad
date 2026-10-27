@@ -297,3 +297,14 @@ position/advance/emsize; positiveinkclips do not establish fulloutline/inkheight
 See [the record](RICHTEXT-QUALITY.md). Default application stages and runtime/
 manifest remain unchanged; extendedfullgates/build were not rerun. Current private
 queue/automation state and pending coordinated checks live in the quality pointer.
+
+## Preserved DWG attribution follow-up
+
+[DWG-READBACK-ATTRIBUTION.md](DWG-READBACK-ATTRIBUTION.md) separates source-version
+projection rules, process diagnostics and decoded handle observations. Preserve
+the original two writer attempts and failures. The next finite source-only
+allocation audit may trace placeholder0x1F and fallbackVX_CONTROL0xB branches;
+it must not rerun conversion, rebuild, repair viewport IDs or infer native
+editability. Existing application gates need no repeat for this docs-only audit.
+Independent binary consumer, exact build lineage, client/domain/native and
+installed/upgrade acceptance remain explicit open requirements.

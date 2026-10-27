@@ -631,6 +631,34 @@
       "nativeCandidateAcceptance": "not run",
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-FMT-002",
+      "parent": "LC-FMT-001",
+      "priority": 1,
+      "symptom": "Decoded DXF viewport IDs were insufficient to attribute encoded R2000 floating-role corruption; fresh JSON exposes additional handle collisions",
+      "expected": "Separate pinned output synthesis, process diagnostics and decoded object observations before any writer integration",
+      "sourceVersion": "1.36.1-beta.6",
+      "sourceCommit": "881f1263714614e4ac8d6045f41cbb2336365f56",
+      "fixtureClass": "Preserved original synthetic model and multi-sheet artifacts; no client data",
+      "status": "verified bounded source/readback attribution; DWG pipeline remains unqualified",
+      "attempts": 1,
+      "productFixAttempts": 0,
+      "newWriterAttempts": 0,
+      "previousWriterAttempts": 2,
+      "acceptance": "Frozen independent source oracle, two fresh JSON readbacks, 52 preserved artifacts and 15 rejected copy-only observation controls; separate read-only validity/privacy/compatibility review",
+      "evidence": [
+        "docs/DWG-READBACK-ATTRIBUTION.md",
+        "docs/DWG-WRITE-FEASIBILITY.md"
+      ],
+      "verifiedScope": "Pinned DXF id/on_off synthesis and version-gated JSON omissions; literal viewport fields, resolved typed VX links; decoded JSON duplicates model B+1F and multisheet1F; no binary-stage attribution",
+      "nextAction": "Bounded pinned-source allocation audit for placeholder BLOCK_HEADER1F and preR2004 fallback VX_CONTROLB; no new converter/readback/rebuild or automatic ID repair",
+      "runtimeChanged": false,
+      "fullGates": "Not rerun for documentation-only change; beta6 candidate retains original scope",
+      "independentBinaryConsumer": "not run",
+      "nativeCandidateAcceptance": "not run",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }

@@ -480,3 +480,14 @@ No runtime/schema/manifest/fontasset/installed/client/native-input change occurr
 Unchanged fullgate/build not rerun. Nativebeta6/installed/upgrade,broader client/
 template/DWG fidelity and production relay remain pending;daily-use readiness false.
 Remaining coordinated/environment/domain prerequisites are recorded privately.
+
+## DWG readback attribution, 2026-10-27
+
+The [source/readback audit](DWG-READBACK-ATTRIBUTION.md) binds preserved synthetic
+R2000 artifacts and two fresh JSON projections. Pinned output macros explain why
+DXF group69=1 alone cannot attribute encoded floating-role corruption. Model JSON
+has36objects/34uniquehandles; multi-sheet has56/55. Duplicate handle classes and
+null/off/empty VX/layout observations keep the pipeline unqualified. Fifteen
+private copy-only controls validate bounded observations. No runtime change,
+third converter attempt, gate/build rerun or native/installed acceptance occurred.
+Beta.6 candidate receipts retain their original closure and readiness limits.
