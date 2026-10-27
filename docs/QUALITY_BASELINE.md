@@ -425,3 +425,17 @@ all59runtime/12resources and cumulative manifest changes are reviewed. Native be
 inherited missing-glyph warning and installed/upgrade acceptance remain pending;
 daily-use readiness false. Mixed A4/A3 output is a useful existing synthetic
 follow-up, so the authorized safe queue is not exhausted.
+
+## Mixed A4/A3 coverage - October26,2026 local session
+
+LC-QA-007 freezes a new child fixture without altering the original2A3 reference.
+Both actual source and existingbeta6unpacked cases pass4app/20PDF/23controls.
+Complete native bytes, measurements and4renderpairs match; fresh full/detail images
+were inspected. MediaBox/CropBox widths209.888653/420.200665mm and height297.010661mm
+are within unchanged0.3mmpage tolerance;127/63.5mmmodel and100mmpaper rulers pass
+unchanged physical tolerances. Regular18/13 re-audit arrays match exactly, and wrong
+profile rejects. New4+original3 pure references pass7/7. See [the record](MIXED-PAPER-QUALITY.md).
+No runtime/schema/manifest/build/installed/client/native input change or extended
+fullgate rerun occurred. Nativebeta6/installed acceptance and general font/client/
+DWG/template fidelity remain pending. Existing synthetic plan/detail coverage has
+a deliberate next child; daily-use readiness remains false.

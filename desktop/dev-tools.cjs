@@ -22,6 +22,8 @@ auxiliaries.push('tests/performance-fixture.mjs','tests/performance-workflow.cjs
 auxiliaries.push('tests/reload-fixture.mjs','tests/reload-workflow.cjs','tests/audit-reload.py');
 auxiliaries.push('tools/local-development-relay.cjs','tests/local-development-relay.test.cjs','tests/local-development-relay-workflow.cjs','tests/audit-local-relay.py','tests/fixtures/local-relay-request.json');
 auxiliaries.push('tests/import-headline.test.cjs','tests/import-headline-workflow.cjs','qa/CANDIDATE-SOURCE-1.36.1-beta.6.json');
+auxiliaries.push('tests/mixed-paper-fixture.mjs','tests/mixed-paper-reference.test.mjs');
+if(candidate)suites.push('tests/mixed-paper-reference.test.mjs');
 if(candidate)suites.push('tests/import-headline.test.cjs');
 if(candidate)suites.push('tests/hatch-normalization.test.mjs','tests/quality-reference.test.mjs','tests/qa-controls.test.cjs','tests/viewport-center-import.test.mjs','tests/tick-width-reference.test.mjs','tests/tick-width.test.mjs','tests/paper-solid-import.test.mjs','tests/multisheet-reference.test.mjs');
 const sha=b=>createHash('sha256').update(b).digest('hex');

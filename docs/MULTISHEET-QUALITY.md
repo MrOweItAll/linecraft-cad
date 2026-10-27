@@ -88,3 +88,14 @@ The scheduler's initial wake was interrupted after restoring the normal cadence
 and before source ownership. A later actual scheduled wake completed this bounded
 milestone. The task remains active every four hours; completion of this milestone
 does not mean all attachment requirements or daily-use qualification are complete.
+
+## Mixed-paper child milestone - October26,2026 local session
+
+The earlier record retains its original same-size scope and historical cadence.
+The new [mixed-paper record](MIXED-PAPER-QUALITY.md) adds ordered A4portrait/A3landscape
+coverage with unchanged runtime and preserved original fixture/test. Both actual
+source/existing-beta6-unpacked cases pass4app/20PDF/23controls; native and four
+render pairs match. Nominal page dimensions are checked against measured MediaBox/
+CropBox with the original0.3mm tolerance. Regular18/13 reader observations remain
+exact on the preserved PDF. Current cadence is hourly. Production plan/detail,
+client/font/template/native/DWG acceptance remains distinct.

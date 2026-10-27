@@ -250,3 +250,13 @@ headline/persistence workflows pass3checks. A fresh candidate gate passed40/40 a
 report text. See [the fix record](IMPORT-HEADLINE-COUNTS.md). No importer/core/schema
 change, installed use or native human acceptance is implied. Next safe existing
 follow-up: synthetic mixed-paper output coverage; keep the hourly loop active.
+
+## Explicit mixed-paper child profile
+
+Append --mixed-paper to multisheet-workflow.cjs to exercise the separately identified
+A4portrait/A3landscape fixture. The reader requires matching profile identity and
+checks20 measurements plus23 rejected controls, including rawMediaBox/CropBox and
+rotation. Default regular behavior retains18/13; a preserved actual regular PDF
+re-audit matches prior arrays exactly. Four new pure references are selected and
+fingerprinted. Targeted source/existingunpacked4/20/23 and7combined pure references
+passed; extended full gates/build were not rerun. See [the record](MIXED-PAPER-QUALITY.md).

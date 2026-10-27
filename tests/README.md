@@ -215,3 +215,13 @@ synthetic DXF Open, independent model1/paper2 geometry, fresh headline/log and
 complete SaveAs/New/Open. The three-check stage uses the same executable/entry/
 unique-prefix/manifest argument shape above. See [the record](../docs/IMPORT-HEADLINE-COUNTS.md);
 VM DWG labels are not actual DWG import or native fidelity evidence.
+
+## Mixed paper profile
+
+node --test tests/mixed-paper-reference.test.mjs runs4 new child references. Append
+--mixed-paper to the existing multisheet-workflow.cjs executable/entry/prefix/manifest
+arguments for targeted source/QA-unpacked A4portraitthenA3landscape execution. The
+reader receives explicit --profile mixed-paper and requires producer identity;
+regular remains the default. Mixed20measurements/23controls include raw page boxes,
+rotation and literal physical geometry. The four pure checks are selected; default
+application stage remains regular. See [scope and actual results](../docs/MIXED-PAPER-QUALITY.md).

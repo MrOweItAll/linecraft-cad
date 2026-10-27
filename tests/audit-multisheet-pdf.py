@@ -22,6 +22,41 @@ SHEETS = [
     {'id': 'sheet-b', 'marker': 'QA-A02-SECOND', 'denominator': 96,
      'ruler': ((178.25, 147), (241.75, 147)), 'rulerLength': 63.5},
 ]
+REGULAR_SHEETS = SHEETS
+PAPER_PROFILE = 'regular'
+MIXED_SHEETS = [
+    {'id': 'sheet-a', 'marker': 'A4-FIRST', 'denominator': 48,
+     'page': (210, 297),
+     'frame': {'x': 25, 'y': 100, 'width': 160, 'height': 100},
+     'markerPosition': (145, 15), 'borderRight': 200,
+     'dividers': (140, 180), 'cell': (140, 257, 180, 287),
+     'ruler': ((41.5, 147), (168.5, 147)), 'rulerLength': 127},
+    {'id': 'sheet-b', 'marker': 'A3-SECOND', 'denominator': 96,
+     'page': (420, 297),
+     'frame': {'x': 100, 'y': 100, 'width': 220, 'height': 100},
+     'markerPosition': (310, 15), 'borderRight': 410,
+     'dividers': (300, 360), 'cell': (300, 257, 360, 287),
+     'ruler': ((178.25, 147), (241.75, 147)), 'rulerLength': 63.5},
+]
+
+
+def select_profile(name):
+    global SHEETS, PAPER_PROFILE
+    assert name in ('regular', 'mixed-paper')
+    PAPER_PROFILE = name
+    SHEETS = MIXED_SHEETS if name == 'mixed-paper' else REGULAR_SHEETS
+
+
+def expected_border(sheet):
+    right = sheet.get('borderRight', 410)
+    return [((10, 257), (right, 257)), ((right, 257), (right, 287)),
+            ((right, 287), (10, 287)), ((10, 287), (10, 257))]
+
+
+def expected_dividers(sheet):
+    return [((x, 257), (x, 287)) for x in sheet.get('dividers', (300, 360))]
+
+
 BORDER = [((10, 257), (410, 257)), ((410, 257), (410, 287)),
           ((410, 287), (10, 287)), ((10, 287), (10, 257))]
 SENTINEL = ((20, 237), (120, 237))
@@ -71,10 +106,14 @@ def native_document(document):
     all_ids = [ruler['id']]
     for expected in SHEETS:
         layout = next(row for row in document['layouts'] if row['id'] == expected['id'])
-        assert layout['paper']['widthMm'] == 420 and layout['paper']['heightMm'] == 297
+        assert (layout['paper']['widthMm'], layout['paper']['heightMm']) == expected.get('page', (420, 297))
+        if PAPER_PROFILE == 'mixed-paper':
+            assert layout['paper']['orientation'] == ('portrait' if expected['id'] == 'sheet-a' else 'landscape')
         assert len(layout['viewports']) == 1
         viewport = layout['viewports'][0]
-        assert viewport['frame'] == {'x': 100, 'y': 100, 'width': 220, 'height': 100}
+        assert viewport['frame'] == expected.get('frame', {'x': 100, 'y': 100, 'width': 220, 'height': 100})
+        if PAPER_PROFILE == 'mixed-paper':
+            assert viewport['plotBorder'] is False and viewport['frozenLayers'] == []
         assert viewport['modelCenter'] == {'x': 120, 'y': 0, 'z': 0}
         assert viewport['scaleDenominator'] == expected['denominator'] and viewport['locked'] is True
         assert viewport['workspace'] == '2d'
@@ -82,18 +121,18 @@ def native_document(document):
         assert len(entities) == 5
         assert sorted(row['type'] for row in entities) == ['LINE', 'LINE', 'LINE', 'PLINE', 'TEXT']
         marker = next(row for row in entities if row['type'] == 'TEXT')
-        assert marker['text'] == expected['marker'] and marker['position'] == {'x': 310, 'y': 15}
+        assert marker['text'] == expected['marker'] and marker['position'] == dict(zip(('x', 'y'), expected.get('markerPosition', (310, 15))))
         assert marker['height'] == MARKER_HEIGHT_MM and marker['rotation'] == 0 and marker['style'] == 'Standard'
         appearance(document, marker, .25)
         border = next(row for row in entities if row['type'] == 'PLINE')
         assert border['closed'] is True
-        assert border['points'] == [{'x': 10, 'y': 10}, {'x': 410, 'y': 10},
-                                    {'x': 410, 'y': 40}, {'x': 10, 'y': 40}]
+        assert border['points'] == [{'x': 10, 'y': 10}, {'x': expected.get('borderRight', 410), 'y': 10},
+                                    {'x': expected.get('borderRight', 410), 'y': 40}, {'x': 10, 'y': 40}]
         appearance(document, border, .25)
         lines = [row for row in entities if row['type'] == 'LINE']
         for start, end, width in [({'x': 20, 'y': 60}, {'x': 120, 'y': 60}, .35),
-                                  ({'x': 300, 'y': 10}, {'x': 300, 'y': 40}, .25),
-                                  ({'x': 360, 'y': 10}, {'x': 360, 'y': 40}, .25)]:
+                                  ({'x': expected.get('dividers', (300, 360))[0], 'y': 10}, {'x': expected.get('dividers', (300, 360))[0], 'y': 40}, .25),
+                                  ({'x': expected.get('dividers', (300, 360))[1], 'y': 10}, {'x': expected.get('dividers', (300, 360))[1], 'y': 40}, .25)]:
             matches = [row for row in lines if row['start'] == start and row['end'] == end]
             assert len(matches) == 1
             appearance(document, matches[0], width)
@@ -153,7 +192,10 @@ def extract(page):
                'opacity': trace.get('opacity'), 'color': trace.get('color'),
                'type': trace.get('type'), 'seqno': trace.get('seqno')}
               for trace in page.get_texttrace()]
-    return {'sizeMm': (page.rect.width * MM, page.rect.height * MM), 'images': len(page.get_image_info()),
+    return {'sizeMm': (page.rect.width * MM, page.rect.height * MM),
+            'mediaBoxMm': tuple(float(v) * MM for v in page.mediabox),
+            'cropBoxMm': tuple(float(v) * MM for v in page.cropbox), 'rotation': page.rotation,
+            'images': len(page.get_image_info()),
             'text': page.get_text(), 'markerBoundsMm': {sheet['marker']: [tuple(float(v) * MM for v in box)
                    for box in page.search_for(sheet['marker'])] for sheet in SHEETS},
             'strokes': strokes, 'backgrounds': backgrounds, 'textTraces': traces}
@@ -172,8 +214,18 @@ def validate_pages(pages):
     assert len(pages) == 2, ('Unexpected PDF page count', len(pages))
     measurements = []
     for number, (page, expected) in enumerate(zip(pages, SHEETS), 1):
-        near(page['sizeMm'][0], 420, PAGE_TOLERANCE)
-        near(page['sizeMm'][1], 297, PAGE_TOLERANCE)
+        width, height = expected.get('page', (420, 297))
+        near(page['sizeMm'][0], width, PAGE_TOLERANCE)
+        near(page['sizeMm'][1], height, PAGE_TOLERANCE)
+        if PAPER_PROFILE == 'mixed-paper':
+            assert type(page['rotation']) is int and page['rotation'] == 0
+            for field in ['mediaBoxMm', 'cropBoxMm']:
+                assert len(page[field]) == 4
+                for actual, literal in zip(page[field], (0, 0, width, height)):
+                    near(actual, literal, PAGE_TOLERANCE)
+            measurements.append({'page': number, 'layoutId': expected['id'], 'role': 'paper boxes',
+                                 'expectedSizeMm': [width, height], 'actualSizeMm': page['sizeMm'],
+                                 'mediaBoxMm': page['mediaBoxMm'], 'cropBoxMm': page['cropBoxMm'], 'rotation': page['rotation']})
         assert page['images'] == 0, 'Raster surrogate does not establish vector geometry'
         assert page['text'].count(expected['marker']) == 1
         other = next(sheet['marker'] for sheet in SHEETS if sheet['id'] != expected['id'])
@@ -182,7 +234,8 @@ def validate_pages(pages):
         assert len(bounds) == 1, ('Marker is missing or duplicated', bounds)
         x0, y0, x1, y1 = bounds[0]
         assert all(math.isfinite(value) for value in bounds[0])
-        assert 300 <= x0 < x1 <= 360 and 257 <= y0 < y1 <= 287, ('Marker outside title-block cell', bounds)
+        cell = expected.get('cell', (300, 257, 360, 287))
+        assert cell[0] <= x0 < x1 <= cell[2] and cell[1] <= y0 < y1 <= cell[3], ('Marker outside title-block cell', bounds)
         assert page['textTraces'], 'No actual text paint found'
         for trace in page['textTraces']:
             assert trace['type'] == 0, ('Invisible or unsupported text paint', trace['type'])
@@ -199,13 +252,13 @@ def validate_pages(pages):
         foreground = [row['seqno'] for row in strokes] + [row['seqno'] for row in page['textTraces']]
         for background in page['backgrounds']:
             opaque(background['opacity'], 'Unknown or nonopaque page background')
-            for actual, literal in zip(background['boundsMm'], (0, 0, 420, 297)):
+            for actual, literal in zip(background['boundsMm'], (0, 0, width, height)):
                 near(actual, literal, PAGE_TOLERANCE)
             assert background['seqno'] < min(foreground), 'White overpaint follows foreground ink'
         used = set()
         expected_segments = [('model ruler', expected['ruler'], .25), ('paper sentinel', SENTINEL, .35)]
-        expected_segments += [('title-block edge ' + str(i + 1), segment, .25) for i, segment in enumerate(BORDER)]
-        expected_segments += [('title-block divider ' + str(i + 1), segment, .25) for i, segment in enumerate(DIVIDERS)]
+        expected_segments += [('title-block edge ' + str(i + 1), segment, .25) for i, segment in enumerate(expected_border(expected))]
+        expected_segments += [('title-block divider ' + str(i + 1), segment, .25) for i, segment in enumerate(expected_dividers(expected))]
         for role, segment, width in expected_segments:
             index, row = match_segment(strokes, segment)
             assert index not in used
@@ -218,7 +271,7 @@ def validate_pages(pages):
                                  'lengthMm': length, 'strokeWidthMm': row['widthMm']})
         assert len(used) == len(strokes)
         measurements.append({'page': number, 'layoutId': expected['id'], 'role': 'title-block marker',
-                             'text': expected['marker'], 'boundsMm': bounds[0], 'cellMm': [300, 257, 360, 287]})
+                             'text': expected['marker'], 'boundsMm': bounds[0], 'cellMm': list(cell)})
     return measurements
 
 
@@ -237,7 +290,7 @@ def negative_controls(pages):
     bad = copy.deepcopy(pages)
     bad[0]['text'] = bad[0]['text'].replace(SHEETS[0]['marker'], '')
     controls.append(must_reject('missing sheet marker', bad))
-    for name, segment in [('missing model ruler', SHEETS[0]['ruler']), ('missing title-block edge', BORDER[0])]:
+    for name, segment in [('missing model ruler', SHEETS[0]['ruler']), ('missing title-block edge', expected_border(SHEETS[0])[0])]:
         bad = copy.deepcopy(pages)
         index, _ = match_segment(bad[0]['strokes'], segment)
         del bad[0]['strokes'][index]
@@ -256,19 +309,83 @@ def negative_controls(pages):
     controls.append(must_reject('transparent text', bad))
     bad = copy.deepcopy(pages)
     maximum = max([row['seqno'] for row in bad[0]['strokes']] + [row['seqno'] for row in bad[0]['textTraces']])
-    bad[0]['backgrounds'].append({'boundsMm': (0, 0, 420, 297), 'opacity': 1, 'seqno': maximum + 1})
+    bad[0]['backgrounds'].append({'boundsMm': (0, 0, SHEETS[0].get('page', (420, 297))[0], 297), 'opacity': 1, 'seqno': maximum + 1})
     controls.append(must_reject('late white page overpaint', bad))
     bad = copy.deepcopy(pages)
     bad[0]['images'] = 1
     controls.append(must_reject('raster image surrogate or overpaint', bad))
+    if PAPER_PROFILE == 'mixed-paper':
+        controls.extend(additional_mixed_controls(pages, must_reject, match_segment))
     return controls
+
+
+def additional_mixed_controls(pages, must_reject, match_segment):
+    """Ten extras + the original thirteen = twenty-three mixed controls.
+
+    Each mutation is on a deepcopy; raw PDF/native files stay immutable. This
+    proposal calls page metadata mediaBoxMm/cropBoxMm as four coordinate tuples,
+    and rotation as integer degrees. Adapt field names only if extraction differs.
+    """
+    controls = []
+    bad = copy.deepcopy(pages)
+    bad[0]['sizeMm'] = (420, 297)
+    bad[0]['mediaBoxMm'] = (0, 0, 420, 297)
+    bad[0]['cropBoxMm'] = (0, 0, 420, 297)
+    controls.append(must_reject('both sheets forced to A3', bad))
+
+    bad = copy.deepcopy(pages)
+    bad[1]['sizeMm'] = (210, 297)
+    bad[1]['mediaBoxMm'] = (0, 0, 210, 297)
+    bad[1]['cropBoxMm'] = (0, 0, 210, 297)
+    controls.append(must_reject('both sheets forced to A4', bad))
+
+    bad = copy.deepcopy(pages)
+    bad[0]['mediaBoxMm'] = (0, 0, 420, 297)
+    controls.append(must_reject('raw MediaBox wrong while visible size retained', bad))
+
+    bad = copy.deepcopy(pages)
+    bad[0]['cropBoxMm'] = (1, 0, 210, 297)
+    controls.append(must_reject('cropped or shifted page box', bad))
+
+    bad = copy.deepcopy(pages)
+    bad[0]['rotation'] = 90
+    controls.append(must_reject('unexpected page rotation', bad))
+
+    bad = copy.deepcopy(pages)
+    _, row = match_segment(bad[0]['strokes'], MIXED_SHEETS[0]['ruler'])
+    row['a'] = (row['a'][0] + 1, row['a'][1])
+    row['b'] = (row['b'][0] + 1, row['b'][1])
+    controls.append(must_reject('correct-length model ruler shifted', bad))
+
+    bad = copy.deepcopy(pages)
+    _, row = match_segment(bad[0]['strokes'], SENTINEL)
+    row['b'] = (row['a'][0] + 50, row['a'][1])
+    controls.append(must_reject('paper sentinel incorrectly viewport-scaled', bad))
+
+    bad = copy.deepcopy(pages)
+    boxes = bad[0]['markerBoundsMm'][MIXED_SHEETS[0]['marker']]
+    boxes.append(boxes[0])
+    controls.append(must_reject('duplicate marker bounds', bad))
+
+    bad = copy.deepcopy(pages)
+    bad[0]['textTraces'][0]['type'] = 3
+    controls.append(must_reject('invisible text with opaque metadata', bad))
+
+    bad = copy.deepcopy(pages)
+    _, row = match_segment(bad[0]['strokes'], MIXED_SHEETS[0]['ruler'])
+    row['widthMm'] = .5
+    controls.append(must_reject('wrong physical model stroke width', bad))
+    return controls
+
 
 
 def main():
     parser = argparse.ArgumentParser()
     for name in ['producer', 'receipt', 'render-directory']:
         parser.add_argument('--' + name, type=Path, required=True)
+    parser.add_argument('--profile', choices=['regular', 'mixed-paper'], default='regular')
     args = parser.parse_args()
+    select_profile(args.profile)
     assert not args.receipt.exists() and not args.render_directory.exists(), 'Preserve existing evidence'
     producer = json.loads(args.producer.read_text(encoding='utf-8-sig'))
     outputs = producer['outputs']
@@ -278,13 +395,14 @@ def main():
         assert sha(file) == outputs[name + 'SHA256']
         bindings[name] = {'file': str(file), 'sha256': sha(file)}
     report = {'format': 'LinecraftIndependentMultisheetPDF/1', 'status': 'running',
-              'startedAt': datetime.now(timezone.utc).isoformat(), 'bindings': bindings,
+              'startedAt': datetime.now(timezone.utc).isoformat(), 'bindings': bindings, 'paperProfile': args.profile,
               'scope': 'Actual application-produced PDF, independent literal page/order/text/vector dimensions and paint checks; no production projection imports or font/client parity claim.',
               'tolerancesMm': {'length': LENGTH_TOLERANCE, 'endpointCombinedDistance': ENDPOINT_TOLERANCE,
                                'strokeWidth': STROKE_TOLERANCE, 'page': PAGE_TOLERANCE},
               'measurements': [], 'negativeControls': [], 'renders': []}
     try:
         assert producer['status'] == 'passed' and producer['sourceUnchanged'] is True and producer['inputUnchanged'] is True
+        assert producer.get('paperProfile', 'regular') == args.profile, 'Producer profile mismatch'
         for name in ['input', 'native']:
             native_document(json.loads(Path(outputs[name]).read_text(encoding='utf-8-sig')))
         pdf = fitz.open(outputs['pdf'])
@@ -293,7 +411,7 @@ def main():
         report['negativeControls'] = negative_controls(pages)
         args.render_directory.mkdir()
         for i, page in enumerate(pdf, 1):
-            for label, scale, clip in [('full', 1.5, None), ('title-block', 3, fitz.Rect(0, 250 / MM, 420 / MM, 297 / MM))]:
+            for label, scale, clip in [('full', 1.5, None), ('title-block', 3, fitz.Rect(0, 250 / MM, (SHEETS[i - 1].get('page', (420, 297))[0] if PAPER_PROFILE == 'mixed-paper' else 420) / MM, 297 / MM))]:
                 file = args.render_directory / f'page-{i}-{label}.png'
                 page.get_pixmap(matrix=fitz.Matrix(scale, scale), clip=clip, alpha=False).save(file)
                 report['renders'].append({'page': i, 'kind': label, 'file': str(file), 'sha256': sha(file)})

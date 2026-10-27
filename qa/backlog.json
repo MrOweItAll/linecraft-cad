@@ -519,6 +519,33 @@
       "nativeCandidateAcceptance": "not run",
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-QA-007",
+      "parent": "LC-QA-003",
+      "priority": 1,
+      "symptom": "Selected two-sheet coverage used identical A3 paper sizes and omitted mixed raw page-box checks",
+      "expected": "Controlled A4portrait/A3landscape pages follow explicit order with literal physical rulers, paper geometry, raw page boxes and complete native preservation",
+      "sourceVersion": "1.36.1-beta.6",
+      "sourceCommit": "480a959b23ae32677e7d57effe4af78ccf0c36d7",
+      "fixtureClass": "New synthetic child of the preserved original two-A3 fixture; no client/template/font assets",
+      "status": "verified bounded mixed-paper source/existing-unpacked coverage",
+      "attempts": 1,
+      "acceptance": "Source/unpacked4app20measurements23rejectedcontrols each,7combined pure references, exact native/render equality, regular18/13 compatibility and explicit profile mismatch rejection",
+      "evidence": [
+        "tests/mixed-paper-fixture.mjs",
+        "tests/mixed-paper-reference.test.mjs",
+        "tests/multisheet-workflow.cjs",
+        "tests/audit-multisheet-pdf.py",
+        "docs/MIXED-PAPER-QUALITY.md"
+      ],
+      "verifiedScope": "NativeA4 210x297/A3 420x297; actual PDF widths209.888653/420.200665,height297.010661 within predeclared0.3mmtolerance. Model127/63.5mm,paper100mm,rawMediaBox/CropBox/rotation,vector/text opacity/order/cells; allfour renderpairs exact. No runtimefix.",
+      "nextAction": "Existing synthetic plan/detail child: freeze independent fill/block/dash/annotation expectations first; broader client/fonts/templates/native/DWG acceptance separate",
+      "runtimeChanged": false,
+      "fullGates": "new pure selection recorded; unchanged runtime candidate40/40/655 retained under original closure; extended fullgate not rerun",
+      "nativeCandidateAcceptance": "not run",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }

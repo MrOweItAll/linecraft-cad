@@ -7,11 +7,13 @@ const {execFile, spawnSync} = require('node:child_process');
 const {promisify} = require('node:util'), {pathToFileURL} = require('node:url');
 const execute = promisify(execFile), sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const root = path.resolve(__dirname, '..');
-const [executableArgument, entry = '', prefix, manifestName] = process.argv.slice(2);
+const [executableArgument, entry = '', prefix, manifestName, profileOption] = process.argv.slice(2);
+const mixedPaper=profileOption==='--mixed-paper',paperProfile=mixedPaper?'mixed-paper':'regular';
+assert.ok(profileOption===undefined||mixedPaper,'Only --mixed-paper is accepted as an optional profile.');
 assert.equal(process.platform, 'win32'); assert.equal(process.arch, 'x64');
 assert.ok(executableArgument && /^ordinary-grip-[a-z0-9-]+$/.test(prefix) && manifestName,
   'Usage: node tests/multisheet-workflow.cjs EXE SOURCE_ENTRY_OR_EMPTY UNIQUE_PREFIX CANDIDATE_MANIFEST');
-assert.equal(process.argv.length, 6);
+assert.equal(process.argv.length, mixedPaper?7:6);
 const executable = path.resolve(executableArgument);
 const {manifest, manifestFile, candidate} = require('../tools/source-manifest.cjs').loadManifest(manifestName);
 assert.equal(candidate, true, 'Use an explicit reviewed candidate manifest.');
@@ -25,10 +27,10 @@ const profile = path.join(run, 'profile'), connection = path.join(run, 'control.
 const input = path.join(run, 'multisheet-input.linecraft'), native = path.join(run, 'multisheet-accepted.linecraft');
 const pdf = path.join(run, 'multisheet.pdf'), producerFile = path.join(run, 'producer-results.json');
 const report = {format:'LinecraftMultisheetWorkflow/1', status:'running', startedAt:new Date().toISOString(),
-  version:manifest.version, manifestFile, run, application:null, pdfAudit:null,
+  version:manifest.version, manifestFile, run, paperProfile, application:null, pdfAudit:null,
   scope:'Actual hidden source/unpacked application, authenticated controller, owned chooser replies and production PDF. No installed/native human acceptance.'};
 const appReport = {format:'LinecraftMultisheetApplication/1', status:'running', startedAt:new Date().toISOString(),
-  source:root, executable, entry:entry || null, version:manifest.version, manifestFile, tests:[], errors:[], network:[], outputs:{},
+  source:root, executable, entry:entry || null, version:manifest.version, manifestFile, paperProfile, tests:[], errors:[], network:[], outputs:{},
   scope:'Owned synthetic native drawing; actual Open/Save As/New/Open; temporary UI multi-sheet order; full-state and actual PDF acceptance. No geometry or viewport repair.'};
 report.tests=appReport.tests;
 report.manifestSHA256=sha(sync.readFileSync(path.join(root,manifestFile)));
@@ -41,7 +43,7 @@ async function fingerprint() {
     assert.equal(bytes.length, row.bytes, row.file); assert.equal(sha(bytes), row.sha256, row.file); result[row.file] = row.sha256;
   }
   for (const name of [manifestFile, 'PUBLIC-SOURCE.json', 'package.json', 'package-lock.json',
-    'tests/multisheet-fixture.mjs', 'tests/multisheet-reference.test.mjs', 'tests/multisheet-workflow.cjs', 'tests/audit-multisheet-pdf.py', 'tests/electron-test-options.cjs']) {
+    'tests/multisheet-fixture.mjs', 'tests/multisheet-reference.test.mjs', 'tests/mixed-paper-fixture.mjs', 'tests/mixed-paper-reference.test.mjs', 'tests/multisheet-workflow.cjs', 'tests/audit-multisheet-pdf.py', 'tests/electron-test-options.cjs']) {
     result[name] = sha(await fs.readFile(path.join(root, name)));
   }
   return result;
@@ -81,6 +83,11 @@ async function open(file) {
   if (await page.locator('#import-dialog').evaluate(element => element.open)) await page.locator('#import-close').click();
 }
 function assertFixture(document) {
+  if(mixedPaper){
+    assert.equal(document.settings.units,'in');assert.equal(document.entities.length,1);assert.deepEqual(document.entities[0].start,{x:0,y:0});assert.deepEqual(document.entities[0].end,{x:240,y:0});assert.deepEqual(document.layouts.map(s=>s.id),['sheet-b','sheet-a']);
+    for(const sheet of document.layouts){const a=sheet.id==='sheet-a';assert.equal(sheet.paper.widthMm,a?210:420);assert.equal(sheet.paper.heightMm,297);assert.equal(sheet.paper.orientation,a?'portrait':'landscape');assert.equal(sheet.entities.length,5);assert.equal(sheet.viewports.length,1);const vp=sheet.viewports[0];assert.deepEqual(vp.frame,a?{x:25,y:100,width:160,height:100}:{x:100,y:100,width:220,height:100});assert.deepEqual(vp.modelCenter,{x:120,y:0,z:0});assert.equal(vp.scaleDenominator,a?48:96);assert.equal(vp.locked,true);assert.equal(vp.plotBorder,false);const label=sheet.entities.find(e=>e.type==='TEXT');assert.equal(label.text,a?'A4-FIRST':'A3-SECOND');assert.equal(label.height,4);assert.deepEqual(label.position,{x:a?145:310,y:15});}
+    return;
+  }
   assert.equal(document.settings.units,'in'); assert.equal(document.entities.length,1);
   assert.deepEqual(document.entities[0].start,{x:0,y:0}); assert.deepEqual(document.entities[0].end,{x:240,y:0});
   assert.deepEqual(document.layouts.map(s=>s.id),['sheet-b','sheet-a']);
@@ -104,9 +111,9 @@ async function application() {
     }
     await fs.mkdir(profile, {recursive:true}); sourceBefore = await fingerprint(); packagedBefore = await packagedIdentity();
     appReport.sourceSHA256 = sourceBefore; appReport.packagedBefore = packagedBefore;
-    const {syntheticMultisheetDrawing}=await import(pathToFileURL(path.join(root,'tests/multisheet-fixture.mjs')));
+    const drawingFactory=mixedPaper?(await import(pathToFileURL(path.join(root,'tests/mixed-paper-fixture.mjs')))).syntheticMixedPaperDrawing:(await import(pathToFileURL(path.join(root,'tests/multisheet-fixture.mjs')))).syntheticMultisheetDrawing;
     const {createEditor}=await import(pathToFileURL(path.join(root,'core.mjs')));
-    const text=createEditor(syntheticMultisheetDrawing()).serialize();
+    const text=createEditor(drawingFactory()).serialize();
     await fs.writeFile(input,text,{flag:'wx'}); inputSHA256=sha(await fs.readFile(input));
     const args = [`--user-data-dir=${profile}`, `--linecraft-control-file=${connection}`];
     if (entry) args.unshift(path.resolve(entry), '--linecraft-no-watch');
@@ -191,12 +198,12 @@ async function application() {
     report.sourceSHA256=sourceBefore; report.sourceUnchanged=appReport.sourceUnchanged; report.inputUnchanged=appReport.inputUnchanged;
     const receipt=path.join(run,'pdf-audit.json'),render=path.join(run,'renders');
     const python=process.env.CAD_PYTHON || path.join(root,'.venv/Scripts/python.exe');
-    const result=spawnSync(python,[path.join(root,'tests/audit-multisheet-pdf.py'),'--producer',producerFile,'--receipt',receipt,'--render-directory',render],
+    const result=spawnSync(python,[path.join(root,'tests/audit-multisheet-pdf.py'),'--producer',producerFile,'--receipt',receipt,'--render-directory',render,'--profile',paperProfile],
       {cwd:root,encoding:'utf8',windowsHide:true,timeout:30000,maxBuffer:4*1024*1024});
     await fs.writeFile(path.join(run,'pdf-audit.log'),(result.stdout || '')+(result.stderr || ''),{flag:'wx'});
     assert.equal(result.status,0,result.error?.message || result.stderr || result.stdout);
     const audit=JSON.parse(await fs.readFile(receipt,'utf8')); assert.equal(audit.status,'passed');
-    assert.equal(audit.measurements.length,18); assert.equal(audit.negativeControls.length,13); assert.ok(audit.negativeControls.every(row=>row.rejected));
+    assert.equal(audit.paperProfile,paperProfile); assert.equal(audit.measurements.length,mixedPaper?20:18); assert.equal(audit.negativeControls.length,mixedPaper?23:13); assert.ok(audit.negativeControls.every(row=>row.rejected));
     report.pdfAudit={status:audit.status,file:receipt,sha256:sha(await fs.readFile(receipt)),render,measurements:audit.measurements,negativeControls:audit.negativeControls};
     assert.deepEqual(await fingerprint(),sourceBefore); report.status='passed';
   } catch (error) { report.status='failed'; report.error=error.stack || String(error); process.exitCode=1; }
