@@ -269,9 +269,9 @@
       "sourceCommit": "f37aba5ebe19f27088847cd8f983ecf5facf8eac",
       "reproduction": "Independent synthetic DXF contains one model LINE and two paper entities. Native headline says 3 supported objects in model space; detail row and complete document correctly retain two paper entities.",
       "fixtureClass": "Public-safe independently authored synthetic geometry",
-      "status": "verified renderer-only source/new-unpacked fix; native candidate acceptance pending",
+      "status": "verified renderer-only source/new-unpacked fix and focused unpacked beta6 native acceptance",
       "attempts": 1,
-      "verifiedScope": "app.mjs-only runtime delta from beta5. Total3/model1/paper2/source1 actualmixedDXF; all9before/source/unpacked native/snapshot streams byte-identical and nonheadlineDOM text unchanged. Other metadata variants are VM renderer cases.",
+      "verifiedScope": "app.mjs-only runtime delta from beta5. Total3/model1/paper2/source1 actualmixedDXF; all9before/source/unpacked native/snapshot streams byte-identical and nonheadlineDOM text unchanged. Other metadata variants are VM renderer cases. Subsequent focused unpacked beta6 native headline/dialog and complete persistence acceptance passed; see docs/NATIVE-BETA6-ACCEPTANCE.md.",
       "acceptance": "Six retained expected renderer failures; actual pre-fix wrong headline with preserved geometry/persistence; post7/7 and fresh source/newunpacked3checks each; candidate40/40,655portable",
       "evidence": [
         "docs/NATIVE-BETA4-ACCEPTANCE.md",
@@ -279,16 +279,37 @@
         "tests/import-headline.test.cjs",
         "tests/import-headline-workflow.cjs",
         "qa/CANDIDATE-SOURCE-1.36.1-beta.6.json",
-        "docs/IMPORT-HEADLINE-COUNTS.md"
+        "docs/IMPORT-HEADLINE-COUNTS.md",
+        "docs/NATIVE-BETA6-ACCEPTANCE.md"
       ],
-      "nextAction": "Coordinated beta6 headline/warning and inherited missing-glyph acceptance, or existing synthetic mixed-paper follow-up; no install/promotion",
+      "nextAction": "Separate installed/upgrade, client/domain or other coordinated qualification; preserve unsupported glyph appearance/spacing limits and existing converter attempt cap. No further currently ready unattended item is implied.",
       "candidateVersion": "1.36.1-beta.6",
       "runtimeDeltaFromBeta5": [
         "app.mjs"
       ],
-      "nativeCandidateAcceptance": "not run",
+      "nativeCandidateAcceptance": {
+        "version": "1.36.1-beta.6",
+        "form": "unpacked",
+        "status": "passed focused native acceptance",
+        "date": "2026-10-27",
+        "testedRuntimeCommit": "480a959b23ae32677e7d57effe4af78ccf0c36d7",
+        "method": "Visible native interaction and ordinary Windows Open/Save As/PDF dialogs; read-only document observations",
+        "scope": "Fresh total3/model1/paper2/source1 headline and representation report; complete synthetic native Save As/New/Open; five inherited glyph preview and completion-log warnings; actual PDF audit",
+        "independentPDF": "3 measurement groups and 13 rejected observation controls; fresh full/annotation render review; no plot-response-array claim",
+        "evidence": "docs/NATIVE-BETA6-ACCEPTANCE.md",
+        "installedAcceptance": "not run",
+        "dailyUseReady": false
+      },
       "installedAcceptance": "not run",
-      "dailyUseReady": false
+      "dailyUseReady": false,
+      "reconciliationHistory": [
+        {
+          "date": "2026-10-27",
+          "statusBeforeNativeReconciliation": "verified renderer-only source/new-unpacked fix; native candidate acceptance pending",
+          "nextActionBeforeNativeReconciliation": "Coordinated beta6 headline/warning and inherited missing-glyph acceptance, or existing synthetic mixed-paper follow-up; no install/promotion",
+          "nativeAcceptanceBeforeReconciliation": "not run"
+        }
+      ]
     },
     {
       "id": "LC-QA-002",
@@ -420,7 +441,7 @@
       "candidateVersion": "1.36.1-beta.5",
       "reproduction": "Original synthetic H U+2205 H in Technic across TEXT, plain/rich MTEXT, LEADER and DIMENSION. Independent full-cmap proof of no encoded U+2205; real beta4 source PDF returns only rich warning1/5.",
       "fixtureClass": "Independently specified synthetic labels/geometry and sparse numeric font profile; no copied client/font/template assets",
-      "status": "verified source and newly built unpacked candidate; native acceptance pending",
+      "status": "verified beta5 source/new-unpacked fix; inherited diagnostics passed focused beta6 native acceptance",
       "attempts": 1,
       "acceptance": "Retained9-check4pass/5expectedfail and real source1/5 warning failure; all9 pass afterfix. Actual source/newunpacked4app/8PDF/18controls each, exact native/geometry/SVGHTML/raster preservation and full candidate gate",
       "evidence": [
@@ -429,17 +450,39 @@
         "tests/missing-glyph-workflow.cjs",
         "tests/audit-missing-glyph-pdf.py",
         "qa/CANDIDATE-SOURCE-1.36.1-beta.5.json",
-        "docs/MISSING-GLYPH-DIAGNOSTICS.md"
+        "docs/MISSING-GLYPH-DIAGNOSTICS.md",
+        "docs/NATIVE-BETA6-ACCEPTANCE.md"
       ],
       "rootCause": "Plain textLayout drops measured missingGlyphs; LEADER/DIMENSION also drop layout warnings. Rich text and production warning transport already exist.",
-      "verifiedScope": "One core-only runtime repair from beta4. Candidate37/37 and648 selected portable; both explicit actual cases4/8/18, correct Unicode and five unique diagnostics. Before/after native bytes and2renders exact; source/unpacked match. Unsupported glyph appearance/spacing not fixed.",
+      "verifiedScope": "One core-only runtime repair from beta4. Candidate37/37 and648 selected portable; both explicit actual cases4/8/18, correct Unicode and five unique diagnostics. Before/after native bytes and2renders exact; source/unpacked match. Unsupported glyph appearance/spacing not fixed. Inherited warning behavior subsequently passed on unpacked beta6; historical beta5 native execution remains not run.",
       "runtimeDeltaFromBeta4": [
         "core.mjs"
       ],
-      "nextAction": "Coordinated focused beta5 native warning acceptance or next safe automated queue item; do not install/promote or equate scripted acceptance with daily-use readiness",
+      "nextAction": "Separate installed/upgrade, client/domain or other coordinated qualification; preserve unsupported glyph appearance/spacing limits and existing converter attempt cap. No further currently ready unattended item is implied.",
       "nativeCandidateAcceptance": "not run",
       "installedAcceptance": "not run",
-      "dailyUseReady": false
+      "dailyUseReady": false,
+      "reconciliationHistory": [
+        {
+          "date": "2026-10-27",
+          "statusBeforeNativeReconciliation": "verified source and newly built unpacked candidate; native acceptance pending",
+          "nextActionBeforeNativeReconciliation": "Coordinated focused beta5 native warning acceptance or next safe automated queue item; do not install/promote or equate scripted acceptance with daily-use readiness",
+          "nativeAcceptanceBeforeReconciliation": "not run"
+        }
+      ],
+      "nativeFollowupAcceptance": {
+        "version": "1.36.1-beta.6",
+        "form": "unpacked",
+        "status": "passed focused native acceptance",
+        "date": "2026-10-27",
+        "testedRuntimeCommit": "480a959b23ae32677e7d57effe4af78ccf0c36d7",
+        "method": "Visible native interaction and ordinary Windows Open/Save As/PDF dialogs; read-only document observations",
+        "scope": "Five inherited missing-glyph warnings in native beta6 plot preview and settled completion log; complete synthetic native persistence and actual PDF audit",
+        "independentPDF": "3 measurement groups and 13 rejected observation controls; fresh full/annotation render review; no plot-response-array claim",
+        "evidence": "docs/NATIVE-BETA6-ACCEPTANCE.md",
+        "installedAcceptance": "not run",
+        "dailyUseReady": false
+      }
     },
     {
       "id": "LC-QA-006",

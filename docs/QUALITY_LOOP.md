@@ -9,6 +9,11 @@ These commands do not install a scheduler. See
 contract; exact local state belongs in the private quality pointer. Earlier dated
 manual/unattended statements below retain their historical scope.
 
+The latest focused native result is the existing unpacked beta6
+[headline and inherited glyph-warning acceptance](NATIVE-BETA6-ACCEPTANCE.md).
+It does not establish installed/upgrade or broader native qualification. Earlier
+automated checkpoint descriptions below do not include this later native session.
+
 ```
 npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.6.json
 npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.6.json
@@ -319,3 +324,19 @@ Reconcile the private queue and pause when no authorized safe item is ready. A
 future converter repair needs independent failing regression, build prerequisites
 and explicit new attempt accounting; it must not reuse old passing observations
 as proof of a repaired binary. Native/client/installed checks remain separate.
+
+## Focused beta6 native acceptance reconciliation
+
+The completed one-off native session passed fresh DXF headline/dialog checks,
+complete synthetic native Save As/New/Open persistence, and five distinct glyph
+warnings in both plot preview and the settled completion log. The actual PDF
+passed three independent measurement groups and thirteen rejected observation
+controls; full-page and annotation renders were reviewed. See
+[the bounded native record](NATIVE-BETA6-ACCEPTANCE.md) for identity, exact scope,
+preserved checker/environment failures and unsupported glyph limits.
+
+This reconciliation changes documentation and backlog only. No runtime, manifest,
+build, application gate, native session or converter attempt is repeated. After
+reconciliation, no further currently authorized unattended item is ready; local
+automation state belongs in the private pointer. Preserve the installed/client,
+independent DWG-consumer, domain, relay and release authorization boundaries.

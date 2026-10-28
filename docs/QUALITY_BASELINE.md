@@ -2,12 +2,13 @@
 
 Baseline commit: f37aba5ebe19f27088847cd8f983ecf5facf8eac, version1.36.0,
 origin https://github.com/MrOweItAll/linecraft-cad.git. Local ownership branch:
-codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; active candidate1.36.1-beta.4. Exact local paths and
+codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; current candidate1.36.1-beta.6. Exact local paths and
 checkpoint/installer hashes are in the private session report, outside this tree.
 
 The opening baseline observations and dated sections below retain their historical
-scope. Current beta4 focused native acceptance is recorded in
-[NATIVE-BETA4-ACCEPTANCE.md](NATIVE-BETA4-ACCEPTANCE.md). Local scheduling state and
+scope. Focused beta4 native acceptance is retained in
+[NATIVE-BETA4-ACCEPTANCE.md](NATIVE-BETA4-ACCEPTANCE.md); the later bounded beta6
+headline/glyph-warning result is in [NATIVE-BETA6-ACCEPTANCE.md](NATIVE-BETA6-ACCEPTANCE.md). Local scheduling state and
 its first policy trial are recorded separately; a completed wake does not complete
 all drafting requirements or establish installed/daily-use readiness.
 
@@ -503,3 +504,22 @@ writer, reader, rebuild, product/runtime/manifest change or unchanged app gate
 occurred. Editable DWG, native/installed acceptance and daily-use readiness remain
 unqualified. Further converter work requires a fresh bounded regression/build/
 attempt scope; no further current unattended source-only item is ready.
+
+## Focused beta6 native acceptance - October 27, 2026
+
+The existing isolated unpacked beta6 candidate passed fresh synthetic DXF
+headline/dialog and complete Save As/New/Open checks. Native plot preview and
+the settled completion log each show five distinct inherited Technic missing-glyph
+diagnostics. The actual PDF passed three measurement groups and thirteen rejected
+observation controls; complete native state and fresh full/detail visual reviews
+passed. These counts describe this session, separately from earlier hidden gates.
+See [the native record](NATIVE-BETA6-ACCEPTANCE.md).
+
+The subsequent reconciliation is documentation/backlog only: runtime, manifests,
+candidate/installer, original evidence and installed/profile/client state remain
+unchanged. No test/build/native/converter work is repeated. Historical beta5 native
+execution remains unrun; its inherited warning behavior was accepted on beta6.
+Unsupported glyph appearance/spacing, installed/upgrade, general client/template/
+DWG fidelity, production relay and daily-use readiness remain unqualified. The
+finite ready reconciliation item is complete; the remaining scopes require their
+separate prerequisites or authorization.

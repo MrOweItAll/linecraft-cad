@@ -1,5 +1,11 @@
 # Missing-glyph diagnostics - LC-FNT-001
 
+The inherited diagnostic behavior later passed focused native acceptance on the
+existing unpacked beta6 candidate: five preview/log warnings, complete native
+persistence and an independently audited actual PDF. See
+[the beta6 native record](NATIVE-BETA6-ACCEPTANCE.md). This does not relabel the
+historical beta5 native check as performed or qualify unsupported glyph appearance.
+
 Candidate 1.36.1-beta.5 preserves missing-glyph warnings for plain TEXT and MTEXT
 and forwards them through LEADER and DIMENSION. Previously, only rich MTEXT in
 the five-annotation reference reported the unavailable character. The actual
@@ -74,7 +80,7 @@ were inspected. Source/new-unpacked measurements, native bytes and both render
 pairs match exactly. Before/after source native bytes and both render pairs also
 match exactly, including the beta4 file actually saved and reopened before repair.
 
-## Identity and limits
+## Identity and limits at the original beta5 checkpoint
 
 The immutable beta4 manifest and artifacts remain intact. The new
 [beta5 manifest](../qa/CANDIDATE-SOURCE-1.36.1-beta.5.json) binds all 59 runtime files

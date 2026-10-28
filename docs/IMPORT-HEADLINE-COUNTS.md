@@ -1,5 +1,10 @@
 # Beta6 import headline counts
 
+Current focused native headline/dialog and persistence acceptance passed on the
+existing unpacked beta6 candidate. See [the native record](NATIVE-BETA6-ACCEPTANCE.md).
+The automated checkpoint and its originally pending checks below retain their
+historical scope; installed/upgrade and broader qualification remain separate.
+
 LC-MON-008 fixes the existing renderer headline that labeled all accepted model
 and paper objects as model-space geometry. The mixed synthetic DXF previously
 displayed:
@@ -57,7 +62,7 @@ client drawing, original fixture or prior candidate/receipt was modified. Workfl
 have finite120s watchdogs/180s wrappers; the candidate wrapper remains30minutes.
 Independent read-only reviews recomputed counts, hashes, state, manifest and outputs.
 
-## Candidate identity and remaining acceptance
+## Candidate identity and remaining acceptance at the automated checkpoint
 
 The explicit beta6 manifest is qa/CANDIDATE-SOURCE-1.36.1-beta.6.json, SHA-256
 0256237cea5efcda2691069eb1db1e73eb01628297c7e744d995332653483340.
