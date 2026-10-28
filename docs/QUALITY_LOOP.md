@@ -340,3 +340,27 @@ build, application gate, native session or converter attempt is repeated. After
 reconciliation, no further currently authorized unattended item is ready; local
 automation state belongs in the private pointer. Preserve the installed/client,
 independent DWG-consumer, domain, relay and release authorization boundaries.
+
+## Immutable workflow action references - October 28, 2026
+
+LC-SEC-ACTIONS-SHA pins all eleven existing external action references across the
+quality and beta workflows to full commit SHAs verified against the upstream
+`actions/*` repositories. Version comments retain the existing v4/v5 choices;
+triggers, permissions, job commands and the isolated publication job are unchanged.
+
+Two permanent checks in `tests/qa-controls.test.cjs` enforce the current block-style
+reference policy and reject mutable tags/branches, short or malformed SHAs, quoted
+mutable values and unsupported reference layouts. This is a conservative policy
+check for the repository's workflow style, not a general YAML parser or an audit of
+the actions' implementation. Both workflow files are now fingerprinted gate inputs.
+
+The retained pre-pin run has one expected policy failure and one passing control
+test. Independent review then found a mapping-style bypass in the new checker;
+additional negative controls reproduced it before the checker repair. Both failure
+receipts and the initial fast result are preserved. The final beta6 fast gate
+passes 28/28 stages and 673 selected portable checks,
+including all four QA controls; twelve unavailable private references remain
+explicitly excluded. Runtime/version, candidate manifests and installer bytes are
+unchanged. Application/build/native/installed checks and remote CI were not rerun
+for this workflow-only change. Signing, fuse hardening, versioned release preparation
+and merge/tag/publication authorization remain separate requirements.

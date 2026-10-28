@@ -732,6 +732,34 @@
       "nativeCandidateAcceptance": "not run",
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-SEC-ACTIONS-SHA",
+      "priority": 1,
+      "symptom": "External GitHub Actions references use mutable major-version tags",
+      "expected": "Full upstream commit references with preserved workflow behavior and publication boundaries",
+      "sourceVersion": "1.36.1-beta.6",
+      "sourceCommit": "5019bf0e43549f82c74bca37ecfe12d45eccfcd7",
+      "fixtureClass": "Public workflow configuration and independently specified synthetic policy controls",
+      "status": "verified local immutable references and fast gate; remote CI not run for this change",
+      "attempts": 2,
+      "acceptance": "Eleven existing references across two workflows match five independently verified upstream action commits; pre-pin policy failure retained; fresh fast gate28/28 and673selected portable checks including four QA controls",
+      "evidence": [
+        ".github/workflows/quality-loop.yml",
+        ".github/workflows/windows-beta.yml",
+        "tests/qa-controls.test.cjs",
+        "desktop/dev-tools.cjs:workflow input fingerprints",
+        "docs/QUALITY_LOOP.md:immutable workflow action references"
+      ],
+      "verifiedScope": "Current action major versions and all non-reference workflow content preserved. Conservative block-style reference checks reject mutable, truncated and unsupported forms; they are not a general YAML parser or action implementation audit.",
+      "reviewCorrection": "Independent review found a mapping-style bypass in the new policy checker. Additional controls failed before repair; final fast gate passed. Both failures and the earlier passing fast result are retained separately.",
+      "nextAction": "Bound descriptor-directory threat model and synthetic failure regressions; recover or add structural protocol coverage before extraction. Public push, merge/tag/release and signing decisions remain separately authorized.",
+      "runtimeChanged": false,
+      "candidateManifestChanged": false,
+      "remoteCI": "not run for this local change",
+      "applicationBuildNativeChecks": "not rerun; unchanged runtime and installer",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }
