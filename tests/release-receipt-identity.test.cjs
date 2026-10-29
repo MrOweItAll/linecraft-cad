@@ -14,7 +14,7 @@ const virtualRoot=String.raw`C:\synthetic-release`;
 const filename=name=>path.win32.resolve(virtualRoot,name);
 
 function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongInstaller=false,fileChange}={}){
- const state={archiveCalls:0,copyCalls:0,writeCalls:0,manifestLoads:0,auditReads:0,harnessFaults:[]};
+ const state={archiveCalls:0,copyCalls:0,writeCalls:0,manifestLoads:0,auditReads:0,dependencyReads:0,harnessFaults:[]};
  const demand=(condition,reason)=>{if(!condition){state.harnessFaults.push(reason);throw Object.assign(Error('Unsupported synthetic adapter operation.'),{code:'HARNESS_FAULT'});}};
  const inputs=()=>({[fixture.manifestFile]:fixture.manifestSHA256,[fixture.qualifiedInput.file]:fixture.qualifiedInput.sha256});
  const gate=command=>({format:'LinecraftPublicGate/1',version:fixture.version,command,status:'passed',changedSource:[],
@@ -42,6 +42,7 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
   path:outputPaths[field],sha256:outputReference[field].sha256,bytes:Buffer.byteLength(outputReference[field].text)
  }]));
  Object.assign(data.applications.installed.outputs.pdfAudit,{path:outputPaths.audit,sha256:sha(Buffer.from(JSON.stringify(data.audit)))});
+ data.dependencyAudit=structuredClone(fixture.dependencyReference.report);
  if(change)change(data);
  const files=new Map([[filename('PUBLIC-SOURCE.json'),baseline],
   [filename(fixture.qualifiedInput.file),Buffer.from(fixture.qualifiedInput.text)],
@@ -50,6 +51,7 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
   [filename('work/public-test-installed-results.json'),Buffer.from(JSON.stringify(data.installed))],
   [filename('work/public-pure-results.json'),Buffer.from(JSON.stringify(data.pure))],
   [filename('work/public-clean-install-results.json'),Buffer.from(JSON.stringify(data.clean))],
+  [filename('work/public-npm-audit.json'),Buffer.from(JSON.stringify(data.dependencyAudit))],
   ...appReference.modes.map(mode=>[filename(`tests/ordinary-grip-public-${mode}-results.json`),Buffer.from(JSON.stringify(data.applications[mode]))]),
   [filename(`Windows-Release/Linecraft-CAD-${data.package.version}-Setup.exe`),Buffer.from(wrongInstaller?'tampered synthetic bytes':'synthetic installer bytes')]]);
  for(const field of ['native','pdf']){
@@ -60,7 +62,7 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
  const knownFiles=new Set(files.keys());
  if(fileChange)fileChange(files,outputPaths);
  const boundary=()=>Object.assign(Error('Synthetic asset-mutation boundary reached.'),{code:'HARNESS_ASSET_BOUNDARY'});
- const disk={readFileSync(file,encoding){demand(knownFiles.has(file),'unexpected-read');if(file===outputPaths.audit)state.auditReads++;if(!files.has(file))throw Object.assign(Error('Missing known synthetic file.'),{code:'ENOENT'});const value=files.get(file);return encoding?value.toString(encoding):value;},
+ const disk={readFileSync(file,encoding){demand(knownFiles.has(file),'unexpected-read');if(file===outputPaths.audit)state.auditReads++;if(file===filename('work/public-npm-audit.json'))state.dependencyReads++;if(!files.has(file))throw Object.assign(Error('Missing known synthetic file.'),{code:'ENOENT'});const value=files.get(file);return encoding?value.toString(encoding):value;},
   copyFileSync(){state.copyCalls++;throw boundary();},writeFileSync(){state.writeCalls++;throw boundary();}};
  const git={execFileSync(command,args){
   demand(command==='git'&&Array.isArray(args),'unexpected-child-process');
@@ -190,6 +192,29 @@ for(const kind of ['formatted exact bytes','reordered audit rows','normalized bi
   }
  }});
  assert.equal(result.error?.code,'HARNESS_ASSET_BOUNDARY');assert.equal(result.state.auditReads,1);
+ assert.deepEqual({archive:result.state.archiveCalls,copy:result.state.copyCalls,write:result.state.writeCalls},{archive:1,copy:0,write:0});
+});
+
+for(const entry of fixture.dependencyReference.cases)test('dependency guard: '+entry.id+' rejects before any asset mutation',()=>{
+ const result=execute({change(data){
+  if(entry.operation==='set'||entry.operation==='delete'){
+   let target=data.dependencyAudit;for(const field of entry.field.slice(0,-1))target=target[field];
+   if(entry.operation==='delete')delete target[entry.field.at(-1)];else target[entry.field.at(-1)]=entry.value;
+  }
+ },fileChange(files){
+  const file=filename('work/public-npm-audit.json');
+  if(entry.operation==='missing')files.delete(file);
+  if(entry.operation==='text')files.set(file,Buffer.from(entry.value));
+ }});
+ if(entry.errorName)assert.equal(result.error?.name,entry.errorName,'Require the existing dependency parse/property error');
+ else assert.equal(result.error?.code,entry.error??'ERR_ASSERTION','Require the existing dependency assertion/file error');
+ assert.equal(result.state.dependencyReads,1);noAssets(result);
+});
+for(const formatted of [false,true])test('dependency control: '+(formatted?'formatted':'minimal')+' numeric zero reaches the first archive',()=>{
+ const result=execute({fileChange(files){
+  if(formatted){const file=filename('work/public-npm-audit.json');files.set(file,Buffer.from(JSON.stringify(JSON.parse(files.get(file)),null,2)+'\n'));}
+ }});
+ assert.equal(result.error?.code,'HARNESS_ASSET_BOUNDARY');
  assert.deepEqual({archive:result.state.archiveCalls,copy:result.state.copyCalls,write:result.state.writeCalls},{archive:1,copy:0,write:0});
 });
 

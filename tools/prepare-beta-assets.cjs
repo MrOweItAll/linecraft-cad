@@ -80,6 +80,8 @@ for(const {field,file,digest}of installedOutputs){
  identity(typeof binding?.path==='string'&&path.resolve(binding.path)===file,true,'PDF audit '+field+' path');
  identity(binding?.sha256,digest,'PDF audit '+field+' digest');
 }
+// Admit the existing stored dependency-audit requirement before creating assets.
+const audit=read('work/public-npm-audit.json');assert.equal(audit.metadata.vulnerabilities.total,0);
 execFileSync('git',['archive','--format=zip',`--prefix=Linecraft-CAD-${version}-Source/`,`--output=${path.join(out,source)}`,commit],{cwd:root,stdio:'inherit'});
 const summary={format:'LinecraftPublicBetaVerification/1',version,tag:preflight?null:tag,commit,runId:process.env.GITHUB_RUN_ID,runUrl:`https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,releaseClass:preflight?'candidate':'prerelease',automaticUpdater:false,codeSigning:'unsigned',historicalQualifiedWindowsRuntime:read('PUBLIC-SOURCE.json').qualifiedWindowsEvidence,freshPublicChecks:{},limits:['Hidden CI tests stub native chooser/discard responses.','Historical visible installed Windows checks preceded the vendor security refresh; current public gates exercise the patched vendor runtime separately.','Fresh install/uninstall scope is a GitHub-hosted Windows VM; broader Windows/DPI coverage remains beta work.']};
 for(const mode of applicationModes){
@@ -95,7 +97,6 @@ for(const mode of applicationModes){
 }
 summary.cleanInstallation={os:clean.os,scope:clean.scope,checks:clean.checks};
 summary.freshPublicChecks.pure=pure;
-const audit=read('work/public-npm-audit.json');assert.equal(audit.metadata.vulnerabilities.total,0);
 summary.dependencyAudit={vulnerabilities:audit.metadata.vulnerabilities,dependencies:audit.metadata.dependencies,scope:'Current npm advisory response for the locked dependencies, including the bundled Electron runtime.'};
 summary.desktopRuntime=require('../package.json').devDependencies.electron;
 summary.runtimeIdentity={runtimeFiles:59,bundledResources:12,manifestSHA256:sha(path.join(root,'PUBLIC-SOURCE.json')),scope:'Original application code and resources retain qualified identities; the patched vendor desktop runtime is separately exercised in each public application gate.'};

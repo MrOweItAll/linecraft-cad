@@ -1169,6 +1169,37 @@
       "publicationRun": false,
       "dailyUseReady": false,
       "nextAction": "Assess remaining dependency-audit pre-mutation admission and versioned publisher metadata independently; keep auditor identity and broader qualification limits explicit, preserve baseline-only selection and separate release authorization."
+    },
+    {
+      "id": "LC-REL-DEPENDENCY-ADMISSION",
+      "parent": "LC-REL-VERSIONED-PIPELINE",
+      "priority": 2,
+      "symptom": "The existing stored dependency-audit zero-vulnerability requirement was checked after archive and copy mutations",
+      "sourceVersion": "1.36.1-beta.7",
+      "fixtureClass": "Actual preparation/manifest-loader VM with minimal synthetic npm metadata, known-file failures and independent dependency-read counter",
+      "status": "verified existing stored dependency-audit admission precedes asset creation",
+      "attempts": 1,
+      "acceptance": "Move the exact stored report read/JSON parse/strict metadata.vulnerabilities.total numeric-zero assertion before the first archive; preserve failure types, cache for unchanged summary and retain earlier guards",
+      "evidence": [
+        "tools/prepare-beta-assets.cjs",
+        "tests/release-receipt-identity.test.cjs",
+        "tests/fixtures/release-receipt-identity.json",
+        "docs/RELEASE-RECEIPT-IDENTITY.md"
+      ],
+      "verifiedScope": "Expanded suite8FAIL/143PASS before;151/151 after. Eight read/parse/property/strict-total negatives require one stored-report read and zero archive/copy/write calls; minimal and formatted zero controls reach only the fake first archive. Prior141 cases retained.",
+      "limits": [
+        "Stored numeric-zero admission only; no npm execution, advisory fetch or current vulnerability qualification",
+        "No freshness/authenticity/completeness, severity-subtotal, dependency-inventory or full-schema claim",
+        "Workflow npm process-exit check and publisher/write-token isolation remain separate and unchanged",
+        "No actual assets/application/build/install/native/remote CI/publication ran"
+      ],
+      "runtimeChanged": false,
+      "candidateManifestChanged": false,
+      "releaseWorkflowChanged": false,
+      "actualAssetsPrepared": false,
+      "publicationRun": false,
+      "dailyUseReady": false,
+      "nextAction": "Inventory remaining pre-mutation summary projections and versioned publisher metadata with independent synthetic references; preserve immutable baseline selection and separate release authorization."
     }
   ]
 }

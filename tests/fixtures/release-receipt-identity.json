@@ -749,5 +749,88 @@
         ]
       }
     ]
+  },
+  "dependencyReference": {
+    "report": {
+      "metadata": {
+        "vulnerabilities": {
+          "total": 0
+        },
+        "dependencies": {
+          "prod": 1,
+          "dev": 0,
+          "total": 1
+        }
+      }
+    },
+    "cases": [
+      {
+        "id": "nonzero total",
+        "operation": "set",
+        "field": [
+          "metadata",
+          "vulnerabilities",
+          "total"
+        ],
+        "value": 1
+      },
+      {
+        "id": "string zero",
+        "operation": "set",
+        "field": [
+          "metadata",
+          "vulnerabilities",
+          "total"
+        ],
+        "value": "0"
+      },
+      {
+        "id": "null total",
+        "operation": "set",
+        "field": [
+          "metadata",
+          "vulnerabilities",
+          "total"
+        ],
+        "value": null
+      },
+      {
+        "id": "missing total",
+        "operation": "delete",
+        "field": [
+          "metadata",
+          "vulnerabilities",
+          "total"
+        ]
+      },
+      {
+        "id": "missing vulnerabilities",
+        "operation": "delete",
+        "field": [
+          "metadata",
+          "vulnerabilities"
+        ],
+        "errorName": "TypeError"
+      },
+      {
+        "id": "missing metadata",
+        "operation": "delete",
+        "field": [
+          "metadata"
+        ],
+        "errorName": "TypeError"
+      },
+      {
+        "id": "missing known report",
+        "operation": "missing",
+        "error": "ENOENT"
+      },
+      {
+        "id": "malformed report JSON",
+        "operation": "text",
+        "value": "{invalid JSON",
+        "errorName": "SyntaxError"
+      }
+    ]
   }
 }

@@ -67,6 +67,13 @@ and execution authenticity remain unverified. Lexical path checks and cached nam
 do not prove Windows file identity or resistance to concurrent replacement. Copies
 remain outside the prefix test.
 
+The stored dependency-audit JSON is also read and parsed before the first archive.
+Its existing strict numeric-zero `metadata.vulnerabilities.total` requirement is
+unchanged. The later summary reuses that admitted object. The workflow separately
+runs npm and checks its process exit code; no npm subprocess is added here. This
+prefix guard does not establish advisory freshness, authenticity, completeness,
+severity consistency or dependency inventory, and it does not fetch advisories.
+
 ```
 node --test --test-reporter=tap tests/release-receipt-identity.test.cjs
 ```
@@ -108,6 +115,12 @@ hash failures are separate from coherent changed-audit cases that refresh their
 embedded digest before testing status/count/binding rejection. Three controls
 accept reformatted exact bytes, reordered rows and normalized binding paths. No
 actual PDF auditor, application, drawing or PDF format is executed by this suite.
+
+The dependency-admission follow-up reproduced8 failures alongside143 passes; all151
+now pass, retaining all141 prior cases. Missing/malformed reports, missing nested
+fields and nonzero/non-numeric totals require their existing exact errors and zero
+asset mutations. Minimal and formatted numeric-zero controls remain admitted. No
+npm audit, advisory request or current vulnerability qualification ran.
 
 This is source-only prefix admission. Downstream asset contents, full receipt
 provenance, clean-runner install/uninstall, publisher version matching and a
