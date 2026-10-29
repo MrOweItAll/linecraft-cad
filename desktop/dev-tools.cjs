@@ -13,6 +13,7 @@ const auxiliaries=['tests/core.test.mjs','tests/public-core-exclusions.json','te
 const manifestOption=process.argv.find(a=>a.startsWith('--manifest='))?.slice(11);
 auxiliaries.push('.github/workflows/quality-loop.yml','.github/workflows/windows-beta.yml');
 auxiliaries.push('tests/script-descriptor-reference.test.cjs','tests/fixtures/script-descriptor-contract.json');
+auxiliaries.push('tests/script-admission-reference.test.cjs','tests/fixtures/script-admission-contract.json');
 auxiliaries.push('tools/observe-script-directory.ps1','tools/script-directory-observation.cjs','tests/fixtures/script-directory-observation.json','tests/script-directory-observer.test.ps1');
 const {manifest,manifestFile,candidate}=require('../tools/source-manifest.cjs').loadManifest(manifestOption);
 if(candidate)suites.push('tests/script-directory-observation.test.cjs');

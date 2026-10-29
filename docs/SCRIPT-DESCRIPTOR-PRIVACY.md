@@ -125,3 +125,37 @@ admission and owned cleanup. Client transport identity is a separate required
 review gate. This design changes no runtime behavior and establishes no Windows
 privacy, cross-account, build or installed qualification. The metadata observer
 remains a reference tool and cannot grant admission.
+
+## Proposed service admission references
+
+The explicit reference below executes the unchanged service in a VM, using fake
+HTTP, identity-bearing in-memory file objects and scripted admission-lease replies:
+
+```
+node --test --test-reporter=tap tests/script-admission-reference.test.cjs
+```
+
+Current result:14 tests,5 controls passed and9 pending references failed; the command
+returns nonzero. The service currently ignores the proposed `admission` option.
+The references require deliberate preflight/child-preparation rejection, inert
+publication, revocation before dispatch, session/sequence validation and owned
+cleanup with fixed redacted diagnostics. Controls exercise the actual handler's
+valid request, authentication/Origin rejection, exclusive creation and relative-path
+rejection. Unknown modules or malformed fake-adapter calls cannot count as a
+successful security rejection. Review tightened ordering, teardown and diagnostics;
+original failed output is preserved privately.
+
+The fixture in `tests/fixtures/script-admission-contract.json` defines a proposed
+main-side adapter seam: `prepare`, lease `publish`, `checkReady` and `close`, with
+session-bound revocation and fixed diagnostic callbacks. The fakes do not invoke
+these operations for the service; current observed helper-call counts are zero.
+This is not a production API, helper process or binary IPC protocol. The tests use
+deterministic nonsecret bytes and create no real endpoint, descriptor, drawing or
+Windows security object. Per-await deadlines bound tests; timeout is not cancellation.
+
+Both new files are fingerprinted auxiliaries, outside the selected passing suites.
+Their failures are never inverted into gate passes. The original namespace
+references remain intact. Neither existing green gates nor future green VM
+references prove Windows ACLs/native handles, cross-account denial, helper binary
+integrity, transport authentication, crash/timeout behavior, full close concurrency,
+normal Electron shutdown or installed acceptance. Those requirements remain open.

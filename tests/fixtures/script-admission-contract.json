@@ -1,0 +1,21 @@
+{
+  "format": "LinecraftServiceAdmissionReference/1",
+  "status": "proposed service seam; current runtime ignores admission",
+  "scope": "Actual unmodified service in VM; fake HTTP, in-memory identity-bearing files and scripted lease replies. No helper process or wire IPC is exercised.",
+  "pathError": "ERR_LINECRAFT_CONTROL_PATH",
+  "securityError": "ERR_LINECRAFT_CONTROL_SECURITY",
+  "residualDiagnostic": "ERR_LINECRAFT_CONTROL_RESIDUAL",
+  "sessionId": "synthetic-session-1",
+  "requestRejectionStatus": 503,
+  "preflightEffects": {"tokenCalls":0,"listenCalls":0,"nodeOpenCalls":0,"writeCalls":0,"dispatchCalls":0,"descriptorPresent":false},
+  "proposedSeam": {
+    "option": "admission",
+    "prepare": "prepare({connectionFile,onRevoked}) returns a retained lease after preflight and exclusive empty-child preparation",
+    "publish": "lease.publish(connection) returns {version:1,sessionId,ready:true} after child write and flush",
+    "checkReady": "lease.checkReady({sessionId,sequence}) returns {version:1,sessionId,sequence,ready:true} before dispatch",
+    "close": "lease.close() cleans only the owned object; failures cause a fixed redacted onDiagnostic record",
+    "onRevoked": "session-bound helper loss notice; no subsequent dispatch",
+    "onDiagnostic": "callback receives {code:ERR_LINECRAFT_CONTROL_RESIDUAL} without raw errors or secrets"
+  },
+  "notQualified": ["Windows ACLs and retained OS handles","native helper process or binary framing","cross-account denial","client/server authentication","instantaneous crash detection or race freedom","normal Electron shutdown or installed behavior"]
+}

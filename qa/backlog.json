@@ -769,7 +769,7 @@
       "sourceVersion": "1.36.1-beta.6",
       "sourceCommit": "468cf538bf020980e02030d9f5d57790bbccd3c7",
       "fixtureClass": "Synthetic Windows path declarations, VM fake HTTP and in-memory files only; no real credential, ACL, account, endpoint or drawing",
-      "status": "bundled-helper design and prerequisites assessed; runtime enforcement and peer identity remain pending",
+      "status": "proposed helper design and portable service admission references frozen; runtime enforcement pending",
       "attempts": 1,
       "productFixAttempts": 0,
       "acceptance": "Explicit current-module reference exits nonzero: four future namespace-policy expectations fail and eight lifecycle controls pass. A deliberate policy error and zero listener/open/write effects are required; unrelated startup errors cannot satisfy rejection.",
@@ -802,7 +802,7 @@
           "tests/fixtures/script-directory-observation.json"
         ]
       },
-      "nextAction": "Define bounded fake-IPC/service lifecycle failure contracts, then establish permitted native build/traversal prerequisites. Resolve client transport identity before security-qualified runtime integration; retain red references and existing ordinary-startup behavior.",
+      "nextAction": "Native retained-handle helper and authenticated client transport remain separate prerequisites; preserve the explicit red references. Do not wire metadata observations as admission. Reassess other authorized source preparation while native build/OS qualification remains unavailable.",
       "runtimeChanged": false,
       "candidateManifestChanged": false,
       "defaultGateSelection": "Pending red reference is explicit and unselected; existing gates are not descriptor-privacy qualification",
@@ -822,6 +822,22 @@
         ],
         "runtimeChanged": false,
         "candidateManifestChanged": false
+      },
+      "serviceAdmissionReference": {
+        "scope": "Actual unmodified service in VM; fake HTTP/files/scripted lease replies only",
+        "evidence": [
+          "tests/script-admission-reference.test.cjs",
+          "tests/fixtures/script-admission-contract.json"
+        ],
+        "cases": 14,
+        "controlsPassed": 5,
+        "pendingReferencesFailed": 9,
+        "commandExit": "nonzero; not inverted into a gate pass",
+        "observedHelperCalls": 0,
+        "defaultGateSelection": "fingerprinted auxiliaries only; excluded from passing suites",
+        "reviewRepairBatches": 1,
+        "privacyQualified": false,
+        "nativeHelperOrWireIPCExercised": false
       }
     },
     {
