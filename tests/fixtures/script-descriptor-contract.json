@@ -1,0 +1,22 @@
+{
+  "format": "LinecraftDescriptorPrivacyReference/1",
+  "status": "proposed enforcement contract; current runtime is not hardened",
+  "threatModel": "Protect bearer files from other nonprivileged accounts. Processes running as the same user, administrators and SYSTEM are outside the isolation guarantee.",
+  "supportedWindowsPath": "Ordinary absolute local-drive path on an ACL-capable local filesystem, under a verified private current-user directory; no namespace aliases or alternate streams.",
+  "unsafePathErrorCode": "ERR_LINECRAFT_CONTROL_PATH",
+  "unsafePathCases": [
+    { "id": "unc-share", "path": "\\\\synthetic.invalid\\share\\connection.json" },
+    { "id": "device-namespace", "path": "\\\\.\\pipe\\synthetic-control" },
+    { "id": "extended-namespace", "path": "\\\\?\\C:\\synthetic-private\\connection.json" },
+    { "id": "alternate-stream", "path": "C:\\synthetic-private\\connection.json:capability" }
+  ],
+  "preflightRejection": { "listenCalls": 0, "openCalls": 0, "writeCalls": 0, "descriptorPresent": false },
+  "pendingEnvironmentReferences": [
+    { "id": "foreign-owner", "expected": "Reject before listener or credential publication", "execution": "not run; Windows security adapter absent" },
+    { "id": "foreign-read-or-mutation-rights", "expected": "Reject other-principal descriptor read or protected-directory modification rights", "execution": "not run; Windows security adapter absent" },
+    { "id": "null-unknown-or-unreadable-dacl", "expected": "Fail closed before listener or credential publication", "execution": "not run; Windows security adapter absent" },
+    { "id": "reparse-or-nondirectory-parent", "expected": "Reject before listener or credential publication", "execution": "not run; Windows path/security adapter absent" },
+    { "id": "cross-account-read-denial", "expected": "Independent nonprivileged account cannot read the descriptor", "execution": "not run; independent account context unavailable" },
+    { "id": "cleanup-unlink-failure", "expected": "Endpoint closed, residual artifact warning redacted; do not promise successful deletion", "execution": "not run; residual-warning behavior unimplemented" }
+  ]
+}

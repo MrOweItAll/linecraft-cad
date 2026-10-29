@@ -364,3 +364,14 @@ explicitly excluded. Runtime/version, candidate manifests and installer bytes ar
 unchanged. Application/build/native/installed checks and remote CI were not rerun
 for this workflow-only change. Signing, fuse hardening, versioned release preparation
 and merge/tag/publication authorization remain separate requirements.
+
+## Pending descriptor privacy references - October 28, 2026
+
+The [descriptor privacy contract](SCRIPT-DESCRIPTOR-PRIVACY.md) records the intended
+Windows account/path boundary before a runtime repair. The explicit VM-only
+reference currently fails four unsupported-path expectations while eight existing
+lifecycle/cleanup controls pass. This is a retained failing regression, not a
+privacy fix or OS access-control proof. Owner/DACL/reparse and cross-account
+qualification are explicitly not run. The two reference files are fingerprinted
+auxiliaries, outside the selected passing suites while enforcement is pending.
+No runtime/version/manifest or installer change is part of this milestone.

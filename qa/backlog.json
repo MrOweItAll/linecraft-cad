@@ -760,6 +760,38 @@
       "applicationBuildNativeChecks": "not rerun; unchanged runtime and installer",
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-SEC-SCRIPT-DESCRIPTOR",
+      "priority": 1,
+      "symptom": "Absolute-path validation and file mode do not enforce Windows descriptor-directory privacy",
+      "expected": "Reject unsupported namespace paths and unsafe or unverifiable directory security before listener or credential publication; preserve owned cleanup and exclusive creation",
+      "sourceVersion": "1.36.1-beta.6",
+      "sourceCommit": "468cf538bf020980e02030d9f5d57790bbccd3c7",
+      "fixtureClass": "Synthetic Windows path declarations, VM fake HTTP and in-memory files only; no real credential, ACL, account, endpoint or drawing",
+      "status": "reproduced synthetic path-policy gaps; runtime enforcement and OS privacy qualification pending",
+      "attempts": 1,
+      "productFixAttempts": 0,
+      "acceptance": "Explicit current-module reference exits nonzero: four future namespace-policy expectations fail and eight lifecycle controls pass. A deliberate policy error and zero listener/open/write effects are required; unrelated startup errors cannot satisfy rejection.",
+      "evidence": [
+        "tests/fixtures/script-descriptor-contract.json",
+        "tests/script-descriptor-reference.test.cjs",
+        "docs/SCRIPT-DESCRIPTOR-PRIVACY.md",
+        "SECURITY.md"
+      ],
+      "verifiedScope": "Frozen other-account privacy boundary, unsupported UNC/device/extended/alternate-stream paths, current local/relative/exclusive/fault-cleanup/replacement controls. This is a pre-fix synthetic reference, not a security fix or real Windows access-denial test.",
+      "pendingQualification": [
+        "Windows owner/effective DACL and trusted path/reparse adapter",
+        "Independent cross-account descriptor read denial",
+        "Residual-artifact warning when unlink fails",
+        "Exact-candidate source/unpacked acceptance after a separately reviewed runtime change"
+      ],
+      "nextAction": "Bound the Windows security probe and independent failure oracles before implementing fail-closed startup. Keep the failing reference visible; no account creation, rights changes, installed/client/native interaction or security-readiness claim.",
+      "runtimeChanged": false,
+      "candidateManifestChanged": false,
+      "defaultGateSelection": "Pending red reference is explicit and unselected; existing gates are not descriptor-privacy qualification",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }

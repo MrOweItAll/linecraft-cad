@@ -6,6 +6,13 @@ Older already-public tests and samples are retained for provenance and further
 development; they are historical material, not additional qualified default stages.
 Do not run every test by glob and interpret that as the supported public gate.
 
+The explicit [descriptor privacy reference](../docs/SCRIPT-DESCRIPTOR-PRIVACY.md)
+is a pending security contract, not a selected passing gate. Run
+`node --test --test-reporter=tap tests/script-descriptor-reference.test.cjs` to
+retain the current four expected contract failures and eight lifecycle controls.
+It uses fake HTTP/files only; actual Windows ACL/cross-account qualification is
+not run. Runtime enforcement remains open.
+
 ## Prerequisites
 
 Use Node.js 24 LTS and `npm ci`. The lockfile pins Electron 44.9.3,

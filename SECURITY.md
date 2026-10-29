@@ -8,4 +8,6 @@ Include the affected release/tag, component, impact, reproduction conditions and
 
 Local scripting is disabled on ordinary launches. Its opt-in control descriptor is temporary and contains an authentication secret; keep it outside repositories and shared output. Do not attach that descriptor to a report. A drawing content/base token is not a substitute for the transport credential. The protocol accepts structured operations, not arbitrary executable JavaScript or shell commands.
 
+Windows descriptor-directory privacy enforcement is pending. The current file mode does not enforce private Windows ACLs. The [reference contract and pre-fix observations](docs/SCRIPT-DESCRIPTOR-PRIVACY.md) distinguish this open requirement from existing transport checks; passing general QA does not qualify descriptor privacy.
+
 Maintainers evaluate reports according to impact and available capacity. Response, fix and release dates are not guaranteed, and this policy does not create a service-level agreement or bug-bounty commitment. Normal crashes and feature gaps without a security impact belong in the bug/feature templates.
