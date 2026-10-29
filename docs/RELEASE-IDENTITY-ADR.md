@@ -224,3 +224,14 @@ No workflow, trigger, permission, runtime, package or manifest change is include
 The next distinct design slice is read-only reference characterization of remaining
 publisher data validation beyond the already completed three-term local expression
 probe; project/artifact helper execution under the write token remains prohibited.
+
+## Offline checksum reference milestone
+
+The separate [publisher checksum reference](PUBLISHER-CHECKSUM-REFERENCE.md)
+executes only a pinned current checksum block against synthetic adapters, with32
+literal outcomes and access counts. It preserves case-insensitive comparisons
+and unordered membership. Neither the publisher nor the completed three-term
+metadata expression probe runs. Whole-workflow and executed-block identities,
+AST restrictions and known-only adapters bind the bounded execution. This does
+not implement a new publisher validator or stricter version/format/case policy;
+actual artifacts, OS semantics, remote refs and publication remain separate.

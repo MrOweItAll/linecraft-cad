@@ -1326,6 +1326,20 @@
       "repairAttempts": 0,
       "productDefectFixed": false,
       "limits": "Supported frozen-baseline path and virtual bytes only; malformed external Git responses, authenticity, real assets/ZIP/PDF/installer, OS races, native/installed/CI/publisher/publication remain separate"
+    },
+    {
+      "id": "LC-REL-PUBLISHER-CHECKSUM-REFERENCE",
+      "priority": 2,
+      "status": "verified bounded offline current checksum-block reference; publisher and release policy unchanged",
+      "problem": "Remaining checksum parsing/membership/case and short-circuit behavior lacked independent executed reference coverage",
+      "fixture": "32 literal synthetic decisions and hash-attempt counts with independent Python SHA256 payload digests",
+      "expected": "5 accepted and27 rejection/propagation cases; exact original errors; no actual artifacts or metadata/remote/publication execution",
+      "change": "Explicit pinned-block PowerShell reference with AST/known-only adapters; script/fixture fingerprinted as auxiliaries, no default PS gate",
+      "validation": "32/32 on localPowerShell7.6.9; fresh fast qualification recorded privately",
+      "implementationAttempts": 1,
+      "repairAttempts": 0,
+      "productDefectFixed": false,
+      "limits": "Trusted-source reference only; fake case-insensitive lookup/logical lines and synthetic byte hashing do not qualify real files, BOM/newlines, OS custody/races, actual payloads, metadata, remote refs, publisher/CI or installed/native/daily-use readiness"
     }
   ]
 }

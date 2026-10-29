@@ -480,3 +480,12 @@ outputs match unchanged literal references. See the
 This is bounded refactoring of historical1.36.0 preparation. Candidate publication,
 publisher/write-token behavior, real assets and beta7 build/native/installed or
 daily-use qualification remain open. Earlier standalone sections are historical.
+
+## Explicit offline publisher checksum reference - October 29, 2026
+
+The [checksum reference](PUBLISHER-CHECKSUM-REFERENCE.md) adds a separate explicit
+PowerShell7 command with32 literal synthetic cases, including actual current
+case-insensitive behavior and short-circuit hash counts. It evaluates a pinned
+checksum block with known-only adapters; no publisher/gh/remote/native/installed
+operation runs. Its script and fixture are fingerprinted auxiliaries, not a new
+portable gate stage. Current publication policy and original assets are unchanged.
