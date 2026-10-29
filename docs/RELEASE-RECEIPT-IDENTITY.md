@@ -40,6 +40,15 @@ consistency of declared inputs, not independent inventory completeness: a key
 jointly omitted from all three corrupted reports is not detected. Complete schema
 validation and authentication of receipts remain separate requirements.
 
+The source, unpacked and installed application reports are read once before the
+first archive. Five existing requirements now run there for every mode:32 passed
+application checks, zero failures,9 embedded PDF passes, the pinned Electron
+version and a start at or after CI start. The admitted records are reused for the
+later summary. These application reports have no top-level format/status field.
+Their start-only lower bound is unchanged; this move adds no completion-time or
+future-time rule. Output-file identity, full PDF audit contents and downstream
+copies still require their separate checks.
+
 ```
 node --test --test-reporter=tap tests/release-receipt-identity.test.cjs
 ```
@@ -60,7 +69,11 @@ missing end times, wrong or absent producer formats, valid interval boundaries a
 PowerShell fractional timestamps. Already-rejected raw completion cases remain
 controls. The suite joins both baseline and candidate qualification; the fixture
 and preparation tool are fingerprinted. No real asset
-preparation, archive, installation, application or publication is exercised.
+preparation, archive, installation, application or publication is exercised. The
+application-admission follow-up reproduced15 failures alongside83 passes; all98
+now pass, retaining all80 prior cases. Five single-field negatives per mode prove
+rejection before asset mutations; three CI-start equality controls stay admitted.
+These synthetic report counts do not represent executed application or PDF tests.
 
 This is source-only prefix admission. Downstream asset contents, full receipt
 provenance, clean-runner install/uninstall, publisher version matching and a

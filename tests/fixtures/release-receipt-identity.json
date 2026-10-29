@@ -367,5 +367,56 @@
     "file": "synthetic-extra-input.txt",
     "text": "Literal unselected source input.\n",
     "sha256": "41b6b4b9a03dc01c6d9bb23b34dc68b45650b83da05cdd1f111adfc07ff64010"
+  },
+  "applicationReference": {
+    "modes": [
+      "source",
+      "unpacked",
+      "installed"
+    ],
+    "passed": 32,
+    "failed": 0,
+    "pdfPassed": 9,
+    "electron": "44.9.3",
+    "cases": [
+      {
+        "id": "incomplete application checks",
+        "field": [
+          "passed"
+        ],
+        "value": 31
+      },
+      {
+        "id": "failed application check",
+        "field": [
+          "failed"
+        ],
+        "value": 1
+      },
+      {
+        "id": "incomplete embedded PDF checks",
+        "field": [
+          "outputs",
+          "pdfAudit",
+          "passed"
+        ],
+        "value": 8
+      },
+      {
+        "id": "wrong Electron runtime",
+        "field": [
+          "application",
+          "electron"
+        ],
+        "value": "44.9.2"
+      },
+      {
+        "id": "stale application start",
+        "field": [
+          "startedAt"
+        ],
+        "value": "2026-09-30T23:59:59.999Z"
+      }
+    ]
   }
 }

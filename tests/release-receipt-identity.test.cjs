@@ -25,6 +25,13 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
    sourceSHA256:inputs(),completedAt:fixture.completedAt},
   clean:{format:'LinecraftCleanRunnerInstall/1',version:fixture.version,status:'passed',runId:'42',startedAt:fixture.startedAt,
    finishedAt:fixture.completedAt,installerSha256:sha(Buffer.from('synthetic installer bytes'))}};
+ const appReference=fixture.applicationReference;
+ data.applications=Object.fromEntries(appReference.modes.map(mode=>[mode,{
+  framework:'Synthetic ordinary-grip application receipt for prefix admission only',evidenceClass:'Fake receipt; no application execution',
+  startedAt:fixture.startedAt,completedAt:fixture.completedAt,total:32,passed:appReference.passed,failed:appReference.failed,
+  application:{electron:appReference.electron,version:mode==='source'?appReference.electron:fixture.version,linecraftManifestVersion:fixture.version},
+  outputs:{pdfAudit:{passed:appReference.pdfPassed,total:9}},tests:[]
+ }]));
  if(change)change(data);
  const files=new Map([[filename('PUBLIC-SOURCE.json'),baseline],
   [filename(fixture.qualifiedInput.file),Buffer.from(fixture.qualifiedInput.text)],
@@ -33,6 +40,7 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
   [filename('work/public-test-installed-results.json'),Buffer.from(JSON.stringify(data.installed))],
   [filename('work/public-pure-results.json'),Buffer.from(JSON.stringify(data.pure))],
   [filename('work/public-clean-install-results.json'),Buffer.from(JSON.stringify(data.clean))],
+  ...appReference.modes.map(mode=>[filename(`tests/ordinary-grip-public-${mode}-results.json`),Buffer.from(JSON.stringify(data.applications[mode]))]),
   [filename(`Windows-Release/Linecraft-CAD-${data.package.version}-Setup.exe`),Buffer.from(wrongInstaller?'tampered synthetic bytes':'synthetic installer bytes')]]);
  const boundary=()=>Object.assign(Error('Synthetic asset-mutation boundary reached.'),{code:'HARNESS_ASSET_BOUNDARY'});
  const disk={readFileSync(file,encoding){demand(files.has(file),'unexpected-read');const value=files.get(file);return encoding?value.toString(encoding):value;},
@@ -86,6 +94,21 @@ for(const entry of fixture.cases)test('guard: '+entry.id+' rejects before any as
  }});
  assert.equal(result.error?.code,entry.error??fixture.identityError,'Require the intended receipt/identity rejection, not a harness or later-stage exception');noAssets(result);
 });
+
+for(const mode of fixture.applicationReference.modes){
+ for(const entry of fixture.applicationReference.cases)test('application guard: '+mode+' '+entry.id+' rejects before any asset mutation',()=>{
+  const result=execute({change(data){
+   let target=data.applications[mode];for(const field of entry.field.slice(0,-1))target=target[field];
+   target[entry.field.at(-1)]=entry.value;
+  }});
+  assert.equal(result.error?.code,'ERR_ASSERTION','Require the existing application assertion, not a harness or later-stage exception');noAssets(result);
+ });
+ test('application control: '+mode+' start equals CI start and reaches the first asset boundary',()=>{
+  const result=execute({change(data){data.applications[mode].startedAt=fixture.gateStart;}});
+  assert.equal(result.error?.code,'HARNESS_ASSET_BOUNDARY');
+  assert.deepEqual({archive:result.state.archiveCalls,copy:result.state.copyCalls,write:result.state.writeCalls},{archive:1,copy:0,write:0});
+ });
+}
 
 for(const preflight of [false,true])test('control: valid synthetic historical '+(preflight?'preflight':'tag')+' reaches the first asset boundary',()=>{
  const result=execute({preflight});assert.equal(result.error?.code,'HARNESS_ASSET_BOUNDARY');

@@ -51,12 +51,18 @@ const clean=read('work/public-clean-install-results.json');identity(clean?.forma
 assert.equal(clean.version,version);assert.equal(clean.runId,process.env.GITHUB_RUN_ID);chronology(clean,'finishedAt','clean');
 const installer=`Linecraft-CAD-${version}-Setup.exe`,source=`Linecraft-CAD-${version}-Source.zip`;
 assert.equal(sha(path.join(out,installer)),clean.installerSha256);
-execFileSync('git',['archive','--format=zip',`--prefix=Linecraft-CAD-${version}-Source/`,`--output=${path.join(out,source)}`,commit],{cwd:root,stdio:'inherit'});
-const summary={format:'LinecraftPublicBetaVerification/1',version,tag:preflight?null:tag,commit,runId:process.env.GITHUB_RUN_ID,runUrl:`https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,releaseClass:preflight?'candidate':'prerelease',automaticUpdater:false,codeSigning:'unsigned',historicalQualifiedWindowsRuntime:read('PUBLIC-SOURCE.json').qualifiedWindowsEvidence,freshPublicChecks:{},limits:['Hidden CI tests stub native chooser/discard responses.','Historical visible installed Windows checks preceded the vendor security refresh; current public gates exercise the patched vendor runtime separately.','Fresh install/uninstall scope is a GitHub-hosted Windows VM; broader Windows/DPI coverage remains beta work.']};
-for(const mode of ['source','unpacked','installed']){
+// Admit the existing application/PDF requirements before creating any assets.
+const applicationModes=['source','unpacked','installed'],applications={};
+for(const mode of applicationModes){
  const r=read(`tests/ordinary-grip-public-${mode}-results.json`);assert.equal(r.passed,32);assert.equal(r.failed,0);assert.equal(r.outputs.pdfAudit.passed,9);
  assert.equal(r.application.electron,require('../package.json').devDependencies.electron,'Application did not run the patched vendor runtime.');
  assert.ok(Date.parse(r.startedAt)>=gateStart,'Stale application receipt.');
+ applications[mode]=r;
+}
+execFileSync('git',['archive','--format=zip',`--prefix=Linecraft-CAD-${version}-Source/`,`--output=${path.join(out,source)}`,commit],{cwd:root,stdio:'inherit'});
+const summary={format:'LinecraftPublicBetaVerification/1',version,tag:preflight?null:tag,commit,runId:process.env.GITHUB_RUN_ID,runUrl:`https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,releaseClass:preflight?'candidate':'prerelease',automaticUpdater:false,codeSigning:'unsigned',historicalQualifiedWindowsRuntime:read('PUBLIC-SOURCE.json').qualifiedWindowsEvidence,freshPublicChecks:{},limits:['Hidden CI tests stub native chooser/discard responses.','Historical visible installed Windows checks preceded the vendor security refresh; current public gates exercise the patched vendor runtime separately.','Fresh install/uninstall scope is a GitHub-hosted Windows VM; broader Windows/DPI coverage remains beta work.']};
+for(const mode of applicationModes){
+ const r=applications[mode];
  summary.freshPublicChecks[mode]={application:r.application,applicationChecks:r.passed,failed:r.failed,pdfChecks:r.outputs.pdfAudit.passed,evidenceClass:r.evidenceClass,tests:r.tests.map(t=>({name:t.name,status:t.status}))};
  if(mode==='installed'){
   for(const [field,name]of [['native','Installed-Acceptance.linecraft'],['pdf','Installed-Acceptance.pdf']]){

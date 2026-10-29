@@ -1073,6 +1073,37 @@
       "publicationRun": false,
       "dailyUseReady": false,
       "nextAction": "Assess remaining receipt structures and downstream asset/publisher metadata before proposing a versioned pipeline; preserve immutable baseline selection and separate release authorization."
+    },
+    {
+      "id": "LC-REL-APPLICATION-ADMISSION",
+      "parent": "LC-REL-VERSIONED-PIPELINE",
+      "priority": 2,
+      "symptom": "Existing application/PDF receipt requirements were checked after source archive creation",
+      "sourceVersion": "1.36.1-beta.7",
+      "fixtureClass": "Actual preparation/manifest-loader VM with separate synthetic application receipts for source/unpacked/installed and a first-archive sentinel",
+      "status": "verified existing application/PDF admission checks precede asset creation",
+      "attempts": 1,
+      "acceptance": "Move the existing passed32/failed0/embedded PDFpassed9/Electron-pin/start-lower-bound checks before first asset mutation for all three modes; reuse admitted records and preserve all prior guards",
+      "evidence": [
+        "tools/prepare-beta-assets.cjs",
+        "tests/release-receipt-identity.test.cjs",
+        "tests/fixtures/release-receipt-identity.json",
+        "docs/RELEASE-RECEIPT-IDENTITY.md"
+      ],
+      "verifiedScope": "Expanded suite15FAIL/83PASS before;98/98 after. Five single-field negatives per mode reject with zero archive/copy/write calls; three inclusive CI-start controls reach the fake first archive. All80 prior cases retained.",
+      "limits": [
+        "Existing five checks moved only; application receipts have no top-level format/status",
+        "Application start lower bound unchanged; no full chronology/schema/authenticity qualification",
+        "Output hashes/full PDF audit contents/copies and dependency audit remain downstream",
+        "Synthetic prefix only; no actual app/PDF/build/installation or publication ran"
+      ],
+      "runtimeChanged": false,
+      "candidateManifestChanged": false,
+      "releaseWorkflowChanged": false,
+      "actualAssetsPrepared": false,
+      "publicationRun": false,
+      "dailyUseReady": false,
+      "nextAction": "Assess remaining output-file/PDF-audit admission and source/publisher metadata with independent synthetic references before further preparation changes; keep separate release authorization and baseline-only selection."
     }
   ]
 }
