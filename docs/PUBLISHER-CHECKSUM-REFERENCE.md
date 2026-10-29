@@ -41,3 +41,13 @@ Notes remain outside the six checksummed payloads. Strict-case/order/metadata
 format/version policies would be separate changes, not existing protections.
 Workflow, publisher, preparer/planner, package, runtime, manifests, original
 reference fixtures and installed/client state are unchanged by this milestone.
+
+## Version-bound reference after metadata admission
+
+The default fixture is now publisher-checksum-reference-format-version.json for
+the separately reviewed inline format/version admission fix. The original
+publisher-checksum-reference.json and historical workflow pin remain unchanged.
+The child records previous workflow/reference hashes and preserves every payload,
+case, expected outcome and checksum-block pin. All32 current cases pass. Only the
+script's default fixture path changes; its checksum harness body is unchanged.
+See the [admission scope](RELEASE-IDENTITY-ADR.md#fixed-publisher-formatversion-admission).

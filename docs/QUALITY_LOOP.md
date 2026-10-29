@@ -489,3 +489,16 @@ case-insensitive behavior and short-circuit hash counts. It evaluates a pinned
 checksum block with known-only adapters; no publisher/gh/remote/native/installed
 operation runs. Its script and fixture are fingerprinted auxiliaries, not a new
 portable gate stage. Current publication policy and original assets are unchanged.
+
+## Fixed publisher metadata admission - October 29, 2026
+
+The [fixed format/version clause](RELEASE-IDENTITY-ADR.md#fixed-publisher-formatversion-admission)
+rejects22 newly frozen invalid metadata cases after their pre-fix failures;
+all40 final actual-clause cases pass after six additional Unicode failures prompted
+one ordinal-equality repair. The first34 expectations and original commit/tag/class
+behavior are retained.
+A separately pinned current checksum fixture keeps the original fixture intact,
+with all32 cases and the unchanged checksum-block digest passing. Both PowerShell
+references are explicit auxiliaries; no actual publisher, remote, native or
+installed action runs. This is a bounded two-field policy fix, not full-schema,
+artifact-authenticity or general candidate-release qualification.

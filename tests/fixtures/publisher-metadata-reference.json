@@ -1,0 +1,618 @@
+{
+  "format": "LinecraftPublisherMetadataReference/1",
+  "scope": "Exact ordinal scalar-string format/version policy; original legacy comparisons retained; pinned baseline/initial/fixed clauses only",
+  "expectedCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "allowedClauseSHA256": [
+    "70877edb20465ff0a0171109aea86b7a8990006b763bf8c2cb51523a267fd39c",
+    "cf3dfebe4d3b7faf33fc39dd0b2cccda726c89192a798a1e8aaeb22f4864dc79",
+    "3b0e60ef4856bad72d9f30e47c3b187a246ed2911b25498e90e2d252e8f80dd8"
+  ],
+  "requiredFixedClauseSHA256": "3b0e60ef4856bad72d9f30e47c3b187a246ed2911b25498e90e2d252e8f80dd8",
+  "cases": [
+    {
+      "id": "canonical producer fields",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "accepted",
+        "message": ""
+      },
+      "newContract": false
+    },
+    {
+      "id": "preserved case alias commit",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.36.0",
+        "commit": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "accepted",
+        "message": ""
+      },
+      "newContract": false
+    },
+    {
+      "id": "preserved case alias tag",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "V1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "accepted",
+        "message": ""
+      },
+      "newContract": false
+    },
+    {
+      "id": "preserved case alias releaseClass",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "PRERELEASE"
+      },
+      "expected": {
+        "status": "accepted",
+        "message": ""
+      },
+      "newContract": false
+    },
+    {
+      "id": "unrelated field remains ignored",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease",
+        "syntheticExtra": "ignored"
+      },
+      "expected": {
+        "status": "accepted",
+        "message": ""
+      },
+      "newContract": false
+    },
+    {
+      "id": "format missing",
+      "verification": {
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "format null",
+      "verification": {
+        "format": null,
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "format empty array",
+      "verification": {
+        "format": [],
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "format single-value array",
+      "verification": {
+        "format": [
+          "LinecraftPublicBetaVerification/1"
+        ],
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "format object",
+      "verification": {
+        "format": {
+          "value": "LinecraftPublicBetaVerification/1"
+        },
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "format boolean",
+      "verification": {
+        "format": true,
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "format number",
+      "verification": {
+        "format": 136,
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "format wrong value",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/2",
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "format case alias",
+      "verification": {
+        "format": "linecraftpublicbetaverification/1",
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "format trailing space",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1 ",
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "format leading space",
+      "verification": {
+        "format": " LinecraftPublicBetaVerification/1",
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "version missing",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "version null",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": null,
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "version empty array",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": [],
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "version single-value array",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": [
+          "1.36.0"
+        ],
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "version object",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": {
+          "value": "1.36.0"
+        },
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "version boolean",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": true,
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "version number",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": 136,
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "version wrong value",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.36.1-beta.7",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "version prefixed alias",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "v1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "version trailing space",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.36.0 ",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "version leading space",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": " 1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "preserved wrong commit",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.36.0",
+        "commit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": false
+    },
+    {
+      "id": "preserved missing commit",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.36.0",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": false
+    },
+    {
+      "id": "preserved wrong tag",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.1",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": false
+    },
+    {
+      "id": "preserved missing tag",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": false
+    },
+    {
+      "id": "preserved wrong releaseClass",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "candidate"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": false
+    },
+    {
+      "id": "preserved missing releaseClass",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": false
+    },
+    {
+      "id": "coherent beta7 remains rejected by old tag term",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.36.1-beta.7",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.1-beta.7",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": false
+    },
+    {
+      "id": "format soft hyphen",
+      "verification": {
+        "format": "Li\u00adnecraftPublicBetaVerification/1",
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "format embedded NUL",
+      "verification": {
+        "format": "Li\u0000necraftPublicBetaVerification/1",
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "format zero-width space",
+      "verification": {
+        "format": "Li\u200bnecraftPublicBetaVerification/1",
+        "version": "1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "version soft hyphen",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.\u00ad36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "version embedded NUL",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.\u000036.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    },
+    {
+      "id": "version zero-width space",
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.\u200b36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "tag": "v1.36.0",
+        "releaseClass": "prerelease"
+      },
+      "expected": {
+        "status": "rejected",
+        "message": "Qualification does not bind this tag/commit."
+      },
+      "newContract": true
+    }
+  ],
+  "initialAttemptClauseSHA256": "cf3dfebe4d3b7faf33fc39dd0b2cccda726c89192a798a1e8aaeb22f4864dc79"
+}

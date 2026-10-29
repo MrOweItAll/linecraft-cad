@@ -1,6 +1,6 @@
 # ADR-REL-001: frozen release identity contract
 
-**Status:** Frozen source-preparation integration implemented; publisher and candidate policy unchanged.
+**Status:** Frozen source preparation and fixed publisher format/version admission implemented; candidate release support remains open.
 **Date:** 2026-10-29
 **Deciders:** Maintainers and independent qualification/security reviewers.
 Release execution and any publication-policy expansion require separate review.
@@ -235,3 +235,48 @@ metadata expression probe runs. Whole-workflow and executed-block identities,
 AST restrictions and known-only adapters bind the bounded execution. This does
 not implement a new publisher validator or stricter version/format/case policy;
 actual artifacts, OS semantics, remote refs and publication remain separate.
+
+## Fixed publisher format/version admission
+
+The inline admission clause now additionally requires scalar string format
+LinecraftPublicBetaVerification/1 and scalar string version1.36.0, compared using
+StringComparison.Ordinal. Missing,
+null, numeric, Boolean, array/object and noncanonical values reject through the
+existing message. Original commit/tag/class comparisons and their case behavior
+are retained. The workflow changes only this clause: no helper is imported into
+the write-token job and no trigger, permission, remote lookup or publication
+command changes. Earlier milestone statements retain their historical scope.
+
+The explicit offline command is:
+
+```
+pwsh -NoLogo -NoProfile -NonInteractive -File tests/publisher-metadata-reference.ps1
+```
+
+Its34 independent literal cases include5 accepts,22 new format/version negatives
+and7 preserved legacy rejections. Before the source fix,12 passed and the22 new
+negative cases failed because the old clause accepted them. Afterward34/34 pass.
+The coherent beta7 control was already rejected by the old tag term. New format
+case aliases reject; version's prefixed alias is a wrong value, not a case test.
+A focused Unicode review then found six invisible-character variants accepted by
+PowerShell case-sensitive collation. One repair uses scalar string guards followed
+by System.String.Equals with StringComparison.Ordinal. The first34 expectations
+are retained and six Unicode negatives added; all40 cases pass. Both the initial
+34-pass result and the six-failure probe remain preserved. The harness permits
+only the reviewed baseline/initial/fixed clause bytes, approved variables/types
+and the two exact static Equals calls with their field/literal/Ordinal arguments.
+No command or other method enters the executed clause.
+It binds the expected commit only in the child process and restores that value.
+
+The old checksum fixture and its historical workflow pin remain byte-unchanged.
+A distinct publisher-checksum-reference-format-version.json preserves all payloads,
+cases, expected messages and access counts while binding the new workflow. The
+checksum block pin is unchanged; all32 checksum cases pass. Both explicit commands
+require the recorded localPowerShell7 environment and remain fingerprinted
+auxiliaries, not default portable gate stages.
+
+These are property-value admission checks, not a complete JSON/root-object schema,
+artifact authenticity, real JSON-file/asset/ZIP/PDF/installer or OS-race validation.
+The actual publisher, gh, remote CI/tag lookup and release commands are not run.
+Broader candidate publication, native/installed and daily-use qualification remain
+open. No producer/runtime/package/manifest or original reference fixture changes.

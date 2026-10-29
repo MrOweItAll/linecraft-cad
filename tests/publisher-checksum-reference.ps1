@@ -2,7 +2,7 @@
 [CmdletBinding()]
 param(
   [string]$Workflow = (Join-Path $PSScriptRoot '../.github/workflows/windows-beta.yml'),
-  [string]$Fixture = (Join-Path $PSScriptRoot 'fixtures/publisher-checksum-reference.json')
+  [string]$Fixture = (Join-Path $PSScriptRoot 'fixtures/publisher-checksum-reference-format-version.json')
 )
 $ErrorActionPreference = 'Stop'
 function Digest([byte[]]$Bytes) {

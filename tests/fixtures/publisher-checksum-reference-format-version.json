@@ -1,0 +1,591 @@
+{
+  "format": "LinecraftPublisherChecksumReference/1",
+  "scope": "Offline current checksum block only; synthetic lines/bytes, case-insensitive fake lookup; no actual files/assets/metadata/remote/publication qualification",
+  "workflowSHA256": "6e33bc42cf03b44d9c449ea407e4f1db3b209254c4d43a03561839bd3892cae3",
+  "blockSHA256": "f247d26a7751b70eb0c9bb7333bf21e4cf7061de667b2f4424c503f182831fb6",
+  "expectedAssets": [
+    "Linecraft-CAD-1.36.0-Setup.exe",
+    "Linecraft-CAD-1.36.0-Source.zip",
+    "Installed-Acceptance.linecraft",
+    "Installed-Acceptance.pdf",
+    "Public-Beta-Verification.json",
+    "libredwg-0.13.4-upstream.tar.gz"
+  ],
+  "payloads": [
+    {
+      "name": "Linecraft-CAD-1.36.0-Setup.exe",
+      "text": "Synthetic offline checksum payload 1.\n",
+      "sha256": "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f"
+    },
+    {
+      "name": "Linecraft-CAD-1.36.0-Source.zip",
+      "text": "Synthetic offline checksum payload 2.\n",
+      "sha256": "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1"
+    },
+    {
+      "name": "Installed-Acceptance.linecraft",
+      "text": "Synthetic offline checksum payload 3.\n",
+      "sha256": "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a"
+    },
+    {
+      "name": "Installed-Acceptance.pdf",
+      "text": "Synthetic offline checksum payload 4.\n",
+      "sha256": "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071"
+    },
+    {
+      "name": "Public-Beta-Verification.json",
+      "text": "Synthetic offline checksum payload 5.\n",
+      "sha256": "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7"
+    },
+    {
+      "name": "libredwg-0.13.4-upstream.tar.gz",
+      "text": "Synthetic offline checksum payload 6.\n",
+      "sha256": "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af"
+    }
+  ],
+  "cases": [
+    {
+      "id": "canonical six",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Setup.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "accepted",
+        "message": "",
+        "checksumReads": 1,
+        "hashAttempts": 6
+      }
+    },
+    {
+      "id": "reverse order",
+      "lines": [
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Setup.exe"
+      ],
+      "expected": {
+        "status": "accepted",
+        "message": "",
+        "checksumReads": 1,
+        "hashAttempts": 6
+      }
+    },
+    {
+      "id": "uppercase hexadecimal",
+      "lines": [
+        "2C7F591CF7D8FE5FF7F2C75582079326A9C22BA4DCE9414D3D3D874755AFB68F  Linecraft-CAD-1.36.0-Setup.exe",
+        "ACA7516332DEF745A9A5678B1287924557187F2EB6D6712470057DA752F85AF1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324FADFC31A4D4790C6B8FEA72B9A0D1E706137DDD73CFB1850319CD7F53A  Installed-Acceptance.linecraft",
+        "02C99FB07C4909E6DE0F70C774AE11761915D8CEC55BB7AC3510B228EF844071  Installed-Acceptance.pdf",
+        "373C0CFF5609183D91BF463BCD37B7816158C28670735D84278D0E94945F43B7  Public-Beta-Verification.json",
+        "4295CE53155D3BAF85DA7BEC585B53E992BA113F8CB8610FBE570811D1EF37AF  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "accepted",
+        "message": "",
+        "checksumReads": 1,
+        "hashAttempts": 6
+      }
+    },
+    {
+      "id": "uppercase filename aliases",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  LINECRAFT-CAD-1.36.0-SETUP.EXE",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  LINECRAFT-CAD-1.36.0-SOURCE.ZIP",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  INSTALLED-ACCEPTANCE.LINECRAFT",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  INSTALLED-ACCEPTANCE.PDF",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  PUBLIC-BETA-VERIFICATION.JSON",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  LIBREDWG-0.13.4-UPSTREAM.TAR.GZ"
+      ],
+      "expected": {
+        "status": "accepted",
+        "message": "",
+        "checksumReads": 1,
+        "hashAttempts": 6
+      }
+    },
+    {
+      "id": "rotated complete set",
+      "lines": [
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz",
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Setup.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip"
+      ],
+      "expected": {
+        "status": "accepted",
+        "message": "",
+        "checksumReads": 1,
+        "hashAttempts": 6
+      }
+    },
+    {
+      "id": "short digest",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68  Linecraft-CAD-1.36.0-Setup.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Malformed checksum record.",
+        "checksumReads": 1,
+        "hashAttempts": 0
+      }
+    },
+    {
+      "id": "long digest",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f0  Linecraft-CAD-1.36.0-Setup.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Malformed checksum record.",
+        "checksumReads": 1,
+        "hashAttempts": 0
+      }
+    },
+    {
+      "id": "nonhex digest",
+      "lines": [
+        "gc7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Setup.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Malformed checksum record.",
+        "checksumReads": 1,
+        "hashAttempts": 0
+      }
+    },
+    {
+      "id": "one space",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f Linecraft-CAD-1.36.0-Setup.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Malformed checksum record.",
+        "checksumReads": 1,
+        "hashAttempts": 0
+      }
+    },
+    {
+      "id": "three spaces",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f   Linecraft-CAD-1.36.0-Setup.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Malformed checksum record.",
+        "checksumReads": 1,
+        "hashAttempts": 0
+      }
+    },
+    {
+      "id": "tab delimiter",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f\tLinecraft-CAD-1.36.0-Setup.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Malformed checksum record.",
+        "checksumReads": 1,
+        "hashAttempts": 0
+      }
+    },
+    {
+      "id": "leading space",
+      "lines": [
+        " 2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Setup.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Malformed checksum record.",
+        "checksumReads": 1,
+        "hashAttempts": 0
+      }
+    },
+    {
+      "id": "trailing space",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Setup.exe ",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Malformed checksum record.",
+        "checksumReads": 1,
+        "hashAttempts": 0
+      }
+    },
+    {
+      "id": "blank line",
+      "lines": [
+        "",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Malformed checksum record.",
+        "checksumReads": 1,
+        "hashAttempts": 0
+      }
+    },
+    {
+      "id": "slash path",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  folder/file.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Malformed checksum record.",
+        "checksumReads": 1,
+        "hashAttempts": 0
+      }
+    },
+    {
+      "id": "backslash path",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  folder\\file.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Malformed checksum record.",
+        "checksumReads": 1,
+        "hashAttempts": 0
+      }
+    },
+    {
+      "id": "drive path",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  C:file.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Malformed checksum record.",
+        "checksumReads": 1,
+        "hashAttempts": 0
+      }
+    },
+    {
+      "id": "embedded newline",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Setup.exe\n",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Malformed checksum record.",
+        "checksumReads": 1,
+        "hashAttempts": 0
+      }
+    },
+    {
+      "id": "malformed third record",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Setup.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "not a checksum",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Malformed checksum record.",
+        "checksumReads": 1,
+        "hashAttempts": 2
+      }
+    },
+    {
+      "id": "notes excluded",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  release-notes.md",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Unexpected or duplicate asset.",
+        "checksumReads": 1,
+        "hashAttempts": 0
+      }
+    },
+    {
+      "id": "checksum file excluded",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  SHA256SUMS.txt",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Unexpected or duplicate asset.",
+        "checksumReads": 1,
+        "hashAttempts": 0
+      }
+    },
+    {
+      "id": "unknown basename",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  unapproved.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Unexpected or duplicate asset.",
+        "checksumReads": 1,
+        "hashAttempts": 0
+      }
+    },
+    {
+      "id": "duplicate second",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Setup.exe",
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Setup.exe",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Unexpected or duplicate asset.",
+        "checksumReads": 1,
+        "hashAttempts": 1
+      }
+    },
+    {
+      "id": "case alias duplicate second",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Setup.exe",
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  LINECRAFT-CAD-1.36.0-SETUP.EXE",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Unexpected or duplicate asset.",
+        "checksumReads": 1,
+        "hashAttempts": 1
+      }
+    },
+    {
+      "id": "wrong first digest",
+      "lines": [
+        "0000000000000000000000000000000000000000000000000000000000000000  Linecraft-CAD-1.36.0-Setup.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Checksum mismatch: Linecraft-CAD-1.36.0-Setup.exe",
+        "checksumReads": 1,
+        "hashAttempts": 1
+      }
+    },
+    {
+      "id": "transposed digests",
+      "lines": [
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Setup.exe",
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Checksum mismatch: Linecraft-CAD-1.36.0-Setup.exe",
+        "checksumReads": 1,
+        "hashAttempts": 1
+      }
+    },
+    {
+      "id": "missing last record",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Setup.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Incomplete qualified asset set.",
+        "checksumReads": 1,
+        "hashAttempts": 5
+      }
+    },
+    {
+      "id": "empty checksum set",
+      "lines": [],
+      "expected": {
+        "status": "rejected",
+        "message": "Incomplete qualified asset set.",
+        "checksumReads": 1,
+        "hashAttempts": 0
+      }
+    },
+    {
+      "id": "extra notes after six",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Setup.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz",
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  release-notes.md"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Unexpected or duplicate asset.",
+        "checksumReads": 1,
+        "hashAttempts": 6
+      }
+    },
+    {
+      "id": "extra duplicate after six",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Setup.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz",
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Setup.exe"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Unexpected or duplicate asset.",
+        "checksumReads": 1,
+        "hashAttempts": 6
+      }
+    },
+    {
+      "id": "changed synthetic payload",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Setup.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "Checksum mismatch: Linecraft-CAD-1.36.0-Setup.exe",
+        "checksumReads": 1,
+        "hashAttempts": 1
+      },
+      "changedPayload": "Linecraft-CAD-1.36.0-Setup.exe"
+    },
+    {
+      "id": "missing known fake asset",
+      "lines": [
+        "2c7f591cf7d8fe5ff7f2c75582079326a9c22ba4dce9414d3d3d874755afb68f  Linecraft-CAD-1.36.0-Setup.exe",
+        "aca7516332def745a9a5678b1287924557187f2eb6d6712470057da752f85af1  Linecraft-CAD-1.36.0-Source.zip",
+        "874324fadfc31a4d4790c6b8fea72b9a0d1e706137ddd73cfb1850319cd7f53a  Installed-Acceptance.linecraft",
+        "02c99fb07c4909e6de0f70c774ae11761915d8cec55bb7ac3510b228ef844071  Installed-Acceptance.pdf",
+        "373c0cff5609183d91bf463bcd37b7816158c28670735d84278d0e94945f43b7  Public-Beta-Verification.json",
+        "4295ce53155d3baf85da7bec585b53e992ba113f8cb8610fbe570811d1ef37af  libredwg-0.13.4-upstream.tar.gz"
+      ],
+      "expected": {
+        "status": "rejected",
+        "message": "REFERENCE_MISSING_ASSET",
+        "checksumReads": 1,
+        "hashAttempts": 1
+      },
+      "missingPayload": "Linecraft-CAD-1.36.0-Setup.exe"
+    }
+  ],
+  "previousWorkflowSHA256": "ec2c4fd98a8e30832cd7a04fc6eac4c27906da343e9e2daac87554bc5ce23915",
+  "previousReferenceSHA256": "6b9f204353d0ecf1ecbd376f9064ebbfa3c19170a192ccece53dffc3c3773b67",
+  "reason": "LC-REL-PUBLISHER-FORMAT-VERSION: ordinal format/version admission only; all checksum cases unchanged"
+}

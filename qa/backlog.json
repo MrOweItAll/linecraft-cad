@@ -1340,6 +1340,20 @@
       "repairAttempts": 0,
       "productDefectFixed": false,
       "limits": "Trusted-source reference only; fake case-insensitive lookup/logical lines and synthetic byte hashing do not qualify real files, BOM/newlines, OS custody/races, actual payloads, metadata, remote refs, publisher/CI or installed/native/daily-use readiness"
+    },
+    {
+      "id": "LC-REL-PUBLISHER-FORMAT-VERSION",
+      "priority": 2,
+      "status": "verified bounded inline fixed format/version admission; generic candidate release qualification open",
+      "problem": "Historical publisher admitted metadata with absent, wrongly typed or mismatched format/version when the existing commit/tag/class matched",
+      "fixture": "40 final actual-clause cases:5accept28newfieldnegatives7legacyrejections; first34 rows unchanged plus6 invisible-character cases; original checksum reference preserved",
+      "expected": "Require ordinal-exact scalar string format LinecraftPublicBetaVerification/1 and version1.36.0; retain original commit/tag/class behavior",
+      "change": "One inline admission clause only; no imported project helper/write-token boundary, trigger, permission or remote/publication change",
+      "validation": "Oldclause12pass22fail/34; firstcandidate34pass; Unicodeprobe34pass6fail/40; repaired40/40; unchangedchecksum/currentchild32/32; finalfastprivate",
+      "implementationAttempts": 1,
+      "repairAttempts": 1,
+      "limits": "Field-value admission only; not fullJSON/rootobject schema, authenticity, actual assets or publisher/CI/native/installed/daily-use qualification",
+      "repairScope": "One demonstrated case-sensitive collation gap repaired with guarded System.String.Equals Ordinal; before/initial/Unicode failure receipts retained"
     }
   ]
 }

@@ -109,7 +109,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           Set-Location approved-assets
           $verification = Get-Content -LiteralPath Public-Beta-Verification.json -Raw | ConvertFrom-Json
-          if ($verification.commit -ne $env:GITHUB_SHA -or $verification.tag -ne 'v1.36.0' -or $verification.releaseClass -ne 'prerelease') { throw 'Qualification does not bind this tag/commit.' }
+          if ($verification.commit -ne $env:GITHUB_SHA -or $verification.tag -ne 'v1.36.0' -or $verification.releaseClass -ne 'prerelease' -or $verification.format -isnot [string] -or (-not [string]::Equals($verification.format,'LinecraftPublicBetaVerification/1',[StringComparison]::Ordinal)) -or $verification.version -isnot [string] -or (-not [string]::Equals($verification.version,'1.36.0',[StringComparison]::Ordinal))) { throw 'Qualification does not bind this tag/commit.' }
           $expected = @('Linecraft-CAD-1.36.0-Setup.exe', 'Linecraft-CAD-1.36.0-Source.zip', 'Installed-Acceptance.linecraft', 'Installed-Acceptance.pdf', 'Public-Beta-Verification.json', 'libredwg-0.13.4-upstream.tar.gz')
           $seen = @()
           foreach ($line in Get-Content -LiteralPath SHA256SUMS.txt) {
