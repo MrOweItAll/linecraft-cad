@@ -33,7 +33,7 @@
     "build": "node dev-tools.cjs build"
   },
   "devDependencies": {
-    "electron": "44.7.0",
+    "electron": "44.9.1",
     "electron-builder": "26.15.3",
     "playwright": "1.62.1"
   },
