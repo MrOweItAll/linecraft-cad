@@ -3,6 +3,29 @@ const finite=n=>typeof n==='number'&&Number.isFinite(n);
 const copy=value=>JSON.parse(JSON.stringify(value));
 export const PAPER_SIZES=Object.freeze(Object.fromEntries(Object.entries({A0:[841,1189],A1:[594,841],A2:[420,594],A3:[297,420],A4:[210,297],A5:[148,210],Letter:[215.9,279.4],Tabloid:[279.4,431.8]}).map(([name,[widthMm,heightMm]])=>[name,Object.freeze({widthMm,heightMm})])));
 export const LINETYPES=Object.freeze(['continuous','dashed','hidden','center']);
+const MIN_SCALE = 1e-6, MAX_SCALE = 1e6;
+
+export function worldToScreen(p, viewport, width, height) {
+  return { x: width / 2 + (p.x - viewport.center.x) * viewport.scale, y: height / 2 - (p.y - viewport.center.y) * viewport.scale };
+}
+
+export function screenToWorld(p, viewport, width, height) {
+  return { x: viewport.center.x + (p.x - width / 2) / viewport.scale, y: viewport.center.y - (p.y - height / 2) / viewport.scale };
+}
+
+/** Return a new viewport with the same world point beneath the supplied screen point. */
+export function zoomAt(viewport, factor, screen, width, height) {
+  if (!finite(factor) || factor <= 0) throw new Error('Zoom factor must be positive and finite.');
+  const anchor = screenToWorld(screen, viewport, width, height);
+  const scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, viewport.scale * factor));
+  return { center: { x: anchor.x - (screen.x - width / 2) / scale, y: anchor.y + (screen.y - height / 2) / scale }, scale };
+}
+
+/** Positive screen deltas drag drawing content right/down. */
+export function pan(viewport, dx, dy) {
+  return { center: { x: viewport.center.x - dx / viewport.scale, y: viewport.center.y + dy / viewport.scale }, scale: viewport.scale };
+}
+
 export function modelUnitMillimeters(settings={}){const values={unitless:1,mm:1,cm:10,m:1000,in:25.4,ft:304.8},unit=settings.units===undefined?'unitless':settings.units;if(!Object.hasOwn(values,unit))throw Error('Unsupported model unit.');return values[unit];}
 export function normalizePaper(raw={}){
   if(!raw||typeof raw!=='object'||Array.isArray(raw))throw Error('Paper specification must be an object.');

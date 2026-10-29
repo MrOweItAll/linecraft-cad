@@ -41,6 +41,7 @@ if(candidate)suites.push('tests/rotated-annotation-reference.test.mjs');
 auxiliaries.push('tests/richtext-fixture.mjs','tests/richtext-reference.test.mjs','tests/richtext-workflow.cjs','tests/audit-richtext-pdf.py');
 if(candidate)suites.push('tests/richtext-reference.test.mjs');
 if(candidate)suites.push('tests/import-headline.test.cjs');
+if(candidate)suites.push('tests/viewport-navigation-independent.test.mjs');
 if(candidate)suites.push('tests/hatch-normalization.test.mjs','tests/quality-reference.test.mjs','tests/qa-controls.test.cjs','tests/viewport-center-import.test.mjs','tests/tick-width-reference.test.mjs','tests/tick-width.test.mjs','tests/paper-solid-import.test.mjs','tests/multisheet-reference.test.mjs');
 const sha=b=>createHash('sha256').update(b).digest('hex');
 const hashFiles=names=>Object.fromEntries(names.map(n=>[n,sha(fs.readFileSync(path.join(root,n)))]));

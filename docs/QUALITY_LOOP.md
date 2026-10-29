@@ -15,9 +15,9 @@ It does not establish installed/upgrade or broader native qualification. Earlier
 automated checkpoint descriptions below do not include this later native session.
 
 ```
-npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.6.json
-npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.6.json
-npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.6.json
+npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.7.json
+npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.7.json
+npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.7.json
 ```
 
 These reuse desktop/dev-tools.cjs. Fast selects the existing bounded public core

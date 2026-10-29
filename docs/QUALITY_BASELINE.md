@@ -2,7 +2,7 @@
 
 Baseline commit: f37aba5ebe19f27088847cd8f983ecf5facf8eac, version1.36.0,
 origin https://github.com/MrOweItAll/linecraft-cad.git. Local ownership branch:
-codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; current candidate1.36.1-beta.6. Exact local paths and
+codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; current candidate1.36.1-beta.7. Exact local paths and
 checkpoint/installer hashes are in the private session report, outside this tree.
 
 The opening baseline observations and dated sections below retain their historical
@@ -523,3 +523,19 @@ Unsupported glyph appearance/spacing, installed/upgrade, general client/template
 DWG fidelity, production relay and daily-use readiness remain unqualified. The
 finite ready reconciliation item is complete; the remaining scopes require their
 separate prerequisites or authorization.
+
+## 2026-10-29: viewport navigation source extraction
+
+Candidate1.36.1-beta.7 moves worldToScreen, screenToWorld, zoomAt and pan into the
+existing paper-space module and retains the core public functions and signatures.
+No runtime file or dependency was added. Its cumulative manifest retains all beta6
+changes and declares only core/paper-space as the new runtime delta.
+
+Thirteen independent contracts pass. The explicit beta7 fast gate passed39/39
+stages with834 selected portable checks. Hidden source navigation passed11/11
+before and after; synthetic paper workflow passed6/6 with2 measured PDF groups and
+7 rejected negative controls each. Geometry/history/JSON/DXF/plotHTML comparison
+and actual native file bytes match; measured PDF geometry and raster match exactly.
+PDF file hashes differ. Independent code/test and cumulative candidate/CI reviews
+passed. These are source checks: beta7 has no new build, unpacked, visible native,
+installed or daily-use qualification. Historical beta6 evidence retains its scope.

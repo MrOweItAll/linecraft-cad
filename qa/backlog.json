@@ -921,6 +921,36 @@
       "fusesApplied": false,
       "nativeInstalledAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-MAINT-VIEWPORT-NAVIGATION",
+      "parent": "LC-MAINT-MODULES",
+      "priority": 2,
+      "symptom": "Four pure 2D screen and navigation helpers lived in the geometry/command engine",
+      "sourceVersion": "1.36.1-beta.7",
+      "fixtureClass": "Independent literal geometry and isolated synthetic hidden source workflows",
+      "status": "verified behavior-preserving source extraction; new build and native acceptance not run",
+      "attempts": 1,
+      "acceptance": "Preserve core exports, signatures, error text, clamps, permissive arithmetic and nonmutation; compare geometry/history/JSON/DXF/SVG and actual app navigation/PDF before and after",
+      "evidence": [
+        "tests/viewport-navigation-independent.test.mjs",
+        "tests/viewport-regression-v17.cjs",
+        "tests/paper-solid-workflow.cjs",
+        "tests/audit-paper-solid-pdf.py",
+        "qa/CANDIDATE-SOURCE-1.36.1-beta.7.json"
+      ],
+      "verifiedScope": "13 independent contracts; fast39/39 with834 selected portable checks; hidden source navigation11/11 before and after; paper workflow6/6 and PDF2/2 measurements with7/7 rejected negative controls each. Deterministic geometry/history/JSON/DXF/plotHTML and actual saved native bytes unchanged; PDF measurements and raster exact. PDF file hashes differ.",
+      "runtimeDelta": [
+        "core.mjs",
+        "paper-space.mjs"
+      ],
+      "candidateManifestChanged": true,
+      "newRuntimeFiles": 0,
+      "newDependencies": 0,
+      "review": "Independent runtime/test and cumulative candidate/CI review passed",
+      "nativeInstalledAcceptance": "not run for beta7",
+      "dailyUseReady": false,
+      "nextAction": "Preserve beta6 historical binary/native evidence. Any beta7 build/unpacked/native qualification is a separate milestone; reassess further coherent extractions independently."
     }
   ]
 }

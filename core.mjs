@@ -1,7 +1,7 @@
 /* Linecraft geometry and command engine. Original implementation; no external dependencies. */
 import {validateEllipse,ellipsePoint,ellipseBoundsPoints,validateSpline,makeClampedKnots,splinePoint,splineBezierSegments,splineBoundsPoints,sampleCurve,boundaryPolygon,boundaryContains,hatchGeometry,filletLines,chamferLines} from './advanced-geometry.mjs';
 import {parseLength,parseAngle,formatLength,formatAngle,formatArea,UNIT_PRESETS,UNIT_SETTINGS_DEFAULTS,normalizeUnitSettings,dxfUnitFormat} from './units.mjs';
-import {PAPER_SIZES,LINETYPES,modelUnitMillimeters,normalizePaper,normalizeLayouts,normalizePaperViewport,normalizePaperView,normalizeFrame,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible,viewportBoundaryPoints,viewportFrameFromPoints,normalizeViewportBoundary,viewportAsObject,compensateViewportResize} from './paper-space.mjs';
+import {PAPER_SIZES,LINETYPES,modelUnitMillimeters,normalizePaper,normalizeLayouts,normalizePaperViewport,normalizePaperView,normalizeFrame,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible,viewportBoundaryPoints,viewportFrameFromPoints,normalizeViewportBoundary,viewportAsObject,compensateViewportResize,worldToScreen,screenToWorld,zoomAt,pan} from './paper-space.mjs';
 import {presetUCS,normalizeUCS,ucsFromThreePoints,constructionPlane,planeToWorld,worldToPlane,intersectPlaneRay,planeCamera,spatialCurvePoint,spatialAngleOnArc,spatialCurveBounds,validateSpatialCurve,sampleSpatialCurve,spatialCurveOCS} from './drawing-plane.mjs';
 import {parseViewportZoomFactor} from './viewport-scales.mjs';
 import {FONT_FAMILIES,canonicalFontFamily,measureFontText} from './font-metrics.mjs';
@@ -18,7 +18,7 @@ export {roofBoundaryFromWalls} from './architecture/plan-topology.mjs';
 export {fromWorld as architectureWorldToLocal,toWorld as architectureLocalToWorld} from './architecture/units-adapter.mjs';
 const ARCHITECTURE_PREFIX='@architecture/';
 const architecturalEntity=entity=>typeof entity?.id==='string'&&entity.id.startsWith(ARCHITECTURE_PREFIX);
-export {PAPER_SIZES,LINETYPES,modelUnitMillimeters,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible,viewportBoundaryPoints,viewportFrameFromPoints,normalizeViewportBoundary,viewportAsObject,compensateViewportResize,presetUCS,normalizeUCS,ucsFromThreePoints,constructionPlane,planeToWorld,worldToPlane,intersectPlaneRay,planeCamera};
+export {PAPER_SIZES,LINETYPES,modelUnitMillimeters,viewportModelToPaper,viewportPaperToModel,pointInViewport,isEntityVisible,viewportBoundaryPoints,viewportFrameFromPoints,normalizeViewportBoundary,viewportAsObject,compensateViewportResize,worldToScreen,screenToWorld,zoomAt,pan,presetUCS,normalizeUCS,ucsFromThreePoints,constructionPlane,planeToWorld,worldToPlane,intersectPlaneRay,planeCamera};
 export {spatialCurvePoint,spatialCurveBounds,validateSpatialCurve,sampleSpatialCurve};
 export {parseLength,parseAngle,formatLength,formatAngle,formatArea,UNIT_PRESETS,dxfUnitFormat};
 export {VIEWPORT_SCALE_GROUPS,VIEWPORT_SCALES,MIN_VIEWPORT_SCALE_DENOMINATOR,MAX_VIEWPORT_SCALE_DENOMINATOR,getViewportScale,parseViewportScale,matchViewportScale,formatViewportScale,parseViewportZoomFactor} from './viewport-scales.mjs';
@@ -428,27 +428,6 @@ export function bounds3D(entities,document={}){
 export function rotateEntity3D(entity,rawBase,axis,degrees){
   if(!TYPES3D.has(entity.type))throw new Error('ROTATE3D supports MESH and POLY3D only.');const base=point3(rawBase);if(!['X','Y','Z'].includes(axis)||!finite(degrees))throw new Error('ROTATE3D requires world axis X/Y/Z and a finite angle.');
   const[c,s]=angleBasis(degrees),mapping=p=>{const x=p.x-base.x,y=p.y-base.y,z=p.z-base.z;return axis==='X'?{x:p.x,y:base.y+y*c-z*s,z:base.z+y*s+z*c}:axis==='Y'?{x:base.x+x*c+z*s,y:p.y,z:base.z-x*s+z*c}:{x:base.x+x*c-y*s,y:base.y+x*s+y*c,z:p.z};};const source=clone(entity);if(SPATIAL_CURVES.has(entity.type)){const direction=p=>axis==='X'?{x:p.x,y:p.y*c-p.z*s,z:p.y*s+p.z*c}:axis==='Y'?{x:p.x*c+p.z*s,y:p.y,z:-p.x*s+p.z*c}:{x:p.x*c-p.y*s,y:p.x*s+p.y*c,z:p.z};source.xAxis=direction(entity.xAxis);source.yAxis=direction(entity.yAxis);}return mapEntity(source,mapping);
-}
-
-export function worldToScreen(p, viewport, width, height) {
-  return { x: width / 2 + (p.x - viewport.center.x) * viewport.scale, y: height / 2 - (p.y - viewport.center.y) * viewport.scale };
-}
-
-export function screenToWorld(p, viewport, width, height) {
-  return { x: viewport.center.x + (p.x - width / 2) / viewport.scale, y: viewport.center.y - (p.y - height / 2) / viewport.scale };
-}
-
-/** Return a new viewport with the same world point beneath the supplied screen point. */
-export function zoomAt(viewport, factor, screen, width, height) {
-  if (!finite(factor) || factor <= 0) throw new Error('Zoom factor must be positive and finite.');
-  const anchor = screenToWorld(screen, viewport, width, height);
-  const scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, viewport.scale * factor));
-  return { center: { x: anchor.x - (screen.x - width / 2) / scale, y: anchor.y + (screen.y - height / 2) / scale }, scale };
-}
-
-/** Positive screen deltas drag drawing content right/down. */
-export function pan(viewport, dx, dy) {
-  return { center: { x: viewport.center.x - dx / viewport.scale, y: viewport.center.y + dy / viewport.scale }, scale: viewport.scale };
 }
 
 export function entityPoints(entity,document={}) {
