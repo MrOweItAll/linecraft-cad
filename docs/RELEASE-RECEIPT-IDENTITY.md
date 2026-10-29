@@ -46,8 +46,16 @@ application checks, zero failures,9 embedded PDF passes, the pinned Electron
 version and a start at or after CI start. The admitted records are reused for the
 later summary. These application reports have no top-level format/status field.
 Their start-only lower bound is unchanged; this move adds no completion-time or
-future-time rule. Output-file identity, full PDF audit contents and downstream
-copies still require their separate checks.
+future-time rule.
+
+Both installed output paths now pass the existing resolved work-root prefix and
+exact byte-digest checks before archive creation. The pre-existing hash comparison
+immediately before each later copy is retained. The actual PDF audit JSON is also
+read, parsed and mapped to its summary rows before the first mutation; that mapped
+data is reused later. This moves the existing parse/projection requirements only:
+audit digest, status, counts and bindings are not validated by this preparation
+step. Lexical path checks and cached names do not prove Windows file identity or
+resistance to concurrent replacement. Copies remain outside the prefix test.
 
 ```
 node --test --test-reporter=tap tests/release-receipt-identity.test.cjs
@@ -74,6 +82,15 @@ application-admission follow-up reproduced15 failures alongside83 passes; all98
 now pass, retaining all80 prior cases. Five single-field negatives per mode prove
 rejection before asset mutations; three CI-start equality controls stay admitted.
 These synthetic report counts do not represent executed application or PDF tests.
+
+The installed-output follow-up reproduced17 failures alongside100 passes; all117
+now pass, retaining all98 prior cases. Literal native/PDF byte strings with
+independently recorded digests exercise custody only; they are not valid drawing
+or PDF files. Outside/sibling/traversal paths, wrong digests, changed or missing
+known files and unparseable/unmappable audit data reject before mutation. Two
+normalized in-work path controls stay admitted. Traversal receipts retain their
+raw path spelling until production resolves them. Explicit missing-file errors and
+audit-read counters distinguish these rejections from unknown harness operations.
 
 This is source-only prefix admission. Downstream asset contents, full receipt
 provenance, clean-runner install/uninstall, publisher version matching and a

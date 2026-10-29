@@ -433,7 +433,7 @@ change is included; continue unrelated assessment until listener evidence is ava
 ## Asset-preparation receipt identity
 
 The [receipt identity guard](RELEASE-RECEIPT-IDENTITY.md) binds the historical
-baseline and gate metadata before asset mutations. Its98 synthetic prefix checks
+baseline and gate metadata before asset mutations. Its117 synthetic prefix checks
 run in both baseline and candidate suites. This does not generalize the1.36.0-only
 publisher or establish candidate release readiness; no release action is a side
 effect of the reference tests.

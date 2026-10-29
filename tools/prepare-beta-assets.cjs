@@ -59,18 +59,25 @@ for(const mode of applicationModes){
  assert.ok(Date.parse(r.startedAt)>=gateStart,'Stale application receipt.');
  applications[mode]=r;
 }
+// Admit both installed outputs and the existing audit projection before mutation.
+const installedOutputs=[['native','Installed-Acceptance.linecraft'],['pdf','Installed-Acceptance.pdf']].map(([field,name])=>{
+ const file=path.resolve(applications.installed.outputs[field]),work=path.join(root,'work')+path.sep;
+ assert.ok(file.startsWith(work));const digest=applications.installed.outputs[field+'SHA256'];assert.equal(sha(file),digest);
+ return{file,name,digest};
+});
+const installedAudit=JSON.parse(fs.readFileSync(applications.installed.outputs.pdfAudit.path,'utf8'));
+const installedPdfMeasurements=installedAudit.tests.map(t=>({name:t.name,status:t.status,details:t.details}));
 execFileSync('git',['archive','--format=zip',`--prefix=Linecraft-CAD-${version}-Source/`,`--output=${path.join(out,source)}`,commit],{cwd:root,stdio:'inherit'});
 const summary={format:'LinecraftPublicBetaVerification/1',version,tag:preflight?null:tag,commit,runId:process.env.GITHUB_RUN_ID,runUrl:`https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,releaseClass:preflight?'candidate':'prerelease',automaticUpdater:false,codeSigning:'unsigned',historicalQualifiedWindowsRuntime:read('PUBLIC-SOURCE.json').qualifiedWindowsEvidence,freshPublicChecks:{},limits:['Hidden CI tests stub native chooser/discard responses.','Historical visible installed Windows checks preceded the vendor security refresh; current public gates exercise the patched vendor runtime separately.','Fresh install/uninstall scope is a GitHub-hosted Windows VM; broader Windows/DPI coverage remains beta work.']};
 for(const mode of applicationModes){
  const r=applications[mode];
  summary.freshPublicChecks[mode]={application:r.application,applicationChecks:r.passed,failed:r.failed,pdfChecks:r.outputs.pdfAudit.passed,evidenceClass:r.evidenceClass,tests:r.tests.map(t=>({name:t.name,status:t.status}))};
  if(mode==='installed'){
-  for(const [field,name]of [['native','Installed-Acceptance.linecraft'],['pdf','Installed-Acceptance.pdf']]){
-   const file=path.resolve(r.outputs[field]),work=path.join(root,'work')+path.sep;
-   assert.ok(file.startsWith(work));assert.equal(sha(file),r.outputs[field+'SHA256']);fs.copyFileSync(file,path.join(out,name));
+  for(const {file,name,digest}of installedOutputs){
+   // Retain the copy-adjacent hash guard after early admission.
+   assert.equal(sha(file),digest);fs.copyFileSync(file,path.join(out,name));
   }
-  const audit=JSON.parse(fs.readFileSync(r.outputs.pdfAudit.path,'utf8'));
-  summary.actualPdfMeasurements=audit.tests.map(t=>({name:t.name,status:t.status,details:t.details}));
+  summary.actualPdfMeasurements=installedPdfMeasurements;
  }
 }
 summary.cleanInstallation={os:clean.os,scope:clean.scope,checks:clean.checks};

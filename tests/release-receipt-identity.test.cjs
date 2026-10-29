@@ -9,12 +9,12 @@ const manifestSource=fs.readFileSync(path.join(__dirname,'../tools/source-manife
 const baseline=fs.readFileSync(path.join(__dirname,'../PUBLIC-SOURCE.json'));
 const sha=value=>crypto.createHash('sha256').update(value).digest('hex');
 assert.equal(sha(baseline),fixture.manifestSHA256);
-for(const input of [fixture.qualifiedInput,fixture.extraInput])assert.equal(sha(Buffer.from(input.text)),input.sha256);
+for(const input of [fixture.qualifiedInput,fixture.extraInput,fixture.outputReference.native,fixture.outputReference.pdf])assert.equal(sha(Buffer.from(input.text)),input.sha256);
 const virtualRoot=String.raw`C:\synthetic-release`;
 const filename=name=>path.win32.resolve(virtualRoot,name);
 
-function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongInstaller=false}={}){
- const state={archiveCalls:0,copyCalls:0,writeCalls:0,manifestLoads:0,harnessFaults:[]};
+function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongInstaller=false,fileChange}={}){
+ const state={archiveCalls:0,copyCalls:0,writeCalls:0,manifestLoads:0,auditReads:0,harnessFaults:[]};
  const demand=(condition,reason)=>{if(!condition){state.harnessFaults.push(reason);throw Object.assign(Error('Unsupported synthetic adapter operation.'),{code:'HARNESS_FAULT'});}};
  const inputs=()=>({[fixture.manifestFile]:fixture.manifestSHA256,[fixture.qualifiedInput.file]:fixture.qualifiedInput.sha256});
  const gate=command=>({format:'LinecraftPublicGate/1',version:fixture.version,command,status:'passed',changedSource:[],
@@ -32,6 +32,12 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
   application:{electron:appReference.electron,version:mode==='source'?appReference.electron:fixture.version,linecraftManifestVersion:fixture.version},
   outputs:{pdfAudit:{passed:appReference.pdfPassed,total:9}},tests:[]
  }]));
+ const outputReference=fixture.outputReference;
+ const outputPaths={native:filename(outputReference.native.file),pdf:filename(outputReference.pdf.file),audit:filename(outputReference.auditFile)};
+ Object.assign(data.applications.installed.outputs,{native:outputPaths.native,nativeSHA256:outputReference.native.sha256,
+  pdf:outputPaths.pdf,pdfSHA256:outputReference.pdf.sha256});
+ data.audit=structuredClone(outputReference.audit);
+ Object.assign(data.applications.installed.outputs.pdfAudit,{path:outputPaths.audit,sha256:sha(Buffer.from(JSON.stringify(data.audit)))});
  if(change)change(data);
  const files=new Map([[filename('PUBLIC-SOURCE.json'),baseline],
   [filename(fixture.qualifiedInput.file),Buffer.from(fixture.qualifiedInput.text)],
@@ -42,8 +48,15 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
   [filename('work/public-clean-install-results.json'),Buffer.from(JSON.stringify(data.clean))],
   ...appReference.modes.map(mode=>[filename(`tests/ordinary-grip-public-${mode}-results.json`),Buffer.from(JSON.stringify(data.applications[mode]))]),
   [filename(`Windows-Release/Linecraft-CAD-${data.package.version}-Setup.exe`),Buffer.from(wrongInstaller?'tampered synthetic bytes':'synthetic installer bytes')]]);
+ for(const field of ['native','pdf']){
+  const bytes=Buffer.from(outputReference[field].text);files.set(outputPaths[field],bytes);
+  for(const entry of outputReference.cases.filter(entry=>entry.operation==='path'))files.set(filename(entry.path+'-'+field),bytes);
+ }
+ files.set(outputPaths.audit,Buffer.from(JSON.stringify(data.audit)));
+ const knownFiles=new Set(files.keys());
+ if(fileChange)fileChange(files,outputPaths);
  const boundary=()=>Object.assign(Error('Synthetic asset-mutation boundary reached.'),{code:'HARNESS_ASSET_BOUNDARY'});
- const disk={readFileSync(file,encoding){demand(files.has(file),'unexpected-read');const value=files.get(file);return encoding?value.toString(encoding):value;},
+ const disk={readFileSync(file,encoding){demand(knownFiles.has(file),'unexpected-read');if(file===outputPaths.audit)state.auditReads++;if(!files.has(file))throw Object.assign(Error('Missing known synthetic file.'),{code:'ENOENT'});const value=files.get(file);return encoding?value.toString(encoding):value;},
   copyFileSync(){state.copyCalls++;throw boundary();},writeFileSync(){state.writeCalls++;throw boundary();}};
  const git={execFileSync(command,args){
   demand(command==='git'&&Array.isArray(args),'unexpected-child-process');
@@ -109,6 +122,35 @@ for(const mode of fixture.applicationReference.modes){
   assert.deepEqual({archive:result.state.archiveCalls,copy:result.state.copyCalls,write:result.state.writeCalls},{archive:1,copy:0,write:0});
  });
 }
+
+for(const field of ['native','pdf']){
+ for(const entry of fixture.outputReference.cases)test('output guard: '+field+' '+entry.id+' rejects before any asset mutation',()=>{
+  const result=execute({change(data){
+   if(entry.operation==='path')data.applications.installed.outputs[field]=virtualRoot+'/'+entry.path+'-'+field;
+   if(entry.operation==='hash')data.applications.installed.outputs[field+'SHA256']='0'.repeat(64);
+  },fileChange(files,paths){
+   if(entry.operation==='tamper')files.set(paths[field],Buffer.from('Changed synthetic output bytes.'));
+   if(entry.operation==='missing')files.delete(paths[field]);
+  }});
+  assert.equal(result.error?.code,entry.error??'ERR_ASSERTION','Require the intended existing output/file rejection');noAssets(result);
+ });
+ test('output control: '+field+' normalized in-work path reaches the first archive',()=>{
+  const result=execute({change(data){
+   data.applications.installed.outputs[field]=virtualRoot+'\\work/acceptance/stage/../'+(field==='native'?'grip-accepted.linecraft':'grip-accepted.pdf');
+  }});
+  assert.equal(result.error?.code,'HARNESS_ASSET_BOUNDARY');
+  assert.deepEqual({archive:result.state.archiveCalls,copy:result.state.copyCalls,write:result.state.writeCalls},{archive:1,copy:0,write:0});
+ });
+}
+for(const entry of fixture.outputReference.auditCases)test('audit guard: '+entry.id+' rejects before any asset mutation',()=>{
+ const result=execute({fileChange(files,paths){
+  if(entry.operation==='missing')files.delete(paths.audit);
+  else files.set(paths.audit,Buffer.from(entry.operation==='text'?entry.value:JSON.stringify(entry.value)));
+ }});
+ if(entry.errorName)assert.equal(result.error?.name,entry.errorName,'Require the actual parse/projection error');
+ else assert.equal(result.error?.code,entry.error,'Require the known-file read error');
+ assert.equal(result.state.auditReads,1);noAssets(result);
+});
 
 for(const preflight of [false,true])test('control: valid synthetic historical '+(preflight?'preflight':'tag')+' reaches the first asset boundary',()=>{
  const result=execute({preflight});assert.equal(result.error?.code,'HARNESS_ASSET_BOUNDARY');

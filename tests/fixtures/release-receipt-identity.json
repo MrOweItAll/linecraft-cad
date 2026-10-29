@@ -418,5 +418,159 @@
         "value": "2026-09-30T23:59:59.999Z"
       }
     ]
+  },
+  "outputReference": {
+    "native": {
+      "file": "work/acceptance/grip-accepted.linecraft",
+      "text": "Synthetic installed native bytes.\n",
+      "sha256": "fc01124ade763096628dea685662829707983a3b6653d3b05147ebb3e5eab262"
+    },
+    "pdf": {
+      "file": "work/acceptance/grip-accepted.pdf",
+      "text": "Synthetic installed PDF bytes.\n",
+      "sha256": "d65375941c254c0abd8eb27fd675d1a1df70f1f8007ed6ab347e3f397a901163"
+    },
+    "auditFile": "work/acceptance/pdf-audit.json",
+    "audit": {
+      "framework": "Synthetic PDF audit JSON projection only; no PDF execution",
+      "status": "passed",
+      "total": 9,
+      "passed": 9,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "Synthetic audit row 1",
+          "status": "passed",
+          "details": {
+            "syntheticOnly": true
+          }
+        },
+        {
+          "name": "Synthetic audit row 2",
+          "status": "passed",
+          "details": {
+            "syntheticOnly": true
+          }
+        },
+        {
+          "name": "Synthetic audit row 3",
+          "status": "passed",
+          "details": {
+            "syntheticOnly": true
+          }
+        },
+        {
+          "name": "Synthetic audit row 4",
+          "status": "passed",
+          "details": {
+            "syntheticOnly": true
+          }
+        },
+        {
+          "name": "Synthetic audit row 5",
+          "status": "passed",
+          "details": {
+            "syntheticOnly": true
+          }
+        },
+        {
+          "name": "Synthetic audit row 6",
+          "status": "passed",
+          "details": {
+            "syntheticOnly": true
+          }
+        },
+        {
+          "name": "Synthetic audit row 7",
+          "status": "passed",
+          "details": {
+            "syntheticOnly": true
+          }
+        },
+        {
+          "name": "Synthetic audit row 8",
+          "status": "passed",
+          "details": {
+            "syntheticOnly": true
+          }
+        },
+        {
+          "name": "Synthetic audit row 9",
+          "status": "passed",
+          "details": {
+            "syntheticOnly": true
+          }
+        }
+      ]
+    },
+    "cases": [
+      {
+        "id": "outside work root",
+        "operation": "path",
+        "path": "outside/accepted"
+      },
+      {
+        "id": "work prefix lookalike",
+        "operation": "path",
+        "path": "work-other/accepted"
+      },
+      {
+        "id": "traversal outside work",
+        "operation": "path",
+        "path": "work/../outside/accepted"
+      },
+      {
+        "id": "wrong declared hash",
+        "operation": "hash"
+      },
+      {
+        "id": "changed known bytes",
+        "operation": "tamper"
+      },
+      {
+        "id": "missing known file",
+        "operation": "missing",
+        "error": "ENOENT"
+      }
+    ],
+    "auditCases": [
+      {
+        "id": "missing known audit",
+        "operation": "missing",
+        "error": "ENOENT"
+      },
+      {
+        "id": "malformed audit JSON",
+        "operation": "text",
+        "value": "{invalid JSON",
+        "errorName": "SyntaxError"
+      },
+      {
+        "id": "missing audit tests",
+        "operation": "json",
+        "value": {
+          "status": "passed"
+        },
+        "errorName": "TypeError"
+      },
+      {
+        "id": "nonarray audit tests",
+        "operation": "json",
+        "value": {
+          "tests": {}
+        },
+        "errorName": "TypeError"
+      },
+      {
+        "id": "null audit row",
+        "operation": "json",
+        "value": {
+          "tests": [
+            null
+          ]
+        },
+        "errorName": "TypeError"
+      }
+    ]
   }
 }

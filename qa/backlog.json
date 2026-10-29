@@ -1104,6 +1104,39 @@
       "publicationRun": false,
       "dailyUseReady": false,
       "nextAction": "Assess remaining output-file/PDF-audit admission and source/publisher metadata with independent synthetic references before further preparation changes; keep separate release authorization and baseline-only selection."
+    },
+    {
+      "id": "LC-REL-INSTALLED-OUTPUT-ADMISSION",
+      "parent": "LC-REL-VERSIONED-PIPELINE",
+      "priority": 2,
+      "symptom": "Installed native/PDF path/hash and PDF-audit parse/projection failures occurred after archive and possible copy mutations",
+      "sourceVersion": "1.36.1-beta.7",
+      "fixtureClass": "Actual preparation/manifest-loader VM; independently hashed literal fake output bytes, synthetic nine-row audit and explicit known-file failures",
+      "status": "verified early installed output admission and audit projection; copy-adjacent hash guard retained",
+      "attempts": 1,
+      "testOracleRepairs": 1,
+      "acceptance": "Existing native/PDF resolved-work-prefix and exact digest checks plus audit JSON parse/tests projection occur before archive/copy/write; cache admitted paths/projection without removing immediate-before-copy hash checks",
+      "evidence": [
+        "tools/prepare-beta-assets.cjs",
+        "tests/release-receipt-identity.test.cjs",
+        "tests/fixtures/release-receipt-identity.json",
+        "docs/RELEASE-RECEIPT-IDENTITY.md"
+      ],
+      "verifiedScope": "Expanded suite17FAIL/100PASS before;117/117 after. Twelve native/PDF custody negatives and five audit read/parse/projection negatives reject with zero asset mutations; two normalized in-work path controls reach the fake first archive. Prior98 cases retained.",
+      "limits": [
+        "Fake byte custody only; no actual native drawing/PDF format or physical measurement acceptance",
+        "Audit digest/status/counts/bindings remain unchecked by preparation; existing parsing/projection only",
+        "Lexical work-prefix checks do not prove OS file identity or concurrent-replacement resistance",
+        "Copy-adjacent hash guard retained by code review; downstream copies are not executed by prefix tests",
+        "No actual archive/assets/app/build/install/native/converter/publication ran"
+      ],
+      "runtimeChanged": false,
+      "candidateManifestChanged": false,
+      "releaseWorkflowChanged": false,
+      "actualAssetsPrepared": false,
+      "publicationRun": false,
+      "dailyUseReady": false,
+      "nextAction": "Inventory actual audit identity/status/count/binding requirements and remaining dependency/publisher admission with independent synthetic negatives before any further fix; preserve baseline-only selection and separate release authorization."
     }
   ]
 }
