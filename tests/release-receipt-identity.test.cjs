@@ -9,22 +9,26 @@ const manifestSource=fs.readFileSync(path.join(__dirname,'../tools/source-manife
 const baseline=fs.readFileSync(path.join(__dirname,'../PUBLIC-SOURCE.json'));
 const sha=value=>crypto.createHash('sha256').update(value).digest('hex');
 assert.equal(sha(baseline),fixture.manifestSHA256);
+for(const input of [fixture.qualifiedInput,fixture.extraInput])assert.equal(sha(Buffer.from(input.text)),input.sha256);
 const virtualRoot=String.raw`C:\synthetic-release`;
 const filename=name=>path.win32.resolve(virtualRoot,name);
 
 function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongInstaller=false}={}){
  const state={archiveCalls:0,copyCalls:0,writeCalls:0,manifestLoads:0,harnessFaults:[]};
  const demand=(condition,reason)=>{if(!condition){state.harnessFaults.push(reason);throw Object.assign(Error('Unsupported synthetic adapter operation.'),{code:'HARNESS_FAULT'});}};
+ const inputs=()=>({[fixture.manifestFile]:fixture.manifestSHA256,[fixture.qualifiedInput.file]:fixture.qualifiedInput.sha256});
  const gate=command=>({format:'LinecraftPublicGate/1',version:fixture.version,command,status:'passed',changedSource:[],
   manifestFile:fixture.manifestFile,manifestSHA256:fixture.manifestSHA256,candidate:fixture.candidate,
-  sourceSHA256:{[fixture.manifestFile]:fixture.manifestSHA256},startedAt:fixture.startedAt,completedAt:fixture.completedAt});
+  sourceSHA256:inputs(),startedAt:fixture.startedAt,completedAt:fixture.completedAt});
  const data={package:{version:fixture.version,devDependencies:{electron:'44.9.3'}},release:gate('release'),installed:gate('test-installed'),
   pure:{format:'LinecraftPublicPureSummary/1',version:fixture.version,status:'passed',node:'v24.13.0',core:{},suites:[],
-   sourceSHA256:{[fixture.manifestFile]:fixture.manifestSHA256},completedAt:fixture.completedAt},
+   sourceSHA256:inputs(),completedAt:fixture.completedAt},
   clean:{format:'LinecraftCleanRunnerInstall/1',version:fixture.version,status:'passed',runId:'42',startedAt:fixture.startedAt,
    finishedAt:fixture.completedAt,installerSha256:sha(Buffer.from('synthetic installer bytes'))}};
  if(change)change(data);
  const files=new Map([[filename('PUBLIC-SOURCE.json'),baseline],
+  [filename(fixture.qualifiedInput.file),Buffer.from(fixture.qualifiedInput.text)],
+  [filename(fixture.extraInput.file),Buffer.from(fixture.extraInput.text)],
   [filename('work/public-release-results.json'),Buffer.from(JSON.stringify(data.release))],
   [filename('work/public-test-installed-results.json'),Buffer.from(JSON.stringify(data.installed))],
   [filename('work/public-pure-results.json'),Buffer.from(JSON.stringify(data.pure))],
@@ -74,6 +78,9 @@ for(const entry of fixture.cases)test('guard: '+entry.id+' rejects before any as
  const result=execute({change(data){
   if(entry.operation==='coherent-other-version')for(const record of Object.values(data))record.version=entry.version;
   else if(entry.operation==='delete-bound-manifest')delete data[entry.receipt].sourceSHA256[fixture.manifestFile];
+  else if(entry.operation==='delete-field')delete data[entry.receipt][entry.field];
+  else if(entry.operation==='set-input')data[entry.receipt].sourceSHA256[entry.input]=entry.value;
+  else if(entry.operation==='delete-input')delete data[entry.receipt].sourceSHA256[entry.input];
   else data[entry.receipt][entry.field]=entry.value;
  }});
  assert.equal(result.error?.code,entry.error??fixture.identityError,'Require the intended receipt/identity rejection, not a harness or later-stage exception');noAssets(result);
@@ -83,7 +90,14 @@ for(const preflight of [false,true])test('control: valid synthetic historical '+
  const result=execute({preflight});assert.equal(result.error?.code,'HARNESS_ASSET_BOUNDARY');
  assert.deepEqual({archive:result.state.archiveCalls,copy:result.state.copyCalls,write:result.state.writeCalls},{archive:1,copy:0,write:0});
 });
+for(const [name,change] of [['pure completion equals gate start',d=>{d.pure.completedAt=fixture.gateStart;}],
+ ['pure completion equals current time',d=>{d.pure.completedAt=fixture.now;}],
+ ['pure input property order differs',d=>{d.pure.sourceSHA256=Object.fromEntries(Object.entries(d.pure.sourceSHA256).reverse());}]])test('control: '+name+' reaches the asset boundary',()=>{
+ const result=execute({change});assert.equal(result.error?.code,'HARNESS_ASSET_BOUNDARY');
+ assert.deepEqual({archive:result.state.archiveCalls,copy:result.state.copyCalls,write:result.state.writeCalls},{archive:1,copy:0,write:0});
+});
 for(const [name,options] of [['unapproved ref',{wrongRef:true}],['different tag commit',{wrongCommit:true}],
+ ['missing release start time',{change:d=>{delete d.release.startedAt;}}],['missing installed start time',{change:d=>{delete d.installed.startedAt;}}],
  ['wrong release command',{change:d=>{d.release.command='test';}}],['wrong installed command',{change:d=>{d.installed.command='release';}}],
  ['changed release source hash',{change:d=>{d.release.sourceSHA256[fixture.manifestFile]='0'.repeat(64);}}],
  ['changed installed source hash',{change:d=>{d.installed.sourceSHA256[fixture.manifestFile]='0'.repeat(64);}}],['changed installer hash',{wrongInstaller:true}]])test('control: '+name+' remains rejected before assets',()=>{

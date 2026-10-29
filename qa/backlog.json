@@ -1012,7 +1012,37 @@
       "actualAssetsPrepared": false,
       "publicationRun": false,
       "dailyUseReady": false,
-      "nextAction": "Review remaining pure-summary freshness/source bindings and full receipt schemas or publisher metadata checks independently. Preserve baseline-only workflow selection and separate exact-candidate qualification/release authorization."
+      "nextAction": "Pure completion/input follow-up is recorded in LC-REL-PURE-RECEIPT. Review remaining full receipt schemas, chronology and publisher metadata independently; preserve baseline-only selection and separate release approval."
+    },
+    {
+      "id": "LC-REL-PURE-RECEIPT",
+      "parent": "LC-REL-VERSIONED-PIPELINE",
+      "priority": 2,
+      "symptom": "Pure summary completion time and declared source inputs were not checked before asset mutation",
+      "sourceVersion": "1.36.1-beta.7",
+      "fixtureClass": "Actual preparation/manifest-loader VM with synthetic receipts and literal known input bytes; fake first-mutation sentinel",
+      "status": "verified bounded completion-freshness and declared-input consistency guard",
+      "attempts": 1,
+      "acceptance": "Inclusive finite string completedAt window; mandatory selected manifest digest; identical sorted source names and strict lowercase digests across pure/release/installed; preserve old guards and stop before asset mutations",
+      "evidence": [
+        "tools/prepare-beta-assets.cjs",
+        "tests/release-receipt-identity.test.cjs",
+        "tests/fixtures/release-receipt-identity.json",
+        "docs/RELEASE-RECEIPT-IDENTITY.md"
+      ],
+      "verifiedScope": "Expanded suite16FAIL/26PASS before;42/42 after. Accepts equal time boundaries and different map property order; retains all21 earlier cases and required raw gate start times. No real asset preparation or publication.",
+      "limits": [
+        "Recorded completion freshness only; pure start time is absent",
+        "Consistent declared inventory, not detection of joint omissions or receipt authenticity",
+        "No full schemas, downstream assets, clean-runner install or candidate publication qualification"
+      ],
+      "runtimeChanged": false,
+      "candidateManifestChanged": false,
+      "releaseWorkflowChanged": false,
+      "actualAssetsPrepared": false,
+      "publicationRun": false,
+      "dailyUseReady": false,
+      "nextAction": "Assess remaining raw/clean receipt chronology and schema requirements with independent synthetic negatives; preserve the1.36.0-only workflow and publisher isolation."
     }
   ]
 }

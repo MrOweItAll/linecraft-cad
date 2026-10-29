@@ -11,10 +11,19 @@ each receipt's bound source inputs must include that manifest digest. A mismatch
 returns `ERR_LINECRAFT_RELEASE_IDENTITY` with a fixed reason. Existing status,
 version, command, timing, source-hash, ref/commit and installer checks remain.
 
-The pure summary uses its actual producer schema: status and version are checked
-before asset mutation. It has no manifest filename/hash/candidate or start-time
-fields. This change does not add complete schema validation, pure freshness/full
-source bindings or authentication of receipts.
+The pure summary uses its actual producer schema: status, version and recorded
+completion time are checked before asset mutation. Completion must be a finite
+parsed string within the inclusive CI-start/current-time window. Pure has no
+start-time field; this does not prove that the whole pure run began within that
+window.
+
+Pure must bind the selected manifest digest. Its source map must be a non-null
+object, with the same sorted input names and lowercase64-character digests as both
+release and installed reports. Those reports' hashes are checked against current
+files by the existing guard. JSON property order may differ. This establishes
+consistency of declared inputs, not independent inventory completeness: a key
+jointly omitted from all three corrupted reports is not detected. Complete schema
+validation and authentication of receipts remain separate requirements.
 
 ```
 node --test --test-reporter=tap tests/release-receipt-identity.test.cjs
@@ -26,10 +35,13 @@ sentinel and stops execution. Valid historical tag and preflight controls must
 reach that exact boundary. Negative cases require intended errors and zero
 archive/copy/write counters; unknown adapter operations fail the harness.
 
-Before the guard,12 references failed while9 controls passed. After the guard,
-all21 pass. The suite joins both baseline and candidate qualification; the fixture
-and preparation tool are fingerprinted. No real asset preparation, archive,
-installation, application or publication is exercised by these tests.
+The first identity guard changed12 failing references/9 passing controls into
+21 passes. The pure-summary follow-up reproduced16 failures alongside26 passes;
+all42 now pass. New cases include completion-time boundaries, malformed or
+inconsistent input maps, property-order independence and preservation of required
+release/installed start times. The suite joins both baseline and candidate
+qualification; the fixture and preparation tool are fingerprinted. No real asset
+preparation, archive, installation, application or publication is exercised.
 
 This is source-only prefix admission. Downstream asset contents, full receipt
 provenance, clean-runner install/uninstall, publisher version matching and a

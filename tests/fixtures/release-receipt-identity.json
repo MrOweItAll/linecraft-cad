@@ -12,17 +12,185 @@
   "now": "2026-10-01T00:10:00.000Z",
   "identityError": "ERR_LINECRAFT_RELEASE_IDENTITY",
   "cases": [
-    {"id":"release-manifest-file","receipt":"release","field":"manifestFile","value":"OTHER-SOURCE.json"},
-    {"id":"installed-manifest-file","receipt":"installed","field":"manifestFile","value":"OTHER-SOURCE.json"},
-    {"id":"release-manifest-hash","receipt":"release","field":"manifestSHA256","value":"0000000000000000000000000000000000000000000000000000000000000000"},
-    {"id":"installed-manifest-hash","receipt":"installed","field":"manifestSHA256","value":"0000000000000000000000000000000000000000000000000000000000000000"},
-    {"id":"release-candidate-flag","receipt":"release","field":"candidate","value":true},
-    {"id":"installed-candidate-flag","receipt":"installed","field":"candidate","value":true},
-    {"id":"candidate-string-is-not-boolean","receipt":"release","field":"candidate","value":"false"},
-    {"id":"release-missing-bound-manifest","receipt":"release","operation":"delete-bound-manifest"},
-    {"id":"installed-missing-bound-manifest","receipt":"installed","operation":"delete-bound-manifest"},
-    {"id":"pure-version","receipt":"pure","field":"version","value":"1.35.0"},
-    {"id":"pure-failure-before-mutation","receipt":"pure","field":"status","value":"failed","error":"ERR_ASSERTION"},
-    {"id":"package-and-receipts-differ-from-selected-baseline","operation":"coherent-other-version","version":"1.36.1-beta.7"}
-  ]
+    {
+      "id": "release-manifest-file",
+      "receipt": "release",
+      "field": "manifestFile",
+      "value": "OTHER-SOURCE.json"
+    },
+    {
+      "id": "installed-manifest-file",
+      "receipt": "installed",
+      "field": "manifestFile",
+      "value": "OTHER-SOURCE.json"
+    },
+    {
+      "id": "release-manifest-hash",
+      "receipt": "release",
+      "field": "manifestSHA256",
+      "value": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "id": "installed-manifest-hash",
+      "receipt": "installed",
+      "field": "manifestSHA256",
+      "value": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "id": "release-candidate-flag",
+      "receipt": "release",
+      "field": "candidate",
+      "value": true
+    },
+    {
+      "id": "installed-candidate-flag",
+      "receipt": "installed",
+      "field": "candidate",
+      "value": true
+    },
+    {
+      "id": "candidate-string-is-not-boolean",
+      "receipt": "release",
+      "field": "candidate",
+      "value": "false"
+    },
+    {
+      "id": "release-missing-bound-manifest",
+      "receipt": "release",
+      "operation": "delete-bound-manifest"
+    },
+    {
+      "id": "installed-missing-bound-manifest",
+      "receipt": "installed",
+      "operation": "delete-bound-manifest"
+    },
+    {
+      "id": "pure-version",
+      "receipt": "pure",
+      "field": "version",
+      "value": "1.35.0"
+    },
+    {
+      "id": "pure-failure-before-mutation",
+      "receipt": "pure",
+      "field": "status",
+      "value": "failed",
+      "error": "ERR_ASSERTION"
+    },
+    {
+      "id": "package-and-receipts-differ-from-selected-baseline",
+      "operation": "coherent-other-version",
+      "version": "1.36.1-beta.7"
+    },
+    {
+      "id": "pure-completed-stale",
+      "receipt": "pure",
+      "field": "completedAt",
+      "value": "2026-09-30T23:59:59.999Z"
+    },
+    {
+      "id": "pure-completed-future",
+      "receipt": "pure",
+      "field": "completedAt",
+      "value": "2026-10-01T00:10:00.001Z"
+    },
+    {
+      "id": "pure-completed-invalid",
+      "receipt": "pure",
+      "field": "completedAt",
+      "value": "not-a-time"
+    },
+    {
+      "id": "pure-completed-missing",
+      "receipt": "pure",
+      "operation": "delete-field",
+      "field": "completedAt"
+    },
+    {
+      "id": "pure-completed-number",
+      "receipt": "pure",
+      "field": "completedAt",
+      "value": 1790812920000
+    },
+    {
+      "id": "pure-input-map-missing",
+      "receipt": "pure",
+      "operation": "delete-field",
+      "field": "sourceSHA256"
+    },
+    {
+      "id": "pure-input-map-null",
+      "receipt": "pure",
+      "field": "sourceSHA256",
+      "value": null
+    },
+    {
+      "id": "pure-input-map-array",
+      "receipt": "pure",
+      "field": "sourceSHA256",
+      "value": []
+    },
+    {
+      "id": "pure-input-map-empty",
+      "receipt": "pure",
+      "field": "sourceSHA256",
+      "value": {}
+    },
+    {
+      "id": "pure-bound-manifest-missing",
+      "receipt": "pure",
+      "operation": "delete-bound-manifest"
+    },
+    {
+      "id": "pure-bound-manifest-conflicts",
+      "receipt": "pure",
+      "operation": "set-input",
+      "input": "PUBLIC-SOURCE.json",
+      "value": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "id": "pure-nonmanifest-input-conflicts",
+      "receipt": "pure",
+      "operation": "set-input",
+      "input": "synthetic-qualified-input.txt",
+      "value": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "id": "pure-input-name-missing",
+      "receipt": "pure",
+      "operation": "delete-input",
+      "input": "synthetic-qualified-input.txt"
+    },
+    {
+      "id": "pure-input-name-extra",
+      "receipt": "pure",
+      "operation": "set-input",
+      "input": "synthetic-extra-input.txt",
+      "value": "41b6b4b9a03dc01c6d9bb23b34dc68b45650b83da05cdd1f111adfc07ff64010"
+    },
+    {
+      "id": "pure-input-digest-uppercase",
+      "receipt": "pure",
+      "operation": "set-input",
+      "input": "synthetic-qualified-input.txt",
+      "value": "015A6B7BB24B918211E11432B53F11E60BB1D40247C94AB526AD1473415C4142"
+    },
+    {
+      "id": "pure-input-digest-nonstring",
+      "receipt": "pure",
+      "operation": "set-input",
+      "input": "synthetic-qualified-input.txt",
+      "value": 123
+    }
+  ],
+  "qualifiedInput": {
+    "file": "synthetic-qualified-input.txt",
+    "text": "Literal qualified source input.\n",
+    "sha256": "015a6b7bb24b918211e11432b53f11e60bb1d40247c94ab526ad1473415c4142"
+  },
+  "extraInput": {
+    "file": "synthetic-extra-input.txt",
+    "text": "Literal unselected source input.\n",
+    "sha256": "41b6b4b9a03dc01c6d9bb23b34dc68b45650b83da05cdd1f111adfc07ff64010"
+  }
 }

@@ -26,6 +26,20 @@ for(const [label,r] of [['release',release],['installed',installed]]){
 }
 assert.equal(release.command,'release');assert.equal(installed.command,'test-installed');
 assert.equal(pure.status,'passed');identity(pure.version,version,'pure version');
+const pureCompletedAt=typeof pure.completedAt==='string'?Date.parse(pure.completedAt):NaN;
+identity(Number.isFinite(pureCompletedAt)&&pureCompletedAt>=gateStart&&pureCompletedAt<=Date.now(),true,'pure completion time');
+const pureInputs=pure.sourceSHA256;
+identity(pureInputs!==null&&typeof pureInputs==='object'&&!Array.isArray(pureInputs),true,'pure source inputs');
+identity(pureInputs[manifestFile],manifestSHA256,'pure bound manifest hash');
+const pureNames=Object.keys(pureInputs).sort();
+for(const [label,r] of [['release',release],['installed',installed]]){
+ const names=Object.keys(r.sourceSHA256).sort();
+ identity(pureNames.length===names.length&&pureNames.every((name,index)=>name===names[index]),true,'pure/'+label+' source input names');
+ for(const name of pureNames){
+  identity(typeof pureInputs[name]==='string'&&/^[a-f0-9]{64}$/.test(pureInputs[name]),true,'pure source digest format');
+  identity(pureInputs[name],r.sourceSHA256[name],'pure/'+label+' source input hash');
+ }
+}
 const clean=read('work/public-clean-install-results.json');assert.equal(clean.status,'passed');
 assert.equal(clean.version,version);assert.equal(clean.runId,process.env.GITHUB_RUN_ID);assert.ok(Date.parse(clean.startedAt)>=gateStart);
 const installer=`Linecraft-CAD-${version}-Setup.exe`,source=`Linecraft-CAD-${version}-Source.zip`;
