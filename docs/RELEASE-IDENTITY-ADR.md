@@ -1,6 +1,6 @@
 # ADR-REL-001: frozen release identity contract
 
-**Status:** Proposed extraction design; no runtime or workflow implementation.
+**Status:** Standalone metadata model implemented; preparation integration remains proposed.
 **Date:** 2026-10-29
 **Deciders:** Maintainers and independent qualification/security reviewers.
 Release execution and any publication-policy expansion require separate review.
@@ -9,12 +9,13 @@ Release execution and any publication-policy expansion require separate review.
 
 The current release path is historical1.36.0-only. A valid QA candidate does not
 become releasable through that path. The
-[receipt admission guard](RELEASE-RECEIPT-IDENTITY.md) has169 synthetic prefix
+[receipt admission guard](RELEASE-RECEIPT-IDENTITY.md) has171 synthetic prefix
 cases, which stop at the first archive boundary. It does not qualify complete
 prepared assets, the publisher, installation or daily use.
 
-This inventory changes documentation only. It does not change the immutable
-baseline, candidate manifests, triggers, token permissions, source code or assets.
+The initial inventory changed documentation only. The standalone follow-up adds a
+pure metadata model and portable tests. Preparation, publication, runtime, immutable
+baseline, candidate selection, triggers, token permissions and assets are unchanged.
 
 ## Observed boundaries
 
@@ -108,7 +109,7 @@ explicitly; it is a separate milestone from the source planner.
 
 | Option | Benefit | Cost / constraint | Disposition |
 | --- | --- | --- | --- |
-| Retain all inline source identity logic | Smallest immediate change; existing169 prefix references remain authoritative | Identity/name derivation stays coupled to side effects | Preserve as the baseline oracle. |
+| Retain all inline source identity logic | Smallest immediate change; existing171 prefix references remain authoritative | Identity/name derivation stays coupled to side effects | Preserve as the baseline oracle. |
 | Extract a pure frozen source planner | Independently testable literal metadata/name contract without changing release scope | Wrapper and publisher still need separate qualification | Proposed first implementation. |
 | Reuse one executable validator in both jobs | Reduces duplicated logic | Project/artifact code under the write token conflicts with the current isolation boundary | Not part of this design. |
 | Generalize candidate versions and workflow/publisher together | Could eventually support a versioned release path | Requires exact-candidate build/install evidence, trigger/token review and release authority | Deferred; no incidental generalization. |
@@ -117,7 +118,7 @@ explicitly; it is a separate milestone from the source planner.
 
 1. Establish literal tag/preflight/beta7-rejection expectations against current
    behavior. Alter package/manifest version, selected file/hash/candidate flag,
-   ref and tag commit independently. Keep all169 prefix cases.
+   ref and tag commit independently. Keep all171 prefix cases.
 2. Extract only the frozen planner, then compare before/after behavior and exact
    output names. This is a behavior-preserving extraction; do not invent a failing
    product regression to describe it as a fix.
@@ -133,3 +134,29 @@ explicitly; it is a separate milestone from the source planner.
 This design does not resolve receipt authenticity/inventory completeness, auditor
 identity, OS file identity/races, native/installed acceptance or client/domain
 requirements. The existing pipeline remains historical1.36.0-only.
+
+## Standalone model milestone
+
+`tools/frozen-release-identity.cjs` implements the frozen metadata API without
+imports, filesystem, environment, Git, process or publication access. It is not
+called by `prepare-beta-assets.cjs` or the publisher. The API takes explicit
+package/manifest/mode/ref/HEAD/tag-commit fields and returns fresh immutable name
+and metadata values. `canonicalTag` remains `v1.36.0`; preflight's
+`verificationTag` is null. HEAD is a nonempty opaque string; Git object validity
+and authenticity remain caller responsibilities. Preflight needs no tag commit.
+
+The actual unchanged wrapper passed171 prefix cases, retaining the original169
+and adding two literal archive-argument, installer-read and tag-lookup controls.
+Its selected manifest remains the real default baseline. The new API separately
+passed21 pure-context tests with independent literal expected outputs, frozen
+inputs, alternate matching commits and coherent-beta7 rejection. Explicit
+candidate/file/hash/flag API negatives are not claimed as accessible routes of
+the selectorless wrapper. No fabricated red-to-green product fix is reported.
+
+Both baseline and candidate profiles select the new unit suite and fingerprint
+the actual helper/reference inputs. The original receipt fixture is unchanged.
+These checks do not establish complete prepared-output equivalence. Integration
+remains deferred until a bounded virtual characterization covers downstream
+verification metadata, asset names/checksum text and final log semantics, without
+running real archive/copy/build/publisher operations. Preserve the existing early
+Git/manifest guard order and all171 prefix cases when that integration is reviewed.

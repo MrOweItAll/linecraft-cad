@@ -141,3 +141,10 @@ provenance, clean-runner install/uninstall, publisher version matching and a
 versioned candidate pipeline still need separate review/qualification. The existing
 workflow remains1.36.0-only; beta7 is not made releasable by this guard. Merge,
 tagging, workflow dispatch and publication retain their separate authorization.
+
+
+Two literal frozen-policy characterizations bring this prefix suite to171 while
+retaining all169 prior cases. They observe exact archive arguments, one installer
+read and tag-mode versus preflight Git lookup counts. The separate21-case
+[standalone planner contract](RELEASE-IDENTITY-ADR.md) does not alter preparation
+or establish downstream summary/checksum/asset output equivalence.

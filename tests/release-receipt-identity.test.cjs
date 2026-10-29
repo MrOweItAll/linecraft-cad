@@ -4,6 +4,7 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),crypto=require('node:crypto');
 const fixture=require('./fixtures/release-receipt-identity.json');
+const frozenReference=require('./fixtures/frozen-release-identity.json');
 const prepare=fs.readFileSync(path.join(__dirname,'../tools/prepare-beta-assets.cjs'),'utf8');
 const manifestSource=fs.readFileSync(path.join(__dirname,'../tools/source-manifest.cjs'),'utf8');
 const baseline=fs.readFileSync(path.join(__dirname,'../PUBLIC-SOURCE.json'));
@@ -14,7 +15,7 @@ const virtualRoot=String.raw`C:\synthetic-release`;
 const filename=name=>path.win32.resolve(virtualRoot,name);
 
 function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongInstaller=false,fileChange}={}){
- const state={archiveCalls:0,copyCalls:0,writeCalls:0,manifestLoads:0,auditReads:0,dependencyReads:0,harnessFaults:[]};
+ const state={archiveCalls:0,copyCalls:0,writeCalls:0,archiveArguments:null,tagLookups:0,installerReads:0,manifestLoads:0,auditReads:0,dependencyReads:0,harnessFaults:[]};
  const demand=(condition,reason)=>{if(!condition){state.harnessFaults.push(reason);throw Object.assign(Error('Unsupported synthetic adapter operation.'),{code:'HARNESS_FAULT'});}};
  const inputs=()=>({[fixture.manifestFile]:fixture.manifestSHA256,[fixture.qualifiedInput.file]:fixture.qualifiedInput.sha256});
  const gate=command=>({format:'LinecraftPublicGate/1',version:fixture.version,command,status:'passed',changedSource:[],
@@ -62,14 +63,15 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
  const knownFiles=new Set(files.keys());
  if(fileChange)fileChange(files,outputPaths);
  const boundary=()=>Object.assign(Error('Synthetic asset-mutation boundary reached.'),{code:'HARNESS_ASSET_BOUNDARY'});
- const disk={readFileSync(file,encoding){demand(knownFiles.has(file),'unexpected-read');if(file===outputPaths.audit)state.auditReads++;if(file===filename('work/public-npm-audit.json'))state.dependencyReads++;if(!files.has(file))throw Object.assign(Error('Missing known synthetic file.'),{code:'ENOENT'});const value=files.get(file);return encoding?value.toString(encoding):value;},
+ const disk={readFileSync(file,encoding){demand(knownFiles.has(file),'unexpected-read');if(file===frozenReference.installerPath)state.installerReads++;if(file===outputPaths.audit)state.auditReads++;if(file===filename('work/public-npm-audit.json'))state.dependencyReads++;if(!files.has(file))throw Object.assign(Error('Missing known synthetic file.'),{code:'ENOENT'});const value=files.get(file);return encoding?value.toString(encoding):value;},
   copyFileSync(){state.copyCalls++;throw boundary();},writeFileSync(){state.writeCalls++;throw boundary();}};
  const git={execFileSync(command,args){
   demand(command==='git'&&Array.isArray(args),'unexpected-child-process');
   if(args.length===2&&args[0]==='rev-parse'&&args[1]==='HEAD')return fixture.commit+'\n';
-  if(args.length===2&&args[0]==='rev-parse'&&args[1]===`v${data.package.version}^{commit}`)return (wrongCommit?'b'.repeat(40):fixture.commit)+'\n';
+  if(args.length===2&&args[0]==='rev-parse'&&args[1]===`v${data.package.version}^{commit}`){state.tagLookups++;return (wrongCommit?'b'.repeat(40):fixture.commit)+'\n';}
   if(JSON.stringify(args)===JSON.stringify(['diff','--exit-code','HEAD','--']))return '';
   if(args[0]==='archive'){
+   state.archiveArguments=structuredClone(args);
    demand(args.length===5&&args[1]==='--format=zip'&&args[2]===`--prefix=Linecraft-CAD-${data.package.version}-Source/`&&
     args[3]===`--output=${filename(`Windows-Release/Linecraft-CAD-${data.package.version}-Source.zip`)}`&&args[4]===fixture.commit,'archive-arguments');
    state.archiveCalls++;throw boundary();
@@ -261,4 +263,11 @@ for(const [name,options] of [['unapproved ref',{wrongRef:true}],['different tag 
  ['changed release source hash',{change:d=>{d.release.sourceSHA256[fixture.manifestFile]='0'.repeat(64);}}],
  ['changed installed source hash',{change:d=>{d.installed.sourceSHA256[fixture.manifestFile]='0'.repeat(64);}}],['changed installer hash',{wrongInstaller:true}]])test('control: '+name+' remains rejected before assets',()=>{
  const result=execute(options);assert.ok(['ERR_ASSERTION',fixture.identityError].includes(result.error?.code),'Require an existing or identity guard rejection');noAssets(result);
+});
+
+for(const preflight of [false,true])test('frozen wrapper literal: '+(preflight?'preflight':'tag')+' archive identity and Git lookup count',()=>{
+ const result=execute({preflight});assert.equal(result.error?.code,'HARNESS_ASSET_BOUNDARY');
+ assert.deepEqual(result.state.archiveArguments,frozenReference.archiveArguments);
+ assert.equal(result.state.tagLookups,preflight?0:1);assert.equal(result.state.installerReads,1);
+ assert.deepEqual({archive:result.state.archiveCalls,copy:result.state.copyCalls,write:result.state.writeCalls},{archive:1,copy:0,write:0});
 });

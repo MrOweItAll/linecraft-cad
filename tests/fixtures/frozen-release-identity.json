@@ -1,0 +1,168 @@
+{
+  "format": "LinecraftFrozenReleaseIdentityReference/1",
+  "scope": "Independent literal standalone API policy; current-wrapper observation limited to prefix/archive arguments, not prepared assets",
+  "tagInput": {
+    "packageVersion": "1.36.0",
+    "manifestVersion": "1.36.0",
+    "manifestFile": "PUBLIC-SOURCE.json",
+    "manifestSHA256": "c7cb2c46702e7e88b7ddd84aa83b038bf52aa0a5901d3154bf3fb60bba41b5c7",
+    "candidate": false,
+    "preflight": false,
+    "ref": "refs/tags/v1.36.0",
+    "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "tagCommit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "preflightInput": {
+    "packageVersion": "1.36.0",
+    "manifestVersion": "1.36.0",
+    "manifestFile": "PUBLIC-SOURCE.json",
+    "manifestSHA256": "c7cb2c46702e7e88b7ddd84aa83b038bf52aa0a5901d3154bf3fb60bba41b5c7",
+    "candidate": false,
+    "preflight": true,
+    "ref": "refs/heads/codex/public-beta-1.36",
+    "head": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "alternateHead": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "expectedCommon": {
+    "version": "1.36.0",
+    "canonicalTag": "v1.36.0",
+    "sourcePrefix": "Linecraft-CAD-1.36.0-Source/",
+    "installer": "Linecraft-CAD-1.36.0-Setup.exe",
+    "source": "Linecraft-CAD-1.36.0-Source.zip",
+    "payloadAssets": [
+      "Linecraft-CAD-1.36.0-Setup.exe",
+      "Linecraft-CAD-1.36.0-Source.zip",
+      "Installed-Acceptance.linecraft",
+      "Installed-Acceptance.pdf",
+      "Public-Beta-Verification.json",
+      "libredwg-0.13.4-upstream.tar.gz"
+    ],
+    "checksumFile": "SHA256SUMS.txt",
+    "uploadAssets": [
+      "Linecraft-CAD-1.36.0-Setup.exe",
+      "Linecraft-CAD-1.36.0-Source.zip",
+      "Installed-Acceptance.linecraft",
+      "Installed-Acceptance.pdf",
+      "Public-Beta-Verification.json",
+      "libredwg-0.13.4-upstream.tar.gz",
+      "SHA256SUMS.txt"
+    ],
+    "notesFile": "release-notes.md"
+  },
+  "expectedTag": {
+    "verificationTag": "v1.36.0",
+    "releaseClass": "prerelease",
+    "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "expectedPreflight": {
+    "verificationTag": null,
+    "releaseClass": "candidate",
+    "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "archiveArguments": [
+    "archive",
+    "--format=zip",
+    "--prefix=Linecraft-CAD-1.36.0-Source/",
+    "--output=C:\\synthetic-release\\Windows-Release\\Linecraft-CAD-1.36.0-Source.zip",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  ],
+  "installerPath": "C:\\synthetic-release\\Windows-Release\\Linecraft-CAD-1.36.0-Setup.exe",
+  "negativeCases": [
+    {
+      "id": "package version",
+      "patch": {
+        "packageVersion": "1.36.1-beta.7"
+      }
+    },
+    {
+      "id": "manifest version",
+      "patch": {
+        "manifestVersion": "1.36.1-beta.7"
+      }
+    },
+    {
+      "id": "manifest file",
+      "patch": {
+        "manifestFile": "qa/CANDIDATE-SOURCE-1.36.1-beta.7.json"
+      }
+    },
+    {
+      "id": "manifest digest",
+      "patch": {
+        "manifestSHA256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "id": "manifest candidate",
+      "patch": {
+        "candidate": true
+      }
+    },
+    {
+      "id": "string candidate",
+      "patch": {
+        "candidate": "false"
+      }
+    },
+    {
+      "id": "string preflight",
+      "patch": {
+        "preflight": "false"
+      }
+    },
+    {
+      "id": "wrong ref",
+      "patch": {
+        "ref": "refs/heads/unapproved"
+      }
+    },
+    {
+      "id": "wrong tag version",
+      "patch": {
+        "ref": "refs/tags/v1.36.1-beta.7"
+      }
+    },
+    {
+      "id": "case alias tag",
+      "patch": {
+        "ref": "refs/tags/V1.36.0"
+      }
+    },
+    {
+      "id": "tag commit",
+      "patch": {
+        "tagCommit": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    },
+    {
+      "id": "empty head",
+      "patch": {
+        "head": ""
+      }
+    },
+    {
+      "id": "array manifest digest",
+      "patch": {
+        "manifestSHA256": [
+          "c7cb2c46702e7e88b7ddd84aa83b038bf52aa0a5901d3154bf3fb60bba41b5c7"
+        ]
+      }
+    },
+    {
+      "id": "missing candidate",
+      "patch": {},
+      "delete": "candidate"
+    },
+    {
+      "id": "coherent QA beta7",
+      "patch": {
+        "packageVersion": "1.36.1-beta.7",
+        "manifestVersion": "1.36.1-beta.7",
+        "manifestFile": "qa/CANDIDATE-SOURCE-1.36.1-beta.7.json",
+        "manifestSHA256": "a17516f6005ba8cb4a9c65b7c27751454a12b93508962c1354c584533bf595d5",
+        "candidate": true,
+        "ref": "refs/tags/v1.36.1-beta.7"
+      }
+    }
+  ]
+}

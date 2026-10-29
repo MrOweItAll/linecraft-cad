@@ -433,7 +433,7 @@ change is included; continue unrelated assessment until listener evidence is ava
 ## Asset-preparation receipt identity
 
 The [receipt identity guard](RELEASE-RECEIPT-IDENTITY.md) binds the historical
-baseline and gate metadata before asset mutations. Its169 synthetic prefix checks
+baseline and gate metadata before asset mutations. Its171 synthetic prefix checks
 run in both baseline and candidate suites. This does not generalize the1.36.0-only
 publisher or establish candidate release readiness; no release action is a side
 effect of the reference tests.
@@ -447,3 +447,13 @@ permissions. A local synthetic PowerShell expression probe is separately bounded
 from unexecuted publisher/CI behavior. This documentation milestone reruns no
 unchanged gate or build; existing169 prefix cases and their qualification limits
 remain unchanged. Versioned candidate publication is not implemented or authorized.
+
+## Standalone frozen release metadata model - October 29, 2026
+
+The [release identity ADR](RELEASE-IDENTITY-ADR.md) now records a standalone pure
+model and21 literal API checks. Two additional current-wrapper characterizations
+bring its prefix suite to171, preserving the original169. Selected candidate
+metadata is tested only at the new API; preparation still uses the default
+baseline. The model is not integrated with preparation or the write-token
+publisher. No candidate release support, runtime/manifest/workflow change or
+prepared-output/build/install/publication qualification follows from this step.

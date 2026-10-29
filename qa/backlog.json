@@ -1264,6 +1264,40 @@
       "publicationRun": false,
       "dailyUseReady": false,
       "nextAction": "Establish independent literal frozen-policy expectations against current behavior, then consider a behavior-preserving pure source-planner extraction under read permissions; preserve all169 prefix cases, baseline selection, fixed triggers and separate release authority."
+    },
+    {
+      "id": "LC-REL-FROZEN-PLANNER-MODEL",
+      "parent": "LC-REL-VERSIONED-PIPELINE",
+      "priority": 2,
+      "symptom": "Frozen source identity and canonical names lacked an independently testable metadata contract separate from preparation side effects",
+      "sourceVersion": "1.36.1-beta.7",
+      "fixtureClass": "Independent literal frozen-policy reference, actual unchanged-wrapper prefix VM and real standalone-module pure-context tests",
+      "status": "verified standalone frozen metadata model; preparation/publisher integration deferred",
+      "attempts": 1,
+      "acceptance": "Characterize current historical archive identity first; implement pure explicit-input frozen metadata API with exact names, canonical versus verification tag distinction, no publication authority and no wrapper/publisher policy change",
+      "evidence": [
+        "tools/frozen-release-identity.cjs",
+        "tests/frozen-release-identity.test.cjs",
+        "tests/fixtures/frozen-release-identity.json",
+        "tests/release-receipt-identity.test.cjs",
+        "docs/RELEASE-IDENTITY-ADR.md"
+      ],
+      "verifiedScope": "Current unchanged-wrapper171/171 before the model, retaining169prior cases and adding2literal archive/installer/Git controls; standalone API21/21 with fixed outputs, frozen inputs, alternate commits and15negative metadata tuples. This is a new standalone contract, not a red-to-green product fix.",
+      "limits": [
+        "Not imported by preparation or publisher; no integrated source extraction or candidate release support",
+        "Selected coherent-beta7/file/hash/candidate API negatives are not accessible current-wrapper routes",
+        "Opaque commit strings do not prove Git object validity/authenticity; outputs grant no publication authority",
+        "No complete prepared-output, checksum/summary serialization or real asset/app/build/install/native/CI/publication qualification"
+      ],
+      "runtimeChanged": false,
+      "candidateManifestChanged": false,
+      "releaseWorkflowChanged": false,
+      "preparationChanged": false,
+      "publisherIntegration": false,
+      "actualAssetsPrepared": false,
+      "publicationRun": false,
+      "dailyUseReady": false,
+      "nextAction": "Characterize complete downstream metadata/name/checksum/log behavior with a bounded all-virtual harness before source-planner integration; preserve early guard order, default baseline, all171 prefix cases and publisher/write-token isolation."
     }
   ]
 }
