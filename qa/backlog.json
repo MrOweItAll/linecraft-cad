@@ -1231,6 +1231,39 @@
       "publicationRun": false,
       "dailyUseReady": false,
       "nextAction": "Inventory source-preparation and isolated publisher version/tag/asset identity boundaries before any versioned pipeline change; preserve baseline-only selection, fixed release triggers and separate release authorization."
+    },
+    {
+      "id": "LC-REL-METADATA-CONTRACT-DESIGN",
+      "parent": "LC-REL-VERSIONED-PIPELINE",
+      "priority": 2,
+      "symptom": "Source preparation, manifest selection and isolated publisher have distinct historical version/tag/asset policies that need an explicit contract before extraction or generalization",
+      "sourceVersion": "1.36.1-beta.7",
+      "fixtureClass": "Read-only source/workflow inventory, independent literal historical tuples and synthetic local PowerShell expressions",
+      "status": "reviewed inventory and proposed frozen source-identity planner; implementation unstarted",
+      "attempts": 1,
+      "acceptance": "Record exact baseline/tag/preflight/asset identities and publisher trust boundaries; propose a testable staged extraction without changing runtime, candidate selectors, triggers or write-token permissions",
+      "evidence": [
+        "docs/RELEASE-IDENTITY-ADR.md",
+        ".github/workflows/windows-beta.yml",
+        "tools/prepare-beta-assets.cjs",
+        "tools/source-manifest.cjs",
+        "docs/RELEASE-RECEIPT-IDENTITY.md"
+      ],
+      "verifiedScope": "Source inspection plus one finite local PowerShell7.6.9 expression probe. Confirms case-insensitive comparisons and version/format omission from the isolated identity clause only. No publisher/artifact/remote behavior executed; unchanged gates/builds not rerun.",
+      "limits": [
+        "Proposed design only; no source planner, publisher validator or candidate release support implemented",
+        "Local expression observations are not full publisher acceptance, exploitation or Windows CI qualification",
+        "Version/format, checksum case, notes integrity and remote-ref changes remain separate reviewed policies",
+        "Existing169 prefix cases and native/installed/client/domain/readiness limits remain unchanged"
+      ],
+      "runtimeChanged": false,
+      "candidateManifestChanged": false,
+      "releaseWorkflowChanged": false,
+      "actualPublisherExecuted": false,
+      "gatesRerun": false,
+      "publicationRun": false,
+      "dailyUseReady": false,
+      "nextAction": "Establish independent literal frozen-policy expectations against current behavior, then consider a behavior-preserving pure source-planner extraction under read permissions; preserve all169 prefix cases, baseline selection, fixed triggers and separate release authority."
     }
   ]
 }

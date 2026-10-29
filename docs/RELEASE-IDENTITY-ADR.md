@@ -1,0 +1,135 @@
+# ADR-REL-001: frozen release identity contract
+
+**Status:** Proposed extraction design; no runtime or workflow implementation.
+**Date:** 2026-10-29
+**Deciders:** Maintainers and independent qualification/security reviewers.
+Release execution and any publication-policy expansion require separate review.
+
+## Context and constraints
+
+The current release path is historical1.36.0-only. A valid QA candidate does not
+become releasable through that path. The
+[receipt admission guard](RELEASE-RECEIPT-IDENTITY.md) has169 synthetic prefix
+cases, which stop at the first archive boundary. It does not qualify complete
+prepared assets, the publisher, installation or daily use.
+
+This inventory changes documentation only. It does not change the immutable
+baseline, candidate manifests, triggers, token permissions, source code or assets.
+
+## Observed boundaries
+
+| Boundary | Current source evidence | Consequence |
+| --- | --- | --- |
+| Source identity | `tools/prepare-beta-assets.cjs:4-21` | Reads HEAD, requires exact tag or named preflight ref, compares tag commit with HEAD, checks tracked cleanliness and package/selected-manifest version equality. |
+| Manifest selection | `tools/source-manifest.cjs:6-30`; preparation calls `loadManifest()` without a selector | Preparation selects immutable `PUBLIC-SOURCE.json`, version1.36.0. Explicit QA candidate support does not change this default. |
+| Candidate creation | `tools/create-candidate-manifest.cjs:7-12` | The old generator copies the baseline and records one changed file. Do not use it to regenerate a cumulative candidate as a release-policy shortcut. |
+| Installer naming | `package.json:74-79` | NSIS artifact template is `Linecraft-CAD-${version}-Setup.${ext}`. |
+| Prepared metadata/assets | `tools/prepare-beta-assets.cjs:52,86-111` | Package version drives source/installer names and source prefix; summary tag/class depend on tag versus preflight mode. |
+| Workflow intake | `.github/workflows/windows-beta.yml:3-8,60-83` | Fixed `v1.36.0` tag and named branch; fixed uploaded artifact paths. Dispatch does not itself make the publisher eligible. |
+| Publisher isolation | `.github/workflows/windows-beta.yml:90-107` | Separate write-token job downloads evidence; no checkout, npm install or project helper execution there. |
+| Publisher checks | `.github/workflows/windows-beta.yml:112-127` | Checks commit/tag/class, six checksum-listed assets, hashes/completeness, and observed remote commit before calling the release CLI. |
+
+The baseline manifest digest is
+`c7cb2c46702e7e88b7ddd84aa83b038bf52aa0a5901d3154bf3fb60bba41b5c7`.
+The current beta7 QA manifest digest is
+`a17516f6005ba8cb4a9c65b7c27751454a12b93508962c1354c584533bf595d5`.
+Current package version1.36.1-beta.7 differs from the default release baseline;
+inspection therefore predicts rejection at the package/manifest guard. No actual
+preparation attempt was made for this inventory.
+
+## Independent literal policy references
+
+Use `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa` as the synthetic HEAD/tag commit.
+These are expected data values for future tests, not executed release receipts.
+
+| Input mode | Package / selected manifest | Exact ref | Manifest candidate | Output tag / class |
+| --- | --- | --- | --- | --- |
+| Tag | `1.36.0` / `1.36.0`, baseline file/digest above | `refs/tags/v1.36.0` | `false` | `v1.36.0` / `prerelease` |
+| Preflight | Same baseline tuple | `refs/heads/codex/public-beta-1.36` | `false` | `null` / `candidate` |
+| QA beta7 | `1.36.1-beta.7` / same QA candidate version | Any | `true` | Unsupported by the frozen release policy |
+
+Preflight release class `candidate` is distinct from the manifest's `candidate`
+boolean, which is false for both supported historical modes.
+
+The exact six checksummed payload names are:
+
+```
+Linecraft-CAD-1.36.0-Setup.exe
+Linecraft-CAD-1.36.0-Source.zip
+Installed-Acceptance.linecraft
+Installed-Acceptance.pdf
+Public-Beta-Verification.json
+libredwg-0.13.4-upstream.tar.gz
+```
+
+The source archive prefix is `Linecraft-CAD-1.36.0-Source/`. The upload set adds
+`SHA256SUMS.txt` separately. `release-notes.md` is a notes input outside the six
+checksummed payloads; it is not a seventh payload or an uploaded release asset.
+
+## Publisher compatibility observations
+
+The current identity clause does not explicitly check verification `version` or
+`format`. Its PowerShell `-notmatch`, `-in` and `-ne` operations are case-insensitive
+by default. Do not describe the digest regex as strictly lowercase or silently
+replace that behavior with case-sensitive JavaScript comparisons.
+
+A bounded local PowerShell7.6.9 expression probe confirmed that an uppercase digest
+matches the current regex, case aliases match the allowlist/duplicate comparisons,
+and changing only version or format leaves the current identity clause satisfied.
+Wrong commit, tag or class fails that clause. The probe executed only synthetic
+expressions: no file hashing, artifact validation, remote lookup or publisher ran.
+It does not demonstrate a complete publisher acceptance, attack or CI result.
+
+Notes are not covered by the payload checksum set. The remote-commit lookup is an
+observation before publication, not an atomic tag pin. Any future version/format,
+notes-integrity, case-policy or remote-ref change needs its own explicit contract
+and failing reference; this inventory implements none of them.
+
+## Decision proposed
+
+Start with a pure frozen source-identity planner in the read-token qualification
+side. It accepts explicit package/selected-manifest/ref/HEAD/tag-commit metadata
+and returns canonical tag, release class, source prefix and the asset-name tuple.
+It has no filesystem, environment, Git, process, network or publication access.
+
+The first extraction preserves the two historical tuples above and rejects a
+coherent beta7 tuple. It does not add a generic version grammar, candidate selector
+or new release channel. The wrapper still loads/verifies manifest bytes, reads Git
+state, checks receipts and performs side effects. Planning output grants no
+publication authority and must not contain a `publicationAllowed` switch.
+
+Do not import this project helper into the write-token publisher or execute helper
+code downloaded with artifacts. The publisher's independent inline policy remains
+fixed. A later offline data-only publisher reference validator may run under read
+permissions, but its format/version/checksum/case/notes policy must first be stated
+explicitly; it is a separate milestone from the source planner.
+
+## Options considered and trade-offs
+
+| Option | Benefit | Cost / constraint | Disposition |
+| --- | --- | --- | --- |
+| Retain all inline source identity logic | Smallest immediate change; existing169 prefix references remain authoritative | Identity/name derivation stays coupled to side effects | Preserve as the baseline oracle. |
+| Extract a pure frozen source planner | Independently testable literal metadata/name contract without changing release scope | Wrapper and publisher still need separate qualification | Proposed first implementation. |
+| Reuse one executable validator in both jobs | Reduces duplicated logic | Project/artifact code under the write token conflicts with the current isolation boundary | Not part of this design. |
+| Generalize candidate versions and workflow/publisher together | Could eventually support a versioned release path | Requires exact-candidate build/install evidence, trigger/token review and release authority | Deferred; no incidental generalization. |
+
+## Consequences and staged work
+
+1. Establish literal tag/preflight/beta7-rejection expectations against current
+   behavior. Alter package/manifest version, selected file/hash/candidate flag,
+   ref and tag commit independently. Keep all169 prefix cases.
+2. Extract only the frozen planner, then compare before/after behavior and exact
+   output names. This is a behavior-preserving extraction; do not invent a failing
+   product regression to describe it as a fix.
+3. Integrate on the read-token source side only after independent code/test/privacy
+   review. Preserve default baseline selection and all existing receipt guards.
+4. Separately inventory/test publisher data policy. Missing version/format and
+   strict-case expectations are proposed future requirements, not current passing
+   protections. Any product fix needs a genuine failing reference first.
+5. Consider candidate release support only through a separately reviewed policy
+   and exact-candidate qualification. No workflow, trigger, permission, publication,
+   build, installation or converter action follows from this ADR.
+
+This design does not resolve receipt authenticity/inventory completeness, auditor
+identity, OS file identity/races, native/installed acceptance or client/domain
+requirements. The existing pipeline remains historical1.36.0-only.

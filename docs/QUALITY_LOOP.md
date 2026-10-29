@@ -437,3 +437,13 @@ baseline and gate metadata before asset mutations. Its169 synthetic prefix check
 run in both baseline and candidate suites. This does not generalize the1.36.0-only
 publisher or establish candidate release readiness; no release action is a side
 effect of the reference tests.
+
+## Frozen release identity design - October 29, 2026
+
+The [release identity ADR](RELEASE-IDENTITY-ADR.md) inventories source/preflight,
+manifest, asset/checksum and isolated-publisher boundaries. It proposes a pure
+frozen source planner without changing candidate selection, triggers or write
+permissions. A local synthetic PowerShell expression probe is separately bounded
+from unexecuted publisher/CI behavior. This documentation milestone reruns no
+unchanged gate or build; existing169 prefix cases and their qualification limits
+remain unchanged. Versioned candidate publication is not implemented or authorized.
