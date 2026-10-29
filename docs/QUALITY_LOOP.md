@@ -429,3 +429,11 @@ Its first source attempt failed closed0/5 at listener ownership; no renderer com
 ran. The failed run and forced owned-child cleanup are retained. Unpacked/native/
 hardened-fuse acceptance is not inferred. No runtime, fuse, build, manifest or installer
 change is included; continue unrelated assessment until listener evidence is available.
+
+## Asset-preparation receipt identity
+
+The [receipt identity guard](RELEASE-RECEIPT-IDENTITY.md) binds the historical
+baseline and gate metadata before asset mutations. Its21 synthetic prefix checks
+run in both baseline and candidate suites. This does not generalize the1.36.0-only
+publisher or establish candidate release readiness; no release action is a side
+effect of the reference tests.

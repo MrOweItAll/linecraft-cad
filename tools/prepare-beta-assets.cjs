@@ -1,5 +1,6 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),{createHash}=require('node:crypto'),{execFileSync}=require('node:child_process');
+const {loadManifest}=require('./source-manifest.cjs');
 const root=path.resolve(__dirname,'..'),version=require('../package.json').version,tag=`v${version}`,out=path.join(root,'Windows-Release');
 assert.ok(process.argv.length<=3&&(!process.argv[2]||process.argv[2]==='--preflight'));
 const preflight=process.argv[2]==='--preflight';
@@ -9,13 +10,22 @@ assert.equal(process.env.GITHUB_REF,preflight?'refs/heads/codex/public-beta-1.36
 if(!preflight)assert.equal(execFileSync('git',['rev-parse',`${tag}^{commit}`],{cwd:root,encoding:'utf8'}).trim(),commit);
 execFileSync('git',['diff','--exit-code','HEAD','--'],{cwd:root,stdio:'inherit'});
 const gateStart=Date.parse(process.env.GATE_START_UTC);assert.ok(Number.isFinite(gateStart),'CI start timestamp required.');
-const release=read('work/public-release-results.json'),installed=read('work/public-test-installed-results.json');
-for(const r of [release,installed]){
+// Keep the historical baseline selector. Candidate release support is separate.
+const {manifest,manifestFile,candidate}=loadManifest(),manifestSHA256=sha(path.join(root,manifestFile));
+function identity(actual,expected,reason){if(actual!==expected)throw Object.assign(Error(`Release receipt identity mismatch: ${reason}.`),{code:'ERR_LINECRAFT_RELEASE_IDENTITY'});}
+identity(version,manifest.version,'package/manifest version');
+const release=read('work/public-release-results.json'),installed=read('work/public-test-installed-results.json'),pure=read('work/public-pure-results.json');
+for(const [label,r] of [['release',release],['installed',installed]]){
  assert.equal(r.status,'passed');assert.equal(r.version,version);assert.deepEqual(r.changedSource,[]);
+ identity(r.manifestFile,manifestFile,label+' manifest file');
+ identity(r.manifestSHA256,manifestSHA256,label+' manifest hash');
+ identity(r.candidate,candidate,label+' candidate flag');
+ identity(r.sourceSHA256?.[manifestFile],manifestSHA256,label+' bound manifest hash');
  assert.ok(Date.parse(r.startedAt)>=gateStart&&Date.parse(r.completedAt)<=Date.now(),'Stale or future gate receipt.');
  for(const [name,digest] of Object.entries(r.sourceSHA256))assert.equal(sha(path.join(root,name)),digest,name);
 }
 assert.equal(release.command,'release');assert.equal(installed.command,'test-installed');
+assert.equal(pure.status,'passed');identity(pure.version,version,'pure version');
 const clean=read('work/public-clean-install-results.json');assert.equal(clean.status,'passed');
 assert.equal(clean.version,version);assert.equal(clean.runId,process.env.GITHUB_RUN_ID);assert.ok(Date.parse(clean.startedAt)>=gateStart);
 const installer=`Linecraft-CAD-${version}-Setup.exe`,source=`Linecraft-CAD-${version}-Source.zip`;
@@ -37,7 +47,7 @@ for(const mode of ['source','unpacked','installed']){
  }
 }
 summary.cleanInstallation={os:clean.os,scope:clean.scope,checks:clean.checks};
-const pure=read('work/public-pure-results.json');assert.equal(pure.status,'passed');summary.freshPublicChecks.pure=pure;
+summary.freshPublicChecks.pure=pure;
 const audit=read('work/public-npm-audit.json');assert.equal(audit.metadata.vulnerabilities.total,0);
 summary.dependencyAudit={vulnerabilities:audit.metadata.vulnerabilities,dependencies:audit.metadata.dependencies,scope:'Current npm advisory response for the locked dependencies, including the bundled Electron runtime.'};
 summary.desktopRuntime=require('../package.json').devDependencies.electron;

@@ -988,6 +988,31 @@
       "nativeInstalledAcceptance": "not run for beta7",
       "dailyUseReady": false,
       "nextAction": "Preserve beta6 historical binary/native evidence. Any beta7 build/unpacked/native qualification is a separate milestone; reassess further coherent extractions independently."
+    },
+    {
+      "id": "LC-REL-RECEIPT-IDENTITY",
+      "parent": "LC-REL-VERSIONED-PIPELINE",
+      "priority": 2,
+      "symptom": "Asset preparation did not bind release/installed manifest lineage and read pure status/version after its first asset mutations",
+      "sourceVersion": "1.36.1-beta.7",
+      "fixtureClass": "Synthetic historical package/receipt metadata; VM fake files/Git and real immutable baseline manifest bytes",
+      "status": "verified bounded source-only receipt identity guard; versioned candidate pipeline remains open",
+      "attempts": 1,
+      "acceptance": "Strict selected baseline/package/receipt identity before archive/copy/write; preserve valid historical tag/preflight boundary and existing ref/commit/command/hash controls",
+      "evidence": [
+        "tools/prepare-beta-assets.cjs",
+        "tests/release-receipt-identity.test.cjs",
+        "tests/fixtures/release-receipt-identity.json",
+        "docs/RELEASE-RECEIPT-IDENTITY.md"
+      ],
+      "verifiedScope": "12 failing references and9 passing controls before;21/21 pass after. Valid controls reach only a fake first-archive boundary; all mismatches reject before asset-mutation spies. No downstream asset preparation or publication simulated.",
+      "runtimeChanged": false,
+      "candidateManifestChanged": false,
+      "releaseWorkflowChanged": false,
+      "actualAssetsPrepared": false,
+      "publicationRun": false,
+      "dailyUseReady": false,
+      "nextAction": "Review remaining pure-summary freshness/source bindings and full receipt schemas or publisher metadata checks independently. Preserve baseline-only workflow selection and separate exact-candidate qualification/release authorization."
     }
   ]
 }

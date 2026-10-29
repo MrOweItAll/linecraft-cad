@@ -14,8 +14,10 @@ const manifestOption=process.argv.find(a=>a.startsWith('--manifest='))?.slice(11
 auxiliaries.push('.github/workflows/quality-loop.yml','.github/workflows/windows-beta.yml');
 auxiliaries.push('tests/script-descriptor-reference.test.cjs','tests/fixtures/script-descriptor-contract.json');
 auxiliaries.push('tests/script-admission-reference.test.cjs','tests/fixtures/script-admission-contract.json');
+auxiliaries.push('tests/fixtures/release-receipt-identity.json','tools/prepare-beta-assets.cjs');
 auxiliaries.push('tools/observe-script-directory.ps1','tools/script-directory-observation.cjs','tests/fixtures/script-directory-observation.json','tests/script-directory-observer.test.ps1');
 const {manifest,manifestFile,candidate}=require('../tools/source-manifest.cjs').loadManifest(manifestOption);
+suites.push('tests/release-receipt-identity.test.cjs');
 if(candidate)suites.push('tests/script-directory-observation.test.cjs');
 if(candidate)suites.push('tests/non-inspector-contract.test.cjs');
 auxiliaries.push('tests/non-inspector-contract.cjs','tests/non-inspector-websocket.test.cjs','tests/non-inspector-probe.cjs','tests/observe-owned-windows.ps1','tests/fixtures/non-inspector-beta6-targets.json');

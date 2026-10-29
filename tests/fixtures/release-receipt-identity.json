@@ -1,0 +1,28 @@
+{
+  "format": "LinecraftReleaseReceiptIdentityReference/1",
+  "scope": "Synthetic prefix admission only; actual prepare tool and manifest loader run in a VM before a fake asset-mutation boundary",
+  "version": "1.36.0",
+  "manifestFile": "PUBLIC-SOURCE.json",
+  "manifestSHA256": "c7cb2c46702e7e88b7ddd84aa83b038bf52aa0a5901d3154bf3fb60bba41b5c7",
+  "candidate": false,
+  "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "gateStart": "2026-10-01T00:00:00.000Z",
+  "startedAt": "2026-10-01T00:01:00.000Z",
+  "completedAt": "2026-10-01T00:02:00.000Z",
+  "now": "2026-10-01T00:10:00.000Z",
+  "identityError": "ERR_LINECRAFT_RELEASE_IDENTITY",
+  "cases": [
+    {"id":"release-manifest-file","receipt":"release","field":"manifestFile","value":"OTHER-SOURCE.json"},
+    {"id":"installed-manifest-file","receipt":"installed","field":"manifestFile","value":"OTHER-SOURCE.json"},
+    {"id":"release-manifest-hash","receipt":"release","field":"manifestSHA256","value":"0000000000000000000000000000000000000000000000000000000000000000"},
+    {"id":"installed-manifest-hash","receipt":"installed","field":"manifestSHA256","value":"0000000000000000000000000000000000000000000000000000000000000000"},
+    {"id":"release-candidate-flag","receipt":"release","field":"candidate","value":true},
+    {"id":"installed-candidate-flag","receipt":"installed","field":"candidate","value":true},
+    {"id":"candidate-string-is-not-boolean","receipt":"release","field":"candidate","value":"false"},
+    {"id":"release-missing-bound-manifest","receipt":"release","operation":"delete-bound-manifest"},
+    {"id":"installed-missing-bound-manifest","receipt":"installed","operation":"delete-bound-manifest"},
+    {"id":"pure-version","receipt":"pure","field":"version","value":"1.35.0"},
+    {"id":"pure-failure-before-mutation","receipt":"pure","field":"status","value":"failed","error":"ERR_ASSERTION"},
+    {"id":"package-and-receipts-differ-from-selected-baseline","operation":"coherent-other-version","version":"1.36.1-beta.7"}
+  ]
+}
