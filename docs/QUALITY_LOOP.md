@@ -457,3 +457,14 @@ metadata is tested only at the new API; preparation still uses the default
 baseline. The model is not integrated with preparation or the write-token
 publisher. No candidate release support, runtime/manifest/workflow change or
 prepared-output/build/install/publication qualification follows from this step.
+
+## Virtual release serialization contract - October 29, 2026
+
+The unchanged preparation wrapper now has171 preserved prefix plus17 virtual
+completion/adapter/oracle cases,188 total. Full tag/preflight verification bytes,
+synthetic checksum lines, exact copy/write names and final log are frozen in an
+independent reference. See [the ADR](RELEASE-IDENTITY-ADR.md#virtual-downstream-characterization).
+The default sentinel remains first-archive; only opt-in cases complete using fake
+in-memory assets. No real output, ZIP/PDF/installer, publisher, CI or security
+sandbox qualification follows. Standalone planner integration remains deferred;
+production/runtime/manifests/workflows are unchanged.

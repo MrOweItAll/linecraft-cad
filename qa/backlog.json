@@ -1298,6 +1298,20 @@
       "publicationRun": false,
       "dailyUseReady": false,
       "nextAction": "Characterize complete downstream metadata/name/checksum/log behavior with a bounded all-virtual harness before source-planner integration; preserve early guard order, default baseline, all171 prefix cases and publisher/write-token isolation."
+    },
+    {
+      "id": "LC-REL-VIRTUAL-SERIALIZATION",
+      "priority": 2,
+      "status": "verified bounded virtual downstream metadata/checksum/final-log characterization; planner integration deferred",
+      "problem": "First-archive prefix checks did not characterize downstream serialized metadata and synthetic-byte checksum output",
+      "fixture": "Independently authored full frozen tag/preflight verification literals and synthetic-byte SHA256/checksum/final-log references",
+      "expected": "Exact188 suite:171 preserved prefix and17 virtual controls; no real assets, child processes, filesystem writes, publisher or network execution",
+      "change": "Opt-in allowlisted in-memory completion adapter; production preparer/planner/workflows and original fixtures unchanged",
+      "validation": "188/188 focused cases and41/41 fast stages with1043 selected portable checks;204 source inputs; no application or build gate repeated",
+      "implementationAttempts": 1,
+      "repairAttempts": 2,
+      "repairScope": "One preserved private generator indentation mismatch, then bounded review cleanup preserving original mixed line endings and clarifying gate wording; no product fix",
+      "limits": "Virtual serialization only, not ZIP validity, real PDF/installer, OS permissions/races, authenticity, general privacy, installed/native/CI/publication or daily-use readiness"
     }
   ]
 }

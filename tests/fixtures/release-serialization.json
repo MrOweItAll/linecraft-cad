@@ -1,0 +1,446 @@
+{
+  "format": "LinecraftVirtualPreparationReference/1",
+  "scope": "Independent literal serialized metadata and synthetic-byte checksum oracle; no real assets, ZIP, PDF, installer, publisher or CI execution",
+  "inputBytes": {
+    "installer": "synthetic installer bytes",
+    "archive": "Synthetic archive placeholder; not ZIP bytes.\n",
+    "native": "Synthetic installed native bytes.\n",
+    "pdf": "Synthetic installed PDF bytes.\n",
+    "supplement": "Synthetic source supplement; not a compressed archive.\n",
+    "notes": "Synthetic release notes; not checksummed payload.\n"
+  },
+  "expectedPayloadAssets": [
+    "Linecraft-CAD-1.36.0-Setup.exe",
+    "Linecraft-CAD-1.36.0-Source.zip",
+    "Installed-Acceptance.linecraft",
+    "Installed-Acceptance.pdf",
+    "Public-Beta-Verification.json",
+    "libredwg-0.13.4-upstream.tar.gz"
+  ],
+  "expectedCopyPairs": [
+    [
+      "work\\acceptance\\grip-accepted.linecraft",
+      "Windows-Release\\Installed-Acceptance.linecraft"
+    ],
+    [
+      "work\\acceptance\\grip-accepted.pdf",
+      "Windows-Release\\Installed-Acceptance.pdf"
+    ],
+    [
+      "third-party-source\\libredwg-0.13.4-upstream.tar.gz",
+      "Windows-Release\\libredwg-0.13.4-upstream.tar.gz"
+    ],
+    [
+      "docs\\RELEASE-1.36-BETA.md",
+      "Windows-Release\\release-notes.md"
+    ]
+  ],
+  "expectedWritePaths": [
+    "Windows-Release\\Public-Beta-Verification.json",
+    "Windows-Release\\SHA256SUMS.txt"
+  ],
+  "modes": {
+    "tag": {
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.36.0",
+        "tag": "v1.36.0",
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "runId": "42",
+        "runUrl": "https://github.com/synthetic/example/actions/runs/42",
+        "releaseClass": "prerelease",
+        "automaticUpdater": false,
+        "codeSigning": "unsigned",
+        "historicalQualifiedWindowsRuntime": {
+          "pipelineStages": 177,
+          "inheritedUnchangedStages": 128,
+          "newlyExecutedStages": 49,
+          "visibleNativeFileChecks": 14,
+          "additionalVisibleGestureChecks": 11,
+          "actualPdfChecks": 9,
+          "scope": "Historical qualification of preserved application source/resources on Electron44.7.0. The Electron44.9.3 security refresh requires separate current public and visible-installed requalification; historical results do not establish the refreshed vendor runtime."
+        },
+        "freshPublicChecks": {
+          "source": {
+            "application": {
+              "electron": "44.9.3",
+              "version": "44.9.3",
+              "linecraftManifestVersion": "1.36.0",
+              "location": "[local path omitted]",
+              "nested": {
+                "keep": "synthetic"
+              }
+            },
+            "applicationChecks": 32,
+            "failed": 0,
+            "pdfChecks": 9,
+            "evidenceClass": "Fake receipt; no application execution",
+            "tests": [
+              {
+                "name": "Synthetic application row",
+                "status": "passed"
+              }
+            ]
+          },
+          "unpacked": {
+            "application": {
+              "electron": "44.9.3",
+              "version": "1.36.0",
+              "linecraftManifestVersion": "1.36.0",
+              "location": "[local path omitted]",
+              "nested": {
+                "keep": "synthetic"
+              }
+            },
+            "applicationChecks": 32,
+            "failed": 0,
+            "pdfChecks": 9,
+            "evidenceClass": "Fake receipt; no application execution",
+            "tests": [
+              {
+                "name": "Synthetic application row",
+                "status": "passed"
+              }
+            ]
+          },
+          "installed": {
+            "application": {
+              "electron": "44.9.3",
+              "version": "1.36.0",
+              "linecraftManifestVersion": "1.36.0",
+              "location": "[local path omitted]",
+              "nested": {
+                "keep": "synthetic"
+              }
+            },
+            "applicationChecks": 32,
+            "failed": 0,
+            "pdfChecks": 9,
+            "evidenceClass": "Fake receipt; no application execution",
+            "tests": [
+              {
+                "name": "Synthetic application row",
+                "status": "passed"
+              }
+            ]
+          },
+          "pure": {
+            "format": "LinecraftPublicPureSummary/1",
+            "version": "1.36.0",
+            "status": "passed",
+            "node": "v24.13.0",
+            "core": {},
+            "suites": [],
+            "sourceSHA256": {
+              "PUBLIC-SOURCE.json": "c7cb2c46702e7e88b7ddd84aa83b038bf52aa0a5901d3154bf3fb60bba41b5c7",
+              "synthetic-qualified-input.txt": "015a6b7bb24b918211e11432b53f11e60bb1d40247c94ab526ad1473415c4142"
+            },
+            "completedAt": "2026-10-01T00:02:00.000Z"
+          }
+        },
+        "limits": [
+          "Hidden CI tests stub native chooser/discard responses.",
+          "Historical visible installed Windows checks preceded the vendor security refresh; current public gates exercise the patched vendor runtime separately.",
+          "Fresh install/uninstall scope is a GitHub-hosted Windows VM; broader Windows/DPI coverage remains beta work."
+        ],
+        "actualPdfMeasurements": [
+          {
+            "name": "Synthetic audit row 1",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          },
+          {
+            "name": "Synthetic audit row 2",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          },
+          {
+            "name": "Synthetic audit row 3",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          },
+          {
+            "name": "Synthetic audit row 4",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          },
+          {
+            "name": "Synthetic audit row 5",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          },
+          {
+            "name": "Synthetic audit row 6",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          },
+          {
+            "name": "Synthetic audit row 7",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          },
+          {
+            "name": "Synthetic audit row 8",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          },
+          {
+            "name": "Synthetic audit row 9",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          }
+        ],
+        "cleanInstallation": {
+          "os": "Synthetic Windows",
+          "scope": "Fake clean-install receipt",
+          "checks": [
+            {
+              "name": "Synthetic clean row",
+              "status": "passed"
+            }
+          ]
+        },
+        "dependencyAudit": {
+          "vulnerabilities": {
+            "total": 0
+          },
+          "dependencies": {
+            "prod": 1,
+            "dev": 0,
+            "total": 1
+          },
+          "scope": "Current npm advisory response for the locked dependencies, including the bundled Electron runtime."
+        },
+        "desktopRuntime": "44.9.3",
+        "runtimeIdentity": {
+          "runtimeFiles": 59,
+          "bundledResources": 12,
+          "manifestSHA256": "c7cb2c46702e7e88b7ddd84aa83b038bf52aa0a5901d3154bf3fb60bba41b5c7",
+          "scope": "Original application code and resources retain qualified identities; the patched vendor desktop runtime is separately exercised in each public application gate."
+        }
+      },
+      "verificationSHA256": "8f74166b9dc50369f0cbe926c1b3ce9181771ad625ecef813e15ddcb2fcf9dcc",
+      "checksumText": "6aeca35cec27083d8b27cac4f37f2b906cf02a2556810863b83eabdbad366d40  Linecraft-CAD-1.36.0-Setup.exe\nf064ddf10fee3ac49c56b7d413886d78f4b7591c902ae14f8d9a9a2390996467  Linecraft-CAD-1.36.0-Source.zip\nfc01124ade763096628dea685662829707983a3b6653d3b05147ebb3e5eab262  Installed-Acceptance.linecraft\nd65375941c254c0abd8eb27fd675d1a1df70f1f8007ed6ab347e3f397a901163  Installed-Acceptance.pdf\n8f74166b9dc50369f0cbe926c1b3ce9181771ad625ecef813e15ddcb2fcf9dcc  Public-Beta-Verification.json\n0775e1c818af47cdce85903749c40a7d0000fa44a51a0881f1487bd3282c57a6  libredwg-0.13.4-upstream.tar.gz\n",
+      "finalLog": "{\n  \"tag\": \"v1.36.0\",\n  \"commit\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\n  \"assets\": [\n    \"Linecraft-CAD-1.36.0-Setup.exe\",\n    \"Linecraft-CAD-1.36.0-Source.zip\",\n    \"Installed-Acceptance.linecraft\",\n    \"Installed-Acceptance.pdf\",\n    \"Public-Beta-Verification.json\",\n    \"libredwg-0.13.4-upstream.tar.gz\",\n    \"SHA256SUMS.txt\"\n  ]\n}\n"
+    },
+    "preflight": {
+      "verification": {
+        "format": "LinecraftPublicBetaVerification/1",
+        "version": "1.36.0",
+        "tag": null,
+        "commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "runId": "42",
+        "runUrl": "https://github.com/synthetic/example/actions/runs/42",
+        "releaseClass": "candidate",
+        "automaticUpdater": false,
+        "codeSigning": "unsigned",
+        "historicalQualifiedWindowsRuntime": {
+          "pipelineStages": 177,
+          "inheritedUnchangedStages": 128,
+          "newlyExecutedStages": 49,
+          "visibleNativeFileChecks": 14,
+          "additionalVisibleGestureChecks": 11,
+          "actualPdfChecks": 9,
+          "scope": "Historical qualification of preserved application source/resources on Electron44.7.0. The Electron44.9.3 security refresh requires separate current public and visible-installed requalification; historical results do not establish the refreshed vendor runtime."
+        },
+        "freshPublicChecks": {
+          "source": {
+            "application": {
+              "electron": "44.9.3",
+              "version": "44.9.3",
+              "linecraftManifestVersion": "1.36.0",
+              "location": "[local path omitted]",
+              "nested": {
+                "keep": "synthetic"
+              }
+            },
+            "applicationChecks": 32,
+            "failed": 0,
+            "pdfChecks": 9,
+            "evidenceClass": "Fake receipt; no application execution",
+            "tests": [
+              {
+                "name": "Synthetic application row",
+                "status": "passed"
+              }
+            ]
+          },
+          "unpacked": {
+            "application": {
+              "electron": "44.9.3",
+              "version": "1.36.0",
+              "linecraftManifestVersion": "1.36.0",
+              "location": "[local path omitted]",
+              "nested": {
+                "keep": "synthetic"
+              }
+            },
+            "applicationChecks": 32,
+            "failed": 0,
+            "pdfChecks": 9,
+            "evidenceClass": "Fake receipt; no application execution",
+            "tests": [
+              {
+                "name": "Synthetic application row",
+                "status": "passed"
+              }
+            ]
+          },
+          "installed": {
+            "application": {
+              "electron": "44.9.3",
+              "version": "1.36.0",
+              "linecraftManifestVersion": "1.36.0",
+              "location": "[local path omitted]",
+              "nested": {
+                "keep": "synthetic"
+              }
+            },
+            "applicationChecks": 32,
+            "failed": 0,
+            "pdfChecks": 9,
+            "evidenceClass": "Fake receipt; no application execution",
+            "tests": [
+              {
+                "name": "Synthetic application row",
+                "status": "passed"
+              }
+            ]
+          },
+          "pure": {
+            "format": "LinecraftPublicPureSummary/1",
+            "version": "1.36.0",
+            "status": "passed",
+            "node": "v24.13.0",
+            "core": {},
+            "suites": [],
+            "sourceSHA256": {
+              "PUBLIC-SOURCE.json": "c7cb2c46702e7e88b7ddd84aa83b038bf52aa0a5901d3154bf3fb60bba41b5c7",
+              "synthetic-qualified-input.txt": "015a6b7bb24b918211e11432b53f11e60bb1d40247c94ab526ad1473415c4142"
+            },
+            "completedAt": "2026-10-01T00:02:00.000Z"
+          }
+        },
+        "limits": [
+          "Hidden CI tests stub native chooser/discard responses.",
+          "Historical visible installed Windows checks preceded the vendor security refresh; current public gates exercise the patched vendor runtime separately.",
+          "Fresh install/uninstall scope is a GitHub-hosted Windows VM; broader Windows/DPI coverage remains beta work."
+        ],
+        "actualPdfMeasurements": [
+          {
+            "name": "Synthetic audit row 1",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          },
+          {
+            "name": "Synthetic audit row 2",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          },
+          {
+            "name": "Synthetic audit row 3",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          },
+          {
+            "name": "Synthetic audit row 4",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          },
+          {
+            "name": "Synthetic audit row 5",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          },
+          {
+            "name": "Synthetic audit row 6",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          },
+          {
+            "name": "Synthetic audit row 7",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          },
+          {
+            "name": "Synthetic audit row 8",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          },
+          {
+            "name": "Synthetic audit row 9",
+            "status": "passed",
+            "details": {
+              "syntheticOnly": true
+            }
+          }
+        ],
+        "cleanInstallation": {
+          "os": "Synthetic Windows",
+          "scope": "Fake clean-install receipt",
+          "checks": [
+            {
+              "name": "Synthetic clean row",
+              "status": "passed"
+            }
+          ]
+        },
+        "dependencyAudit": {
+          "vulnerabilities": {
+            "total": 0
+          },
+          "dependencies": {
+            "prod": 1,
+            "dev": 0,
+            "total": 1
+          },
+          "scope": "Current npm advisory response for the locked dependencies, including the bundled Electron runtime."
+        },
+        "desktopRuntime": "44.9.3",
+        "runtimeIdentity": {
+          "runtimeFiles": 59,
+          "bundledResources": 12,
+          "manifestSHA256": "c7cb2c46702e7e88b7ddd84aa83b038bf52aa0a5901d3154bf3fb60bba41b5c7",
+          "scope": "Original application code and resources retain qualified identities; the patched vendor desktop runtime is separately exercised in each public application gate."
+        }
+      },
+      "verificationSHA256": "4738940d6549489bb489c1d7893f56c119bb714715f90d08d60e6533ecdbef27",
+      "checksumText": "6aeca35cec27083d8b27cac4f37f2b906cf02a2556810863b83eabdbad366d40  Linecraft-CAD-1.36.0-Setup.exe\nf064ddf10fee3ac49c56b7d413886d78f4b7591c902ae14f8d9a9a2390996467  Linecraft-CAD-1.36.0-Source.zip\nfc01124ade763096628dea685662829707983a3b6653d3b05147ebb3e5eab262  Installed-Acceptance.linecraft\nd65375941c254c0abd8eb27fd675d1a1df70f1f8007ed6ab347e3f397a901163  Installed-Acceptance.pdf\n4738940d6549489bb489c1d7893f56c119bb714715f90d08d60e6533ecdbef27  Public-Beta-Verification.json\n0775e1c818af47cdce85903749c40a7d0000fa44a51a0881f1487bd3282c57a6  libredwg-0.13.4-upstream.tar.gz\n",
+      "finalLog": "{\n  \"tag\": \"v1.36.0\",\n  \"commit\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\n  \"assets\": [\n    \"Linecraft-CAD-1.36.0-Setup.exe\",\n    \"Linecraft-CAD-1.36.0-Source.zip\",\n    \"Installed-Acceptance.linecraft\",\n    \"Installed-Acceptance.pdf\",\n    \"Public-Beta-Verification.json\",\n    \"libredwg-0.13.4-upstream.tar.gz\",\n    \"SHA256SUMS.txt\"\n  ]\n}\n"
+    }
+  }
+}

@@ -14,7 +14,7 @@ const manifestOption=process.argv.find(a=>a.startsWith('--manifest='))?.slice(11
 auxiliaries.push('.github/workflows/quality-loop.yml','.github/workflows/windows-beta.yml');
 auxiliaries.push('tests/script-descriptor-reference.test.cjs','tests/fixtures/script-descriptor-contract.json');
 auxiliaries.push('tests/script-admission-reference.test.cjs','tests/fixtures/script-admission-contract.json');
-auxiliaries.push('tests/fixtures/release-receipt-identity.json','tools/prepare-beta-assets.cjs','tests/fixtures/frozen-release-identity.json','tools/frozen-release-identity.cjs');
+auxiliaries.push('tests/fixtures/release-receipt-identity.json','tools/prepare-beta-assets.cjs','tests/fixtures/frozen-release-identity.json','tools/frozen-release-identity.cjs','tests/fixtures/release-serialization.json');
 auxiliaries.push('tools/observe-script-directory.ps1','tools/script-directory-observation.cjs','tests/fixtures/script-directory-observation.json','tests/script-directory-observer.test.ps1');
 const {manifest,manifestFile,candidate}=require('../tools/source-manifest.cjs').loadManifest(manifestOption);
 suites.push('tests/release-receipt-identity.test.cjs','tests/frozen-release-identity.test.cjs');

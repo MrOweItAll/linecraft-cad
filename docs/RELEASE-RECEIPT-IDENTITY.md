@@ -148,3 +148,15 @@ retaining all169 prior cases. They observe exact archive arguments, one installe
 read and tag-mode versus preflight Git lookup counts. The separate21-case
 [standalone planner contract](RELEASE-IDENTITY-ADR.md) does not alter preparation
 or establish downstream summary/checksum/asset output equivalence.
+
+## Opt-in downstream synthetic serialization
+
+The original171 prefix cases remain unchanged in meaning and names. Seventeen
+separate virtual completion controls bring this suite to188: two literal complete
+outputs, two copy-adjacent tamper rejections, seven denied adapter operations and
+six output-mutation sensitivity checks. The new reference binds full JSON bytes,
+metadata SHA256, six ordered checksum rows and canonical final log. See the
+[ADR scope](RELEASE-IDENTITY-ADR.md#virtual-downstream-characterization). Fake archive,
+PDF and installer bytes establish synthetic serialization only; production
+preparation, standalone integration and publisher/real-asset qualification remain
+separate. The original receipt and standalone API fixtures stay unchanged.

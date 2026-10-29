@@ -160,3 +160,35 @@ remains deferred until a bounded virtual characterization covers downstream
 verification metadata, asset names/checksum text and final log semantics, without
 running real archive/copy/build/publisher operations. Preserve the existing early
 Git/manifest guard order and all171 prefix cases when that integration is reviewed.
+
+## Virtual downstream characterization
+
+The unchanged preparer now runs to completion in an opt-in in-memory harness for
+both frozen tag and preflight modes. The original171 prefix cases retain their
+first-archive sentinel. Seventeen additional controls cover two complete virtual
+outputs, two post-archive copy-adjacent hash rejections, seven denied adapter
+operations and six in-memory output mutations detected by the independent oracle.
+The suite totals188 cases; these are synthetic checks, not fresh application or
+installed acceptance. Both profiles fingerprint the new literal reference.
+
+`tests/fixtures/release-serialization.json` freezes full verification objects and
+SHA256 values, ordered six-record checksum text and final console text. Its
+expected values were authored independently of the planner and preparer. Python
+SHA256 establishes the synthetic-byte reference; Node checks actual serialized
+bytes. The reference includes selected nested omission/projection controls. It
+preserves preflight verification tag null/class candidate and canonical final-log
+tag v1.36.0. Notes and the checksum file remain outside the six checksum records.
+
+Only exact Git calls, four copy pairs and two write paths are modeled. The fake
+archive contains declared placeholder bytes, with no ZIP validity claim. Unknown
+modules, filesystem operations/paths and child commands fail closed without host
+fallback. The VM adapter is a test boundary for trusted source, not a security
+sandbox for untrusted code. No real archive/copy/write, app, PDF, installer,
+publisher or network operation is executed by these cases. Filesystem permissions,
+races and authenticity, broad privacy/redaction and actual assets remain separate.
+
+The standalone planner is still unwired. This characterization is a reference for
+a future narrowly reviewed integration, preserving the early ref/tag-commit,
+tracked-clean/time and default-manifest guard order. Neither candidate selection
+nor the publisher/write-token boundary changes. A future integration must compare
+the same complete virtual outputs and retain all prefix/API/adapter controls.

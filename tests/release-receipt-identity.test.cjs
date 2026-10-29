@@ -1,10 +1,11 @@
 'use strict';
 // Actual source executes against fake files/Git. The first asset mutation is a
-// sentinel, never a real archive/copy/write or downstream release simulation.
+// sentinel by default. Opt-in downstream cases use only allowlisted in-memory bytes.
 const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),crypto=require('node:crypto');
 const fixture=require('./fixtures/release-receipt-identity.json');
 const frozenReference=require('./fixtures/frozen-release-identity.json');
+const serializationReference=require('./fixtures/release-serialization.json');
 const prepare=fs.readFileSync(path.join(__dirname,'../tools/prepare-beta-assets.cjs'),'utf8');
 const manifestSource=fs.readFileSync(path.join(__dirname,'../tools/source-manifest.cjs'),'utf8');
 const baseline=fs.readFileSync(path.join(__dirname,'../PUBLIC-SOURCE.json'));
@@ -14,8 +15,8 @@ for(const input of [fixture.qualifiedInput,fixture.extraInput,fixture.outputRefe
 const virtualRoot=String.raw`C:\synthetic-release`;
 const filename=name=>path.win32.resolve(virtualRoot,name);
 
-function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongInstaller=false,fileChange}={}){
- const state={archiveCalls:0,copyCalls:0,writeCalls:0,archiveArguments:null,tagLookups:0,installerReads:0,manifestLoads:0,auditReads:0,dependencyReads:0,harnessFaults:[]};
+function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongInstaller=false,fileChange,virtualOutputs=false,toolSource=prepare,afterArchive}={}){
+ const state={archiveCalls:0,copyCalls:0,writeCalls:0,archiveArguments:null,tagLookups:0,installerReads:0,manifestLoads:0,auditReads:0,dependencyReads:0,copies:[],writes:[],logs:[],harnessFaults:[]};
  const demand=(condition,reason)=>{if(!condition){state.harnessFaults.push(reason);throw Object.assign(Error('Unsupported synthetic adapter operation.'),{code:'HARNESS_FAULT'});}};
  const inputs=()=>({[fixture.manifestFile]:fixture.manifestSHA256,[fixture.qualifiedInput.file]:fixture.qualifiedInput.sha256});
  const gate=command=>({format:'LinecraftPublicGate/1',version:fixture.version,command,status:'passed',changedSource:[],
@@ -44,7 +45,15 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
  }]));
  Object.assign(data.applications.installed.outputs.pdfAudit,{path:outputPaths.audit,sha256:sha(Buffer.from(JSON.stringify(data.audit)))});
  data.dependencyAudit=structuredClone(fixture.dependencyReference.report);
- if(change)change(data);
+  if(virtualOutputs){
+   for(const mode of appReference.modes){
+    const r=data.applications[mode];
+    Object.assign(r.application,{location:'C:\\synthetic-profile\\file',path:'synthetic omitted field',nested:{keep:'synthetic',stdout:'synthetic omitted field'}});
+    r.tests=[{name:'Synthetic application row',status:'passed',details:'not projected',path:'synthetic omitted field'}];
+   }
+   Object.assign(data.clean,{os:'Synthetic Windows',scope:'Fake clean-install receipt',checks:[{name:'Synthetic clean row',status:'passed',cwd:'synthetic omitted field'}]});
+  }
+  if(change)change(data);
  const files=new Map([[filename('PUBLIC-SOURCE.json'),baseline],
   [filename(fixture.qualifiedInput.file),Buffer.from(fixture.qualifiedInput.text)],
   [filename(fixture.extraInput.file),Buffer.from(fixture.extraInput.text)],
@@ -60,11 +69,28 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
   for(const entry of outputReference.cases.filter(entry=>entry.operation==='path'))files.set(filename(entry.path+'-'+field),bytes);
  }
  files.set(outputPaths.audit,Buffer.from(JSON.stringify(data.audit)));
- const knownFiles=new Set(files.keys());
+  if(virtualOutputs){
+   files.set(filename('third-party-source/libredwg-0.13.4-upstream.tar.gz'),Buffer.from(serializationReference.inputBytes.supplement));
+   files.set(filename('docs/RELEASE-1.36-BETA.md'),Buffer.from(serializationReference.inputBytes.notes));
+  }
+  const originalFiles=new Map([...files].map(([name,bytes])=>[name,Buffer.from(bytes)]));
+  const knownFiles=new Set(files.keys());
+  const created=new Set();
+  const copyPairs=serializationReference.expectedCopyPairs.map(pair=>pair.map(filename));
+  const writePaths=serializationReference.expectedWritePaths.map(filename);
+  const create=(file,bytes)=>{demand(!files.has(file),'unexpected-overwrite');files.set(file,Buffer.from(bytes));created.add(file);knownFiles.add(file);};
  if(fileChange)fileChange(files,outputPaths);
  const boundary=()=>Object.assign(Error('Synthetic asset-mutation boundary reached.'),{code:'HARNESS_ASSET_BOUNDARY'});
- const disk={readFileSync(file,encoding){demand(knownFiles.has(file),'unexpected-read');if(file===frozenReference.installerPath)state.installerReads++;if(file===outputPaths.audit)state.auditReads++;if(file===filename('work/public-npm-audit.json'))state.dependencyReads++;if(!files.has(file))throw Object.assign(Error('Missing known synthetic file.'),{code:'ENOENT'});const value=files.get(file);return encoding?value.toString(encoding):value;},
-  copyFileSync(){state.copyCalls++;throw boundary();},writeFileSync(){state.writeCalls++;throw boundary();}};
+ const disk={readFileSync(file,encoding){demand(knownFiles.has(file),'unexpected-read');if(file===frozenReference.installerPath)state.installerReads++;if(file===outputPaths.audit)state.auditReads++;if(file===filename('work/public-npm-audit.json'))state.dependencyReads++;if(!files.has(file))throw Object.assign(Error('Missing known synthetic file.'),{code:'ENOENT'});const value=files.get(file);demand(encoding===undefined||encoding==='utf8','unexpected-read-encoding');return encoding?value.toString(encoding):Buffer.from(value);},
+  copyFileSync(...args){
+    if(!virtualOutputs){state.copyCalls++;throw boundary();}
+    demand(args.length===2&&copyPairs.some(pair=>pair[0]===args[0]&&pair[1]===args[1]),'unexpected-copy');
+    demand(files.has(args[0]),'missing-copy-source');create(args[1],files.get(args[0]));state.copyCalls++;state.copies.push(args);
+   },writeFileSync(...args){
+    if(!virtualOutputs){state.writeCalls++;throw boundary();}
+    demand(args.length===2&&writePaths.includes(args[0])&&typeof args[1]==='string','unexpected-write');
+    create(args[0],Buffer.from(args[1]));state.writeCalls++;state.writes.push(args[0]);
+   }};
  const git={execFileSync(command,args){
   demand(command==='git'&&Array.isArray(args),'unexpected-child-process');
   if(args.length===2&&args[0]==='rev-parse'&&args[1]==='HEAD')return fixture.commit+'\n';
@@ -74,12 +100,15 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
    state.archiveArguments=structuredClone(args);
    demand(args.length===5&&args[1]==='--format=zip'&&args[2]===`--prefix=Linecraft-CAD-${data.package.version}-Source/`&&
     args[3]===`--output=${filename(`Windows-Release/Linecraft-CAD-${data.package.version}-Source.zip`)}`&&args[4]===fixture.commit,'archive-arguments');
-   state.archiveCalls++;throw boundary();
+   state.archiveCalls++;
+    if(!virtualOutputs)throw boundary();
+    create(filename('Windows-Release/Linecraft-CAD-1.36.0-Source.zip'),Buffer.from(serializationReference.inputBytes.archive));
+    if(afterArchive)afterArchive(files,outputPaths);return '';
   }
   demand(false,'unexpected-git-command');
  }};
  class Clock extends Date{static now(){return Date.parse(fixture.now);}}
- const context={Buffer,Date:Clock,__dirname:filename('tools'),console:{log(){demand(false,'unexpected-output-before-boundary');}},
+ const context={Buffer,Date:Clock,__dirname:filename('tools'),console:{log(...args){demand(virtualOutputs&&args.length===1&&typeof args[0]==='string','unexpected-console');state.logs.push(args[0]);}},
   process:{argv:['node','prepare-beta-assets.cjs',...(preflight?['--preflight']:[])],env:{
    GITHUB_REF:wrongRef?'refs/heads/unapproved':preflight?'refs/heads/codex/public-beta-1.36':`refs/tags/v${data.package.version}`,
    GATE_START_UTC:fixture.gateStart,GITHUB_RUN_ID:'42',GITHUB_REPOSITORY:'synthetic/example'}}};
@@ -87,7 +116,7 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
  function load(source){
   const module={exports:{}};
   vm.runInNewContext(source,{...context,module,exports:module.exports,require(name){
-   const modules={'node:fs':disk,'node:path':path.win32,'node:assert/strict':assert,'node:crypto':crypto,'node:child_process':git,'../package.json':data.package};
+   const modules={'node:fs':new Proxy(disk,{get(target,name){demand(Object.hasOwn(target,name),'unexpected-fs-method');return target[name];}}),'node:path':path.win32,'node:assert/strict':assert,'node:crypto':crypto,'node:child_process':git,'../package.json':data.package};
    if(name==='./source-manifest.cjs'){
     if(!cachedManifest){state.manifestLoads++;cachedManifest=load(manifestSource);}
     return cachedManifest;
@@ -97,9 +126,9 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
   return module.exports;
  }
  let error;
- try{load(prepare);}catch(value){error=value;}
+ try{load(toolSource);}catch(value){error=value;}
  assert.deepEqual(state.harnessFaults,[],'Unknown adapter calls must not count as receipt rejection');
- return {state,error};
+ return {state,error,files,created,originalFiles};
 }
 
 function noAssets(result){assert.deepEqual({archive:result.state.archiveCalls,copy:result.state.copyCalls,write:result.state.writeCalls},{archive:0,copy:0,write:0});}
@@ -270,4 +299,59 @@ for(const preflight of [false,true])test('frozen wrapper literal: '+(preflight?'
  assert.deepEqual(result.state.archiveArguments,frozenReference.archiveArguments);
  assert.equal(result.state.tagLookups,preflight?0:1);assert.equal(result.state.installerReads,1);
  assert.deepEqual({archive:result.state.archiveCalls,copy:result.state.copyCalls,write:result.state.writeCalls},{archive:1,copy:0,write:0});
+});
+
+// These controls execute the unchanged preparer to completion using fake assets.
+// No real ZIP/PDF/installer, filesystem mutation, child process or publisher runs.
+function checkVirtual(result,preflight){
+ const expected=serializationReference.modes[preflight?'preflight':'tag'];
+ assert.equal(result.error,undefined);
+ assert.deepEqual({archive:result.state.archiveCalls,copy:result.state.copyCalls,write:result.state.writeCalls,log:result.state.logs.length},{archive:1,copy:4,write:2,log:1});
+ assert.deepEqual(result.state.archiveArguments,frozenReference.archiveArguments);
+ assert.equal(result.state.tagLookups,preflight?0:1);
+ assert.deepEqual(result.state.copies,serializationReference.expectedCopyPairs.map(pair=>pair.map(filename)));
+ assert.deepEqual(result.state.writes,serializationReference.expectedWritePaths.map(filename));
+ const metadata=result.files.get(filename('Windows-Release/Public-Beta-Verification.json'));
+ assert.equal(metadata.toString('utf8'),JSON.stringify(expected.verification,null,2)+'\n');
+ assert.equal(sha(metadata),expected.verificationSHA256);
+ assert.equal(result.files.get(filename('Windows-Release/SHA256SUMS.txt')).toString('utf8'),expected.checksumText);
+ assert.deepEqual(result.state.logs,[expected.finalLog.trimEnd()]);
+ const expectedCreated=[...serializationReference.expectedPayloadAssets.slice(1),'SHA256SUMS.txt','release-notes.md'].map(name=>filename('Windows-Release/'+name));
+ assert.deepEqual([...result.created].sort(),expectedCreated.sort());
+ for(const [file,bytes] of result.originalFiles)assert.deepEqual(result.files.get(file),bytes,'Synthetic inputs remain unchanged');
+ for(const [field,name] of [['native','Installed-Acceptance.linecraft'],['pdf','Installed-Acceptance.pdf'],['supplement','libredwg-0.13.4-upstream.tar.gz'],['notes','release-notes.md']])
+  assert.equal(result.files.get(filename('Windows-Release/'+name)).toString('utf8'),serializationReference.inputBytes[field]);
+}
+for(const preflight of [false,true])test('virtual preparation: '+(preflight?'preflight':'tag')+' exact serialized metadata, checksums and final log',()=>{
+ checkVirtual(execute({preflight,virtualOutputs:true}),preflight);
+});
+for(const field of ['native','pdf'])test('virtual preparation: '+field+' changed after archive still rejects at copy-adjacent hash',()=>{
+ const result=execute({virtualOutputs:true,afterArchive(files,paths){files.set(paths[field],Buffer.from('Changed synthetic output after archive.'));}});
+ assert.equal(result.error?.code,'ERR_ASSERTION');assert.equal(result.state.archiveCalls,1);
+ assert.equal(result.state.copyCalls,field==='native'?0:1);assert.equal(result.state.writeCalls,0);
+});
+for(const [name,toolSource] of [
+ ['unknown module',"require('node:net')"],
+ ['unknown fs method',"require('node:fs').mkdirSync('outside')"],
+ ['unknown read',"require('node:fs').readFileSync('outside')"],
+ ['unknown copy',"require('node:fs').copyFileSync('outside','elsewhere')"],
+ ['unknown write',"require('node:fs').writeFileSync('outside','bytes')"],
+ ['unknown child',"require('node:child_process').execFileSync('node',[])"],
+ ['unknown git',"require('node:child_process').execFileSync('git',['status'])"]
+])test('virtual adapter: '+name+' fails closed without host fallback',()=>{
+ assert.throws(()=>execute({virtualOutputs:true,toolSource}),/Unknown adapter calls/);
+});
+const mutations=[
+ ['verification format',"format:'LinecraftPublicBetaVerification/1'","format:'WrongSyntheticFormat/1'"],
+ ['verification tag','tag:preflight?null:tag','tag:tag'],
+ ['verification release class',"releaseClass:preflight?'candidate':'prerelease'","releaseClass:'prerelease'"],
+ ['payload checksum membership','assets.map(n=>','assets.slice(0,-1).map(n=>'],
+ ['final upload names',"assets:assets.concat('SHA256SUMS.txt')","assets:assets"],
+ ['canonical final tag','JSON.stringify({tag,commit,assets:','JSON.stringify({tag:null,commit,assets:']
+];
+for(const [name,before,after] of mutations)test('virtual oracle sensitivity: '+name+' change is detected',()=>{
+ assert.equal(prepare.split(before).length,2,'Mutation must match exactly once');
+ const result=execute({preflight:true,virtualOutputs:true,toolSource:prepare.replace(before,after)});
+ assert.equal(result.error,undefined,'Probe must finish; oracle, not a harness exception, detects altered output');
+ assert.throws(()=>checkVirtual(result,true),{code:'ERR_ASSERTION'});
 });
