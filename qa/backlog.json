@@ -802,6 +802,35 @@
       "defaultGateSelection": "Pending red reference is explicit and unselected; existing gates are not descriptor-privacy qualification",
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-QA-STRUCTURAL-CONTRACTS",
+      "priority": 2,
+      "symptom": "Selected public QA omitted original synthetic V1/V2/V3 structural protocol coverage",
+      "expected": "Recover reviewed original tests and independently establish geometry, declared arithmetic and current-source identity before structural extraction",
+      "sourceVersion": "1.36.1-beta.6",
+      "sourceCommit": "9862c21be5cc8a830198aa0f8d4970bd2be7f8db",
+      "fixtureClass": "Original generic rectangular/T-shaped mathematical source and independently authored literal references; no client data or calculator dependency",
+      "status": "verified bounded pure contract coverage; file-service/native/engine acceptance separate",
+      "attempts": 1,
+      "productFixAttempts": 0,
+      "acceptance": "72 original synthetic cases restored with only CRLF-to-LF normalization in two copies plus3 literal plane/force/overlap references; current source modules remain unchanged",
+      "evidence": [
+        "tests/structural-bridge-independent.test.mjs",
+        "tests/structural-assignments.test.mjs",
+        "tests/structural-boundaries.test.mjs",
+        "tests/export-joined-roof-sample.mjs",
+        "tests/structural-contract-reference.test.mjs",
+        "docs/STRUCTURAL-CONTRACT-COVERAGE.md"
+      ],
+      "reviewCorrection": "Initial74pass1fail came from an incorrect new error-word matcher; correction adds stable outside-face diagnostic and actual rejection text without changing numerical assertions or tolerances. Failed evidence retained.",
+      "verifiedScope": "Pure source V1/V2/V3 contracts and declared arithmetic only; synthetic engine identities do not establish execution authenticity, capacity, code compliance or a load path",
+      "nextAction": "Review retained synthetic desktop file-service protocol tests separately; runtime admission product choice and installed/native/client/external-engine requirements remain open",
+      "runtimeChanged": false,
+      "candidateManifestChanged": false,
+      "nativeCandidateAcceptance": "not run for this coverage",
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }

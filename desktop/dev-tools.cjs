@@ -16,6 +16,8 @@ auxiliaries.push('tests/script-descriptor-reference.test.cjs','tests/fixtures/sc
 auxiliaries.push('tools/observe-script-directory.ps1','tools/script-directory-observation.cjs','tests/fixtures/script-directory-observation.json','tests/script-directory-observer.test.ps1');
 const {manifest,manifestFile,candidate}=require('../tools/source-manifest.cjs').loadManifest(manifestOption);
 if(candidate)suites.push('tests/script-directory-observation.test.cjs');
+auxiliaries.push('tests/export-joined-roof-sample.mjs');
+if(candidate)suites.push('tests/structural-bridge-independent.test.mjs','tests/structural-assignments.test.mjs','tests/structural-boundaries.test.mjs','tests/structural-contract-reference.test.mjs');
 auxiliaries.push('tests/multisheet-fixture.mjs','tests/multisheet-reference.test.mjs','tests/multisheet-workflow.cjs','tests/audit-multisheet-pdf.py');
 auxiliaries.push('tests/font-layout-fixture.mjs','tests/font-layout-workflow.cjs','tests/audit-font-layout-pdf.py');
 auxiliaries.push('tests/architectural_font_reference.py');

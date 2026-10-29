@@ -388,3 +388,13 @@ permission change. Every classification keeps privacy unproven. Managed descript
 provenance, the declared root boundary and unqualified identity/race/group/child-file
 and cross-account semantics are explicit. The runtime and earlier red path reference
 remain unchanged; existing general gates do not establish scripting privacy.
+
+## Recovered synthetic structural contracts - October 29, 2026
+
+The three original reviewed V1/V2/V3 pure suites and joined-roof helper are restored
+with only CRLF-to-LF normalization in two public copies. Three new literal tests independently establish opposing-plane
+vertices/areas, declared load arithmetic and located containment/overlap values.
+All four suites join candidate fast selection; the imported helper is fingerprinted
+and its native-file generator CLI is not executed. See
+[the reference and evidence scope](STRUCTURAL-CONTRACT-COVERAGE.md). No runtime,
+manifest, installer, external engine or native workflow is changed or qualified.

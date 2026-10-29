@@ -21,6 +21,13 @@ checks 19 synthetic descriptor-normalization references without applying ACLs.
 PowerShell 7 is verified; Windows PowerShell 5.1 is blocked by host execution policy.
 See the [observer scope](../docs/SCRIPT-DESCRIPTOR-PRIVACY.md#standalone-windows-metadata-observer).
 
+Candidate fast selection also restores the three original synthetic structural
+bridge/assignment/boundary suites and adds three independent literal references:
+`structural-contract-reference.test.mjs`. The 72 restored plus three new cases
+exercise source-bound V1/V2/V3 contracts, geometry and declared arithmetic. They do
+not run the external calculator or fixture-generator CLI. See
+[the reference calculations and limits](../docs/STRUCTURAL-CONTRACT-COVERAGE.md).
+
 ## Prerequisites
 
 Use Node.js 24 LTS and `npm ci`. The lockfile pins Electron 44.9.3,
