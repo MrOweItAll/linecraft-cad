@@ -285,3 +285,12 @@ checks plus one literal V1 case and four callback-contract cases use fake Electr
 and owned synthetic files. JSON reports stay under the QA run or source work
 folder. See [the scope](../docs/STRUCTURAL-FILE-COVERAGE.md); native UI and real
 external-engine execution are not covered.
+
+## Non-inspector diagnostic
+
+Candidate fast selects the eight cases in non-inspector-contract.test.cjs. The
+explicit non-inspector-websocket.test.cjs needs approved loopback access; it is
+fingerprinted but not a portable gate stage. non-inspector-probe.cjs is an explicit
+Windows diagnostic with Node24 and PowerShell7, never a default application stage.
+Its source listener-ownership prerequisite currently fails closed; do not rerun
+Electron unchanged. See [scope and actual limits](../docs/NON-INSPECTOR-PROBE.md).

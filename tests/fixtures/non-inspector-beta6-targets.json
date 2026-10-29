@@ -1,0 +1,13 @@
+{
+  "format": "LinecraftNonInspectorApprovedTargets/1",
+  "electronVersion": "44.9.3",
+  "source": {
+    "bytes": 246819840,
+    "sha256": "61f45e6f522c666c6156222680712870b38f3a4acbd2e847b987f53ddb613544"
+  },
+  "unpacked": {
+    "bytes": 246820352,
+    "sha256": "017d9b644ee933cabb63c189a8fde52d4917ca3a5fe00411729d3b5c371bf016"
+  },
+  "scope": "Existing approved Windows x64 source distribution and preserved beta6 QA executable only; no hardened candidate or installed application."
+}

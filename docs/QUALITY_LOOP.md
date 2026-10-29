@@ -418,3 +418,14 @@ Electron qualification requires Node inspection, so a non-inspector approach is
 needed before applying the proposed policy. No fuse, dependency, runtime, manifest,
 installer or installed state changes, launches or repeated gates are part of this
 inventory. Hardening and exact-artifact acceptance remain unimplemented.
+
+## Non-inspector diagnostic probe - October 29, 2026
+
+Eight portable ownership/endpoint/visibility guards join candidate fast selection;
+a separate actual loopback redirect control passed after standard execution review.
+The [explicit renderer probe](NON-INSPECTOR-PROBE.md) binds approved existing targets
+and creates isolated hidden profiles without Node inspection or scripting descriptors.
+Its first source attempt failed closed0/5 at listener ownership; no renderer commands
+ran. The failed run and forced owned-child cleanup are retained. Unpacked/native/
+hardened-fuse acceptance is not inferred. No runtime, fuse, build, manifest or installer
+change is included; continue unrelated assessment until listener evidence is available.

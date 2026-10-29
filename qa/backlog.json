@@ -889,6 +889,38 @@
       "signingQualified": false,
       "nativeInstalledAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-SEC-FUSES-NONINSPECTOR-PROBE",
+      "priority": 2,
+      "parent": "LC-SEC-FUSES",
+      "symptom": "Existing Playwright Electron launch needs Node inspector; alternative probe must prove ownership before renderer access",
+      "sourceVersion": "1.36.1-beta.6",
+      "sourceCommit": "8a22e8ed8d5df715ef3dc8966813c51754dd59cf",
+      "fixtureClass": "Approved source and preserved QA-unpacked identities, fresh synthetic profiles, no installed/client files",
+      "status": "diagnostic implemented and controls verified; live source blocked at listener ownership",
+      "attempts": 1,
+      "productFixAttempts": 0,
+      "sourceLaunchAttempts": 1,
+      "acceptance": "8portableguards and1explicit actual redirect control passed; wrong synthetic executable rejected before app/profile creation. Live source0/5 failed closed; guard unchanged.",
+      "evidence": [
+        "tests/non-inspector-contract.cjs",
+        "tests/non-inspector-contract.test.cjs",
+        "tests/non-inspector-websocket.test.cjs",
+        "tests/non-inspector-probe.cjs",
+        "tests/observe-owned-windows.ps1",
+        "tests/fixtures/non-inspector-beta6-targets.json",
+        "docs/NON-INSPECTOR-PROBE.md"
+      ],
+      "verifiedScope": "Checker contracts and bounded failure/cleanup only; native-window sampler and actual renderer checks not reached",
+      "blocker": "Current Windows TCP table view omits the expected own listener; separate synthetic listener observations reproduce missing evidence. Cause unresolved.",
+      "cleanup": "Owned source child forcedSIGTERM and closed; subsequent exact-profile audit0matches. No normal-close success claimed.",
+      "nextAction": "Do not retry unchanged Electron; if revisited, first bound a read-only TCP API observation against an exact synthetic listener. Continue existing module-extraction assessment.",
+      "runtimeChanged": false,
+      "candidateManifestChanged": false,
+      "fusesApplied": false,
+      "nativeInstalledAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }

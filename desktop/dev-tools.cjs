@@ -16,6 +16,8 @@ auxiliaries.push('tests/script-descriptor-reference.test.cjs','tests/fixtures/sc
 auxiliaries.push('tools/observe-script-directory.ps1','tools/script-directory-observation.cjs','tests/fixtures/script-directory-observation.json','tests/script-directory-observer.test.ps1');
 const {manifest,manifestFile,candidate}=require('../tools/source-manifest.cjs').loadManifest(manifestOption);
 if(candidate)suites.push('tests/script-directory-observation.test.cjs');
+if(candidate)suites.push('tests/non-inspector-contract.test.cjs');
+auxiliaries.push('tests/non-inspector-contract.cjs','tests/non-inspector-websocket.test.cjs','tests/non-inspector-probe.cjs','tests/observe-owned-windows.ps1','tests/fixtures/non-inspector-beta6-targets.json');
 auxiliaries.push('tests/export-joined-roof-sample.mjs');
 auxiliaries.push('samples/mixed-pitch-v115.linecraft');
 if(candidate)suites.push('tests/structural-files.test.cjs','tests/structural-assignments-files.test.cjs','tests/structural-boundaries-files.test.cjs','tests/structural-file-dispatch.test.cjs');
