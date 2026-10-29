@@ -37,6 +37,10 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
  Object.assign(data.applications.installed.outputs,{native:outputPaths.native,nativeSHA256:outputReference.native.sha256,
   pdf:outputPaths.pdf,pdfSHA256:outputReference.pdf.sha256});
  data.audit=structuredClone(outputReference.audit);
+ data.audit.framework=fixture.auditIdentityReference.framework;
+ data.audit.bindings=Object.fromEntries(['native','pdf'].map(field=>[field,{
+  path:outputPaths[field],sha256:outputReference[field].sha256,bytes:Buffer.byteLength(outputReference[field].text)
+ }]));
  Object.assign(data.applications.installed.outputs.pdfAudit,{path:outputPaths.audit,sha256:sha(Buffer.from(JSON.stringify(data.audit)))});
  if(change)change(data);
  const files=new Map([[filename('PUBLIC-SOURCE.json'),baseline],
@@ -150,6 +154,43 @@ for(const entry of fixture.outputReference.auditCases)test('audit guard: '+entry
  if(entry.errorName)assert.equal(result.error?.name,entry.errorName,'Require the actual parse/projection error');
  else assert.equal(result.error?.code,entry.error,'Require the known-file read error');
  assert.equal(result.state.auditReads,1);noAssets(result);
+});
+
+for(const entry of fixture.auditIdentityReference.cases)test('audit identity: '+entry.id+' rejects before any asset mutation',()=>{
+ const result=execute({change(data){
+  const auditOperation=['audit','delete-audit','drop-row','binding-path'].includes(entry.operation);
+  if(entry.operation==='audit'||entry.operation==='delete-audit'){
+   let target=data.audit;for(const field of entry.field.slice(0,-1))target=target[field];
+   if(entry.operation==='delete-audit')delete target[entry.field.at(-1)];else target[entry.field.at(-1)]=entry.value;
+  }
+  if(entry.operation==='drop-row')data.audit.tests.pop();
+  if(entry.operation==='binding-path')data.audit.bindings[entry.binding].path=filename('outside/accepted-'+entry.binding);
+  // Semantic negatives bind the exact modified bytes; digest negatives do not.
+  if(auditOperation)data.applications.installed.outputs.pdfAudit.sha256=sha(Buffer.from(JSON.stringify(data.audit)));
+  if(entry.operation==='embedded'||entry.operation==='delete-embedded'){
+   const target=data.applications.installed.outputs.pdfAudit;
+   if(entry.operation==='delete-embedded')delete target[entry.field[0]];else target[entry.field[0]]=entry.value;
+  }
+ },fileChange(files,paths){
+  if(entry.operation==='raw-tamper')files.set(paths.audit,Buffer.concat([files.get(paths.audit),Buffer.from(' \n')]));
+ }});
+ assert.equal(result.error?.code,fixture.identityError,'Require the intended audit identity rejection');
+ assert.equal(result.state.auditReads,1);noAssets(result);
+});
+for(const kind of ['formatted exact bytes','reordered audit rows','normalized binding paths'])test('audit identity control: '+kind+' reaches the first archive',()=>{
+ const result=execute({change(data){
+  if(kind==='reordered audit rows')data.audit.tests.reverse();
+  if(kind==='normalized binding paths')for(const field of ['native','pdf'])data.audit.bindings[field].path=virtualRoot+'/work/acceptance/stage/../'+(field==='native'?'grip-accepted.linecraft':'grip-accepted.pdf');
+  data.applications.installed.outputs.pdfAudit.sha256=sha(Buffer.from(JSON.stringify(data.audit)));
+ },fileChange(files,paths){
+  if(kind==='formatted exact bytes'){
+   const bytes=Buffer.from(JSON.stringify(JSON.parse(files.get(paths.audit)),null,2)+'\n');files.set(paths.audit,bytes);
+   const receiptFile=filename('tests/ordinary-grip-public-installed-results.json'),receipt=JSON.parse(files.get(receiptFile));
+   receipt.outputs.pdfAudit.sha256=sha(bytes);files.set(receiptFile,Buffer.from(JSON.stringify(receipt)));
+  }
+ }});
+ assert.equal(result.error?.code,'HARNESS_ASSET_BOUNDARY');assert.equal(result.state.auditReads,1);
+ assert.deepEqual({archive:result.state.archiveCalls,copy:result.state.copyCalls,write:result.state.writeCalls},{archive:1,copy:0,write:0});
 });
 
 for(const preflight of [false,true])test('control: valid synthetic historical '+(preflight?'preflight':'tag')+' reaches the first asset boundary',()=>{

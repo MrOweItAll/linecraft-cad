@@ -63,10 +63,23 @@ for(const mode of applicationModes){
 const installedOutputs=[['native','Installed-Acceptance.linecraft'],['pdf','Installed-Acceptance.pdf']].map(([field,name])=>{
  const file=path.resolve(applications.installed.outputs[field]),work=path.join(root,'work')+path.sep;
  assert.ok(file.startsWith(work));const digest=applications.installed.outputs[field+'SHA256'];assert.equal(sha(file),digest);
- return{file,name,digest};
+ return{field,file,name,digest};
 });
-const installedAudit=JSON.parse(fs.readFileSync(applications.installed.outputs.pdfAudit.path,'utf8'));
+const installedAuditBytes=fs.readFileSync(applications.installed.outputs.pdfAudit.path);
+const installedAudit=JSON.parse(installedAuditBytes.toString('utf8'));
 const installedPdfMeasurements=installedAudit.tests.map(t=>({name:t.name,status:t.status,details:t.details}));
+// Parse/project first to preserve existing malformed-audit rejection behavior.
+identity(createHash('sha256').update(installedAuditBytes).digest('hex'),applications.installed.outputs.pdfAudit.sha256,'PDF audit byte hash');
+identity(installedAudit.framework,'Independent actual drafting PDF vector and physical scale audit','PDF audit framework');
+identity(installedAudit.status,'passed','PDF audit status');
+identity(installedAudit.total,9,'PDF audit total');identity(installedAudit.passed,9,'PDF audit passed');identity(installedAudit.failed,0,'PDF audit failed');
+identity(applications.installed.outputs.pdfAudit.total,9,'embedded PDF audit total');
+identity(Array.isArray(installedAudit.tests)&&installedAudit.tests.length===9&&installedAudit.tests.every(t=>t.status==='passed'),true,'PDF audit rows');
+for(const {field,file,digest}of installedOutputs){
+ const binding=installedAudit.bindings?.[field];
+ identity(typeof binding?.path==='string'&&path.resolve(binding.path)===file,true,'PDF audit '+field+' path');
+ identity(binding?.sha256,digest,'PDF audit '+field+' digest');
+}
 execFileSync('git',['archive','--format=zip',`--prefix=Linecraft-CAD-${version}-Source/`,`--output=${path.join(out,source)}`,commit],{cwd:root,stdio:'inherit'});
 const summary={format:'LinecraftPublicBetaVerification/1',version,tag:preflight?null:tag,commit,runId:process.env.GITHUB_RUN_ID,runUrl:`https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,releaseClass:preflight?'candidate':'prerelease',automaticUpdater:false,codeSigning:'unsigned',historicalQualifiedWindowsRuntime:read('PUBLIC-SOURCE.json').qualifiedWindowsEvidence,freshPublicChecks:{},limits:['Hidden CI tests stub native chooser/discard responses.','Historical visible installed Windows checks preceded the vendor security refresh; current public gates exercise the patched vendor runtime separately.','Fresh install/uninstall scope is a GitHub-hosted Windows VM; broader Windows/DPI coverage remains beta work.']};
 for(const mode of applicationModes){

@@ -572,5 +572,182 @@
         "errorName": "TypeError"
       }
     ]
+  },
+  "auditIdentityReference": {
+    "framework": "Independent actual drafting PDF vector and physical scale audit",
+    "total": 9,
+    "passed": 9,
+    "failed": 0,
+    "cases": [
+      {
+        "id": "wrong embedded audit hash",
+        "operation": "embedded",
+        "field": [
+          "sha256"
+        ],
+        "value": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "id": "missing embedded audit hash",
+        "operation": "delete-embedded",
+        "field": [
+          "sha256"
+        ]
+      },
+      {
+        "id": "array embedded audit hash",
+        "operation": "embedded",
+        "field": [
+          "sha256"
+        ],
+        "value": [
+          "0000000000000000000000000000000000000000000000000000000000000000"
+        ]
+      },
+      {
+        "id": "wrong embedded audit total",
+        "operation": "embedded",
+        "field": [
+          "total"
+        ],
+        "value": 8
+      },
+      {
+        "id": "changed raw audit bytes",
+        "operation": "raw-tamper"
+      },
+      {
+        "id": "wrong audit framework",
+        "operation": "audit",
+        "field": [
+          "framework"
+        ],
+        "value": "Unrelated audit"
+      },
+      {
+        "id": "failed audit status",
+        "operation": "audit",
+        "field": [
+          "status"
+        ],
+        "value": "failed"
+      },
+      {
+        "id": "wrong audit total",
+        "operation": "audit",
+        "field": [
+          "total"
+        ],
+        "value": 8
+      },
+      {
+        "id": "wrong audit passed count",
+        "operation": "audit",
+        "field": [
+          "passed"
+        ],
+        "value": 8
+      },
+      {
+        "id": "nonzero audit failures",
+        "operation": "audit",
+        "field": [
+          "failed"
+        ],
+        "value": 1
+      },
+      {
+        "id": "string audit count",
+        "operation": "audit",
+        "field": [
+          "total"
+        ],
+        "value": "9"
+      },
+      {
+        "id": "missing audit row",
+        "operation": "drop-row"
+      },
+      {
+        "id": "failed audit row",
+        "operation": "audit",
+        "field": [
+          "tests",
+          "0",
+          "status"
+        ],
+        "value": "failed"
+      },
+      {
+        "id": "native binding uses another same-byte path",
+        "operation": "binding-path",
+        "binding": "native"
+      },
+      {
+        "id": "native binding hash differs",
+        "operation": "audit",
+        "field": [
+          "bindings",
+          "native",
+          "sha256"
+        ],
+        "value": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "id": "native binding missing",
+        "operation": "delete-audit",
+        "field": [
+          "bindings",
+          "native"
+        ]
+      },
+      {
+        "id": "native binding path is array",
+        "operation": "audit",
+        "field": [
+          "bindings",
+          "native",
+          "path"
+        ],
+        "value": [
+          "work/acceptance/not-a-string"
+        ]
+      },
+      {
+        "id": "pdf binding uses another same-byte path",
+        "operation": "binding-path",
+        "binding": "pdf"
+      },
+      {
+        "id": "pdf binding hash differs",
+        "operation": "audit",
+        "field": [
+          "bindings",
+          "pdf",
+          "sha256"
+        ],
+        "value": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      {
+        "id": "pdf binding missing",
+        "operation": "delete-audit",
+        "field": [
+          "bindings",
+          "pdf"
+        ]
+      },
+      {
+        "id": "pdf binding path is array",
+        "operation": "audit",
+        "field": [
+          "bindings",
+          "pdf",
+          "path"
+        ],
+        "value": [
+          "work/acceptance/not-a-string"
+        ]
+      }
+    ]
   }
 }

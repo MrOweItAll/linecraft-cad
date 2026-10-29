@@ -52,10 +52,20 @@ Both installed output paths now pass the existing resolved work-root prefix and
 exact byte-digest checks before archive creation. The pre-existing hash comparison
 immediately before each later copy is retained. The actual PDF audit JSON is also
 read, parsed and mapped to its summary rows before the first mutation; that mapped
-data is reused later. This moves the existing parse/projection requirements only:
-audit digest, status, counts and bindings are not validated by this preparation
-step. Lexical path checks and cached names do not prove Windows file identity or
-resistance to concurrent replacement. Copies remain outside the prefix test.
+data is reused later. The audit identity follow-up hashes that same raw buffer,
+compares it with the embedded audit digest, and requires the actual producer's
+framework label, passed status, numeric9 total/9 passed/0 failed and nine passed
+rows. The installed embedded total must also be9. Native/PDF binding paths must
+resolve to the already-admitted output paths and their digests must match those
+outputs. Parsing/projection still precede the new checks, preserving the existing
+malformed-audit errors. JSON formatting and row order may differ when the embedded
+digest binds the exact bytes.
+
+These checks establish declared metadata consistency. Auditor identity, byte-size
+declarations, chronology, row-name/inventory completeness, measurement correctness
+and execution authenticity remain unverified. Lexical path checks and cached names
+do not prove Windows file identity or resistance to concurrent replacement. Copies
+remain outside the prefix test.
 
 ```
 node --test --test-reporter=tap tests/release-receipt-identity.test.cjs
@@ -91,6 +101,13 @@ known files and unparseable/unmappable audit data reject before mutation. Two
 normalized in-work path controls stay admitted. Traversal receipts retain their
 raw path spelling until production resolves them. Explicit missing-file errors and
 audit-read counters distinguish these rejections from unknown harness operations.
+
+The audit-identity follow-up reproduced21 failures alongside120 passes; all141
+pass after one implementation repair, retaining all117 prior cases. Raw-byte
+hash failures are separate from coherent changed-audit cases that refresh their
+embedded digest before testing status/count/binding rejection. Three controls
+accept reformatted exact bytes, reordered rows and normalized binding paths. No
+actual PDF auditor, application, drawing or PDF format is executed by this suite.
 
 This is source-only prefix admission. Downstream asset contents, full receipt
 provenance, clean-runner install/uninstall, publisher version matching and a

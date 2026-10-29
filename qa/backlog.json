@@ -1137,6 +1137,38 @@
       "publicationRun": false,
       "dailyUseReady": false,
       "nextAction": "Inventory actual audit identity/status/count/binding requirements and remaining dependency/publisher admission with independent synthetic negatives before any further fix; preserve baseline-only selection and separate release authorization."
+    },
+    {
+      "id": "LC-REL-PDF-AUDIT-IDENTITY",
+      "parent": "LC-REL-VERSIONED-PIPELINE",
+      "priority": 2,
+      "symptom": "Preparation accepted mismatched audit bytes, unsuccessful/inconsistent PDF audit metadata and bindings unrelated to the admitted native/PDF outputs",
+      "sourceVersion": "1.36.1-beta.7",
+      "fixtureClass": "Actual preparation/manifest-loader VM with fixed fake native/PDF bytes; exact raw audit buffer; separate hash-tamper and coherent semantic mutations",
+      "status": "verified bounded PDF-audit byte identity and declared success/native-PDF binding consistency before mutation",
+      "attempts": 1,
+      "repairAttempts": 1,
+      "acceptance": "Single raw audit read; preserve existing parse/projection failures; require exact embedded digest, actual producer framework, passed numeric9/9/0 counts and nine passed rows, embedded total9 and native/PDF normalized path/digest matches before assets",
+      "evidence": [
+        "tools/prepare-beta-assets.cjs",
+        "tests/release-receipt-identity.test.cjs",
+        "tests/fixtures/release-receipt-identity.json",
+        "docs/RELEASE-RECEIPT-IDENTITY.md"
+      ],
+      "verifiedScope": "Expanded suite21FAIL/120PASS before; initial import-name error102PASS/39FAIL retained; one repair produces141/141. All117 prior cases retain exact expected errors. Three positive controls admit formatting/order/normalized binding paths; all rejections precede archive/copy/write.",
+      "limits": [
+        "Declared metadata/byte consistency only; no actual PDF/native format, measurement or execution acceptance",
+        "Auditor identity, byte-size declarations, chronology and row-name/inventory completeness remain outside this guard",
+        "Lexical path comparison does not qualify Windows object identity or replacement-race resistance",
+        "Downstream copies/build/installation/native/remote CI/publication not executed"
+      ],
+      "runtimeChanged": false,
+      "candidateManifestChanged": false,
+      "releaseWorkflowChanged": false,
+      "actualAssetsPrepared": false,
+      "publicationRun": false,
+      "dailyUseReady": false,
+      "nextAction": "Assess remaining dependency-audit pre-mutation admission and versioned publisher metadata independently; keep auditor identity and broader qualification limits explicit, preserve baseline-only selection and separate release authorization."
     }
   ]
 }
