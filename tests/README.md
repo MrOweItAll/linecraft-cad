@@ -13,6 +13,14 @@ retain the current four expected contract failures and eight lifecycle controls.
 It uses fake HTTP/files only; actual Windows ACL/cross-account qualification is
 not run. Runtime enforcement remains open.
 
+The standalone directory observer has 23 portable tests in
+`script-directory-observation.test.cjs`, selected by the candidate fast profile.
+Its `supportedReferencePattern` result always leaves privacy unproven. The explicit
+Windows command `pwsh -NoProfile -NonInteractive -File tests/script-directory-observer.test.ps1`
+checks 19 synthetic descriptor-normalization references without applying ACLs.
+PowerShell 7 is verified; Windows PowerShell 5.1 is blocked by host execution policy.
+See the [observer scope](../docs/SCRIPT-DESCRIPTOR-PRIVACY.md#standalone-windows-metadata-observer).
+
 ## Prerequisites
 
 Use Node.js 24 LTS and `npm ci`. The lockfile pins Electron 44.9.3,

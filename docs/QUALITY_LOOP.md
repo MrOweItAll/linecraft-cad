@@ -375,3 +375,16 @@ privacy fix or OS access-control proof. Owner/DACL/reparse and cross-account
 qualification are explicitly not run. The two reference files are fingerprinted
 auxiliaries, outside the selected passing suites while enforcement is pending.
 No runtime/version/manifest or installer change is part of this milestone.
+
+## Standalone directory observations - October 29, 2026
+
+The [metadata observer](SCRIPT-DESCRIPTOR-PRIVACY.md#standalone-windows-metadata-observer)
+adds a read-only PowerShell 7 collector and a strict portable reference classifier.
+Twenty-three portable cases join the candidate fast profile; nineteen separate
+Windows checks normalize in-memory synthetic security descriptors without applying
+them. Windows PowerShell 5.1 execution is blocked by host policy and is not passed.
+The owned inherited-ACL fixture is unsupported by the narrow allowlist, with no
+permission change. Every classification keeps privacy unproven. Managed descriptor
+provenance, the declared root boundary and unqualified identity/race/group/child-file
+and cross-account semantics are explicit. The runtime and earlier red path reference
+remain unchanged; existing general gates do not establish scripting privacy.

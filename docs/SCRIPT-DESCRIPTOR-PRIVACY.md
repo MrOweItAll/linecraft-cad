@@ -55,11 +55,63 @@ module adapters are failures, and negative references require a specific policy
 error plus zero side effects. The ordinary-local positive control is not an ACL test.
 
 The JSON reference also lists owner/DACL/reparse, cross-account read denial and
-residual-warning requirements as **not run**. There is no OS security adapter or
-independent account evidence yet. These references are deliberately outside the
+residual-warning requirements as **not run** at that checkpoint. Runtime admission
+and independent account evidence remain absent. These references are outside the
 selected fast/application suites while the product fix is pending; both files are
 fingerprinted auxiliaries. Existing passing gates do not satisfy this open security
 requirement. No existing assertion, required gate, manifest or baseline was removed
 or weakened. A runtime fix needs its own reviewed candidate identity and relevant
 source/unpacked verification. Native, installed, administrator-resistance and
 general Windows race/reparse acceptance remain unqualified.
+
+## Standalone Windows metadata observer
+
+`tools/observe-script-directory.ps1` is a read-only PowerShell 7 observer for a
+caller-designated synthetic directory beneath a declared synthetic root. It
+collects local volume type, directory/reparse attributes and managed security
+descriptor data for that bounded chain. It does not enumerate contents, read a scripting connection
+descriptor, change ACLs or enable scripting. Its normal output contains ordinal
+positions and role labels, without paths, account names, SIDs, SDDL or raw errors.
+Failures return a fixed error record and nonzero exit.
+
+```
+pwsh -NoProfile -NonInteractive -File tools/observe-script-directory.ps1 -LiteralPath $fixtureDirectory -DeclaredRoot $fixtureRoot
+```
+
+The schema labels its provenance `managed-roundtrip`. .NET can transform null
+DACL representations internally; this observation combines missing/null states
+as `unrestricted-or-absent` and never accepts either. It does not claim to recover
+the kernel's original absent-versus-null distinction.
+[.NET descriptor implementation](https://source.dot.net/System.Security.AccessControl/System/Security/AccessControl/SecurityDescriptor.cs.html).
+
+`tools/script-directory-observation.cjs` strictly validates this redacted schema
+and classifies a deliberately narrow **supported reference pattern**: current-user
+ownership throughout the declared chain, fixed NTFS/ReFS, no reparse flags, a
+canonical populated DACL, and basic full-control allows for current user, SYSTEM
+and administrators only. An applicable current-user allow is required; inherit-only
+rights cannot supply it. Deny, callback, object-specific, generic-mask, unknown-role
+and complex flag cases are unsupported. The literal mask is 2032127; inheritance
+flags distinguish InheritOnly=8 from Inherited=16.
+[File rights](https://learn.microsoft.com/en-us/dotnet/api/system.security.accesscontrol.filesystemrights),
+[ACE flags](https://learn.microsoft.com/en-us/dotnet/api/system.security.accesscontrol.aceflags).
+
+Every classification returns `privacyEstablished: false`. This is not a general
+Windows effective-access evaluator, group-membership expansion, authenticated
+replay evidence or runtime admission. The root's parent is outside the boundary;
+child-file inheritance, handle/path identity, replacement/race resistance and
+independent cross-account denial remain unqualified. Windows access checks depend
+on the requesting token and ACE semantics.
+[Microsoft access checks](https://learn.microsoft.com/en-us/windows/win32/secauthz/how-dacls-control-access-to-an-object).
+
+The 23 portable reference tests join the candidate fast suite. Nineteen separate
+Windows normalization checks construct synthetic raw descriptors without applying
+them to OS objects. Those pass under PowerShell 7; the Windows PowerShell 5.1 check
+is blocked by host execution policy and is not passed. A new inherited-ACL test
+folder produced two real metadata observations and an unsupported reference pattern
+because additional principal entries were present. No permission was changed.
+That result is not proof that another account can access a live descriptor.
+
+The application service, beta6 manifests and installer remain unchanged. The four
+earlier pending path references remain unresolved; no live descriptor or endpoint
+was created during this observer milestone. Production integration needs a
+separately verified admission/identity design and exact-candidate qualification.

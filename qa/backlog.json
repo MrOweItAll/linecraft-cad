@@ -769,7 +769,7 @@
       "sourceVersion": "1.36.1-beta.6",
       "sourceCommit": "468cf538bf020980e02030d9f5d57790bbccd3c7",
       "fixtureClass": "Synthetic Windows path declarations, VM fake HTTP and in-memory files only; no real credential, ACL, account, endpoint or drawing",
-      "status": "reproduced synthetic path-policy gaps; runtime enforcement and OS privacy qualification pending",
+      "status": "synthetic path gaps reproduced; standalone metadata observer verified; runtime enforcement pending",
       "attempts": 1,
       "productFixAttempts": 0,
       "acceptance": "Explicit current-module reference exits nonzero: four future namespace-policy expectations fail and eight lifecycle controls pass. A deliberate policy error and zero listener/open/write effects are required; unrelated startup errors cannot satisfy rejection.",
@@ -786,7 +786,17 @@
         "Residual-artifact warning when unlink fails",
         "Exact-candidate source/unpacked acceptance after a separately reviewed runtime change"
       ],
-      "nextAction": "Bound the Windows security probe and independent failure oracles before implementing fail-closed startup. Keep the failing reference visible; no account creation, rights changes, installed/client/native interaction or security-readiness claim.",
+      "observerMilestone": {
+        "scope": "Standalone read-only PowerShell7 metadata and conservative reference classifier, disconnected from runtime admission",
+        "portableReferences": 23,
+        "offlineWindowsReferences": "19 passed under PowerShell7; no ACL application or account creation",
+        "windowsPowerShell51": "blocked by host execution policy; not passed",
+        "realMetadata": "Owned synthetic directory chain observed; extra principals yield unsupported reference pattern, not proof of cross-account access",
+        "privacyEstablished": false,
+        "reviewCorrections": "Strict schema Symbol-key error path and candidate-suite declaration ordering; failing evidence preserved",
+        "evidence": ["tools/observe-script-directory.ps1", "tools/script-directory-observation.cjs", "tests/script-directory-observation.test.cjs", "tests/script-directory-observer.test.ps1", "tests/fixtures/script-directory-observation.json"]
+      },
+      "nextAction": "Design verified runtime admission and child-file identity/ACL checks; metadata pattern matching alone cannot establish security. Resolve the supported execution strategy and separately scope any required private-directory permission changes. Existing red path reference, cross-account and native/installed requirements remain open.",
       "runtimeChanged": false,
       "candidateManifestChanged": false,
       "defaultGateSelection": "Pending red reference is explicit and unselected; existing gates are not descriptor-privacy qualification",

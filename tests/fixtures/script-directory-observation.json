@@ -1,0 +1,20 @@
+{
+  "format": "LinecraftDirectoryObservation/1",
+  "scope": "metadata-only",
+  "provenance": "managed-roundtrip",
+  "boundary": { "kind": "declared-root", "complete": true, "outsideRootChecked": false, "handleBound": false },
+  "volume": { "driveType": "fixed", "fileSystem": "NTFS" },
+  "directories": [
+    {
+      "ordinal": 0, "isDirectory": true, "reparse": false,
+      "security": {
+        "ownerRole": "current-user", "daclState": "populated", "protected": true, "canonical": true,
+        "aces": [
+          { "type": "allow", "role": "current-user", "mask": 2032127, "flags": 3, "callback": false },
+          { "type": "allow", "role": "system", "mask": 2032127, "flags": 3, "callback": false },
+          { "type": "allow", "role": "administrators", "mask": 2032127, "flags": 3, "callback": false }
+        ]
+      }
+    }
+  ]
+}
