@@ -275,3 +275,13 @@ persistence/PDFbridge. The independent auditor requires --profile richtext and
 passes12measurements/26controls with directSFNTglyphmetrics andpositiveinkguards.
 No fontassets are copied; no native Plot form/dialog claim. See
 [scope](../docs/RICHTEXT-QUALITY.md). Existing default workflows stay unchanged.
+
+## Synthetic structural file service
+
+Candidate fast selects structural-files.test.cjs, structural-assignments-files.test.cjs,
+structural-boundaries-files.test.cjs and structural-file-dispatch.test.cjs. Run them
+under ordinary Node with --test and no application arguments. The37 original host
+checks plus one literal V1 case and four callback-contract cases use fake Electron
+and owned synthetic files. JSON reports stay under the QA run or source work
+folder. See [the scope](../docs/STRUCTURAL-FILE-COVERAGE.md); native UI and real
+external-engine execution are not covered.

@@ -398,3 +398,12 @@ All four suites join candidate fast selection; the imported helper is fingerprin
 and its native-file generator CLI is not executed. See
 [the reference and evidence scope](STRUCTURAL-CONTRACT-COVERAGE.md). No runtime,
 manifest, installer, external engine or native workflow is changed or qualified.
+
+## Synthetic structural file service - October 29, 2026
+
+The candidate fast profile adds37 recovered mocked-host/file-service checks, one
+literal V1 host result and four independent callback dispatch cases. The original
+mixed-pitch sample is restored byte-for-byte; output reports and all synthetic
+writes stay in exclusive owned run folders. See
+[the scope and retained checker failure](STRUCTURAL-FILE-COVERAGE.md). No runtime,
+manifest, installer, native UI, installed app or external engine is changed.

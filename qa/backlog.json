@@ -831,6 +831,34 @@
       "nativeCandidateAcceptance": "not run for this coverage",
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-QA-STRUCTURAL-FILES",
+      "priority": 2,
+      "symptom": "Pure structural suites did not exercise desktop IPC/file-service dispatch",
+      "expected": "Recover reviewed synthetic file-service tests and independent protocol routing/source-binding references",
+      "sourceVersion": "1.36.1-beta.6",
+      "sourceCommit": "0dd202fa7f2d8e5e809e70b04d349a02041a731a",
+      "fixtureClass": "Original generic joined/mixed-pitch mathematical roofs; fake Electron choosers and exclusive synthetic stores",
+      "status": "bounded mocked-host/file-service coverage; native/external-engine acceptance separate",
+      "attempts": 1,
+      "productFixAttempts": 0,
+      "acceptance": "37 recovered assertions plus1 literal V1 host result and4 callback-contract cases; generic sample byte-preserved",
+      "evidence": [
+        "tests/structural-files.test.cjs",
+        "tests/structural-assignments-files.test.cjs",
+        "tests/structural-boundaries-files.test.cjs",
+        "tests/structural-file-dispatch.test.cjs",
+        "samples/mixed-pitch-v115.linecraft",
+        "docs/STRUCTURAL-FILE-COVERAGE.md"
+      ],
+      "reviewCorrection": "First41PASS1FAIL came from new checker assuming2 main faces; independent fixture-plane derivation establishes4 exposed pieces. Numeric declarations and original assertions unchanged; failed evidence retained.",
+      "verifiedScope": "Real source IPC/core and bounded filesystem operations with Electron/dialog transport mocked; callback routing is an independent injected contract",
+      "nextAction": "Reassess structural coverage before a bounded subsystem extraction; descriptor runtime-admission dependency choice, native/installed/client/external-engine and release requirements remain separate",
+      "runtimeChanged": false,
+      "candidateManifestChanged": false,
+      "installedAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }
