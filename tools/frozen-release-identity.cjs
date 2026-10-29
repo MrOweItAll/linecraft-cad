@@ -1,5 +1,5 @@
 'use strict';
-// Standalone metadata model. Not integrated with preparation or publication.
+// Pure frozen metadata model. Used by source preparation, not publication.
 const version='1.36.0',canonicalTag='v1.36.0';
 const baselineSHA256='c7cb2c46702e7e88b7ddd84aa83b038bf52aa0a5901d3154bf3fb60bba41b5c7';
 const payload=[

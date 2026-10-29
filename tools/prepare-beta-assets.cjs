@@ -7,7 +7,8 @@ const preflight=process.argv[2]==='--preflight';
 const read=n=>JSON.parse(fs.readFileSync(path.join(root,n),'utf8')),sha=f=>createHash('sha256').update(fs.readFileSync(f)).digest('hex');
 const commit=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim();
 assert.equal(process.env.GITHUB_REF,preflight?'refs/heads/codex/public-beta-1.36':`refs/tags/${tag}`,'Exact approved tag or named preflight branch required.');
-if(!preflight)assert.equal(execFileSync('git',['rev-parse',`${tag}^{commit}`],{cwd:root,encoding:'utf8'}).trim(),commit);
+let tagCommit;
+if(!preflight){tagCommit=execFileSync('git',['rev-parse',`${tag}^{commit}`],{cwd:root,encoding:'utf8'}).trim();assert.equal(tagCommit,commit);}
 execFileSync('git',['diff','--exit-code','HEAD','--'],{cwd:root,stdio:'inherit'});
 const gateStart=Date.parse(process.env.GATE_START_UTC);assert.ok(Number.isFinite(gateStart),'CI start timestamp required.');
 // Keep the historical baseline selector. Candidate release support is separate.
@@ -19,6 +20,11 @@ function chronology(receipt,endField,label){
  identity(Number.isFinite(start)&&Number.isFinite(end)&&gateStart<=start&&start<=end&&end<=Date.now(),true,label+' chronology');
 }
 identity(version,manifest.version,'package/manifest version');
+// Load only after the original early guards and real default-manifest admission.
+const releasePlan=require('./frozen-release-identity.cjs').planFrozenReleaseIdentity({
+ packageVersion:version,manifestVersion:manifest.version,manifestFile,manifestSHA256,candidate,
+ preflight,ref:process.env.GITHUB_REF,head:commit,tagCommit
+});
 const release=read('work/public-release-results.json'),installed=read('work/public-test-installed-results.json'),pure=read('work/public-pure-results.json');
 for(const [label,r] of [['release',release],['installed',installed]]){
  identity(r?.format,'LinecraftPublicGate/1',label+' format');
@@ -49,7 +55,7 @@ for(const [label,r] of [['release',release],['installed',installed]]){
 }
 const clean=read('work/public-clean-install-results.json');identity(clean?.format,'LinecraftCleanRunnerInstall/1','clean format');assert.equal(clean.status,'passed');
 assert.equal(clean.version,version);assert.equal(clean.runId,process.env.GITHUB_RUN_ID);chronology(clean,'finishedAt','clean');
-const installer=`Linecraft-CAD-${version}-Setup.exe`,source=`Linecraft-CAD-${version}-Source.zip`;
+const {installer,source}=releasePlan;
 assert.equal(sha(path.join(out,installer)),clean.installerSha256);
 // Admit the existing application/PDF requirements before creating any assets.
 const applicationModes=['source','unpacked','installed'],applications={},applicationTests={};
@@ -83,8 +89,8 @@ for(const {field,file,digest}of installedOutputs){
 }
 // Admit the existing stored dependency-audit requirement before creating assets.
 const audit=read('work/public-npm-audit.json');assert.equal(audit.metadata.vulnerabilities.total,0);
-execFileSync('git',['archive','--format=zip',`--prefix=Linecraft-CAD-${version}-Source/`,`--output=${path.join(out,source)}`,commit],{cwd:root,stdio:'inherit'});
-const summary={format:'LinecraftPublicBetaVerification/1',version,tag:preflight?null:tag,commit,runId:process.env.GITHUB_RUN_ID,runUrl:`https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,releaseClass:preflight?'candidate':'prerelease',automaticUpdater:false,codeSigning:'unsigned',historicalQualifiedWindowsRuntime:read('PUBLIC-SOURCE.json').qualifiedWindowsEvidence,freshPublicChecks:{},limits:['Hidden CI tests stub native chooser/discard responses.','Historical visible installed Windows checks preceded the vendor security refresh; current public gates exercise the patched vendor runtime separately.','Fresh install/uninstall scope is a GitHub-hosted Windows VM; broader Windows/DPI coverage remains beta work.']};
+execFileSync('git',['archive','--format=zip',`--prefix=${releasePlan.sourcePrefix}`,`--output=${path.join(out,source)}`,commit],{cwd:root,stdio:'inherit'});
+const summary={format:'LinecraftPublicBetaVerification/1',version,tag:releasePlan.verificationTag,commit,runId:process.env.GITHUB_RUN_ID,runUrl:`https://github.com/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`,releaseClass:releasePlan.releaseClass,automaticUpdater:false,codeSigning:'unsigned',historicalQualifiedWindowsRuntime:read('PUBLIC-SOURCE.json').qualifiedWindowsEvidence,freshPublicChecks:{},limits:['Hidden CI tests stub native chooser/discard responses.','Historical visible installed Windows checks preceded the vendor security refresh; current public gates exercise the patched vendor runtime separately.','Fresh install/uninstall scope is a GitHub-hosted Windows VM; broader Windows/DPI coverage remains beta work.']};
 for(const mode of applicationModes){
  const r=applications[mode];
  summary.freshPublicChecks[mode]={application:r.application,applicationChecks:r.passed,failed:r.failed,pdfChecks:r.outputs.pdfAudit.passed,evidenceClass:r.evidenceClass,tests:applicationTests[mode]};
@@ -105,7 +111,7 @@ summary.runtimeIdentity={runtimeFiles:59,bundledResources:12,manifestSHA256:sha(
 const strip=(v)=>typeof v==='string'&&(/^[a-z]:[\\/]/i.test(v)||v.includes('\\Users\\'))?'[local path omitted]':Array.isArray(v)?v.map(strip):v&&typeof v==='object'?Object.fromEntries(Object.entries(v).filter(([k])=>!['cwd','root','work','executable','command','args','stdout','stderr','log','path'].includes(k)).map(([k,x])=>[k,strip(x)])):v;
 fs.writeFileSync(path.join(out,'Public-Beta-Verification.json'),JSON.stringify(strip(summary),null,2)+'\n');
 const supplement='libredwg-0.13.4-upstream.tar.gz';fs.copyFileSync(path.join(root,'third-party-source',supplement),path.join(out,supplement));
-const assets=[installer,source,'Installed-Acceptance.linecraft','Installed-Acceptance.pdf','Public-Beta-Verification.json',supplement];
-fs.writeFileSync(path.join(out,'SHA256SUMS.txt'),assets.map(n=>`${sha(path.join(out,n))}  ${n}`).join('\n')+'\n');
-fs.copyFileSync(path.join(root,'docs','RELEASE-1.36-BETA.md'),path.join(out,'release-notes.md'));
-console.log(JSON.stringify({tag,commit,assets:assets.concat('SHA256SUMS.txt')},null,2));
+const assets=releasePlan.payloadAssets;
+fs.writeFileSync(path.join(out,releasePlan.checksumFile),assets.map(n=>`${sha(path.join(out,n))}  ${n}`).join('\n')+'\n');
+fs.copyFileSync(path.join(root,'docs','RELEASE-1.36-BETA.md'),path.join(out,releasePlan.notesFile));
+console.log(JSON.stringify({tag:releasePlan.canonicalTag,commit,assets:releasePlan.uploadAssets},null,2));

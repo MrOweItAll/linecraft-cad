@@ -160,3 +160,14 @@ metadata SHA256, six ordered checksum rows and canonical final log. See the
 PDF and installer bytes establish synthetic serialization only; production
 preparation, standalone integration and publisher/real-asset qualification remain
 separate. The original receipt and standalone API fixtures stay unchanged.
+
+## Source-side frozen planner integration
+
+The planner is called after existing early guards and before receipt reads. The
+suite now has198 cases:171 prefix,17 virtual downstream and10 integration/order
+controls. The separate21 API cases remain selected. Original fixture bytes and
+all188 existing case declarations remain; only four sensitivity-probe source
+needles change to the equivalent planned output suppliers. Full virtual bytes,
+checksums and logs remain exact. See the [integration scope](RELEASE-IDENTITY-ADR.md#frozen-source-side-integration).
+No generic candidate release support, publisher action or actual-asset/native/
+installed readiness is established by these in-memory controls.

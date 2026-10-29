@@ -1,6 +1,6 @@
 # ADR-REL-001: frozen release identity contract
 
-**Status:** Standalone metadata model implemented; preparation integration remains proposed.
+**Status:** Frozen source-preparation integration implemented; publisher and candidate policy unchanged.
 **Date:** 2026-10-29
 **Deciders:** Maintainers and independent qualification/security reviewers.
 Release execution and any publication-policy expansion require separate review.
@@ -192,3 +192,35 @@ a future narrowly reviewed integration, preserving the early ref/tag-commit,
 tracked-clean/time and default-manifest guard order. Neither candidate selection
 nor the publisher/write-token boundary changes. A future integration must compare
 the same complete virtual outputs and retain all prefix/API/adapter controls.
+
+## Frozen source-side integration
+
+The planner is now lazily loaded and called after the original package/manifest
+identity guard. CLI/ref/tag-commit, tracked diff, CI time and real default-manifest
+admission retain their original order and failures. The already observed tag
+commit is retained; preflight performs no tag lookup. Planned installer/source
+names, archive prefix, verification tag/class, checksum/notes names, immutable
+payload/upload arrays and canonical final tag supply the existing wrapper. Receipt
+admission, output hashes and side effects stay in that wrapper.
+
+The original188 case declarations and reference fixtures are retained; four
+source-expression mutation needles are retargeted to their corresponding planned
+output suppliers. Full tag/preflight verification bytes, hashes, checksum text,
+copy/write names and final logs match the unchanged independent literals. Ten
+new controls check real-helper calls with literal inputs, seven early-failure
+orders and propagation of a deliberate helper-body exception before receipts.
+The preparation suite totals198; the separate planner API suite retains21.
+Before integration,197 checks passed195/failed2 because the two new invocation
+contracts required a not-yet-wired helper. That is integration evidence, not a
+previous product defect. The final combined219 cases pass.
+
+The real default loader fixes the baseline file/hash/flag/version. The planner's
+nonempty HEAD requirement is stricter for malformed external/mock Git responses;
+no universal equivalence or Git authenticity claim is made. Earlier standalone
+milestone descriptions retain their historical scope. Candidate release support,
+write-token publisher behavior, actual assets/ZIP/PDF/installer, OS races, native
+or installed acceptance and publication remain separate and unqualified here.
+No workflow, trigger, permission, runtime, package or manifest change is included.
+The next distinct design slice is read-only reference characterization of remaining
+publisher data validation beyond the already completed three-term local expression
+probe; project/artifact helper execution under the write token remains prohibited.

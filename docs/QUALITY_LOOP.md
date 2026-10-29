@@ -468,3 +468,15 @@ The default sentinel remains first-archive; only opt-in cases complete using fak
 in-memory assets. No real output, ZIP/PDF/installer, publisher, CI or security
 sandbox qualification follows. Standalone planner integration remains deferred;
 production/runtime/manifests/workflows are unchanged.
+
+## Frozen preparation planner integration - October 29, 2026
+
+The pure frozen metadata planner now supplies source-preparation identity/names
+only after the original early guards and real default-manifest admission. Its
+original188 reference cases retain their meaning and gain10 invocation/order
+controls,198 total; the separate21 API cases remain. Complete virtual tag/preflight
+outputs match unchanged literal references. See the
+[integration record](RELEASE-IDENTITY-ADR.md#frozen-source-side-integration).
+This is bounded refactoring of historical1.36.0 preparation. Candidate publication,
+publisher/write-token behavior, real assets and beta7 build/native/installed or
+daily-use qualification remain open. Earlier standalone sections are historical.

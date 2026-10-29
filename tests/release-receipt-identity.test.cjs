@@ -8,6 +8,7 @@ const frozenReference=require('./fixtures/frozen-release-identity.json');
 const serializationReference=require('./fixtures/release-serialization.json');
 const prepare=fs.readFileSync(path.join(__dirname,'../tools/prepare-beta-assets.cjs'),'utf8');
 const manifestSource=fs.readFileSync(path.join(__dirname,'../tools/source-manifest.cjs'),'utf8');
+const plannerSource=fs.readFileSync(path.join(__dirname,'../tools/frozen-release-identity.cjs'),'utf8');
 const baseline=fs.readFileSync(path.join(__dirname,'../PUBLIC-SOURCE.json'));
 const sha=value=>crypto.createHash('sha256').update(value).digest('hex');
 assert.equal(sha(baseline),fixture.manifestSHA256);
@@ -15,8 +16,8 @@ for(const input of [fixture.qualifiedInput,fixture.extraInput,fixture.outputRefe
 const virtualRoot=String.raw`C:\synthetic-release`;
 const filename=name=>path.win32.resolve(virtualRoot,name);
 
-function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongInstaller=false,fileChange,virtualOutputs=false,toolSource=prepare,afterArchive}={}){
- const state={archiveCalls:0,copyCalls:0,writeCalls:0,archiveArguments:null,tagLookups:0,installerReads:0,manifestLoads:0,auditReads:0,dependencyReads:0,copies:[],writes:[],logs:[],harnessFaults:[]};
+function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongInstaller=false,fileChange,virtualOutputs=false,toolSource=prepare,afterArchive,dirty=false,gateStart=fixture.gateStart,invalidArg=false,plannerToolSource=plannerSource}={}){
+ const state={archiveCalls:0,copyCalls:0,writeCalls:0,archiveArguments:null,tagLookups:0,installerReads:0,manifestLoads:0,auditReads:0,dependencyReads:0,headReads:0,diffCalls:0,manifestReads:0,plannerLoads:0,plannerCalls:0,plannerInput:null,receiptReads:0,copies:[],writes:[],logs:[],harnessFaults:[]};
  const demand=(condition,reason)=>{if(!condition){state.harnessFaults.push(reason);throw Object.assign(Error('Unsupported synthetic adapter operation.'),{code:'HARNESS_FAULT'});}};
  const inputs=()=>({[fixture.manifestFile]:fixture.manifestSHA256,[fixture.qualifiedInput.file]:fixture.qualifiedInput.sha256});
  const gate=command=>({format:'LinecraftPublicGate/1',version:fixture.version,command,status:'passed',changedSource:[],
@@ -81,7 +82,7 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
   const create=(file,bytes)=>{demand(!files.has(file),'unexpected-overwrite');files.set(file,Buffer.from(bytes));created.add(file);knownFiles.add(file);};
  if(fileChange)fileChange(files,outputPaths);
  const boundary=()=>Object.assign(Error('Synthetic asset-mutation boundary reached.'),{code:'HARNESS_ASSET_BOUNDARY'});
- const disk={readFileSync(file,encoding){demand(knownFiles.has(file),'unexpected-read');if(file===frozenReference.installerPath)state.installerReads++;if(file===outputPaths.audit)state.auditReads++;if(file===filename('work/public-npm-audit.json'))state.dependencyReads++;if(!files.has(file))throw Object.assign(Error('Missing known synthetic file.'),{code:'ENOENT'});const value=files.get(file);demand(encoding===undefined||encoding==='utf8','unexpected-read-encoding');return encoding?value.toString(encoding):Buffer.from(value);},
+ const disk={readFileSync(file,encoding){demand(knownFiles.has(file),'unexpected-read');if(file===filename('PUBLIC-SOURCE.json'))state.manifestReads++;if(file===filename('work/public-release-results.json'))state.receiptReads++;if(file===frozenReference.installerPath)state.installerReads++;if(file===outputPaths.audit)state.auditReads++;if(file===filename('work/public-npm-audit.json'))state.dependencyReads++;if(!files.has(file))throw Object.assign(Error('Missing known synthetic file.'),{code:'ENOENT'});const value=files.get(file);demand(encoding===undefined||encoding==='utf8','unexpected-read-encoding');return encoding?value.toString(encoding):Buffer.from(value);},
   copyFileSync(...args){
     if(!virtualOutputs){state.copyCalls++;throw boundary();}
     demand(args.length===2&&copyPairs.some(pair=>pair[0]===args[0]&&pair[1]===args[1]),'unexpected-copy');
@@ -93,9 +94,9 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
    }};
  const git={execFileSync(command,args){
   demand(command==='git'&&Array.isArray(args),'unexpected-child-process');
-  if(args.length===2&&args[0]==='rev-parse'&&args[1]==='HEAD')return fixture.commit+'\n';
+  if(args.length===2&&args[0]==='rev-parse'&&args[1]==='HEAD'){state.headReads++;return fixture.commit+'\n';}
   if(args.length===2&&args[0]==='rev-parse'&&args[1]===`v${data.package.version}^{commit}`){state.tagLookups++;return (wrongCommit?'b'.repeat(40):fixture.commit)+'\n';}
-  if(JSON.stringify(args)===JSON.stringify(['diff','--exit-code','HEAD','--']))return '';
+  if(JSON.stringify(args)===JSON.stringify(['diff','--exit-code','HEAD','--'])){state.diffCalls++;if(dirty)throw Object.assign(Error('Synthetic tracked diff rejected.'),{code:'SYNTHETIC_GIT_DIRTY'});return '';}
   if(args[0]==='archive'){
    state.archiveArguments=structuredClone(args);
    demand(args.length===5&&args[1]==='--format=zip'&&args[2]===`--prefix=Linecraft-CAD-${data.package.version}-Source/`&&
@@ -109,10 +110,10 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
  }};
  class Clock extends Date{static now(){return Date.parse(fixture.now);}}
  const context={Buffer,Date:Clock,__dirname:filename('tools'),console:{log(...args){demand(virtualOutputs&&args.length===1&&typeof args[0]==='string','unexpected-console');state.logs.push(args[0]);}},
-  process:{argv:['node','prepare-beta-assets.cjs',...(preflight?['--preflight']:[])],env:{
+  process:{argv:['node','prepare-beta-assets.cjs',...(preflight?['--preflight']:[]),...(invalidArg?['--unexpected']:[])],env:{
    GITHUB_REF:wrongRef?'refs/heads/unapproved':preflight?'refs/heads/codex/public-beta-1.36':`refs/tags/v${data.package.version}`,
-   GATE_START_UTC:fixture.gateStart,GITHUB_RUN_ID:'42',GITHUB_REPOSITORY:'synthetic/example'}}};
- let cachedManifest;
+   GATE_START_UTC:gateStart,GITHUB_RUN_ID:'42',GITHUB_REPOSITORY:'synthetic/example'}}};
+ let cachedManifest,cachedPlanner;
  function load(source){
   const module={exports:{}};
   vm.runInNewContext(source,{...context,module,exports:module.exports,require(name){
@@ -121,7 +122,11 @@ function execute({change,preflight=false,wrongRef=false,wrongCommit=false,wrongI
     if(!cachedManifest){state.manifestLoads++;cachedManifest=load(manifestSource);}
     return cachedManifest;
    }
-   demand(Object.hasOwn(modules,name),'unexpected-module');return modules[name];
+   if(name==='./frozen-release-identity.cjs'){
+     if(!cachedPlanner){state.plannerLoads++;cachedPlanner=load(plannerToolSource);}
+     return{planFrozenReleaseIdentity(input){state.plannerCalls++;state.plannerInput=structuredClone(input);return cachedPlanner.planFrozenReleaseIdentity(input);}};
+    }
+    demand(Object.hasOwn(modules,name),'unexpected-module');return modules[name];
   }},{filename:'synthetic-release-tool.cjs',timeout:1000});
   return module.exports;
  }
@@ -343,15 +348,45 @@ for(const [name,toolSource] of [
 });
 const mutations=[
  ['verification format',"format:'LinecraftPublicBetaVerification/1'","format:'WrongSyntheticFormat/1'"],
- ['verification tag','tag:preflight?null:tag','tag:tag'],
- ['verification release class',"releaseClass:preflight?'candidate':'prerelease'","releaseClass:'prerelease'"],
+ ['verification tag','tag:releasePlan.verificationTag','tag:releasePlan.canonicalTag'],
+ ['verification release class','releaseClass:releasePlan.releaseClass',"releaseClass:'prerelease'"],
  ['payload checksum membership','assets.map(n=>','assets.slice(0,-1).map(n=>'],
- ['final upload names',"assets:assets.concat('SHA256SUMS.txt')","assets:assets"],
- ['canonical final tag','JSON.stringify({tag,commit,assets:','JSON.stringify({tag:null,commit,assets:']
+ ['final upload names','assets:releasePlan.uploadAssets',"assets:assets"],
+ ['canonical final tag','JSON.stringify({tag:releasePlan.canonicalTag,commit,assets:','JSON.stringify({tag:null,commit,assets:']
 ];
 for(const [name,before,after] of mutations)test('virtual oracle sensitivity: '+name+' change is detected',()=>{
  assert.equal(prepare.split(before).length,2,'Mutation must match exactly once');
  const result=execute({preflight:true,virtualOutputs:true,toolSource:prepare.replace(before,after)});
  assert.equal(result.error,undefined,'Probe must finish; oracle, not a harness exception, detects altered output');
  assert.throws(()=>checkVirtual(result,true),{code:'ERR_ASSERTION'});
+});
+
+// Integration contracts: these require the real captured planner, not a fake plan.
+for(const preflight of [false,true])test('planner integration: '+(preflight?'preflight':'tag')+' delegates once with independently frozen observed identity',()=>{
+ const result=execute({preflight});assert.equal(result.error?.code,'HARNESS_ASSET_BOUNDARY');
+ assert.equal(result.state.plannerLoads,1);assert.equal(result.state.plannerCalls,1);
+ assert.deepEqual(JSON.parse(JSON.stringify(result.state.plannerInput)),preflight?frozenReference.preflightInput:frozenReference.tagInput);
+});
+for(const [name,options,counts,code] of [
+ ['unknown CLI argument',{invalidArg:true},[0,0,0,0],'ERR_ASSERTION'],
+ ['unapproved ref',{wrongRef:true},[1,0,0,0],'ERR_ASSERTION'],
+ ['different tag commit',{wrongCommit:true},[1,1,0,0],'ERR_ASSERTION'],
+ ['tracked dirty source',{dirty:true},[1,1,1,0],'SYNTHETIC_GIT_DIRTY'],
+ ['invalid CI start',{gateStart:'not-a-timestamp'},[1,1,1,0],'ERR_ASSERTION'],
+ ['changed baseline bytes',{fileChange(files){const file=filename('PUBLIC-SOURCE.json');files.set(file,Buffer.concat([files.get(file),Buffer.from([10])]));}},[1,1,1,1],'ERR_ASSERTION'],
+ ['package/manifest mismatch',{change(data){data.package.version='9.0.0';}},[1,1,1,3],'ERR_LINECRAFT_RELEASE_IDENTITY']
+])test('planner ordering: '+name+' retains original early rejection before planner or receipt reads',()=>{
+ const result=execute(options);assert.equal(result.error?.code,code);noAssets(result);
+ assert.deepEqual([result.state.headReads,result.state.tagLookups,result.state.diffCalls,result.state.manifestReads],counts);
+ assert.equal(result.state.plannerLoads,0);assert.equal(result.state.plannerCalls,0);assert.equal(result.state.receiptReads,0);
+});
+
+test('planner integration: real helper body exception propagates before receipts or assets',()=>{
+ const before='function planFrozenReleaseIdentity(input){';
+ assert.equal(plannerSource.split(before).length,2);
+ const plannerToolSource=plannerSource.replace(before,before+"throw Object.assign(Error('Synthetic planner body failure.'),{code:'SYNTHETIC_PLANNER_BODY'});");
+ const result=execute({plannerToolSource});
+ assert.equal(result.error?.code,'SYNTHETIC_PLANNER_BODY');
+ assert.equal(result.state.plannerLoads,1);assert.equal(result.state.plannerCalls,1);
+ assert.equal(result.state.receiptReads,0);noAssets(result);
 });
