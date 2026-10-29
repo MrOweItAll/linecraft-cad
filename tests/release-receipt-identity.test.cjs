@@ -218,6 +218,21 @@ for(const formatted of [false,true])test('dependency control: '+(formatted?'form
  assert.deepEqual({archive:result.state.archiveCalls,copy:result.state.copyCalls,write:result.state.writeCalls},{archive:1,copy:0,write:0});
 });
 
+for(const mode of fixture.applicationReference.modes){
+ for(const entry of fixture.applicationProjectionReference.cases)test('application projection: '+mode+' '+entry.id+' rejects before any asset mutation',()=>{
+  const result=execute({change(data){
+   if(entry.operation==='delete')delete data.applications[mode].tests;
+   else data.applications[mode].tests=structuredClone(entry.value);
+  }});
+  assert.equal(result.error?.name,'TypeError','Require the original projection failure, not a harness exception');noAssets(result);
+ });
+ for(const entry of fixture.applicationProjectionReference.controls)test('application projection control: '+mode+' '+entry.id+' reaches the first archive',()=>{
+  const result=execute({change(data){data.applications[mode].tests=structuredClone(entry.value);}});
+  assert.equal(result.error?.code,'HARNESS_ASSET_BOUNDARY');
+  assert.deepEqual({archive:result.state.archiveCalls,copy:result.state.copyCalls,write:result.state.writeCalls},{archive:1,copy:0,write:0});
+ });
+}
+
 for(const preflight of [false,true])test('control: valid synthetic historical '+(preflight?'preflight':'tag')+' reaches the first asset boundary',()=>{
  const result=execute({preflight});assert.equal(result.error?.code,'HARNESS_ASSET_BOUNDARY');
  assert.deepEqual({archive:result.state.archiveCalls,copy:result.state.copyCalls,write:result.state.writeCalls},{archive:1,copy:0,write:0});

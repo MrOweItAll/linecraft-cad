@@ -832,5 +832,45 @@
         "errorName": "SyntaxError"
       }
     ]
+  },
+  "applicationProjectionReference": {
+    "cases": [
+      {
+        "id": "missing tests",
+        "operation": "delete"
+      },
+      {
+        "id": "null tests",
+        "value": null
+      },
+      {
+        "id": "object tests",
+        "value": {}
+      },
+      {
+        "id": "null row",
+        "value": [
+          null
+        ]
+      }
+    ],
+    "controls": [
+      {
+        "id": "empty rows",
+        "value": []
+      },
+      {
+        "id": "partial row fields",
+        "value": [
+          {},
+          {
+            "name": "Synthetic name only"
+          },
+          {
+            "status": "passed"
+          }
+        ]
+      }
+    ]
   }
 }

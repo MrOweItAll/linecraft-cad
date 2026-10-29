@@ -74,6 +74,14 @@ runs npm and checks its process exit code; no npm subprocess is added here. This
 prefix guard does not establish advisory freshness, authenticity, completeness,
 severity consistency or dependency inventory, and it does not fetch advisories.
 
+Each application's existing `tests.map(t => ({name:t.name,status:t.status}))`
+projection now runs before the first archive. The later summary reuses the
+per-mode cached arrays; original application records remain available for output
+admission. Missing/null/non-array test lists and null rows retain their existing
+TypeErrors. Empty arrays and partial rows remain permitted. This move adds no
+row-count, name/status-type or all-passed rule. Exact mapper/cache reuse is checked
+by code review; the prefix tests do not serialize the downstream summary.
+
 ```
 node --test --test-reporter=tap tests/release-receipt-identity.test.cjs
 ```
@@ -121,6 +129,12 @@ now pass, retaining all141 prior cases. Missing/malformed reports, missing neste
 fields and nonzero/non-numeric totals require their existing exact errors and zero
 asset mutations. Minimal and formatted numeric-zero controls remain admitted. No
 npm audit, advisory request or current vulnerability qualification ran.
+
+The application-projection follow-up reproduced12 failures alongside157 passes;
+all169 now pass, retaining all151 earlier cases. Four isolated projection failures
+per mode reject before mutations; six empty/partial-row controls preserve existing
+permissiveness. No actual application, asset preparation or full-summary output
+qualification is inferred.
 
 This is source-only prefix admission. Downstream asset contents, full receipt
 provenance, clean-runner install/uninstall, publisher version matching and a

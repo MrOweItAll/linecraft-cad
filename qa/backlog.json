@@ -1200,6 +1200,37 @@
       "publicationRun": false,
       "dailyUseReady": false,
       "nextAction": "Inventory remaining pre-mutation summary projections and versioned publisher metadata with independent synthetic references; preserve immutable baseline selection and separate release authorization."
+    },
+    {
+      "id": "LC-REL-APPLICATION-PROJECTION",
+      "parent": "LC-REL-VERSIONED-PIPELINE",
+      "priority": 2,
+      "symptom": "Malformed application test lists/rows could fail summary projection only after archive creation",
+      "sourceVersion": "1.36.1-beta.7",
+      "fixtureClass": "Actual preparation/manifest-loader VM with independent application test-list mutations for source/unpacked/installed and first-archive sentinel",
+      "status": "verified existing per-mode application projection precedes asset creation and is reused",
+      "attempts": 1,
+      "acceptance": "Cache the exact existing name/status map before archive for all three modes; preserve original TypeErrors, empty/partial-row permissiveness and original application records; summary consumes cached arrays",
+      "evidence": [
+        "tools/prepare-beta-assets.cjs",
+        "tests/release-receipt-identity.test.cjs",
+        "tests/fixtures/release-receipt-identity.json",
+        "docs/RELEASE-RECEIPT-IDENTITY.md"
+      ],
+      "verifiedScope": "Expanded suite12FAIL/157PASS before;169/169 after. Missing/null/object lists and null rows in each mode reject with original TypeError and zero mutations; six empty/partial controls reach only the fake first archive. Prior151 cases retained.",
+      "limits": [
+        "Projection admission only; no row-count, name/status-type, all-passed or full-schema validation added",
+        "Prefix tests do not establish serialized full-summary bytes; exact mapper/cache reuse reviewed separately",
+        "No test inventory/execution authenticity or broader application qualification claim",
+        "No actual assets/application/PDF/build/install/native/remote CI/publication ran"
+      ],
+      "runtimeChanged": false,
+      "candidateManifestChanged": false,
+      "releaseWorkflowChanged": false,
+      "actualAssetsPrepared": false,
+      "publicationRun": false,
+      "dailyUseReady": false,
+      "nextAction": "Inventory source-preparation and isolated publisher version/tag/asset identity boundaries before any versioned pipeline change; preserve baseline-only selection, fixed release triggers and separate release authorization."
     }
   ]
 }
