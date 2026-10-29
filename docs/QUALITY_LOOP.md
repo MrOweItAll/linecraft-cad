@@ -407,3 +407,14 @@ mixed-pitch sample is restored byte-for-byte; output reports and all synthetic
 writes stay in exclusive owned run folders. See
 [the scope and retained checker failure](STRUCTURAL-FILE-COVERAGE.md). No runtime,
 manifest, installer, native UI, installed app or external engine is changed.
+
+## Electron fuse compatibility inventory - October 29, 2026
+
+Read-only inspection of the preserved beta6 QA executable and local source runtime
+found the unchanged nine-slot default wire. The
+[compatibility inventory](ELECTRON-FUSE-COMPATIBILITY.md) bounds a proposed packaged
+policy and records the installed eight-option toolchain limit. Existing Playwright
+Electron qualification requires Node inspection, so a non-inspector approach is
+needed before applying the proposed policy. No fuse, dependency, runtime, manifest,
+installer or installed state changes, launches or repeated gates are part of this
+inventory. Hardening and exact-artifact acceptance remain unimplemented.

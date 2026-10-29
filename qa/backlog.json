@@ -859,6 +859,36 @@
       "candidateManifestChanged": false,
       "installedAcceptance": "not run",
       "dailyUseReady": false
+    },
+    {
+      "id": "LC-SEC-FUSES",
+      "priority": 2,
+      "symptom": "Preserved beta6 executable retains default fuse settings; application gates depend on Node inspector",
+      "expected": "Reviewed packaged fuse policy with complete-wire readback and exact-artifact non-inspector CAD/PDF acceptance",
+      "sourceVersion": "1.36.1-beta.6",
+      "sourceCommit": "be58273127ac195e046767053c3ff7825420b2c4",
+      "fixtureClass": "Read-only preserved QA-unpacked and source runtime; no installed/client artifact",
+      "status": "bounded compatibility inventory verified; fuse hardening and exact-artifact acceptance pending",
+      "attempts": 1,
+      "productFixAttempts": 0,
+      "acceptance": "Observed V1length9wire101100011 matches pinned upstream defaults; proposed000011011 is unapplied. Existing helper names/emits8slots; preserve wasm slot8 with independent complete-wire qualification.",
+      "evidence": [
+        "docs/ELECTRON-FUSE-COMPATIBILITY.md",
+        "package.json",
+        "package-lock.json"
+      ],
+      "verifiedScope": "Static production/toolchain inventory and independent read-only binary observations; no runtime policy applied or launch test",
+      "blockers": [
+        "Current Playwright Electron launcher requires Node inspection; inspector-enabled sibling cannot qualify final proposed artifact",
+        "Complete9slot readback and Windows ASAR embedded-header/resource acceptance need implementation and disposable-copy negative controls"
+      ],
+      "nextAction": "Bound a non-inspector hidden acceptance strategy and independent failing qualification controls before changing packaging/candidate identity; preserve all native/installed/client/dependency/publication limits",
+      "runtimeChanged": false,
+      "candidateManifestChanged": false,
+      "fusesApplied": false,
+      "signingQualified": false,
+      "nativeInstalledAcceptance": "not run",
+      "dailyUseReady": false
     }
   ]
 }
