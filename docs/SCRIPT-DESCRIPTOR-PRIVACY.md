@@ -115,3 +115,13 @@ The application service, beta6 manifests and installer remain unchanged. The fou
 earlier pending path references remain unresolved; no live descriptor or endpoint
 was created during this observer milestone. Production integration needs a
 separately verified admission/identity design and exact-candidate qualification.
+
+## Proposed bundled helper
+
+The distribution choice is resolved in favor of a self-contained Windows helper.
+The [implementation design and prerequisite assessment](SCRIPT-SECURITY-HELPER-ADR.md)
+proposes retained handle ownership, child-file security checks, supervised live
+admission and owned cleanup. Client transport identity is a separate required
+review gate. This design changes no runtime behavior and establishes no Windows
+privacy, cross-account, build or installed qualification. The metadata observer
+remains a reference tool and cannot grant admission.

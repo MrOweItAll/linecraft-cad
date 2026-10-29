@@ -769,7 +769,7 @@
       "sourceVersion": "1.36.1-beta.6",
       "sourceCommit": "468cf538bf020980e02030d9f5d57790bbccd3c7",
       "fixtureClass": "Synthetic Windows path declarations, VM fake HTTP and in-memory files only; no real credential, ACL, account, endpoint or drawing",
-      "status": "synthetic path gaps reproduced; standalone metadata observer verified; runtime enforcement pending",
+      "status": "bundled-helper design and prerequisites assessed; runtime enforcement and peer identity remain pending",
       "attempts": 1,
       "productFixAttempts": 0,
       "acceptance": "Explicit current-module reference exits nonzero: four future namespace-policy expectations fail and eight lifecycle controls pass. A deliberate policy error and zero listener/open/write effects are required; unrelated startup errors cannot satisfy rejection.",
@@ -794,14 +794,35 @@
         "realMetadata": "Owned synthetic directory chain observed; extra principals yield unsupported reference pattern, not proof of cross-account access",
         "privacyEstablished": false,
         "reviewCorrections": "Strict schema Symbol-key error path and candidate-suite declaration ordering; failing evidence preserved",
-        "evidence": ["tools/observe-script-directory.ps1", "tools/script-directory-observation.cjs", "tests/script-directory-observation.test.cjs", "tests/script-directory-observer.test.ps1", "tests/fixtures/script-directory-observation.json"]
+        "evidence": [
+          "tools/observe-script-directory.ps1",
+          "tools/script-directory-observation.cjs",
+          "tests/script-directory-observation.test.cjs",
+          "tests/script-directory-observer.test.ps1",
+          "tests/fixtures/script-directory-observation.json"
+        ]
       },
-      "nextAction": "Design verified runtime admission and child-file identity/ACL checks; metadata pattern matching alone cannot establish security. Resolve the supported execution strategy and separately scope any required private-directory permission changes. Existing red path reference, cross-account and native/installed requirements remain open.",
+      "nextAction": "Define bounded fake-IPC/service lifecycle failure contracts, then establish permitted native build/traversal prerequisites. Resolve client transport identity before security-qualified runtime integration; retain red references and existing ordinary-startup behavior.",
       "runtimeChanged": false,
       "candidateManifestChanged": false,
       "defaultGateSelection": "Pending red reference is explicit and unselected; existing gates are not descriptor-privacy qualification",
       "installedAcceptance": "not run",
-      "dailyUseReady": false
+      "dailyUseReady": false,
+      "designAssessment": {
+        "date": "2026-10-29",
+        "status": "proposed bundled native helper design; no runtime enforcement",
+        "record": "docs/SCRIPT-SECURITY-HELPER-ADR.md",
+        "distributionChoice": "Self-contained bundled Windows helper; external PowerShell prerequisite superseded",
+        "nativeBuildPrerequisite": "Working native C/C++ toolchain not established by bounded local inventory; managed compiler presence is not native build proof",
+        "openGates": [
+          "Retained trusted-root traversal and precise Windows API semantics",
+          "Protected final-child handle security/identity and owned cleanup",
+          "Client transport identity before sensitive transmission",
+          "Independent cross-account and exact-candidate source/unpacked qualification"
+        ],
+        "runtimeChanged": false,
+        "candidateManifestChanged": false
+      }
     },
     {
       "id": "LC-QA-STRUCTURAL-CONTRACTS",
