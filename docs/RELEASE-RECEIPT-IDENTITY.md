@@ -11,6 +11,21 @@ each receipt's bound source inputs must include that manifest digest. A mismatch
 returns `ERR_LINECRAFT_RELEASE_IDENTITY` with a fixed reason. Existing status,
 version, command, timing, source-hash, ref/commit and installer checks remain.
 
+Receipt format discriminators must match the actual producers exactly:
+
+| Receipt | Required format | Start field | End field |
+| --- | --- | --- | --- |
+| Release and installed | `LinecraftPublicGate/1` | `startedAt` | `completedAt` |
+| Clean install | `LinecraftCleanRunnerInstall/1` | `startedAt` | `finishedAt` |
+| Pure summary | `LinecraftPublicPureSummary/1` | Absent | `completedAt` |
+
+Raw gate and clean-install timestamps must be finite parsed strings satisfying
+`CI start <= receipt start <= receipt end <= current time`. Equal boundaries and
+zero durations are valid. Clean installation uses `finishedAt`; a renamed
+`completedAt` cannot substitute for it. PowerShell round-trip timestamps with
+seven fractional digits remain accepted at JavaScript date precision. Ordering
+between different receipts is not established by these per-receipt checks.
+
 The pure summary uses its actual producer schema: status, version and recorded
 completion time are checked before asset mutation. Completion must be a finite
 parsed string within the inclusive CI-start/current-time window. Pure has no
@@ -37,10 +52,14 @@ archive/copy/write counters; unknown adapter operations fail the harness.
 
 The first identity guard changed12 failing references/9 passing controls into
 21 passes. The pure-summary follow-up reproduced16 failures alongside26 passes;
-all42 now pass. New cases include completion-time boundaries, malformed or
+all42 passed. Those cases cover completion-time boundaries, malformed or
 inconsistent input maps, property-order independence and preservation of required
-release/installed start times. The suite joins both baseline and candidate
-qualification; the fixture and preparation tool are fingerprinted. No real asset
+release/installed start times. The chronology/format follow-up reproduced27 failures
+alongside53 passes; all80 now pass. It adds reversed, stale, future, coerced and
+missing end times, wrong or absent producer formats, valid interval boundaries and
+PowerShell fractional timestamps. Already-rejected raw completion cases remain
+controls. The suite joins both baseline and candidate qualification; the fixture
+and preparation tool are fingerprinted. No real asset
 preparation, archive, installation, application or publication is exercised.
 
 This is source-only prefix admission. Downstream asset contents, full receipt

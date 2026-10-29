@@ -13,18 +13,25 @@ const gateStart=Date.parse(process.env.GATE_START_UTC);assert.ok(Number.isFinite
 // Keep the historical baseline selector. Candidate release support is separate.
 const {manifest,manifestFile,candidate}=loadManifest(),manifestSHA256=sha(path.join(root,manifestFile));
 function identity(actual,expected,reason){if(actual!==expected)throw Object.assign(Error(`Release receipt identity mismatch: ${reason}.`),{code:'ERR_LINECRAFT_RELEASE_IDENTITY'});}
+function chronology(receipt,endField,label){
+ const start=typeof receipt.startedAt==='string'?Date.parse(receipt.startedAt):NaN;
+ const end=typeof receipt[endField]==='string'?Date.parse(receipt[endField]):NaN;
+ identity(Number.isFinite(start)&&Number.isFinite(end)&&gateStart<=start&&start<=end&&end<=Date.now(),true,label+' chronology');
+}
 identity(version,manifest.version,'package/manifest version');
 const release=read('work/public-release-results.json'),installed=read('work/public-test-installed-results.json'),pure=read('work/public-pure-results.json');
 for(const [label,r] of [['release',release],['installed',installed]]){
+ identity(r?.format,'LinecraftPublicGate/1',label+' format');
  assert.equal(r.status,'passed');assert.equal(r.version,version);assert.deepEqual(r.changedSource,[]);
  identity(r.manifestFile,manifestFile,label+' manifest file');
  identity(r.manifestSHA256,manifestSHA256,label+' manifest hash');
  identity(r.candidate,candidate,label+' candidate flag');
  identity(r.sourceSHA256?.[manifestFile],manifestSHA256,label+' bound manifest hash');
- assert.ok(Date.parse(r.startedAt)>=gateStart&&Date.parse(r.completedAt)<=Date.now(),'Stale or future gate receipt.');
+ chronology(r,'completedAt',label);
  for(const [name,digest] of Object.entries(r.sourceSHA256))assert.equal(sha(path.join(root,name)),digest,name);
 }
 assert.equal(release.command,'release');assert.equal(installed.command,'test-installed');
+identity(pure?.format,'LinecraftPublicPureSummary/1','pure format');
 assert.equal(pure.status,'passed');identity(pure.version,version,'pure version');
 const pureCompletedAt=typeof pure.completedAt==='string'?Date.parse(pure.completedAt):NaN;
 identity(Number.isFinite(pureCompletedAt)&&pureCompletedAt>=gateStart&&pureCompletedAt<=Date.now(),true,'pure completion time');
@@ -40,8 +47,8 @@ for(const [label,r] of [['release',release],['installed',installed]]){
   identity(pureInputs[name],r.sourceSHA256[name],'pure/'+label+' source input hash');
  }
 }
-const clean=read('work/public-clean-install-results.json');assert.equal(clean.status,'passed');
-assert.equal(clean.version,version);assert.equal(clean.runId,process.env.GITHUB_RUN_ID);assert.ok(Date.parse(clean.startedAt)>=gateStart);
+const clean=read('work/public-clean-install-results.json');identity(clean?.format,'LinecraftCleanRunnerInstall/1','clean format');assert.equal(clean.status,'passed');
+assert.equal(clean.version,version);assert.equal(clean.runId,process.env.GITHUB_RUN_ID);chronology(clean,'finishedAt','clean');
 const installer=`Linecraft-CAD-${version}-Setup.exe`,source=`Linecraft-CAD-${version}-Source.zip`;
 assert.equal(sha(path.join(out,installer)),clean.installerSha256);
 execFileSync('git',['archive','--format=zip',`--prefix=Linecraft-CAD-${version}-Source/`,`--output=${path.join(out,source)}`,commit],{cwd:root,stdio:'inherit'});

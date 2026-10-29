@@ -79,6 +79,7 @@ for(const entry of fixture.cases)test('guard: '+entry.id+' rejects before any as
   if(entry.operation==='coherent-other-version')for(const record of Object.values(data))record.version=entry.version;
   else if(entry.operation==='delete-bound-manifest')delete data[entry.receipt].sourceSHA256[fixture.manifestFile];
   else if(entry.operation==='delete-field')delete data[entry.receipt][entry.field];
+  else if(entry.operation==='rename-field'){data[entry.receipt][entry.to]=data[entry.receipt][entry.from];delete data[entry.receipt][entry.from];}
   else if(entry.operation==='set-input')data[entry.receipt].sourceSHA256[entry.input]=entry.value;
   else if(entry.operation==='delete-input')delete data[entry.receipt].sourceSHA256[entry.input];
   else data[entry.receipt][entry.field]=entry.value;
@@ -96,8 +97,20 @@ for(const [name,change] of [['pure completion equals gate start',d=>{d.pure.comp
  const result=execute({change});assert.equal(result.error?.code,'HARNESS_ASSET_BOUNDARY');
  assert.deepEqual({archive:result.state.archiveCalls,copy:result.state.copyCalls,write:result.state.writeCalls},{archive:1,copy:0,write:0});
 });
+for(const [name,change] of [['release zero duration at CI start',d=>{d.release.startedAt=fixture.gateStart;d.release.completedAt=fixture.gateStart;}],
+ ['installed zero duration at current time',d=>{d.installed.startedAt=fixture.now;d.installed.completedAt=fixture.now;}],
+ ['clean zero duration at CI start',d=>{d.clean.startedAt=fixture.gateStart;d.clean.finishedAt=fixture.gateStart;}],
+ ['clean zero duration at current time',d=>{d.clean.startedAt=fixture.now;d.clean.finishedAt=fixture.now;}],
+ ['clean PowerShell round-trip fractions',d=>{d.clean.startedAt='2026-10-01T00:01:00.1234567Z';d.clean.finishedAt='2026-10-01T00:02:00.7654321Z';}]])test('control: '+name+' reaches the asset boundary',()=>{
+ const result=execute({change});assert.equal(result.error?.code,'HARNESS_ASSET_BOUNDARY');
+ assert.deepEqual({archive:result.state.archiveCalls,copy:result.state.copyCalls,write:result.state.writeCalls},{archive:1,copy:0,write:0});
+});
 for(const [name,options] of [['unapproved ref',{wrongRef:true}],['different tag commit',{wrongCommit:true}],
  ['missing release start time',{change:d=>{delete d.release.startedAt;}}],['missing installed start time',{change:d=>{delete d.installed.startedAt;}}],
+ ['missing release completion',{change:d=>{delete d.release.completedAt;}}],['missing installed completion',{change:d=>{delete d.installed.completedAt;}}],
+ ['invalid release completion',{change:d=>{d.release.completedAt='not-a-time';}}],['invalid installed completion',{change:d=>{d.installed.completedAt='not-a-time';}}],
+ ['wrong release completion alias',{change:d=>{d.release.finishedAt=d.release.completedAt;delete d.release.completedAt;}}],
+ ['wrong installed completion alias',{change:d=>{d.installed.finishedAt=d.installed.completedAt;delete d.installed.completedAt;}}],
  ['wrong release command',{change:d=>{d.release.command='test';}}],['wrong installed command',{change:d=>{d.installed.command='release';}}],
  ['changed release source hash',{change:d=>{d.release.sourceSHA256[fixture.manifestFile]='0'.repeat(64);}}],
  ['changed installed source hash',{change:d=>{d.installed.sourceSHA256[fixture.manifestFile]='0'.repeat(64);}}],['changed installer hash',{wrongInstaller:true}]])test('control: '+name+' remains rejected before assets',()=>{

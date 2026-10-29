@@ -181,6 +181,181 @@
       "operation": "set-input",
       "input": "synthetic-qualified-input.txt",
       "value": 123
+    },
+    {
+      "id": "release-reversed",
+      "receipt": "release",
+      "field": "completedAt",
+      "value": "2026-10-01T00:00:30.000Z"
+    },
+    {
+      "id": "release-completion-stale",
+      "receipt": "release",
+      "field": "completedAt",
+      "value": "2026-09-30T23:59:59.999Z"
+    },
+    {
+      "id": "release-start-future",
+      "receipt": "release",
+      "field": "startedAt",
+      "value": "2026-10-01T00:10:00.001Z"
+    },
+    {
+      "id": "release-start-array",
+      "receipt": "release",
+      "field": "startedAt",
+      "value": [
+        "2026-10-01T00:01:00.000Z"
+      ]
+    },
+    {
+      "id": "release-completion-array",
+      "receipt": "release",
+      "field": "completedAt",
+      "value": [
+        "2026-10-01T00:02:00.000Z"
+      ]
+    },
+    {
+      "id": "release-format-wrong",
+      "receipt": "release",
+      "field": "format",
+      "value": "LinecraftPublicPureSummary/1"
+    },
+    {
+      "id": "release-format-missing",
+      "receipt": "release",
+      "field": "format",
+      "operation": "delete-field"
+    },
+    {
+      "id": "installed-reversed",
+      "receipt": "installed",
+      "field": "completedAt",
+      "value": "2026-10-01T00:00:30.000Z"
+    },
+    {
+      "id": "installed-completion-stale",
+      "receipt": "installed",
+      "field": "completedAt",
+      "value": "2026-09-30T23:59:59.999Z"
+    },
+    {
+      "id": "installed-start-future",
+      "receipt": "installed",
+      "field": "startedAt",
+      "value": "2026-10-01T00:10:00.001Z"
+    },
+    {
+      "id": "installed-start-array",
+      "receipt": "installed",
+      "field": "startedAt",
+      "value": [
+        "2026-10-01T00:01:00.000Z"
+      ]
+    },
+    {
+      "id": "installed-completion-array",
+      "receipt": "installed",
+      "field": "completedAt",
+      "value": [
+        "2026-10-01T00:02:00.000Z"
+      ]
+    },
+    {
+      "id": "installed-format-wrong",
+      "receipt": "installed",
+      "field": "format",
+      "value": "LinecraftPublicPureSummary/1"
+    },
+    {
+      "id": "installed-format-missing",
+      "receipt": "installed",
+      "field": "format",
+      "operation": "delete-field"
+    },
+    {
+      "id": "clean-start-future",
+      "receipt": "clean",
+      "field": "startedAt",
+      "value": "2026-10-01T00:10:00.001Z"
+    },
+    {
+      "id": "clean-start-array",
+      "receipt": "clean",
+      "field": "startedAt",
+      "value": [
+        "2026-10-01T00:01:00.000Z"
+      ]
+    },
+    {
+      "id": "clean-finish-invalid",
+      "receipt": "clean",
+      "field": "finishedAt",
+      "value": "not-a-time"
+    },
+    {
+      "id": "clean-finish-stale",
+      "receipt": "clean",
+      "field": "finishedAt",
+      "value": "2026-09-30T23:59:59.999Z"
+    },
+    {
+      "id": "clean-finish-future",
+      "receipt": "clean",
+      "field": "finishedAt",
+      "value": "2026-10-01T00:10:00.001Z"
+    },
+    {
+      "id": "clean-finish-reversed",
+      "receipt": "clean",
+      "field": "finishedAt",
+      "value": "2026-10-01T00:00:30.000Z"
+    },
+    {
+      "id": "clean-finish-array",
+      "receipt": "clean",
+      "field": "finishedAt",
+      "value": [
+        "2026-10-01T00:02:00.000Z"
+      ]
+    },
+    {
+      "id": "clean-finish-missing",
+      "receipt": "clean",
+      "operation": "delete-field",
+      "field": "finishedAt"
+    },
+    {
+      "id": "clean-format-wrong",
+      "receipt": "clean",
+      "field": "format",
+      "value": "LinecraftPublicGate/1"
+    },
+    {
+      "id": "clean-format-missing",
+      "receipt": "clean",
+      "operation": "delete-field",
+      "field": "format"
+    },
+    {
+      "id": "pure-format-wrong",
+      "receipt": "pure",
+      "field": "format",
+      "value": "LinecraftPublicGate/1"
+    },
+    {
+      "id": "pure-format-missing",
+      "receipt": "pure",
+      "operation": "delete-field",
+      "field": "format"
+    },
+    {
+      "id": "clean-wrong-end-alias",
+      "receipt": "clean",
+      "operation": "rename-field",
+      "from": "finishedAt",
+      "to": "completedAt"
     }
   ],
   "qualifiedInput": {

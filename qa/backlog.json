@@ -1042,7 +1042,37 @@
       "actualAssetsPrepared": false,
       "publicationRun": false,
       "dailyUseReady": false,
-      "nextAction": "Assess remaining raw/clean receipt chronology and schema requirements with independent synthetic negatives; preserve the1.36.0-only workflow and publisher isolation."
+      "nextAction": "Raw/clean chronology and exact format follow-up is recorded in LC-REL-RECEIPT-CHRONOLOGY. Assess remaining full schemas and downstream asset metadata independently; preserve the1.36.0-only workflow and publisher isolation."
+    },
+    {
+      "id": "LC-REL-RECEIPT-CHRONOLOGY",
+      "parent": "LC-REL-VERSIONED-PIPELINE",
+      "priority": 2,
+      "symptom": "Raw gate completion could precede its start; clean-install completion and receipt producer formats were not checked before asset mutation",
+      "sourceVersion": "1.36.1-beta.7",
+      "fixtureClass": "Actual preparation/manifest-loader VM with fixed synthetic receipt times, fake files/Git and a first-archive sentinel",
+      "status": "verified bounded per-receipt chronology and exact producer-format guard",
+      "attempts": 1,
+      "acceptance": "Exact raw/clean/pure format discriminators; string finite CI-start <= start <= end <= now for raw and clean receipts using their actual end fields; preserve pure completion-only rule and all prior controls",
+      "evidence": [
+        "tools/prepare-beta-assets.cjs",
+        "tests/release-receipt-identity.test.cjs",
+        "tests/fixtures/release-receipt-identity.json",
+        "docs/RELEASE-RECEIPT-IDENTITY.md"
+      ],
+      "verifiedScope": "Expanded suite27FAIL/53PASS before;80/80 after. Valid equal boundaries, zero durations and PowerShell seven-digit fractions reach only the fake first-archive boundary. Prior42 cases retained; malformed receipts reject with zero asset mutations.",
+      "limits": [
+        "Per-receipt parsed-time ordering, not ordering between receipts or higher precision than JavaScript dates",
+        "Exact format discriminator, not complete schema validation or receipt authenticity",
+        "No downstream assets, clean-runner install/uninstall or candidate publication qualification"
+      ],
+      "runtimeChanged": false,
+      "candidateManifestChanged": false,
+      "releaseWorkflowChanged": false,
+      "actualAssetsPrepared": false,
+      "publicationRun": false,
+      "dailyUseReady": false,
+      "nextAction": "Assess remaining receipt structures and downstream asset/publisher metadata before proposing a versioned pipeline; preserve immutable baseline selection and separate release authorization."
     }
   ]
 }
