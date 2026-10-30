@@ -46,6 +46,7 @@ if(candidate)suites.push('tests/richtext-reference.test.mjs');
 if(candidate)suites.push('tests/import-headline.test.cjs');
 if(candidate)suites.push('tests/viewport-navigation-independent.test.mjs','tests/atomic-batch-independent.test.mjs');
 if(candidate)suites.push('tests/transform-atomicity-reference.test.mjs','tests/transform-differential-reference.test.mjs','tests/transform-checkpoint-preparation.test.mjs');
+if(candidate)suites.push('tests/save-isolation-reference.test.cjs');
 if(candidate)auxiliaries.push('qa/CANDIDATE-SOURCE-1.36.1-beta.7.json');
 if(candidate)auxiliaries.push('qa/CANDIDATE-SOURCE-1.36.1-beta.8.json');
 if(candidate)suites.push('tests/hatch-normalization.test.mjs','tests/quality-reference.test.mjs','tests/qa-controls.test.cjs','tests/viewport-center-import.test.mjs','tests/tick-width-reference.test.mjs','tests/tick-width.test.mjs','tests/paper-solid-import.test.mjs','tests/multisheet-reference.test.mjs');

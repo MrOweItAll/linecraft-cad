@@ -593,3 +593,21 @@ partially implemented, with its two-attempt budget consumed. Next perform the
 independent P0 LC-REL-02 save/import isolation evidence matrix. No new app/PDF/
 build/unpacked/native/installed/converter acceptance ran; beta7 startup remains
 unexplained and beta6 historical built/native evidence remains separate.
+
+
+## Save/native import isolation reference - October30,2026UTC
+
+The [36-check reference](SAVE-IMPORT-ISOLATION.md) passes against unchanged beta9
+runtime:31actual-main/fake-Electron/owned-file checks and5real-core import/history
+checks. Existing valid native bytes survive injected open/partial-write/flush/
+close/rename failures; collision and denied-cleanup leftovers are distinguished.
+Immediate host association/dirty/text/title and actual core Undo/Redo are checked.
+The fresh expanded candidate profile passes46/46stages,1,158checks and216inputs.
+No runtime, manifest, package/version, dependency or CI change occurred.
+
+LC-REL-02 stays partially implemented. Renderer saved fingerprints/selection/
+history, DXF/DWG/converter branches, development persistence/discard authorization,
+operation/next-step diagnostics and broad crash/platform durability remain open.
+Next define renderer Save/Open/discard failure/cancel references before any fix.
+No application/native/installed acceptance or unchanged startup retry ran; earlier
+beta9 and historical beta6 receipts retain their original scope.

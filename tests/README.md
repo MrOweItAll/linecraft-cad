@@ -347,3 +347,16 @@ The candidate fast profile is45stages/1,122checks/215inputs. See
 [the bounded repair and measured added cost](../docs/TRANSFORM-CHECKPOINT-RECOVERY.md).
 Optional synthetic stack reports remain private. No native/file-loss/installed
 or broad all-command atomicity claim follows.
+
+
+## Existing-file save and native-import isolation
+
+`node --test --test-concurrency=1 tests/save-isolation-reference.test.cjs`
+runs36checks:31actual-main/fake-Electron/owned-filesystem cases and5real-core
+malformed/successful import/history cases. The explicit candidate profile selects
+it, now46stages/1,158checks/216inputs on beta9. Production main/core bytes and
+manifest remain unchanged. See [the matrix and limits](../docs/SAVE-IMPORT-ISOLATION.md).
+The test-only read-only association observer is appended in memory, never exported
+by production. Optional LINECRAFT_SAVE_ISOLATION_REPORT includes local paths/raw
+errors and must remain private. Real renderer/native/converter/crash acceptance
+is not inferred; cleanup-denied and collided fixtures are intentionally retained.

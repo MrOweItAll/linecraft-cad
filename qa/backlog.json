@@ -2134,19 +2134,21 @@
     {
       "id": "LC-REL-02",
       "priority": 0,
-      "status": "partially implemented",
-      "problem": "Atomic save and validate-before-adoption already exist; the requested existing-valid-file fault matrix and complete active-state failure comparisons remain unqualified.",
-      "sourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
-      "sourceVersion": "1.36.1-beta.7",
+      "status": "partially implemented; bounded host/core preservation already satisfied in36executedchecks",
+      "problem": "Existing-file save failure preservation and native/core malformed-input isolation pass the new bounded matrix without a runtime repair. Renderer/discard/exchange/development-state and operation/next-step diagnostic acceptance remain unqualified.",
+      "sourceCommit": "ccd99b00e306c356f05430e5e733b588a6126cef",
+      "sourceVersion": "1.36.1-beta.9",
       "evidence": [
         "desktop/main.cjs:285-312",
         "desktop/main.cjs:405-459",
         "app.mjs:1823-1844",
         "app.mjs:1878-1887",
-        "core.mjs:3225-3233",
+        "core.mjs:3237-3245",
         "tests/desktop-unit.test.cjs:131-175",
         "tests/import-files.test.cjs:17-37",
-        "tests/advanced-security.test.cjs:25"
+        "tests/advanced-security.test.cjs:25",
+        "tests/save-isolation-reference.test.cjs",
+        "docs/SAVE-IMPORT-ISOLATION.md"
       ],
       "acceptance": [
         "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
@@ -2154,7 +2156,7 @@
         "Errors identify the failed Save/Open/import operation and a useful next step.",
         "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
       ],
-      "next": "After LC-REL-01's focused evidence step, extend the existing desktop IPC/filesystem harness with the existing-file failure matrix and complete import-state comparisons; preserve successful overwrite and chooser/cancel controls before considering production changes.",
+      "next": "Complete actual renderer source-function Save/Open/discard failure/cancel references using idle synthetic editors and real prior Undo/Redo, saved fingerprint/import flags/name and editor identity. Preserve successful Save baseline changes before a canceled chooser. Keep DXF/DWG/converter, development persistence/discard authorization and native/crash qualifications explicit. Define an independent failing operation/next-step diagnostic contract before any production fix; do not repeat unchanged passing gates or the blocked application route.",
       "confirmedDefect": false,
       "implementationAttempts": 0,
       "acceptanceComplete": false,
@@ -2166,26 +2168,26 @@
         "requestedPriority": 0,
         "priority": 0,
         "assessment": "partially implemented",
-        "problem": "Atomic save and validate-before-adoption already exist; the requested existing-valid-file fault matrix and complete active-state failure comparisons remain unqualified.",
+        "problem": "Existing-file save failure preservation and native/core malformed-input isolation pass the new bounded matrix without a runtime repair. Renderer/discard/exchange/development-state and operation/next-step diagnostic acceptance remain unqualified.",
         "implemented": "Native save writes and flushes an exclusive sibling, renames without deleting the destination, and cleans its owned temporary file. Association/clean state update after success. Open/import validates before renderer replacement. Existing tests cover malformed Open, canceled Save As and some cleanup failures.",
         "evidence": [
           "desktop/main.cjs:285-312",
           "desktop/main.cjs:405-459",
           "app.mjs:1823-1844",
           "app.mjs:1878-1887",
-          "core.mjs:3225-3233",
+          "core.mjs:3237-3245",
           "tests/desktop-unit.test.cjs:131-175",
           "tests/import-files.test.cjs:17-37",
           "tests/advanced-security.test.cjs:25"
         ],
-        "gap": "Inject write/sync/rename failures while overwriting an existing valid native drawing. Compare file bytes and complete renderer/editor state for malformed and canceled import. Generic error strings do not establish operation-specific next-step guidance. No claim of power-loss/crash durability follows from sibling rename inspection.",
+        "gap": "Renderer/editor adoption, actual saved-fingerprint/dirty/UndoRedo/cancel/discard/exchange/development-state and useful operation/next-step errors remain unqualified. Passed host/core matrix is not a corruption defect.",
         "acceptance": [
           "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
           "Malformed or canceled import leaves active drawing contents, identity, selection and undo/redo unchanged.",
           "Errors identify the failed Save/Open/import operation and a useful next step.",
           "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
         ],
-        "nextAction": "After LC-REL-01's focused evidence step, extend the existing desktop IPC/filesystem harness with the existing-file failure matrix and complete import-state comparisons; preserve successful overwrite and chooser/cancel controls before considering production changes.",
+        "nextAction": "Complete actual renderer source-function Save/Open/discard failure/cancel references using idle synthetic editors and real prior Undo/Redo, saved fingerprint/import flags/name and editor identity. Preserve successful Save baseline changes before a canceled chooser. Keep DXF/DWG/converter, development persistence/discard authorization and native/crash qualifications explicit. Define an independent failing operation/next-step diagnostic contract before any production fix; do not repeat unchanged passing gates or the blocked application route.",
         "dependencies": [
           "LC-REL-01: ordered investigation; not a claim that save safety depends on batch implementation"
         ],
@@ -2196,18 +2198,121 @@
         ],
         "riskConfirmed": false,
         "priorityBasis": "P0 integrity investigation; no reproduced data loss and no justification to interrupt stable nearly completed work.",
-        "rollback": "Documentation-only intake; retain original valid files and fault receipts. Record a focused rollback method for any future repair.",
-        "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+        "rollback": "Focused revert of this test/documentation/candidate-profile checkpoint, preserving beta9runtime and prior independent work; no installed rollback.",
+        "reviewedSourceCommit": "ccd99b00e306c356f05430e5e733b588a6126cef",
         "recommendationNotVerifiedFinding": true,
         "acceptanceComplete": false,
-        "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+        "verificationScope": "Reviewed36/36host/corechecks;freshexpandedfast46/46stages1158portablechecks216inputs;runtimeandmanifestunchanged;noapp/native/installed/converterexecution",
         "completionRequirements": [
           "Record the verified problem and affected behavior before a product change.",
           "Record implementation and relevant executed checks; acceptance must pass before completion.",
           "For performance work record reproducible before/after measurements.",
           "Record remaining limitations and the exact rollback method."
         ],
-        "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+        "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md",
+        "progress": {
+          "scope": "Bounded host/core save/native-import preservation",
+          "assessment": "already satisfied in36checks",
+          "status": "verified coverage; no runtime repair",
+          "parentAcceptanceComplete": false,
+          "runtimeChanged": false,
+          "nextAction": "Complete actual renderer source-function Save/Open/discard failure/cancel references using idle synthetic editors and real prior Undo/Redo, saved fingerprint/import flags/name and editor identity. Preserve successful Save baseline changes before a canceled chooser. Keep DXF/DWG/converter, development persistence/discard authorization and native/crash qualifications explicit. Define an independent failing operation/next-step diagnostic contract before any production fix; do not repeat unchanged passing gates or the blocked application route."
+        }
+      },
+      "history": [
+        {
+          "id": "LC-REL-02",
+          "priority": 0,
+          "status": "partially implemented",
+          "problem": "Atomic save and validate-before-adoption already exist; the requested existing-valid-file fault matrix and complete active-state failure comparisons remain unqualified.",
+          "sourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+          "sourceVersion": "1.36.1-beta.7",
+          "evidence": [
+            "desktop/main.cjs:285-312",
+            "desktop/main.cjs:405-459",
+            "app.mjs:1823-1844",
+            "app.mjs:1878-1887",
+            "core.mjs:3225-3233",
+            "tests/desktop-unit.test.cjs:131-175",
+            "tests/import-files.test.cjs:17-37",
+            "tests/advanced-security.test.cjs:25"
+          ],
+          "acceptance": [
+            "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
+            "Malformed or canceled import leaves active drawing contents, identity, selection and undo/redo unchanged.",
+            "Errors identify the failed Save/Open/import operation and a useful next step.",
+            "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
+          ],
+          "next": "After LC-REL-01's focused evidence step, extend the existing desktop IPC/filesystem harness with the existing-file failure matrix and complete import-state comparisons; preserve successful overwrite and chooser/cancel controls before considering production changes.",
+          "confirmedDefect": false,
+          "implementationAttempts": 0,
+          "acceptanceComplete": false,
+          "recommendationReview": {
+            "requestedId": "LC-REL-02",
+            "canonicalId": "LC-REL-02",
+            "queueId": "LC-REL-02",
+            "title": "Safe save and failed-import isolation",
+            "requestedPriority": 0,
+            "priority": 0,
+            "assessment": "partially implemented",
+            "problem": "Atomic save and validate-before-adoption already exist; the requested existing-valid-file fault matrix and complete active-state failure comparisons remain unqualified.",
+            "implemented": "Native save writes and flushes an exclusive sibling, renames without deleting the destination, and cleans its owned temporary file. Association/clean state update after success. Open/import validates before renderer replacement. Existing tests cover malformed Open, canceled Save As and some cleanup failures.",
+            "evidence": [
+              "desktop/main.cjs:285-312",
+              "desktop/main.cjs:405-459",
+              "app.mjs:1823-1844",
+              "app.mjs:1878-1887",
+              "core.mjs:3225-3233",
+              "tests/desktop-unit.test.cjs:131-175",
+              "tests/import-files.test.cjs:17-37",
+              "tests/advanced-security.test.cjs:25"
+            ],
+            "gap": "Inject write/sync/rename failures while overwriting an existing valid native drawing. Compare file bytes and complete renderer/editor state for malformed and canceled import. Generic error strings do not establish operation-specific next-step guidance. No claim of power-loss/crash durability follows from sibling rename inspection.",
+            "acceptance": [
+              "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
+              "Malformed or canceled import leaves active drawing contents, identity, selection and undo/redo unchanged.",
+              "Errors identify the failed Save/Open/import operation and a useful next step.",
+              "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
+            ],
+            "nextAction": "After LC-REL-01's focused evidence step, extend the existing desktop IPC/filesystem harness with the existing-file failure matrix and complete import-state comparisons; preserve successful overwrite and chooser/cancel controls before considering production changes.",
+            "dependencies": [
+              "LC-REL-01: ordered investigation; not a claim that save safety depends on batch implementation"
+            ],
+            "relatedIds": [
+              "LC-MON-007",
+              "LC-DEV-001",
+              "LC-MAINT-01"
+            ],
+            "riskConfirmed": false,
+            "priorityBasis": "P0 integrity investigation; no reproduced data loss and no justification to interrupt stable nearly completed work.",
+            "rollback": "Documentation-only intake; retain original valid files and fault receipts. Record a focused rollback method for any future repair.",
+            "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+            "recommendationNotVerifiedFinding": true,
+            "acceptanceComplete": false,
+            "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+            "completionRequirements": [
+              "Record the verified problem and affected behavior before a product change.",
+              "Record implementation and relevant executed checks; acceptance must pass before completion.",
+              "For performance work record reproducible before/after measurements.",
+              "Record remaining limitations and the exact rollback method."
+            ],
+            "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+          }
+        }
+      ],
+      "assessment": "partially implemented",
+      "validation": "Reviewed36/36host/corechecks;freshexpandedfast46/46stages1158portablechecks216inputs;runtimeandmanifestunchanged;noapp/native/installed/converterexecution",
+      "change": "New actual-main/fakeElectron/owned-filesystem and real-core preservation references; explicit candidate suite selection and documentation only. No productfix.",
+      "boundedPreservation": {
+        "assessment": "already satisfied",
+        "checks": 36,
+        "hostChecks": 31,
+        "realCoreChecks": 5,
+        "runtimeChanged": false,
+        "record": "docs/SAVE-IMPORT-ISOLATION.md",
+        "mainSHA256": "fc4e12b6831a5e9feb4e91b4cd7c8d167e7290315dd38ce5963efe0e56e13fcf",
+        "testSHA256": "ae0c080911a34ecf10dbeecc13db199d0accf94de9060a03db31f6f2e512b286",
+        "parentComplete": false
       }
     },
     {
@@ -2783,10 +2888,10 @@
       }
     ],
     "latestBoundedResult": {
-      "id": "LC-REL-01",
-      "record": "docs/TRANSFORM-CHECKPOINT-RECOVERY.md",
+      "id": "LC-REL-02",
+      "record": "docs/SAVE-IMPORT-ISOLATION.md",
       "fullItemComplete": false,
-      "next": "LC-REL-02 existing-valid-file save/failed-import isolation evidence"
+      "next": "Complete actual renderer source-function Save/Open/discard failure/cancel references using idle synthetic editors and real prior Undo/Redo, saved fingerprint/import flags/name and editor identity. Preserve successful Save baseline changes before a canceled chooser. Keep DXF/DWG/converter, development persistence/discard authorization and native/crash qualifications explicit. Define an independent failing operation/next-step diagnostic contract before any production fix; do not repeat unchanged passing gates or the blocked application route."
     },
     "followupResults": [
       {
@@ -2805,6 +2910,12 @@
         "id": "LC-REL-01",
         "record": "docs/TRANSFORM-CHECKPOINT-RECOVERY.md",
         "status": "qualifiedterminalrepair61/61; overallpartial; twoattemptsconsumed",
+        "fullItemComplete": false
+      },
+      {
+        "id": "LC-REL-02",
+        "record": "docs/SAVE-IMPORT-ISOLATION.md",
+        "status": "36/36boundedpreservationchecks;parentpartial;no runtimechange",
         "fullItemComplete": false
       }
     ]

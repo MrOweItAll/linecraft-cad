@@ -332,3 +332,13 @@ The measured full-drawing checkpoint adds latency; no optimization is claimed.
 Two bounded semantic attempts are consumed. Continue the independent P0 LC-REL-02
 save/import isolation matrix before speculative performance work. Historical
 findings/IDs and the recommendation merges remain preserved.
+
+
+## LC-REL-02 bounded preservation coverage
+
+The [save/native-import reference](SAVE-IMPORT-ISOLATION.md) passes36checks with
+no runtime repair. Preservation is already satisfied within its injected owned-
+file and real-core malformed-input matrix. LC-REL-02 remains partially implemented:
+renderer/discard/exchange/development-state and operation/next-step diagnostics
+are still unqualified. No destructive-save finding or product fix follows from
+these passing cases; retain the original intake and current results separately.
