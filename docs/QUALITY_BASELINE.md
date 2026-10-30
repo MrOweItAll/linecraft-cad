@@ -759,3 +759,26 @@ unknown beta7 startup limits remain. Prior receipts and failures are preserved.
 
 The fresh selected fast gate passes 49/49 stages and 1,288 portable checks,
 with 224 bound inputs. It excludes all three pending recovery references.
+
+
+## Renderer negotiation prerequisites - October 30, 2026 UTC
+
+[The separate renderer reference](RECOVERY-NEGOTIATION-REFERENCE.md) freezes23checks:
+three controls plus inventory pass;19expected failures cover absent negotiation,
+chooser routing, source deadline ordering, returned binding before actual update/
+checkpoint, and returned reset failure. All22namedcases execute without harness
+errors after preserved fixture corrections. Current positive negotiation/deadline
+branches remain blocked. Fixed bridge replies and a manual clock qualify only
+the stated source projection; main/preload/IPC are not executed.
+
+The reference is auxiliary-only, alongside unchanged protocol37,identity14 and
+paired10; none is selected by the passing fast profile and old packs were not
+rerun. Runtime/main/app/preload/manifest/package/version/CI remain beta10. No
+repair approach is consumed. Main live-generation/queue/replay probes, actual
+ordinary-Save disk binding and integrated post-negotiation busy ownership remain
+prerequisites before the last LC-REL-02 approach. LC-REL-01 remains exhausted;
+application/native/installed/real-storage limits and unknown beta7 cause persist.
+
+The fresh selected fast gate passes49/49stages,1,288portablechecks and225bound
+inputs. All four pending recovery packs are auxiliary-only and excluded from
+passing acceptance; input identity and focused results are recorded separately.

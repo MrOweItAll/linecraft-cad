@@ -2134,7 +2134,7 @@
     {
       "id": "LC-REL-02",
       "priority": 0,
-      "status": "partially implemented; challenge/lifecycle prerequisites frozen, product repair pending",
+      "status": "partially implemented; renderer negotiation prerequisites frozen, runtime repair pending",
       "problem": "Under modeled two-session source recovery, accepted Save As B plus failed auxiliary association persistence leaves restored host target A while renderer content/baseline belongs to B; normal Save attempts unrelated A. Four guarded source references reproduce it, including equal basename/content. Guard prevents creation; no executed overwrite or real application drawing-loss finding.",
       "sourceCommit": "a59c96a6b7f3a6ee483678e193d992e98628b4b6",
       "sourceVersion": "1.36.1-beta.10",
@@ -2167,7 +2167,9 @@
         "docs/DEVELOPMENT-IDENTITY-REFERENCE.md",
         "tests/development-identity-contract.test.cjs",
         "tests/recovery-protocol-reference.test.cjs",
-        "docs/RECOVERY-PROTOCOL-REFERENCE.md"
+        "docs/RECOVERY-PROTOCOL-REFERENCE.md",
+        "tests/recovery-negotiation-reference.test.cjs",
+        "docs/RECOVERY-NEGOTIATION-REFERENCE.md"
       ],
       "acceptance": [
         "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
@@ -2175,7 +2177,7 @@
         "Errors identify the failed Save/Open/import operation and a useful next step.",
         "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
       ],
-      "next": "Before the final LC-REL-02 semantic approach, add healthy renderer challenge/confirmation and returned-binding-before-update/checkpoint controls, including dirty/imported recovery; probe live generation after queued rejection/compensation and after duplicate/conflicting confirmation; assert stable ordinary-Save disk binding and a finite negotiation deadline. Preserve all pending references; then independently review and use at most the one remaining repair approach. No generic rollback, name/content identity heuristic, unchanged gate/application retry, or further LC-REL-01 approach.",
+      "next": "Before the final LC-REL-02 semantic approach, freeze main live-generation probes after queued rejection/compensation and duplicate/conflicting confirmation; assert actual ordinary-Save reply and disk-generation stability, and add an integrated renderer file-action ownership recheck after awaited negotiation. Review those controls independently, then use at most the one remaining repair approach. The renderer23, protocol37, identity14 and paired10 references remain pending and excluded from the passing profile. No generic rollback, name/content identity heuristic, unchanged gate/application retry, or further LC-REL-01 approach.",
       "confirmedDefect": true,
       "implementationAttempts": 1,
       "acceptanceComplete": false,
@@ -2188,7 +2190,7 @@
         "priority": 0,
         "assessment": "partially implemented",
         "problem": "Under modeled two-session source recovery, accepted Save As B plus failed auxiliary association persistence leaves restored host target A while renderer content/baseline belongs to B; normal Save attempts unrelated A. Four guarded source references reproduce it, including equal basename/content. Guard prevents creation; no executed overwrite or real application drawing-loss finding.",
-        "implemented": "New actual-main/queue/core/fake-Electron development profile and discard reference suite/helper, explicit selection and documentation only; no runtime fix.",
+        "implemented": "Renderer negotiation reference and auxiliary-only binding; no runtime repair. Historical host/protocol references are retained unchanged.",
         "evidence": [
           "desktop/main.cjs:278-345",
           "desktop/main.cjs:438-511",
@@ -2199,14 +2201,14 @@
           "tests/import-files.test.cjs:17-37",
           "tests/advanced-security.test.cjs:25"
         ],
-        "gap": "Healthy renderer and live-generation/deadline prerequisites remain; see RECOVERY-PROTOCOL-REFERENCE.md",
+        "gap": "Main live-generation/queue/replay, actual ordinary-Save disk-generation and integrated file-action busy-recheck prerequisites remain; renderer contracts are frozen but still fail.",
         "acceptance": [
           "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
           "Malformed or canceled import leaves active drawing contents, identity, selection and undo/redo unchanged.",
           "Errors identify the failed Save/Open/import operation and a useful next step.",
           "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
         ],
-        "nextAction": "Before the final LC-REL-02 semantic approach, add healthy renderer challenge/confirmation and returned-binding-before-update/checkpoint controls, including dirty/imported recovery; probe live generation after queued rejection/compensation and after duplicate/conflicting confirmation; assert stable ordinary-Save disk binding and a finite negotiation deadline. Preserve all pending references; then independently review and use at most the one remaining repair approach. No generic rollback, name/content identity heuristic, unchanged gate/application retry, or further LC-REL-01 approach.",
+        "nextAction": "Before the final LC-REL-02 semantic approach, freeze main live-generation probes after queued rejection/compensation and duplicate/conflicting confirmation; assert actual ordinary-Save reply and disk-generation stability, and add an integrated renderer file-action ownership recheck after awaited negotiation. Review those controls independently, then use at most the one remaining repair approach. The renderer23, protocol37, identity14 and paired10 references remain pending and excluded from the passing profile. No generic rollback, name/content identity heuristic, unchanged gate/application retry, or further LC-REL-01 approach.",
         "dependencies": [
           "LC-REL-01: ordered investigation; not a claim that save safety depends on batch implementation"
         ],
@@ -2221,7 +2223,7 @@
         "reviewedSourceCommit": "a59c96a6b7f3a6ee483678e193d992e98628b4b6",
         "recommendationNotVerifiedFinding": true,
         "acceptanceComplete": false,
-        "verificationScope": "Protocol37checks6pass31expectedfail36records; missing prerequisites block positive branches. Full integration remains unqualified.",
+        "verificationScope": "Renderer23checks4pass19expectedfail22namedcases; all cases execute without final harness errors. Healthy negotiation/deadline and v2 binding remain pending; full integration unqualified.",
         "completionRequirements": [
           "Record the verified problem and affected behavior before a product change.",
           "Record implementation and relevant executed checks; acceptance must pass before completion.",
@@ -2230,12 +2232,12 @@
         ],
         "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md",
         "progress": {
-          "scope": "Protocol/lifecycle prerequisite contract",
-          "assessment": "reference frozen; implementation prerequisites pending",
+          "scope": "Renderer negotiation prerequisite contract",
+          "assessment": "reference frozen; implementation pending",
           "parentAcceptanceComplete": false,
           "runtimeChanged": false,
           "sourceProductFixAttemptsThisWake": 0,
-          "nextAction": "Before the final LC-REL-02 semantic approach, add healthy renderer challenge/confirmation and returned-binding-before-update/checkpoint controls, including dirty/imported recovery; probe live generation after queued rejection/compensation and after duplicate/conflicting confirmation; assert stable ordinary-Save disk binding and a finite negotiation deadline. Preserve all pending references; then independently review and use at most the one remaining repair approach. No generic rollback, name/content identity heuristic, unchanged gate/application retry, or further LC-REL-01 approach."
+          "nextAction": "Before the final LC-REL-02 semantic approach, freeze main live-generation probes after queued rejection/compensation and duplicate/conflicting confirmation; assert actual ordinary-Save reply and disk-generation stability, and add an integrated renderer file-action ownership recheck after awaited negotiation. Review those controls independently, then use at most the one remaining repair approach. The renderer23, protocol37, identity14 and paired10 references remain pending and excluded from the passing profile. No generic rollback, name/content identity heuristic, unchanged gate/application retry, or further LC-REL-01 approach."
         }
       },
       "history": [
@@ -3211,8 +3213,8 @@
         }
       ],
       "assessment": "partially implemented",
-      "validation": "Protocol37checks6pass31expectedfail36records; missing prerequisites block positive branches. Full integration remains unqualified.",
-      "change": "Protocol reference, fake-frame lifecycle controls, auxiliary input binding and ADR/docs only; no runtime change.",
+      "validation": "Renderer23checks4pass19expectedfail22namedcases; all cases execute without final harness errors. Healthy negotiation/deadline and v2 binding remain pending; full integration unqualified.",
+      "change": "Separate renderer source prerequisite reference, explicit CPv2 field choice, auxiliary binding and scoped docs; no runtime change or repair approach.",
       "boundedPreservation": {
         "assessment": "already satisfied",
         "checks": 36,
@@ -3309,6 +3311,23 @@
         "semanticRecords": 36,
         "runtimeChanged": false,
         "selectedPassingProfile": false,
+        "parentComplete": false,
+        "repairApproachesUsed": 1,
+        "atMostRemaining": 1
+      },
+      "rendererNegotiationReference": {
+        "record": "docs/RECOVERY-NEGOTIATION-REFERENCE.md",
+        "tests": 23,
+        "pass": 4,
+        "expectedFail": 19,
+        "namedCases": 22,
+        "harnessErrors": 0,
+        "runtimeChanged": false,
+        "selectedPassingProfile": false,
+        "mainAndPreloadExecuted": false,
+        "healthyNegotiationQualified": false,
+        "workingDeadlineQualified": false,
+        "integratedFileActionOwnershipQualified": false,
         "parentComplete": false,
         "repairApproachesUsed": 1,
         "atMostRemaining": 1
@@ -3958,8 +3977,18 @@
         "expectedFail": 11,
         "runtimeChanged": false,
         "parentComplete": false
+      },
+      {
+        "id": "LC-REL-02",
+        "scope": "Renderernegotiationprerequisites",
+        "record": "docs/RECOVERY-NEGOTIATION-REFERENCE.md",
+        "tests": 23,
+        "pass": 4,
+        "expectedFail": 19,
+        "runtimeChanged": false,
+        "parentComplete": false
       }
     ],
-    "nextReadyAction": "Complete the ADR-001 implementation prerequisites: freeze independently expected positive-generation, dirty/imported, failed/busy New/reset, queued compensation and stale/duplicate-frame controls, and prove bounded reconciliation ordering. The current fake reload reuses its frame object and does not prove stale-frame rejection. Then use at most the one remaining reviewed LC-REL-02 repair approach for paired UUID consistency and explicit legacy fallback, preserving accepted Save As, stable verified ordinary Save, exact packaged replies and fresh recovery history. No name/content identity heuristic or generic rollback. Preserve the frozen paired10 and identity14 references; do not rerun unchanged references/gates or the blocked application route. LC-REL-01 remains exhausted."
+    "nextReadyAction": "Before the final LC-REL-02 semantic approach, freeze main live-generation probes after queued rejection/compensation and duplicate/conflicting confirmation; assert actual ordinary-Save reply and disk-generation stability, and add an integrated renderer file-action ownership recheck after awaited negotiation. Review those controls independently, then use at most the one remaining repair approach. The renderer23, protocol37, identity14 and paired10 references remain pending and excluded from the passing profile. No generic rollback, name/content identity heuristic, unchanged gate/application retry, or further LC-REL-01 approach."
   }
 }

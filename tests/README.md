@@ -405,3 +405,15 @@ records. See [the bounded reference](../docs/DEVELOPMENT-IDENTITY-REFERENCE.md) 
 excluded from the passing profile and bound only as an auxiliary input. See
 [the reference and limits](../docs/RECOVERY-PROTOCOL-REFERENCE.md). Optional
 LINECRAFT_RECOVERY_PROTOCOL_REPORT contains private local evidence.
+
+
+## Pending renderer recovery negotiation
+
+`node --test --test-concurrency=1 tests/recovery-negotiation-reference.test.cjs`
+is a separate pending contract:23checks,4pass(three controls plus inventory)
+and19expectedfailures across22namedcases, with no final harness errors.
+It is auxiliary-only, excluded from the selected passing fast profile. Optional
+LINECRAFT_RECOVERY_NEGOTIATION_REPORT writes private local traces only.
+See [the source adapters, manual-clock expectations and limits](../docs/RECOVERY-NEGOTIATION-REFERENCE.md).
+No main/preload/realIPC/native/application execution or working deadline follows.
+The unchanged protocol37,identity14 and paired10 references were not rerun.
