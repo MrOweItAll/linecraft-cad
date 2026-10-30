@@ -428,3 +428,12 @@ Actual main generation probes and renderer runAction/queue ownership projections
 are distinguished in [the scope record](../docs/RECOVERY-OWNERSHIP-REFERENCE.md).
 Optional LINECRAFT_RECOVERY_OWNERSHIP_REPORT contains private local traces.
 The unchanged renderer23/protocol37/identity14/paired10 packs were not rerun.
+
+
+## Beta11 recovery qualification
+
+The candidate fast profile now selects all five frozen recovery packs:102/102
+checks pass. Historical pending descriptions above retain their beta10 scope.
+Fresh beta11 fast qualification is54stages/1,390checks/227inputs.
+See [the source repair, fixture adaptations and limits](../docs/DEVELOPMENT-RECOVERY-BINDING.md).
+No application/native/installed or real-transport acceptance follows.

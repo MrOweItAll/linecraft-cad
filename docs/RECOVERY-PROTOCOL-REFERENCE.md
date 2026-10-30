@@ -1,5 +1,10 @@
 # Recovery protocol prerequisite reference
 
+Current beta11 source qualification: 37/37 checks pass in the selected
+profile. See [the repair and limits](DEVELOPMENT-RECOVERY-BINDING.md). The beta10
+pending-checkpoint description below is retained as historical evidence.
+
+
 The new explicit reference has 37 checks: 6 passes (five controls plus inventory) and 31 expected
 failures, with 36 semantic records and no harness errors after a preserved fixture
 parse correction. Thirteen stop at the missing protocol interface, eleven at

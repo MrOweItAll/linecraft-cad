@@ -1,5 +1,10 @@
 # Pending paired recovery target safety
 
+Current beta11 source qualification: 10/10 checks pass in the selected
+profile. See [the repair and limits](DEVELOPMENT-RECOVERY-BINDING.md). The beta10
+pending-checkpoint description below is retained as historical evidence.
+
+
 LC-REL-02 has a confirmed conditional wrong-target Save attempt in this source
 model. The explicit reference has10checks:6pass and4pending safety failures,
 with9scenario traces and no harness errors. It is outside the selected passing

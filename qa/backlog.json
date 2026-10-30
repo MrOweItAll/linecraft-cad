@@ -2134,10 +2134,10 @@
     {
       "id": "LC-REL-02",
       "priority": 0,
-      "status": "partially implemented; live-generation and file-action ownership prerequisites frozen, repair pending",
-      "problem": "Under modeled two-session source recovery, accepted Save As B plus failed auxiliary association persistence leaves restored host target A while renderer content/baseline belongs to B; normal Save attempts unrelated A. Four guarded source references reproduce it, including equal basename/content. Guard prevents creation; no executed overwrite or real application drawing-loss finding.",
-      "sourceCommit": "a59c96a6b7f3a6ee483678e193d992e98628b4b6",
-      "sourceVersion": "1.36.1-beta.10",
+      "status": "partially implemented; bounded recovery identity/lifecycle source repair qualified in beta11",
+      "problem": "Historical beta10 conditional source-model wrong-target attempt after accepted Save As and failed auxiliary persistence; repaired within beta11 source qualification. Broader real transport/storage/crash/native acceptance remains incomplete.",
+      "sourceCommit": "66aa22454a90b8c9906ac04d0d0ffbd790b843d5",
+      "sourceVersion": "1.36.1-beta.11",
       "evidence": [
         "desktop/main.cjs:278-345",
         "desktop/main.cjs:438-511",
@@ -2171,7 +2171,9 @@
         "tests/recovery-negotiation-reference.test.cjs",
         "docs/RECOVERY-NEGOTIATION-REFERENCE.md",
         "tests/recovery-ownership-reference.test.cjs",
-        "docs/RECOVERY-OWNERSHIP-REFERENCE.md"
+        "docs/RECOVERY-OWNERSHIP-REFERENCE.md",
+        "docs/DEVELOPMENT-RECOVERY-BINDING.md",
+        "qa/CANDIDATE-SOURCE-1.36.1-beta.11.json"
       ],
       "acceptance": [
         "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
@@ -2179,9 +2181,9 @@
         "Errors identify the failed Save/Open/import operation and a useful next step.",
         "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
       ],
-      "next": "Review the frozen recovery contracts and a focused main/app/preload implementation plan, then use at most the one remaining LC-REL-02 repair approach for paired UUID lifecycle, guarded challenge/confirmation, returned binding before update/checkpoint, and exclusive file actions across negotiation. Preserve accepted native Save, legacy chooser fallback, exact packaged replies, fresh recovery history and the cumulative59runtime/12resource closure. All five pending references require passing exact-source qualification before implementation acceptance. No generic rollback, content/name identity heuristic, unchanged gate/application/converter retry, or further LC-REL-01 approach.",
+      "next": "Retain the qualified beta11 recovery source repair; LC-REL-02 remains partial outside that envelope and both semantic repair approaches are consumed. Do not start another LC-REL-01/02 repair. Next independent registered work is LC-REL-03: use the existing fake-process importer harness to freeze a focused diagnostic/termination matrix, including kill-false and missing-close behavior, with independent expectations before any fix. No real converter retry, unchanged application retry, native/installed/client action or publication is authorized.",
       "confirmedDefect": true,
-      "implementationAttempts": 1,
+      "implementationAttempts": 2,
       "acceptanceComplete": false,
       "recommendationReview": {
         "requestedId": "LC-REL-02",
@@ -2191,8 +2193,8 @@
         "requestedPriority": 0,
         "priority": 0,
         "assessment": "partially implemented",
-        "problem": "Under modeled two-session source recovery, accepted Save As B plus failed auxiliary association persistence leaves restored host target A while renderer content/baseline belongs to B; normal Save attempts unrelated A. Four guarded source references reproduce it, including equal basename/content. Guard prevents creation; no executed overwrite or real application drawing-loss finding.",
-        "implemented": "Independently expected live-generation and integrated source ownership contracts frozen; existing source busy controls verified. No runtime repair.",
+        "problem": "Historical beta10 conditional source-model wrong-target attempt after accepted Save As and failed auxiliary persistence; repaired within beta11 source qualification. Broader real transport/storage/crash/native acceptance remains incomplete.",
+        "implemented": "Beta11 paired UUID/epoch/nonce recovery with binding-before-update and exclusive file-action ownership, qualified in the stated source envelope.",
         "evidence": [
           "desktop/main.cjs:278-345",
           "desktop/main.cjs:438-511",
@@ -2203,14 +2205,14 @@
           "tests/import-files.test.cjs:17-37",
           "tests/advanced-security.test.cjs:25"
         ],
-        "gap": "Main/app/preload UUID and guarded negotiation implementation remains pending; all five references retain their actual expected failures and integration limits.",
+        "gap": "Real transport/frame ordering/storage/crash/watch/privacy breadth, app/native/installed/upgrade and broader LC-REL-02 acceptance remain unqualified.",
         "acceptance": [
           "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
           "Malformed or canceled import leaves active drawing contents, identity, selection and undo/redo unchanged.",
           "Errors identify the failed Save/Open/import operation and a useful next step.",
           "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
         ],
-        "nextAction": "Review the frozen recovery contracts and a focused main/app/preload implementation plan, then use at most the one remaining LC-REL-02 repair approach for paired UUID lifecycle, guarded challenge/confirmation, returned binding before update/checkpoint, and exclusive file actions across negotiation. Preserve accepted native Save, legacy chooser fallback, exact packaged replies, fresh recovery history and the cumulative59runtime/12resource closure. All five pending references require passing exact-source qualification before implementation acceptance. No generic rollback, content/name identity heuristic, unchanged gate/application/converter retry, or further LC-REL-01 approach.",
+        "nextAction": "Retain the qualified beta11 recovery source repair; LC-REL-02 remains partial outside that envelope and both semantic repair approaches are consumed. Do not start another LC-REL-01/02 repair. Next independent registered work is LC-REL-03: use the existing fake-process importer harness to freeze a focused diagnostic/termination matrix, including kill-false and missing-close behavior, with independent expectations before any fix. No real converter retry, unchanged application retry, native/installed/client action or publication is authorized.",
         "dependencies": [
           "LC-REL-01: ordered investigation; not a claim that save safety depends on batch implementation"
         ],
@@ -2221,11 +2223,11 @@
         ],
         "riskConfirmed": true,
         "priorityBasis": "Confirmed conditional source-model wrong-target attempt warrants P0 investigation before performance; no ordinary application loss or overwrite demonstrated.",
-        "rollback": "Focused revert of this pending-reference/helper/profile/docs checkpoint; preserve beta10 runtime and all existing evidence.",
-        "reviewedSourceCommit": "a59c96a6b7f3a6ee483678e193d992e98628b4b6",
+        "rollback": "Focused revert of 66aa22454a90b8c9906ac04d0d0ffbd790b843d5 restores beta10 runtime/version/profile/CI selection. Preserve all receipts and checkpoint/profile copies; no installed downgrade or live-profile migration authorized.",
+        "reviewedSourceCommit": "66aa22454a90b8c9906ac04d0d0ffbd790b843d5",
         "recommendationNotVerifiedFinding": true,
         "acceptanceComplete": false,
-        "verificationScope": "Ownership18checks8pass10expectedfail17namedcases; no unexpected harness errors. Positive live-generation/recovery-await branches stop at missing prerequisites; existing ownership controls pass.",
+        "verificationScope": "Beta11 selected54/54stages,1390checks,227inputs; all5recoverypacks102/102 plus2private defensive controls. Exact source/fake-host/renderer envelope only; broader acceptance incomplete.",
         "completionRequirements": [
           "Record the verified problem and affected behavior before a product change.",
           "Record implementation and relevant executed checks; acceptance must pass before completion.",
@@ -2234,12 +2236,14 @@
         ],
         "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md",
         "progress": {
-          "scope": "Live-generation and file-action ownership prerequisite contract",
-          "assessment": "expected contracts frozen; implementation pending",
+          "scope": "Paired recovery identity/lifecycle source repair",
+          "assessment": "bounded child qualified; parent remains partial; semantic approach cap exhausted",
           "parentAcceptanceComplete": false,
-          "runtimeChanged": false,
-          "sourceProductFixAttemptsThisWake": 0,
-          "nextAction": "Review the frozen recovery contracts and a focused main/app/preload implementation plan, then use at most the one remaining LC-REL-02 repair approach for paired UUID lifecycle, guarded challenge/confirmation, returned binding before update/checkpoint, and exclusive file actions across negotiation. Preserve accepted native Save, legacy chooser fallback, exact packaged replies, fresh recovery history and the cumulative59runtime/12resource closure. All five pending references require passing exact-source qualification before implementation acceptance. No generic rollback, content/name identity heuristic, unchanged gate/application/converter retry, or further LC-REL-01 approach."
+          "runtimeChanged": true,
+          "sourceProductFixAttemptsThisWake": 1,
+          "totalSemanticRepairApproaches": 2,
+          "remainingApproaches": 0,
+          "nextAction": "Retain the qualified beta11 recovery source repair; LC-REL-02 remains partial outside that envelope and both semantic repair approaches are consumed. Do not start another LC-REL-01/02 repair. Next independent registered work is LC-REL-03: use the existing fake-process importer harness to freeze a focused diagnostic/termination matrix, including kill-false and missing-close behavior, with independent expectations before any fix. No real converter retry, unchanged application retry, native/installed/client action or publication is authorized."
         }
       },
       "history": [
@@ -3215,8 +3219,8 @@
         }
       ],
       "assessment": "partially implemented",
-      "validation": "Ownership18checks8pass10expectedfail17namedcases; no unexpected harness errors. Positive live-generation/recovery-await branches stop at missing prerequisites; existing ownership controls pass.",
-      "change": "New live-generation/ownership reference, auxiliary input binding and scoped ADR/docs only; no runtime/helper change or repair approach.",
+      "validation": "Beta11 selected54/54stages,1390checks,227inputs; all5recoverypacks102/102 plus2private defensive controls. Exact source/fake-host/renderer envelope only; broader acceptance incomplete.",
+      "change": "Main/app/preload paired UUID and bounded guarded recovery repair; version/cumulativemanifest/profile/CI selection and explicit fixture metadata adaptations; no app/build/install/client/publish action.",
       "boundedPreservation": {
         "assessment": "already satisfied",
         "checks": 36,
@@ -3256,8 +3260,8 @@
         "testSHA256": "449520003204bdb468e0e19ec955af431dfb8ef29f3c457d5097c8c543f5c59b",
         "rollback": "Focused revert of this diagnostic source/test/profile/version checkpoint; preserve all receipts and beta9 runtime baseline."
       },
-      "sourceCommitRole": "Unchanged beta10 runtime; contract/reference/profile checkpoint qualified separately.",
-      "newIntegrityDefectConfirmed": true,
+      "sourceCommitRole": "Qualified beta11 runtime commit; final documentation checkpoint and bound-input receipt recorded privately.",
+      "newIntegrityDefectConfirmed": false,
       "developmentHostReference": {
         "assessment": "already satisfied within executed host scope",
         "tests": 43,
@@ -3273,86 +3277,184 @@
       },
       "ordinaryApplicationDrawingLossConfirmed": false,
       "pairedRecoveryReference": {
-        "assessment": "confirmed deficiency within qualified source-model envelope",
-        "record": "docs/PAIRED-RECOVERY-REFERENCES.md",
+        "record": "docs/DEVELOPMENT-RECOVERY-BINDING.md",
+        "historicalRecord": "docs/PAIRED-RECOVERY-REFERENCES.md",
         "tests": 10,
-        "pass": 6,
-        "pendingFailures": 4,
-        "scenarios": 9,
-        "harnessErrors": 0,
-        "runtimeChanged": false,
-        "selectedPassingProfile": false,
-        "barrierPreservesOriginalA": true,
-        "ordinaryApplicationDrawingLossConfirmed": false,
-        "testSHA256": "50e93b4eecd08dbb9cfba777ac273fcfec192c4e46cb3cd7b4e7249ad97b7d51",
-        "helperSHA256": "097bf7982a9ca61e930df78fca1633c20f44750d68b71d9f61bbc91b8e26ec2b",
+        "pass": 10,
+        "fail": 0,
+        "runtimeCodeCommit": "66aa22454a90b8c9906ac04d0d0ffbd790b843d5",
+        "selectedPassingProfile": true,
+        "scope": "Qualified source/fake-host/owned-files/renderer adapters; real IPC/native/installed unqualified",
         "parentComplete": false
       },
       "identityContract": {
-        "assessment": "accepted safety/lifecycle contract; implementation pending",
-        "record": "docs/ADR-001-DEVELOPMENT-RECOVERY-IDENTITY.md",
-        "referenceRecord": "docs/DEVELOPMENT-IDENTITY-REFERENCE.md",
+        "record": "docs/DEVELOPMENT-RECOVERY-BINDING.md",
+        "historicalRecord": "docs/ADR-001-DEVELOPMENT-RECOVERY-IDENTITY.md",
         "tests": 14,
-        "pass": 3,
-        "expectedFail": 11,
-        "scenarios": 13,
-        "guardedRoutingPrerequisites": 9,
-        "missingGenerationPrerequisites": 2,
-        "positiveGenerationBranchesQualified": false,
-        "currentFrameOrderingQualified": false,
-        "runtimeChanged": false,
-        "selectedPassingProfile": false,
-        "testSHA256": "dbddb275c27f8bef3c3a31c29b6193099f150aacfb78ed1620d12114224d9c60",
-        "helperSHA256": "e08e2b9633f8bd3f94175b6d33ca3ba72eac65a68fef03d174835c40f5735616",
+        "pass": 14,
+        "fail": 0,
+        "runtimeCodeCommit": "66aa22454a90b8c9906ac04d0d0ffbd790b843d5",
+        "selectedPassingProfile": true,
+        "scope": "Qualified source/fake-host/owned-files/renderer adapters; real IPC/native/installed unqualified",
         "parentComplete": false
       },
       "recoveryProtocolReference": {
+        "record": "docs/DEVELOPMENT-RECOVERY-BINDING.md",
+        "historicalRecord": null,
         "tests": 37,
-        "pass": 6,
-        "expectedFail": 31,
-        "semanticRecords": 36,
-        "runtimeChanged": false,
-        "selectedPassingProfile": false,
-        "parentComplete": false,
-        "repairApproachesUsed": 1,
-        "atMostRemaining": 1
+        "pass": 37,
+        "fail": 0,
+        "runtimeCodeCommit": "66aa22454a90b8c9906ac04d0d0ffbd790b843d5",
+        "selectedPassingProfile": true,
+        "scope": "Qualified source/fake-host/owned-files/renderer adapters; real IPC/native/installed unqualified",
+        "parentComplete": false
       },
       "rendererNegotiationReference": {
-        "record": "docs/RECOVERY-NEGOTIATION-REFERENCE.md",
+        "record": "docs/DEVELOPMENT-RECOVERY-BINDING.md",
+        "historicalRecord": "docs/RECOVERY-NEGOTIATION-REFERENCE.md",
         "tests": 23,
-        "pass": 4,
-        "expectedFail": 19,
-        "namedCases": 22,
-        "harnessErrors": 0,
-        "runtimeChanged": false,
-        "selectedPassingProfile": false,
-        "mainAndPreloadExecuted": false,
-        "healthyNegotiationQualified": false,
-        "workingDeadlineQualified": false,
-        "integratedFileActionOwnershipQualified": false,
-        "parentComplete": false,
-        "repairApproachesUsed": 1,
-        "atMostRemaining": 1
+        "pass": 23,
+        "fail": 0,
+        "runtimeCodeCommit": "66aa22454a90b8c9906ac04d0d0ffbd790b843d5",
+        "selectedPassingProfile": true,
+        "scope": "Qualified source/fake-host/owned-files/renderer adapters; real IPC/native/installed unqualified",
+        "parentComplete": false
       },
       "recoveryOwnershipReference": {
-        "record": "docs/RECOVERY-OWNERSHIP-REFERENCE.md",
+        "record": "docs/DEVELOPMENT-RECOVERY-BINDING.md",
+        "historicalRecord": "docs/RECOVERY-OWNERSHIP-REFERENCE.md",
         "tests": 18,
-        "pass": 8,
-        "expectedFail": 10,
-        "namedCases": 17,
-        "harnessErrors": 0,
-        "mainBindingPrerequisiteFailures": 7,
-        "mainProtocolPrerequisiteFailures": 1,
-        "rendererProtocolPrerequisiteFailures": 2,
-        "existingOwnershipControlsPass": true,
-        "positiveGenerationQualified": false,
-        "recoveryAwaitOwnershipQualified": false,
-        "runtimeChanged": false,
-        "selectedPassingProfile": false,
+        "pass": 18,
+        "fail": 0,
+        "runtimeCodeCommit": "66aa22454a90b8c9906ac04d0d0ffbd790b843d5",
+        "selectedPassingProfile": true,
+        "scope": "Qualified source/fake-host/owned-files/renderer adapters; real IPC/native/installed unqualified",
+        "parentComplete": false
+      },
+      "recoveryBindingRepair": {
+        "record": "docs/DEVELOPMENT-RECOVERY-BINDING.md",
+        "runtimeCodeCommit": "66aa22454a90b8c9906ac04d0d0ffbd790b843d5",
+        "candidate": "1.36.1-beta.11",
+        "manifest": "qa/CANDIDATE-SOURCE-1.36.1-beta.11.json",
+        "selectedStages": 54,
+        "selectedPass": 54,
+        "portableChecks": 1390,
+        "boundInputs": 227,
+        "recoveryChecks": 102,
+        "recoveryPass": 102,
+        "privateDefensiveControls": 2,
+        "runtimeDelta": [
+          "app.mjs",
+          "desktop/main.cjs",
+          "desktop/preload.cjs"
+        ],
+        "runtimeClosure": 59,
+        "resourceClosure": 12,
+        "semanticApproachesUsedTotal": 2,
+        "remainingApproaches": 0,
+        "boundedChildComplete": true,
         "parentComplete": false,
-        "repairApproachesUsed": 1,
-        "atMostRemaining": 1
-      }
+        "realTransportNativeInstalledQualified": false,
+        "historicalProblem": "Under modeled two-session source recovery, accepted Save As B plus failed auxiliary association persistence leaves restored host target A while renderer content/baseline belongs to B; normal Save attempts unrelated A. Four guarded source references reproduce it, including equal basename/content. Guard prevents creation; no executed overwrite or real application drawing-loss finding."
+      },
+      "referenceQualificationHistory": [
+        {
+          "field": "pairedRecoveryReference",
+          "historical": {
+            "assessment": "confirmed deficiency within qualified source-model envelope",
+            "record": "docs/PAIRED-RECOVERY-REFERENCES.md",
+            "tests": 10,
+            "pass": 6,
+            "pendingFailures": 4,
+            "scenarios": 9,
+            "harnessErrors": 0,
+            "runtimeChanged": false,
+            "selectedPassingProfile": false,
+            "barrierPreservesOriginalA": true,
+            "ordinaryApplicationDrawingLossConfirmed": false,
+            "testSHA256": "50e93b4eecd08dbb9cfba777ac273fcfec192c4e46cb3cd7b4e7249ad97b7d51",
+            "helperSHA256": "097bf7982a9ca61e930df78fca1633c20f44750d68b71d9f61bbc91b8e26ec2b",
+            "parentComplete": false
+          }
+        },
+        {
+          "field": "identityContract",
+          "historical": {
+            "assessment": "accepted safety/lifecycle contract; implementation pending",
+            "record": "docs/ADR-001-DEVELOPMENT-RECOVERY-IDENTITY.md",
+            "referenceRecord": "docs/DEVELOPMENT-IDENTITY-REFERENCE.md",
+            "tests": 14,
+            "pass": 3,
+            "expectedFail": 11,
+            "scenarios": 13,
+            "guardedRoutingPrerequisites": 9,
+            "missingGenerationPrerequisites": 2,
+            "positiveGenerationBranchesQualified": false,
+            "currentFrameOrderingQualified": false,
+            "runtimeChanged": false,
+            "selectedPassingProfile": false,
+            "testSHA256": "dbddb275c27f8bef3c3a31c29b6193099f150aacfb78ed1620d12114224d9c60",
+            "helperSHA256": "e08e2b9633f8bd3f94175b6d33ca3ba72eac65a68fef03d174835c40f5735616",
+            "parentComplete": false
+          }
+        },
+        {
+          "field": "recoveryProtocolReference",
+          "historical": {
+            "tests": 37,
+            "pass": 6,
+            "expectedFail": 31,
+            "semanticRecords": 36,
+            "runtimeChanged": false,
+            "selectedPassingProfile": false,
+            "parentComplete": false,
+            "repairApproachesUsed": 1,
+            "atMostRemaining": 1
+          }
+        },
+        {
+          "field": "rendererNegotiationReference",
+          "historical": {
+            "record": "docs/RECOVERY-NEGOTIATION-REFERENCE.md",
+            "tests": 23,
+            "pass": 4,
+            "expectedFail": 19,
+            "namedCases": 22,
+            "harnessErrors": 0,
+            "runtimeChanged": false,
+            "selectedPassingProfile": false,
+            "mainAndPreloadExecuted": false,
+            "healthyNegotiationQualified": false,
+            "workingDeadlineQualified": false,
+            "integratedFileActionOwnershipQualified": false,
+            "parentComplete": false,
+            "repairApproachesUsed": 1,
+            "atMostRemaining": 1
+          }
+        },
+        {
+          "field": "recoveryOwnershipReference",
+          "historical": {
+            "record": "docs/RECOVERY-OWNERSHIP-REFERENCE.md",
+            "tests": 18,
+            "pass": 8,
+            "expectedFail": 10,
+            "namedCases": 17,
+            "harnessErrors": 0,
+            "mainBindingPrerequisiteFailures": 7,
+            "mainProtocolPrerequisiteFailures": 1,
+            "rendererProtocolPrerequisiteFailures": 2,
+            "existingOwnershipControlsPass": true,
+            "positiveGenerationQualified": false,
+            "recoveryAwaitOwnershipQualified": false,
+            "runtimeChanged": false,
+            "selectedPassingProfile": false,
+            "parentComplete": false,
+            "repairApproachesUsed": 1,
+            "atMostRemaining": 1
+          }
+        }
+      ]
     },
     {
       "id": "LC-REL-03",
@@ -4018,8 +4120,18 @@
         "expectedFail": 10,
         "runtimeChanged": false,
         "parentComplete": false
+      },
+      {
+        "id": "LC-REL-02",
+        "scope": "Beta11pairedrecoveryrepair",
+        "record": "docs/DEVELOPMENT-RECOVERY-BINDING.md",
+        "tests": 102,
+        "pass": 102,
+        "runtimeChanged": true,
+        "parentComplete": false,
+        "approachesUsed": 2
       }
     ],
-    "nextReadyAction": "Review the frozen recovery contracts and a focused main/app/preload implementation plan, then use at most the one remaining LC-REL-02 repair approach for paired UUID lifecycle, guarded challenge/confirmation, returned binding before update/checkpoint, and exclusive file actions across negotiation. Preserve accepted native Save, legacy chooser fallback, exact packaged replies, fresh recovery history and the cumulative59runtime/12resource closure. All five pending references require passing exact-source qualification before implementation acceptance. No generic rollback, content/name identity heuristic, unchanged gate/application/converter retry, or further LC-REL-01 approach."
+    "nextReadyAction": "Retain the qualified beta11 recovery source repair; LC-REL-02 remains partial outside that envelope and both semantic repair approaches are consumed. Do not start another LC-REL-01/02 repair. Next independent registered work is LC-REL-03: use the existing fake-process importer harness to freeze a focused diagnostic/termination matrix, including kill-false and missing-close behavior, with independent expectations before any fix. No real converter retry, unchanged application retry, native/installed/client action or publication is authorized."
   }
 }

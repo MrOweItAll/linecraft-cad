@@ -480,3 +480,20 @@ unknown beta7 startup cause remain unqualified.
 The fresh selected fast gate passes49/49stages,1,288portablechecks and226bound
 inputs. All five pending recovery references are fingerprinted auxiliaries,
 excluded from passing acceptance. Exact final source input binding is separate.
+
+
+## Beta11 paired recovery identity repair - October 30, 2026 UTC
+
+[The bounded repair](DEVELOPMENT-RECOVERY-BINDING.md) implements main UUID/path
+association, guarded frame/epoch/nonce reconciliation, captured chooser routing,
+strict queued compensation and renderer binding-before-update with bounded safe
+fallback. New/Close honor returned reset failures. Accepted native Save and
+packaged replies remain intact; no content/name identity or generic rollback.
+
+All five formerly pending packs now pass102/102 and are selected. Fresh fast
+qualification passes54/54stages,1,390portablechecks and227boundinputs on beta11.
+The cumulative manifest preserves59runtime/12resources; app/main/preload are the
+three beta10 deltas. Real app/PDF/build/unpacked/native/installed/upgrade/daily-use,
+transport/storage/crash and beta7 startup cause remain unqualified. LC-REL-02
+parent remains partial; two repair approaches are consumed. Continue independent
+LC-REL-03 fake-process diagnostics next; no actual converter retry is authorized.

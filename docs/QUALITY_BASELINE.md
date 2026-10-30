@@ -2,7 +2,7 @@
 
 Baseline commit: f37aba5ebe19f27088847cd8f983ecf5facf8eac, version1.36.0,
 origin https://github.com/MrOweItAll/linecraft-cad.git. Local ownership branch:
-codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; current candidate1.36.1-beta.10. Exact local paths and
+codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; current candidate1.36.1-beta.11. Exact local paths and
 checkpoint/installer hashes are in the private session report, outside this tree.
 
 The opening baseline observations and dated sections below retain their historical
@@ -807,3 +807,20 @@ unknown beta7 startup cause remain unqualified.
 The fresh selected fast gate passes49/49stages,1,288portablechecks and226bound
 inputs. All five pending recovery references are fingerprinted auxiliaries,
 excluded from passing acceptance. Exact final source input binding is separate.
+
+
+## Beta11 paired recovery identity repair - October 30, 2026 UTC
+
+[The bounded repair](DEVELOPMENT-RECOVERY-BINDING.md) implements main UUID/path
+association, guarded frame/epoch/nonce reconciliation, captured chooser routing,
+strict queued compensation and renderer binding-before-update with bounded safe
+fallback. New/Close honor returned reset failures. Accepted native Save and
+packaged replies remain intact; no content/name identity or generic rollback.
+
+All five formerly pending packs now pass102/102 and are selected. Fresh fast
+qualification passes54/54stages,1,390portablechecks and227boundinputs on beta11.
+The cumulative manifest preserves59runtime/12resources; app/main/preload are the
+three beta10 deltas. Real app/PDF/build/unpacked/native/installed/upgrade/daily-use,
+transport/storage/crash and beta7 startup cause remain unqualified. LC-REL-02
+parent remains partial; two repair approaches are consumed. Continue independent
+LC-REL-03 fake-process diagnostics next; no actual converter retry is authorized.

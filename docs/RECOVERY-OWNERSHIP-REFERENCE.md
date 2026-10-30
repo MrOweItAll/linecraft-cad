@@ -1,5 +1,10 @@
 # Recovery live-generation and file-action ownership reference
 
+Current beta11 source qualification: 18/18 checks pass in the selected
+profile. See [the repair and limits](DEVELOPMENT-RECOVERY-BINDING.md). The beta10
+pending-checkpoint description below is retained as historical evidence.
+
+
 The separate explicit pack `tests/recovery-ownership-reference.test.cjs` has
 18 checks: seven source controls plus inventory pass, and ten contract
 expectations fail. All 17 named cases execute without unexpected harness errors.

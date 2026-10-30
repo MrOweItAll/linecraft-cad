@@ -1,5 +1,10 @@
 # Renderer recovery negotiation prerequisite reference
 
+Current beta11 source qualification: 23/23 checks pass in the selected
+profile. See [the repair and limits](DEVELOPMENT-RECOVERY-BINDING.md). The beta10
+pending-checkpoint description below is retained as historical evidence.
+
+
 The explicit reference `tests/recovery-negotiation-reference.test.cjs` has
 23 checks: three controls plus inventory pass, and 19 contract expectations fail.
 All 22 named cases execute without harness errors after preserved fixture import

@@ -1,9 +1,9 @@
 # ADR-001: Paired development recovery identity
 
-**Status:** Accepted safety/lifecycle contract; implementation pending
+**Status:** Implemented and source-qualified in beta11; real transport/native/installed qualification pending
 **Date:** 2026-10-30 UTC
 **Deciders:** Authorized local code writer with separate read-only correctness,
-test-validity and privacy/compatibility review. No product change in this decision.
+test-validity and privacy/compatibility review. Implemented in the beta11 source repair.
 
 ## Context
 
@@ -15,11 +15,11 @@ basenames and equal content/baselines cannot recover the missing file identity.
 The reference blocks writes before temporary creation; real restart/storage and
 ordinary application drawing loss remain unqualified.
 
-One earlier LC-REL-02 semantic repair approach is used; at most one remains.
-LC-REL-01 has zero remaining approaches. The next approach must preserve accepted
-native Save, exact packaged replies, drafting/identity/history conventions and
-intentional fresh recovery history. It must use existing source/isolated profiles,
-no dependency, broad rewrite, installed change or unchanged application retry.
+Both LC-REL-02 semantic repair approaches are consumed; zero remain.
+LC-REL-01 also has zero remaining approaches. The qualified beta11 repair preserves
+accepted native Save, exact packaged replies, drafting/identity/history conventions
+and intentional fresh recovery history. It used existing source/isolated profiles,
+with no dependency, installed change or unchanged application retry.
 
 ## Decision
 
@@ -36,8 +36,7 @@ unavailable metadata, never proof of a native association. Host association reco
 `LinecraftDevelopmentPath/2` with path/import-name/binding written together.
 Renderer recovery records version2 carry the exact additive key `developmentBinding`
 (UUID or explicit null) alongside existing content, saved fingerprint and imported
-state. This key is a frozen prerequisite design choice, not an existing product
-capability. Legacy version1 content must still recover,
+state. This key is implemented in the beta11 source repair. Legacy version1 content must still recover,
 but its unverified native target must require explicit Save As fallback.
 
 Reconciliation uses a dedicated development-only channel, distinct from routine
@@ -57,8 +56,7 @@ Completion from an older frame preserves accepted native work but cannot unlock
 the new frame. Routine state notifications cannot reconcile or invalidate identity.
 Renderer negotiation must handle missing/rejected/malformed/hung replies with a
 bounded safe chooser fallback. After awaiting negotiation, recheck file-action
-ownership so queued actions cannot share a stale busy decision. These are pending
-regression contracts, not proof of real IPC ordering.
+ownership so queued actions cannot share a stale busy decision. These contracts pass source regressions; real IPC ordering remains unqualified.
 
 ### Lifecycle invariants
 
@@ -114,11 +112,16 @@ work. These are lifecycle obligations, not reasons to broaden drawing formats.
 ## Action items
 
 1. [x] Freeze source-level legacy/frame/reset-before-sync and generation-allocation prerequisites in the identity boundary reference.
-2. [x] Retain the unchanged paired10 safety reference and its6pass/4pending failures; do not rerun it without changed evidence.
-3. [x] Freeze independently expected positive-generation, queued compensation, live-generation replay and integrated file-action ownership controls in the separate ownership reference. The renderer reference retains healthy/dirty/imported recovery, returned-binding update ordering and returned reset failure. Missing prerequisites still block positive implementation branches; frozen controls are not passing product acceptance.
-4. [x] Freeze a challenge/confirmation regression; actual bounded ordering and healthy renderer prerequisites remain unqualified (see RECOVERY-PROTOCOL-REFERENCE.md).
-5. [ ] Use at most the one remaining LC-REL-02 repair approach; preserve all prior failures and stop that scope if the budget is consumed.
-6. [ ] Qualify exact source bytes, packaged compatibility and separate code/test/privacy reviews. Application/native/installed acceptance remains outside this contract.
+2. [x] Preserve the historical paired10 six-pass/four-failure receipt. The beta11 bridge adaptation retains its safety assertions; current execution passes all ten checks.
+3. [x] Freeze independently expected positive-generation, queued compensation, live-generation replay and integrated file-action ownership controls in the separate ownership reference. The renderer reference retains healthy/dirty/imported recovery, returned-binding update ordering and returned reset failure. The 102 recovery assertions now pass in the qualified source envelope; real transport/native acceptance remains separate.
+4. [x] Qualify challenge/confirmation, scheduled bounded fallback and healthy renderer ordering in the source references. Real transport/frame timing remains unqualified (see DEVELOPMENT-RECOVERY-BINDING.md).
+5. [x] Use the final LC-REL-02 repair approach; both approaches are consumed. Retain all prior failures and do not start another semantic approach in this scope.
+6. [x] Qualify exact source bytes, packaged compatibility and separate code/test/privacy reviews in beta11. Application/native/installed acceptance remains outside this contract.
+
+## Historical beta10 prerequisite notes
+
+The following paragraphs describe the pre-repair beta10 evidence. For current
+beta11 qualification, see the source repair linked below.
 
 The separate [renderer negotiation reference](RECOVERY-NEGOTIATION-REFERENCE.md)
 uses a manual virtual clock, verbatim replacement/persistence bodies and an
@@ -133,3 +136,9 @@ actual reply/disk/confirmation probes and verbatim runAction/queue ownership
 controls. Its existing busy controls pass; awaited-recovery races stop at the
 absent negotiation prerequisite. Early ownership reservation and a valid check
 across the await are both acceptable ways to preserve exclusive file actions.
+
+
+Beta11 implements this contract in [the source repair](DEVELOPMENT-RECOVERY-BINDING.md).
+All five reference packs pass102/102 in the selected54-stage profile. Earlier
+prerequisite notes above describe their historical beta10 checkpoint. The bounded
+source repair does not establish real IPC/storage/crash or installed readiness.

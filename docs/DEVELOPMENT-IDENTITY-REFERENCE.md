@@ -1,5 +1,10 @@
 # Development identity boundary reference
 
+Current beta11 source qualification: 14/14 checks pass in the selected
+profile. See [the repair and limits](DEVELOPMENT-RECOVERY-BINDING.md). The beta10
+pending-checkpoint description below is retained as historical evidence.
+
+
 The [accepted recovery contract](ADR-001-DEVELOPMENT-RECOVERY-IDENTITY.md) chooses
 paired opaque generations with explicit legacy fallback. Implementation is pending;
 no LC-REL-02 repair approach was used in this checkpoint. Its one earlier diagnostic
