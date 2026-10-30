@@ -398,3 +398,10 @@ excluded from the passing fast profile. Its14checks currently report3pass/11fail
 nine protected routing probes and two absent-binding prerequisites, with13scenario
 records. See [the bounded reference](../docs/DEVELOPMENT-IDENTITY-REFERENCE.md) and
 [ADR-001](../docs/ADR-001-DEVELOPMENT-RECOVERY-IDENTITY.md).
+
+
+`recovery-protocol-reference.test.cjs` is an explicit pending prerequisite pack:
+37 checks, 6 pass and 31 expected failures across 36 semantic records. It is
+excluded from the passing profile and bound only as an auxiliary input. See
+[the reference and limits](../docs/RECOVERY-PROTOCOL-REFERENCE.md). Optional
+LINECRAFT_RECOVERY_PROTOCOL_REPORT contains private local evidence.

@@ -708,3 +708,20 @@ partial with one earlier approach used and at most one remaining; LC-REL-01 has0
 Next complete the ADR prerequisites, then use only the remaining reviewed approach.
 All application/realtransport/storage/native/installed limits and the unknown
 beta7 startup cause remain; no unchanged application retry or promotion occurred.
+
+
+## Recovery protocol prerequisites - October 30, 2026 UTC
+
+[The protocol reference](RECOVERY-PROTOCOL-REFERENCE.md) freezes 37 checks:
+6 passing controls, 31 expected failures and 36 scenario records. Missing protocol
+and binding prerequisites block most positive branches; this is not 31 overwrites.
+A returned busy reset also exposes a source-function New replacement deficiency.
+No runtime repair or additional semantic approach occurred. The reference is
+auxiliary-only, outside the selected passing profile alongside paired10/identity14.
+Healthy renderer negotiation, dirty/imported recovery, live-generation retention
+and deadline assertions remain prerequisites before the final LC-REL-02 approach.
+LC-REL-01 has zero approaches remaining. All application/native/installed and
+unknown beta7 startup limits remain. Prior receipts and failures are preserved.
+
+The fresh selected fast gate passes 49/49 stages and 1,288 portable checks,
+with 224 bound inputs. It excludes all three pending recovery references.

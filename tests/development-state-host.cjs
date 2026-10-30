@@ -12,7 +12,7 @@ const ownedSessions=new WeakMap();
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 function deferred(){let resolve;const promise=new Promise(r=>{resolve=r;});return {promise,resolve};}
 const failure=()=>Object.assign(Error('SYNTHETIC_PRIVATE_CHECKPOINT_MESSAGE'),{code:'EIO'});
-async function host({record='valid',packaged=false,restartOf=null}={}){
+async function host({record='valid',packaged=false,restartOf=null,importText=null}={}){
   const previous=restartOf===null?null:ownedSessions.get(restartOf);
   if(restartOf!==null){assert.ok(previous,'Restart requires a fixture-created host token.');assert.equal(restartOf.snapshot().busy,false);assert.equal(record,'valid');}
   const directory=previous?.directory??path.join(root,'work','development-state-reference',Date.now()+'-'+randomUUID());
@@ -33,11 +33,12 @@ async function host({record='valid',packaged=false,restartOf=null}={}){
   if(!previous&&record!=='absent')await fs.writeFile(checkpoint,checkpointText);
   const beforeStartup={nativeA:await fs.readFile(a,'utf8'),nativeB:await fs.readFile(b,'utf8'),checkpoint:await fs.readFile(checkpoint,'utf8').catch(error=>{if(error.code==='ENOENT')return null;throw error;})};
   const handlers=new Map(),events=new Map(),choices={open:[],save:[],confirm:[]},trace=[],warnings=[];
-  let phase=null,window,startup,hold=null,checkpointRenames=0;
+  let phase=null,window,startup,hold=null,nativeHold=null,validationHold=null,checkpointRenames=0,importCalls=0;
   const protectedTargets=new Set(),blockedNativeWrites=[],dialogCalls={open:0,save:0,confirm:0};
   const owned=filename=>assert.ok(path.resolve(filename).startsWith(directory+path.sep),'Only owned writes are permitted.');
   const choose=async queue=>{const result=queue.shift();if(result instanceof Error)throw result;return typeof result==='function'?result():result;};
   const facade={...fs,
+    stat:async filename=>{if(validationHold&&path.resolve(filename)===path.join(root,'core.mjs')){const waiting=validationHold;validationHold=null;waiting.entered.resolve();await waiting.release.promise;}return fs.stat(filename);},
     mkdir:async(filename,options)=>{owned(filename);trace.push({operation:'mkdir',filename});if(phase==='mkdir')throw failure();return fs.mkdir(filename,options);},
     open:async(filename,flags,mode)=>{
       owned(filename);assert.equal(flags,'wx');assert.equal(mode,0o600);
@@ -54,6 +55,7 @@ async function host({record='valid',packaged=false,restartOf=null}={}){
     rename:async(from,to)=>{
       owned(from);owned(to);const scoped=to===checkpoint;
       trace.push({operation:'rename',from,to,scoped});
+      if(!scoped&&nativeHold){const waiting=nativeHold;nativeHold=null;waiting.entered.resolve();await waiting.release.promise;}
       if(scoped){checkpointRenames++;if(hold){const waiting=hold;hold=null;waiting.entered.resolve();await waiting.release.promise;}
         if(phase==='rename'||phase==='compensation'&&checkpointRenames===2)throw failure();}
       return fs.rename(from,to);
@@ -79,22 +81,30 @@ async function host({record='valid',packaged=false,restartOf=null}={}){
   };
   const source=await fs.readFile(mainFile,'utf8'),instance=new Module(mainFile,module),realRequire=Module.createRequire(mainFile);
   instance.filename=mainFile;instance.paths=Module._nodeModulePaths(path.dirname(mainFile));
-  instance.require=name=>{if(name==='electron')return electron;if(name==='node:fs/promises')return facade;if(['./dev-watch.cjs','./script-control.cjs','./import-files.cjs'].includes(name))throw Error('Watcher, scripting and converter are outside this fixture.');return realRequire(name);};
+  instance.require=name=>{if(name==='electron')return electron;if(name==='node:fs/promises')return facade;if(name==='./import-files.cjs'&&typeof importText==='string')return {createDrawingImporter:()=>({importDrawing:async filename=>{owned(filename);importCalls++;return {text:importText,importInfo:{synthetic:true}};}})};if(['./dev-watch.cjs','./script-control.cjs','./import-files.cjs'].includes(name))throw Error('Watcher, scripting and converter are outside this fixture.');return realRequire(name);};
   instance.__process=Object.freeze({argv:[process.execPath,...(packaged?[]:[mainFile]),'--linecraft-no-watch','--user-data-dir='+profile],pid:process.pid,platform:process.platform,versions:{},cwd:()=>root});
   instance.__console={warn:(...args)=>warnings.push(args),error:(...args)=>warnings.push(args)};
   const observer='\nmodule.exports.snapshot=()=>({...documentAssociation(),authorization:discardAuthorization,authorized:Boolean(discardAuthorized()),busy:fileOperationBusy});\n';
   instance._compile("'use strict'; const process=module.__process,console=module.__console;\n"+source+observer,mainFile);
   assert.ok(startup);await startup;assert.ok(window&&handlers.has('linecraft:save'));
-  const event={sender:window.webContents,senderFrame:window.webContents.mainFrame};
-  const invoke=(name,...args)=>handlers.get(name)(event,...args),snapshot=()=>structuredClone(instance.exports.snapshot());
+  const event=()=>({sender:window.webContents,senderFrame:window.webContents.mainFrame});
+  const invoke=(name,...args)=>handlers.get(name)(event(),...args),snapshot=()=>structuredClone(instance.exports.snapshot());
   const result={directory,profile,a,b,checkpoint,sentinel,trace,warnings,choices,invoke,snapshot,association,beforeStartup,blockedNativeWrites,dialogCalls,mainSHA256:hash(source),
     get title(){return window.title;},setPhase:value=>{phase=value;checkpointRenames=0;},
-    update:value=>events.get('linecraft:document-state')(event,value),
+    update:value=>events.get('linecraft:document-state')(event(),value),
     invalidUpdate:value=>events.get('linecraft:document-state')({sender:{},senderFrame:{}},value),
     untrustedConfirm:()=>handlers.get('linecraft:confirm-discard')({sender:{},senderFrame:{}},'Untrusted'),
     holdCheckpoint:()=>{hold={entered:deferred(),release:deferred()};return hold;},
+    holdNativeWrite:()=>{nativeHold={entered:deferred(),release:deferred()};return nativeHold;},
+    holdValidation:()=>{validationHold={entered:deferred(),release:deferred()};return validationHold;},
+    get importCalls(){return importCalls;},
     protectOriginalA:()=>protectedTargets.add(a),protectOriginalB:()=>protectedTargets.add(b),
+    clearWriteProtection:()=>protectedTargets.clear(),
     rendererReload:()=>window.webContents.emit('did-start-loading'),
+    newRendererFrame:()=>{window.webContents.mainFrame={url:pathToFileURL(path.join(root,'index.html')).href};window.webContents.emit('did-start-loading');},
+    captureInvoker:()=>{const captured=event();return(name,...args)=>handlers.get(name)(captured,...args);},
+    hasHandler:name=>handlers.has(name),
+    untrustedInvoke:(name,...args)=>handlers.get(name)({sender:{},senderFrame:{}},...args),
     enqueue:filename=>{assert.ok([a,b].includes(filename));app.emit('open-file',{preventDefault:()=>{}},filename);},
     queue:async()=>{app.emit('open-file',{preventDefault:()=>{}},b);const peek=await invoke('linecraft:open-request',{action:'peek'});assert.ok(peek.request);const prepared=await invoke('linecraft:open-request',{action:'prepare',id:peek.request.id});assert.equal(prepared.ok,true,prepared.error);assert.equal(prepared.text,B);return peek.request.id;},
   };ownedSessions.set(result,{directory});hosts.push(result);return result;

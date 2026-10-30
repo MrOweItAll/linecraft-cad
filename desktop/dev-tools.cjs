@@ -53,6 +53,7 @@ if(candidate)suites.push('tests/development-state-reference.test.cjs');
 if(candidate)auxiliaries.push('tests/development-state-host.cjs');
 if(candidate)auxiliaries.push('tests/paired-recovery-reference.test.cjs');
 if(candidate)auxiliaries.push('tests/development-identity-contract.test.cjs');
+if(candidate)auxiliaries.push('tests/recovery-protocol-reference.test.cjs');
 if(candidate)auxiliaries.push('qa/CANDIDATE-SOURCE-1.36.1-beta.9.json');
 if(candidate)auxiliaries.push('qa/CANDIDATE-SOURCE-1.36.1-beta.7.json');
 if(candidate)auxiliaries.push('qa/CANDIDATE-SOURCE-1.36.1-beta.8.json');

@@ -38,15 +38,25 @@ Renderer recovery records version2 carry that binding alongside existing content
 saved fingerprint and imported state. Legacy version1 content must still recover,
 but its unverified native target must require explicit Save As fallback.
 
-A recovery announcement is distinct from routine document-state synchronization:
-`developmentRecovery: {version: 1, binding: UUID-or-null}`. Reconciliation applies
-only to a main-owned pending candidate at the current renderer startup/reload
-boundary. Missing/legacy/malformed/mismatched identity cannot authorize target reuse.
-Save arriving before reconciliation uses the chooser. The existing trusted-frame
-boundary and did-start-loading lifecycle must be checked; stale prior-frame packets
-must never unlock a current candidate. If the existing transport cannot prove this
-ordering, freeze an explicit challenge/handshake regression before implementation.
-Preload currently forwards state/replies; no new API is assumed by this contract.
+Reconciliation uses a dedicated development-only channel, distinct from routine
+state synchronization. A strict `{version:1, action:'challenge'}` request returns
+only `{ok:true, challenge:UUID}`. The nonce is main-issued, inert and stable within
+one boundary. Confirmation supplies `{version:1, action:'confirm', challenge:UUID,
+binding:UUID-or-null}` and returns `{ok:true, matched:boolean}`. Reject extra keys,
+invalid shapes and stale frames without echoing private payloads. Packaged main
+must expose no usable channel; packaged preload retains method absence.
+
+Confirmation is synchronous and gated to the trusted current frame and nonce.
+An identical confirmation is idempotent; conflicting or stale confirmation must
+not mutate verification. Rotate nonce on frame/adoption/reset boundaries. Null
+cannot verify a native target. Save entering unverified captures chooser routing
+before awaited validation; later confirmation cannot upgrade that operation.
+Completion from an older frame preserves accepted native work but cannot unlock
+the new frame. Routine state notifications cannot reconcile or invalidate identity.
+Renderer negotiation must handle missing/rejected/malformed/hung replies with a
+bounded safe chooser fallback. After awaiting negotiation, recheck file-action
+ownership so queued actions cannot share a stale busy decision. These are pending
+regression contracts, not proof of real IPC ordering.
 
 ### Lifecycle invariants
 
@@ -75,7 +85,7 @@ chosen basename/content is unchanged.
 
 | Option | Complexity | Compatibility | Safety |
 |---|---|---|---|
-| Paired opaque generation (chosen) | Small lifecycle state across main/app | Healthy tokenized restart/reload remains; legacy targets need explicit fallback | Detects accidental cross-channel mismatch without trusting names/content |
+| Paired opaque generation (chosen) | Small lifecycle state across main/app/preload | Healthy tokenized restart/reload remains; legacy targets need explicit fallback | Detects accidental cross-channel mismatch without trusting names/content |
 | Always Save As after every recovery | Lowest | Changes established healthy restart/no-chooser behavior | Safe fallback, used for unverified legacy records only |
 | Name/content/fingerprint matching | Superficially small | Ambiguous copies look identical | Rejected by identical-baseline reference; cannot establish file identity |
 | Generic rollback on auxiliary failure | Broad semantic change | Would undo accepted native Save and its baseline | Rejected; accepted B must remain accepted |
@@ -95,7 +105,7 @@ work. These are lifecycle obligations, not reasons to broaden drawing formats.
 - Two development recovery records can be correlated without exposing paths to the renderer.
 - Healthy new-format restart/reload can retain the intended association.
 - Legacy/invalid binding uses explicit fallback with recovered work preserved.
-- Main/app changes require a cumulative manifest binding both files, retaining the immutable beta10 parent and full59runtime/12resource closure.
+- Future main/app/preload changes require a cumulative manifest binding all three files, retaining the immutable beta10 parent and full59runtime/12resource closure.
 - Packaged responses and drawing compatibility must remain unchanged.
 - Real storage/transport/frame-ordering and native acceptance remain separately unqualified.
 
@@ -104,6 +114,6 @@ work. These are lifecycle obligations, not reasons to broaden drawing formats.
 1. [x] Freeze source-level legacy/frame/reset-before-sync and generation-allocation prerequisites in the identity boundary reference.
 2. [x] Retain the unchanged paired10 safety reference and its6pass/4pending failures; do not rerun it without changed evidence.
 3. [ ] Before product edits, add independently expected positive-generation, dirty/imported, New-returned-failure, queued compensation and stale/duplicate frame controls needed by the actual implementation.
-4. [ ] Prove a bounded current-frame reconciliation ordering; use explicit pending state, not routine-token comparison.
+4. [x] Freeze a challenge/confirmation regression; actual bounded ordering and healthy renderer prerequisites remain unqualified (see RECOVERY-PROTOCOL-REFERENCE.md).
 5. [ ] Use at most the one remaining LC-REL-02 repair approach; preserve all prior failures and stop that scope if the budget is consumed.
 6. [ ] Qualify exact source bytes, packaged compatibility and separate code/test/privacy reviews. Application/native/installed acceptance remains outside this contract.
