@@ -370,3 +370,22 @@ LC-REL-02 remains partial; next investigate development checkpoint/discard state
 boundaries. Real renderer/transport/converter, crash, application/PDF/build/native/
 installed/daily-use qualification remains open. Beta7 startup is still unexplained;
 no unchanged application retry occurred. Historical beta6 acceptance keeps its scope.
+
+
+## Development association/discard references - October 30, 2026 UTC
+
+The [source/fake-host reference](DEVELOPMENT-STATE-REFERENCES.md) passes43checks:
+42namedcases plusinventory. Actual main/queue/core validation and owned profiles
+separate best-effort ordinary persistence from strict queued adoption; exact
+Discard authorization, late notifications, compensation, retry, association-only
+restore, packaged bypass and accepted Save/canceled Open are explicit. Independent
+review strengthened restore byte checks, pending/retry and cancellation controls.
+The expanded fast profile passes49/49stages,1,288portablechecks and221inputs.
+Runtime/manifest/package/version/CI remain unchanged beta10; no product repair.
+
+LC-REL-02 remains partial. Failed best-effort persistence or compensation can
+leave live and disk associations different; no paired renderer restart or drawing
+loss is established. Next investigate exact host/renderer recovery coherence and
+Save routing before repair. Renderer history/gating/storage, warning privacy,
+OS watching/transport, converter/crash/native/installed/daily-use remain open.
+No Electron/application/PDF/build/converter or unchanged startup retry ran.

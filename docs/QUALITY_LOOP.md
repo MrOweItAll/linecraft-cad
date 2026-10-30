@@ -15,9 +15,9 @@ It does not establish installed/upgrade or broader native qualification. Earlier
 automated checkpoint descriptions below do not include this later native session.
 
 ```
-npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.9.json
-npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.9.json
-npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.9.json
+npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.10.json
+npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.10.json
+npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.10.json
 ```
 
 These reuse desktop/dev-tools.cjs. Fast selects the existing bounded public core
@@ -41,8 +41,8 @@ run directory and process state. Archive a proven stale lock with its evidence;
 never delete a live lock. A session also maintains a private development ownership
 record outside this checkout. One code writer owns this checkout; reviewers read.
 
-Budgets: at most3 completed backlog items or60 minutes of active repair, at most2
-distinct fixes per issue. Test/build time is accounted separately. Individual pure
+Budgets: at most3 completed backlog items and50 minutes of active work per wake,
+including qualification, with at most2 distinct repair approaches per issue. Individual pure
 and app stages have3-minute limits; build/bootstrap stages10 minutes. Wrapper limits
 are5 minutes fast,10 application,30 candidate. Timeout stops only the owned child
 process tree. Preserve failed evidence rather than retrying until green.
@@ -646,3 +646,22 @@ LC-REL-02 remains partial; next investigate development checkpoint/discard state
 boundaries. Real renderer/transport/converter, crash, application/PDF/build/native/
 installed/daily-use qualification remains open. Beta7 startup is still unexplained;
 no unchanged application retry occurred. Historical beta6 acceptance keeps its scope.
+
+
+## Development association/discard references - October 30, 2026 UTC
+
+The [source/fake-host reference](DEVELOPMENT-STATE-REFERENCES.md) passes43checks:
+42namedcases plusinventory. Actual main/queue/core validation and owned profiles
+separate best-effort ordinary persistence from strict queued adoption; exact
+Discard authorization, late notifications, compensation, retry, association-only
+restore, packaged bypass and accepted Save/canceled Open are explicit. Independent
+review strengthened restore byte checks, pending/retry and cancellation controls.
+The expanded fast profile passes49/49stages,1,288portablechecks and221inputs.
+Runtime/manifest/package/version/CI remain unchanged beta10; no product repair.
+
+LC-REL-02 remains partial. Failed best-effort persistence or compensation can
+leave live and disk associations different; no paired renderer restart or drawing
+loss is established. Next investigate exact host/renderer recovery coherence and
+Save routing before repair. Renderer history/gating/storage, warning privacy,
+OS watching/transport, converter/crash/native/installed/daily-use remain open.
+No Electron/application/PDF/build/converter or unchanged startup retry ran.

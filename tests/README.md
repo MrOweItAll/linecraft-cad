@@ -379,3 +379,9 @@ fixture void-API failure is preserved and is not a production defect.
 and owned files:22 controls for ordinary Save/Open/import diagnostic/privacy and
 compatibility contracts, with canned import dispatch and no application/converter.
 See [the scoped record](../docs/FILE-OPERATION-DIAGNOSTICS.md).
+
+
+`development-state-reference.test.cjs` uses the shared Node-only
+`development-state-host.cjs`:43 source/fake-host checks for development association
+and discard/queued-adoption boundaries, owned profiles and no application/watchers.
+See [the bounded record](../docs/DEVELOPMENT-STATE-REFERENCES.md).
