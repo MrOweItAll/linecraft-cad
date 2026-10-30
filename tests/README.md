@@ -447,3 +447,10 @@ the selected beta11 profile is54/54stages,1390checks,228inputs. See
 [its contract and fake-process limits](../docs/CONVERTER-LIFECYCLE-REFERENCE.md).
 Do not substitute teardown closure for bounded product settlement or infer real
 converter/process-tree/native acceptance from these source projections.
+
+
+Beta12 selects the expanded converter lifecycle pack:48/48checks(47namedplus
+inventory), including deferred cleanup/admission and reviewed warning-path cases.
+The fresh selected profile passes55/55stages,1438checks,229inputs. The older
+pending28 result above is historical beta11 evidence. See
+[the repair and precise limits](../docs/CONVERTER-SETTLEMENT-CUSTODY.md).

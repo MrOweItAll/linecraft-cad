@@ -2,7 +2,7 @@
 
 Baseline commit: f37aba5ebe19f27088847cd8f983ecf5facf8eac, version1.36.0,
 origin https://github.com/MrOweItAll/linecraft-cad.git. Local ownership branch:
-codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; current candidate1.36.1-beta.11. Exact local paths and
+codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; current candidate1.36.1-beta.12. Exact local paths and
 checkpoint/installer hashes are in the private session report, outside this tree.
 
 The opening baseline observations and dated sections below retain their historical
@@ -844,3 +844,25 @@ fast gate passes54/54stages,1,390checks,228inputs; this pending reference is aux
 only. LC-REL-03 remains partial with zero approaches used. Next review the bounded
 lifecycle/warning repair plan; all application/native/installed and prior limits
 remain. Preserve the initial cross-realm fixture failure and historical receipts.
+
+
+## Beta12 bounded converter custody - October 30, 2026 UTC
+
+[The source repair](CONVERTER-SETTLEMENT-CUSTODY.md) adds one DWG admission/custody
+record, a close-confirmation grace, one-shot abort/settlement, guarded late cleanup
+and successful-warning path projection. No-close/failed cleanup retains ownership;
+direct DXF stays available. Repeated events and old-child data cannot resettle or
+poison metadata budgets. Main/preload and drawing formats remain unchanged.
+
+The final converter pack passes48/48 and is selected; the fresh fast gate passes
+55/55stages,1,438portablechecks,229inputs. The cumulative manifest retains59runtime/
+12resources and9baselinechanges, with onlyimporter differing frombeta11. Independent
+privacy review reproduced an escaped-quote token leak before its correction; all
+prior failures, the earlier47pass and legacy21pass receipts remain preserved.
+
+This qualifies scheduled unconfirmed-child settlement and source custody only,
+not real FS-stall deadlines, process termination/orphan absence, IPC/renderer,
+broad privacy/reason custody or application/native/installed readiness. LC-REL-03
+parent remains partial with1approachused/atmost1remaining; LC-REL-01/02 remain
+exhausted. Next freeze the existing LC-REL-04 synthetic resource/cancellation
+reference, preserving current bounds; no real converter or application retry ran.

@@ -3460,9 +3460,9 @@
       "id": "LC-REL-03",
       "priority": 1,
       "status": "partially implemented",
-      "problem": "The explicit fake-process source reference confirms three unbounded no-close settlements, two cleanup requests before close and two successful-warning private-path payloads. The ordinary main error boundary already sanitizes structured failures; real converter/orphan behavior remains unqualified.",
-      "sourceCommit": "4c84c06f2ef749a76e272d4bb675f6fb7f61ef30",
-      "sourceVersion": "1.36.1-beta.11",
+      "problem": "The bounded beta12 source repair qualifies unconfirmed-child settlement, retained cleanup/admission custody and reviewed successful-warning path projection. Broader real converter/OS/IPC/storage/reason-custody acceptance remains incomplete.",
+      "sourceCommit": "b03e89a2a06bde77ad408f7be7c9bc812cdf31df",
+      "sourceVersion": "1.36.1-beta.12",
       "evidence": [
         "desktop/import-files.cjs:8-76",
         "desktop/main.cjs:87",
@@ -3471,16 +3471,18 @@
         "tests/converter-identity.cjs:5-10",
         "dwg-import.mjs:23",
         "tests/converter-lifecycle-reference.test.cjs",
-        "docs/CONVERTER-LIFECYCLE-REFERENCE.md"
+        "docs/CONVERTER-LIFECYCLE-REFERENCE.md",
+        "docs/CONVERTER-SETTLEMENT-CUSTODY.md",
+        "qa/CANDIDATE-SOURCE-1.36.1-beta.12.json"
       ],
       "acceptance": [
         "Cover missing binaries, unsupported versions, nonzero exit, stderr-only failure, malformed output, hangs and excessive output.",
         "Each failure returns a stable structured diagnostic with useful operation/context and bounded privacy-safe technical details.",
         "No unhandled rejection, orphan process or partial active document remains; execution and owned cleanup are bounded."
       ],
-      "next": "Review a focused LC-REL-03 repair plan for finite failure settlement and retained cleanup custody until confirmed close, plus privacy-safe successful warning details. Preserve the exact main FILE_IMPORT_FAILED boundary, useful warning/count controls, shared deadline/output budget and owned original/sentinel bytes. Qualify deferred late-close cleanup and repeated-event behavior before accepting a fix. No product approach has been used for LC-REL-03; at most two coherent approaches remain. LC-REL-01/02 remain partial and exhausted. No real converter or unchanged application retry, native/installed/client action or publication is authorized.",
+      "next": "Retain the qualified beta12 bounded LC-REL-03 source repair; its broader recommendation remains partial. One coherent repair approach is used and at most one remains; do not spend another without independently failing evidence. Next independent registered work is LC-REL-04: freeze deterministic synthetic boundary and cumulative-expansion-work expectations, then characterize cancellation/cleanup without a real converter. Preserve existing resource bounds and ordinary-import controls; streaming remains deferred. LC-REL-01/02 stay partial and exhausted. No actual converter or unchanged application retry, native/installed/client action or publication is authorized.",
       "confirmedDefect": true,
-      "implementationAttempts": 0,
+      "implementationAttempts": 1,
       "acceptanceComplete": false,
       "recommendationReview": {
         "requestedId": "LC-REL-03",
@@ -3490,8 +3492,8 @@
         "requestedPriority": 1,
         "priority": 1,
         "assessment": "partially implemented",
-        "problem": "The explicit fake-process source reference confirms three unbounded no-close settlements, two cleanup requests before close and two successful-warning private-path payloads. The ordinary main error boundary already sanitizes structured failures; real converter/orphan behavior remains unqualified.",
-        "implemented": "Fixed shell-free hidden invocation, 30-second shared deadline, combined 512-KiB stdout/stderr budget, error-stderr/nonzero rejection, bounded file reads, private cleanup and output validation are implemented. Tests pin existing converter identity and cover many failure classes.",
+        "problem": "The bounded beta12 source repair qualifies unconfirmed-child settlement, retained cleanup/admission custody and reviewed successful-warning path projection. Broader real converter/OS/IPC/storage/reason-custody acceptance remains incomplete.",
+        "implemented": "One importer-owned DWG reservation and per-import child/cleanup custody; scheduled1000ms close-confirmation grace; one-shot abort/settlement; safe repeated events/metadata budgets; retained pending admission, guarded deferred cleanup; authored successful-warning path projection preserving benign/count controls.",
         "evidence": [
           "desktop/import-files.cjs:8-76",
           "desktop/main.cjs:87",
@@ -3500,13 +3502,13 @@
           "tests/converter-identity.cjs:5-10",
           "dwg-import.mjs:23"
         ],
-        "gap": "Bounded source settlement, unconfirmed-exit cleanup custody and successful-warning privacy fail the explicit reference; deferred cleanup positive branches remain blocked. Structured converter-reason custody, real OS/process/IPC/storage qualification remain incomplete.",
+        "gap": "Real converter/process-tree termination/orphan absence, IPC/renderer adoption, real FS-stall deadlines, restart/crash, broader warning privacy/reason custody remain unqualified.",
         "acceptance": [
           "Cover missing binaries, unsupported versions, nonzero exit, stderr-only failure, malformed output, hangs and excessive output.",
           "Each failure returns a stable structured diagnostic with useful operation/context and bounded privacy-safe technical details.",
           "No unhandled rejection, orphan process or partial active document remains; execution and owned cleanup are bounded."
         ],
-        "nextAction": "Review a focused LC-REL-03 repair plan for finite failure settlement and retained cleanup custody until confirmed close, plus privacy-safe successful warning details. Preserve the exact main FILE_IMPORT_FAILED boundary, useful warning/count controls, shared deadline/output budget and owned original/sentinel bytes. Qualify deferred late-close cleanup and repeated-event behavior before accepting a fix. No product approach has been used for LC-REL-03; at most two coherent approaches remain. LC-REL-01/02 remain partial and exhausted. No real converter or unchanged application retry, native/installed/client action or publication is authorized.",
+        "nextAction": "Retain the qualified beta12 bounded LC-REL-03 source repair; its broader recommendation remains partial. One coherent repair approach is used and at most one remains; do not spend another without independently failing evidence. Next independent registered work is LC-REL-04: freeze deterministic synthetic boundary and cumulative-expansion-work expectations, then characterize cancellation/cleanup without a real converter. Preserve existing resource bounds and ordinary-import controls; streaming remains deferred. LC-REL-01/02 stay partial and exhausted. No actual converter or unchanged application retry, native/installed/client action or publication is authorized.",
         "dependencies": [
           "LC-REL-01/02: integrity investigations first",
           "LC-MAINT-01: incremental diagnostic vocabulary"
@@ -3520,11 +3522,11 @@
         ],
         "riskConfirmed": true,
         "priorityBasis": "P1 controlled-failure investigation. DWG writer/editability fidelity records remain separate; this is not a duplicate converter-writing attempt.",
-        "rollback": "Reference/profile/docs-only change; preserve pending failures and immutable beta11 runtime/manifests. No installed rollback implied.",
-        "reviewedSourceCommit": "4c84c06f2ef749a76e272d4bb675f6fb7f61ef30",
+        "rollback": "Focused revert of b03e89a2a06bde77ad408f7be7c9bc812cdf31df restores beta11 importer/version/profile/CI selection; preserve receipts and pending cleanup ownership. No installed downgrade implied.",
+        "reviewedSourceCommit": "b03e89a2a06bde77ad408f7be7c9bc812cdf31df",
         "recommendationNotVerifiedFinding": true,
         "acceptanceComplete": false,
-        "verificationScope": "Unchanged actual importer module in VM with fake child/clock and real owned files; verbatim main error formatter.27namedcases+inventory=28checks21pass7expectedfail0unexpected. No runtime repair or actual converter/native/IPC execution.",
+        "verificationScope": "Final converter48/48selected, finalfast55/55stages1438checks229inputs. Prior46preproduct24pass22fail,47immutablebefore23pass24fail,first47pass,independentescapedquotechallenge1fail andlegacy21pass receipts retained with honest chronology. No real converter or application execution.",
         "completionRequirements": [
           "Record the verified problem and affected behavior before a product change.",
           "Record implementation and relevant executed checks; acceptance must pass before completion.",
@@ -3535,25 +3537,22 @@
       },
       "historicalProblem": "The converter already has substantial bounded execution/cleanup; structured diagnostic custody and unsuccessful-termination acceptance remain incomplete.",
       "converterLifecycleReference": {
-        "tests": 28,
-        "pass": 21,
-        "expectedFail": 7,
-        "namedCases": 27,
+        "tests": 48,
+        "pass": 48,
+        "fail": 0,
+        "namedCases": 47,
         "unexpectedErrors": 0,
-        "settlementFailures": 3,
-        "unconfirmedCleanupRequests": 2,
-        "successfulWarningPrivacyFailures": 2,
-        "selectedPassingProfile": false,
-        "auxiliaryOnly": true,
-        "runtimeChanged": false,
-        "productRepairApproachesUsed": 0,
-        "atMostRemaining": 2,
-        "prospectiveGraceVirtualMs": 1000,
-        "completedDeletionBeforeCloseEstablished": false,
+        "selectedPassingProfile": true,
+        "auxiliaryOnly": false,
+        "runtimeChanged": true,
+        "productRepairApproachesUsed": 1,
+        "atMostRemaining": 1,
         "realProcessOrphanAbsenceQualified": false,
+        "realFilesystemStallDeadlineQualified": false,
         "mainStructuredFailureBoundaryPasses": true,
         "parentComplete": false,
-        "record": "docs/CONVERTER-LIFECYCLE-REFERENCE.md"
+        "record": "docs/CONVERTER-SETTLEMENT-CUSTODY.md",
+        "sourceCommit": "b03e89a2a06bde77ad408f7be7c9bc812cdf31df"
       },
       "recommendationReviewHistory": [
         {
@@ -3606,6 +3605,80 @@
             "Record remaining limitations and the exact rollback method."
           ],
           "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+        },
+        {
+          "requestedId": "LC-REL-03",
+          "canonicalId": "LC-REL-03",
+          "queueId": "LC-REL-03",
+          "title": "External converter resilience",
+          "requestedPriority": 1,
+          "priority": 1,
+          "assessment": "partially implemented",
+          "problem": "The explicit fake-process source reference confirms three unbounded no-close settlements, two cleanup requests before close and two successful-warning private-path payloads. The ordinary main error boundary already sanitizes structured failures; real converter/orphan behavior remains unqualified.",
+          "implemented": "Fixed shell-free hidden invocation, 30-second shared deadline, combined 512-KiB stdout/stderr budget, error-stderr/nonzero rejection, bounded file reads, private cleanup and output validation are implemented. Tests pin existing converter identity and cover many failure classes.",
+          "evidence": [
+            "desktop/import-files.cjs:8-76",
+            "desktop/main.cjs:87",
+            "desktop/main.cjs:277-282",
+            "tests/import-files.test.cjs:11-37",
+            "tests/converter-identity.cjs:5-10",
+            "dwg-import.mjs:23"
+          ],
+          "gap": "Bounded source settlement, unconfirmed-exit cleanup custody and successful-warning privacy fail the explicit reference; deferred cleanup positive branches remain blocked. Structured converter-reason custody, real OS/process/IPC/storage qualification remain incomplete.",
+          "acceptance": [
+            "Cover missing binaries, unsupported versions, nonzero exit, stderr-only failure, malformed output, hangs and excessive output.",
+            "Each failure returns a stable structured diagnostic with useful operation/context and bounded privacy-safe technical details.",
+            "No unhandled rejection, orphan process or partial active document remains; execution and owned cleanup are bounded."
+          ],
+          "nextAction": "Review a focused LC-REL-03 repair plan for finite failure settlement and retained cleanup custody until confirmed close, plus privacy-safe successful warning details. Preserve the exact main FILE_IMPORT_FAILED boundary, useful warning/count controls, shared deadline/output budget and owned original/sentinel bytes. Qualify deferred late-close cleanup and repeated-event behavior before accepting a fix. No product approach has been used for LC-REL-03; at most two coherent approaches remain. LC-REL-01/02 remain partial and exhausted. No real converter or unchanged application retry, native/installed/client action or publication is authorized.",
+          "dependencies": [
+            "LC-REL-01/02: integrity investigations first",
+            "LC-MAINT-01: incremental diagnostic vocabulary"
+          ],
+          "relatedIds": [
+            "LC-FMT-001",
+            "LC-FMT-002",
+            "LC-FMT-003",
+            "LC-REL-02",
+            "LC-MAINT-01"
+          ],
+          "riskConfirmed": true,
+          "priorityBasis": "P1 controlled-failure investigation. DWG writer/editability fidelity records remain separate; this is not a duplicate converter-writing attempt.",
+          "rollback": "Reference/profile/docs-only change; preserve pending failures and immutable beta11 runtime/manifests. No installed rollback implied.",
+          "reviewedSourceCommit": "4c84c06f2ef749a76e272d4bb675f6fb7f61ef30",
+          "recommendationNotVerifiedFinding": true,
+          "acceptanceComplete": false,
+          "verificationScope": "Unchanged actual importer module in VM with fake child/clock and real owned files; verbatim main error formatter.27namedcases+inventory=28checks21pass7expectedfail0unexpected. No runtime repair or actual converter/native/IPC execution.",
+          "completionRequirements": [
+            "Record the verified problem and affected behavior before a product change.",
+            "Record implementation and relevant executed checks; acceptance must pass before completion.",
+            "For performance work record reproducible before/after measurements.",
+            "Record remaining limitations and the exact rollback method."
+          ],
+          "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+        }
+      ],
+      "converterLifecycleReferenceHistory": [
+        {
+          "tests": 28,
+          "pass": 21,
+          "expectedFail": 7,
+          "namedCases": 27,
+          "unexpectedErrors": 0,
+          "settlementFailures": 3,
+          "unconfirmedCleanupRequests": 2,
+          "successfulWarningPrivacyFailures": 2,
+          "selectedPassingProfile": false,
+          "auxiliaryOnly": true,
+          "runtimeChanged": false,
+          "productRepairApproachesUsed": 0,
+          "atMostRemaining": 2,
+          "prospectiveGraceVirtualMs": 1000,
+          "completedDeletionBeforeCloseEstablished": false,
+          "realProcessOrphanAbsenceQualified": false,
+          "mainStructuredFailureBoundaryPasses": true,
+          "parentComplete": false,
+          "record": "docs/CONVERTER-LIFECYCLE-REFERENCE.md"
         }
       ]
     },
@@ -4209,6 +4282,6 @@
         "approachesUsed": 2
       }
     ],
-    "nextReadyAction": "Review a focused LC-REL-03 repair plan for finite failure settlement and retained cleanup custody until confirmed close, plus privacy-safe successful warning details. Preserve the exact main FILE_IMPORT_FAILED boundary, useful warning/count controls, shared deadline/output budget and owned original/sentinel bytes. Qualify deferred late-close cleanup and repeated-event behavior before accepting a fix. No product approach has been used for LC-REL-03; at most two coherent approaches remain. LC-REL-01/02 remain partial and exhausted. No real converter or unchanged application retry, native/installed/client action or publication is authorized."
+    "nextReadyAction": "Retain the qualified beta12 bounded LC-REL-03 source repair; its broader recommendation remains partial. One coherent repair approach is used and at most one remains; do not spend another without independently failing evidence. Next independent registered work is LC-REL-04: freeze deterministic synthetic boundary and cumulative-expansion-work expectations, then characterize cancellation/cleanup without a real converter. Preserve existing resource bounds and ordinary-import controls; streaming remains deferred. LC-REL-01/02 stay partial and exhausted. No actual converter or unchanged application retry, native/installed/client action or publication is authorized."
   }
 }

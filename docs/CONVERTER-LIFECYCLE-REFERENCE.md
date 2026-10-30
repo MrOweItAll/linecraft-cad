@@ -1,5 +1,10 @@
 # Converter lifecycle and successful-warning reference
 
+Current beta12 source repair passes all48expandedchecks and is selected by the
+55-stage profile. See [the repair and limits](CONVERTER-SETTLEMENT-CUSTODY.md).
+The pending28/beta11 results below are preserved historical prerequisites.
+
+
 The explicit LC-REL-03 source reference has **28 checks: 21 pass and seven
 expected failures**, across 27 named cases. There are no unexpected harness
 errors in the corrected run. Runtime remains beta11. No product repair or real
