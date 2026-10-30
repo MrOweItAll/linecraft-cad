@@ -1,8 +1,48 @@
 # Linecraft CAD
 
-Linecraft is an independent offline Windows CAD application for 2D drafting, paper layouts and polygonal 3D modeling. It includes an original command line, drawing canvas, ribbon, layers, properties, snaps, grips, grouped Undo/Redo, native drawing files, bounded model-space DWG/DXF import, DXF export and vector PDF output.
+**A light, offline, MIT-licensed Windows CAD app with an AutoCAD-style command line that humans — and AI agents — can type.**
 
-Download the Windows x64 installer from [GitHub Releases](https://github.com/MrOweItAll/linecraft-cad/releases/latest). The unsigned installer includes its own Electron runtime; a browser, Node.js and Autodesk installation are unnecessary for using the application.
+[**Download for Windows (x64)**](https://github.com/MrOweItAll/linecraft-cad/releases/latest) · [Quick use](QUICK-USE.md) · [Contributing](CONTRIBUTING.md) · [License (MIT)](LICENSE)
+
+<!-- TODO(Jon): add a short demo GIF here, e.g. docs/media/demo.gif (LINE / RECTANGLE / PLOT typed at the command line). No media is committed yet. -->
+
+Linecraft is an independent offline CAD application for 2D drafting, paper layouts and polygonal 3D modeling: command line, ribbon, layers, properties, snaps, grips, grouped Undo/Redo, native `.linecraft` files, model-space DWG/DXF import, DXF export and vector PDF output. No account, no subscription, no internet connection needed.
+
+## Quick start
+
+1. Download the installer from [Releases → latest](https://github.com/MrOweItAll/linecraft-cad/releases/latest) and run it. It bundles its own Electron runtime — no browser, Node.js or Autodesk install needed.
+   - The installer is currently **unsigned**, so Windows SmartScreen may warn. Choose *More info → Run anyway* if you trust the source, and compare the published SHA-256 checksum on the release page.
+2. Open one of the [sample drawings](samples/) or start a new drawing.
+3. Click the command line and type, for example:
+
+```text
+LINE
+0,0
+100,0
+100,50
+Enter to finish
+```
+
+See [QUICK-USE.md](QUICK-USE.md) for controls and shortcuts.
+
+## Scriptable by typing — for humans and AI agents
+
+Everything is driven by typed commands (`LINE`, `RECTANGLE`, `CIRCLE`, `MOVE`, `UNITS`, `PLOT` …) and plain coordinate input. That means a person, or an AI agent that can type into the command line, can draft by entering the same command sequences. Linecraft does **not** include a built-in AI or text-prompt-to-part generator; "AI-friendly" here means only that the interface is typed commands.
+
+## Honest limits (read before you try it)
+
+- **Windows x64 only** today. A Linux build is planned but not available yet — see [CONTRIBUTING.md](CONTRIBUTING.md) if you want to help.
+- **3D is polygonal meshes, not solids.** BOX/CYLINDER/SPHERE/extrude produce meshes, not ACIS/NURBS solids; advanced booleans are not supported.
+- **DWG is import-only** (model space), via a separate unmodified GNU LibreDWG process. Paper layouts and unsupported objects are not imported with full fidelity. **DWG writing is not supported.** DXF import/export and PDF output are supported.
+- Not the complete AutoCAD command catalogue: no nested/dynamic blocks, attributes, associative hatches/dimensions or external references.
+- Unsigned installer (see Quick start).
+- Independent project; not affiliated with or endorsed by Autodesk. "AutoCAD-style" describes the command-line workflow only.
+
+Found a gap? [Open an issue](https://github.com/MrOweItAll/linecraft-cad/issues/new).
+
+---
+
+# Details
 
 ## Paper layouts and physical scales
 
