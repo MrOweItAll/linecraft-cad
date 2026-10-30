@@ -2134,9 +2134,9 @@
     {
       "id": "LC-REL-02",
       "priority": 0,
-      "status": "partially implemented; bounded host/core preservation already satisfied in36executedchecks",
-      "problem": "Existing-file save failure preservation and native/core malformed-input isolation pass the new bounded matrix without a runtime repair. Renderer/discard/exchange/development-state and operation/next-step diagnostic acceptance remain unqualified.",
-      "sourceCommit": "ccd99b00e306c356f05430e5e733b588a6126cef",
+      "status": "partially implemented; host/core and renderer source-function preservation already satisfied in executed scopes",
+      "problem": "Bounded host/core preservation and renderer source-function Save/Open/discard state semantics pass without runtime repair. Useful operation/next-step diagnostics and broader application/integration/durability qualification remain unpassed.",
+      "sourceCommit": "0e7b88f1e8ec37aa40626b27970eace20e097030",
       "sourceVersion": "1.36.1-beta.9",
       "evidence": [
         "desktop/main.cjs:285-312",
@@ -2148,7 +2148,11 @@
         "tests/import-files.test.cjs:17-37",
         "tests/advanced-security.test.cjs:25",
         "tests/save-isolation-reference.test.cjs",
-        "docs/SAVE-IMPORT-ISOLATION.md"
+        "docs/SAVE-IMPORT-ISOLATION.md",
+        "tests/renderer-isolation-reference.test.cjs",
+        "docs/RENDERER-ISOLATION-REFERENCES.md",
+        "app.mjs:297-314",
+        "app.mjs:1823-1860"
       ],
       "acceptance": [
         "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
@@ -2156,7 +2160,7 @@
         "Errors identify the failed Save/Open/import operation and a useful next step.",
         "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
       ],
-      "next": "Complete actual renderer source-function Save/Open/discard failure/cancel references using idle synthetic editors and real prior Undo/Redo, saved fingerprint/import flags/name and editor identity. Preserve successful Save baseline changes before a canceled chooser. Keep DXF/DWG/converter, development persistence/discard authorization and native/crash qualifications explicit. Define an independent failing operation/next-step diagnostic contract before any production fix; do not repeat unchanged passing gates or the blocked application route.",
+      "next": "Freeze an independent failing Save/Open/import operation and useful next-step diagnostic contract in the existing synthetic host harness. Preserve ok/error/canceled/busy compatibility and private-path handling; reuse LC-MAINT-01 vocabulary incrementally. Inspect actual error paths before a small justified fix. Keep full renderer/preload/queued-open, host integration, exchange/converter, development/discard authorization, clipboard, paper/3D and native/crash/daily-use qualification explicit. Do not repeat completed preservation references, unchanged passing gates or the blocked application route.",
       "confirmedDefect": false,
       "implementationAttempts": 0,
       "acceptanceComplete": false,
@@ -2168,7 +2172,7 @@
         "requestedPriority": 0,
         "priority": 0,
         "assessment": "partially implemented",
-        "problem": "Existing-file save failure preservation and native/core malformed-input isolation pass the new bounded matrix without a runtime repair. Renderer/discard/exchange/development-state and operation/next-step diagnostic acceptance remain unqualified.",
+        "problem": "Bounded host/core preservation and renderer source-function Save/Open/discard state semantics pass without runtime repair. Useful operation/next-step diagnostics and broader application/integration/durability qualification remain unpassed.",
         "implemented": "Native save writes and flushes an exclusive sibling, renames without deleting the destination, and cleans its owned temporary file. Association/clean state update after success. Open/import validates before renderer replacement. Existing tests cover malformed Open, canceled Save As and some cleanup failures.",
         "evidence": [
           "desktop/main.cjs:285-312",
@@ -2180,14 +2184,14 @@
           "tests/import-files.test.cjs:17-37",
           "tests/advanced-security.test.cjs:25"
         ],
-        "gap": "Renderer/editor adoption, actual saved-fingerprint/dirty/UndoRedo/cancel/discard/exchange/development-state and useful operation/next-step errors remain unqualified. Passed host/core matrix is not a corruption defect.",
+        "gap": "Operation/next-step error guidance remains unpassed; broader actualapp/transport/queued-open/hostexchange/development/paper3D/native/durability scopes remain unqualified. PassingVM reference is not a production defect.",
         "acceptance": [
           "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
           "Malformed or canceled import leaves active drawing contents, identity, selection and undo/redo unchanged.",
           "Errors identify the failed Save/Open/import operation and a useful next step.",
           "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
         ],
-        "nextAction": "Complete actual renderer source-function Save/Open/discard failure/cancel references using idle synthetic editors and real prior Undo/Redo, saved fingerprint/import flags/name and editor identity. Preserve successful Save baseline changes before a canceled chooser. Keep DXF/DWG/converter, development persistence/discard authorization and native/crash qualifications explicit. Define an independent failing operation/next-step diagnostic contract before any production fix; do not repeat unchanged passing gates or the blocked application route.",
+        "nextAction": "Freeze an independent failing Save/Open/import operation and useful next-step diagnostic contract in the existing synthetic host harness. Preserve ok/error/canceled/busy compatibility and private-path handling; reuse LC-MAINT-01 vocabulary incrementally. Inspect actual error paths before a small justified fix. Keep full renderer/preload/queued-open, host integration, exchange/converter, development/discard authorization, clipboard, paper/3D and native/crash/daily-use qualification explicit. Do not repeat completed preservation references, unchanged passing gates or the blocked application route.",
         "dependencies": [
           "LC-REL-01: ordered investigation; not a claim that save safety depends on batch implementation"
         ],
@@ -2198,11 +2202,11 @@
         ],
         "riskConfirmed": false,
         "priorityBasis": "P0 integrity investigation; no reproduced data loss and no justification to interrupt stable nearly completed work.",
-        "rollback": "Focused revert of this test/documentation/candidate-profile checkpoint, preserving beta9runtime and prior independent work; no installed rollback.",
-        "reviewedSourceCommit": "ccd99b00e306c356f05430e5e733b588a6126cef",
+        "rollback": "Focused revert of renderer test/docs/profileselection checkpoint, preserving unchangedbeta9runtime and priorhostcoverage; no installedrollback.",
+        "reviewedSourceCommit": "0e7b88f1e8ec37aa40626b27970eace20e097030",
         "recommendationNotVerifiedFinding": true,
         "acceptanceComplete": false,
-        "verificationScope": "Reviewed36/36host/corechecks;freshexpandedfast46/46stages1158portablechecks216inputs;runtimeandmanifestunchanged;noapp/native/installed/converterexecution",
+        "verificationScope": "Renderer65/65checks64namedcases;freshprofile47/47stages1223portablechecks217inputs;priorhost/core36keepsscope. Runtime/manifest/package/CI unchanged;no actualrenderer/app/native/converterexecution.",
         "completionRequirements": [
           "Record the verified problem and affected behavior before a product change.",
           "Record implementation and relevant executed checks; acceptance must pass before completion.",
@@ -2211,12 +2215,13 @@
         ],
         "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md",
         "progress": {
-          "scope": "Bounded host/core save/native-import preservation",
-          "assessment": "already satisfied in36checks",
-          "status": "verified coverage; no runtime repair",
+          "scope": "Renderer source-function document state",
+          "assessment": "already satisfied in65checks underexplicitadapters",
+          "status": "verified references;no productrepair",
           "parentAcceptanceComplete": false,
           "runtimeChanged": false,
-          "nextAction": "Complete actual renderer source-function Save/Open/discard failure/cancel references using idle synthetic editors and real prior Undo/Redo, saved fingerprint/import flags/name and editor identity. Preserve successful Save baseline changes before a canceled chooser. Keep DXF/DWG/converter, development persistence/discard authorization and native/crash qualifications explicit. Define an independent failing operation/next-step diagnostic contract before any production fix; do not repeat unchanged passing gates or the blocked application route."
+          "hostPreservationRetained": true,
+          "nextAction": "Freeze an independent failing Save/Open/import operation and useful next-step diagnostic contract in the existing synthetic host harness. Preserve ok/error/canceled/busy compatibility and private-path handling; reuse LC-MAINT-01 vocabulary incrementally. Inspect actual error paths before a small justified fix. Keep full renderer/preload/queued-open, host integration, exchange/converter, development/discard authorization, clipboard, paper/3D and native/crash/daily-use qualification explicit. Do not repeat completed preservation references, unchanged passing gates or the blocked application route."
         }
       },
       "history": [
@@ -2298,11 +2303,114 @@
             ],
             "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
           }
+        },
+        {
+          "id": "LC-REL-02",
+          "priority": 0,
+          "status": "partially implemented; bounded host/core preservation already satisfied in36executedchecks",
+          "problem": "Existing-file save failure preservation and native/core malformed-input isolation pass the new bounded matrix without a runtime repair. Renderer/discard/exchange/development-state and operation/next-step diagnostic acceptance remain unqualified.",
+          "sourceCommit": "ccd99b00e306c356f05430e5e733b588a6126cef",
+          "sourceVersion": "1.36.1-beta.9",
+          "evidence": [
+            "desktop/main.cjs:285-312",
+            "desktop/main.cjs:405-459",
+            "app.mjs:1823-1844",
+            "app.mjs:1878-1887",
+            "core.mjs:3237-3245",
+            "tests/desktop-unit.test.cjs:131-175",
+            "tests/import-files.test.cjs:17-37",
+            "tests/advanced-security.test.cjs:25",
+            "tests/save-isolation-reference.test.cjs",
+            "docs/SAVE-IMPORT-ISOLATION.md"
+          ],
+          "acceptance": [
+            "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
+            "Malformed or canceled import leaves active drawing contents, identity, selection and undo/redo unchanged.",
+            "Errors identify the failed Save/Open/import operation and a useful next step.",
+            "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
+          ],
+          "next": "Complete actual renderer source-function Save/Open/discard failure/cancel references using idle synthetic editors and real prior Undo/Redo, saved fingerprint/import flags/name and editor identity. Preserve successful Save baseline changes before a canceled chooser. Keep DXF/DWG/converter, development persistence/discard authorization and native/crash qualifications explicit. Define an independent failing operation/next-step diagnostic contract before any production fix; do not repeat unchanged passing gates or the blocked application route.",
+          "confirmedDefect": false,
+          "implementationAttempts": 0,
+          "acceptanceComplete": false,
+          "recommendationReview": {
+            "requestedId": "LC-REL-02",
+            "canonicalId": "LC-REL-02",
+            "queueId": "LC-REL-02",
+            "title": "Safe save and failed-import isolation",
+            "requestedPriority": 0,
+            "priority": 0,
+            "assessment": "partially implemented",
+            "problem": "Existing-file save failure preservation and native/core malformed-input isolation pass the new bounded matrix without a runtime repair. Renderer/discard/exchange/development-state and operation/next-step diagnostic acceptance remain unqualified.",
+            "implemented": "Native save writes and flushes an exclusive sibling, renames without deleting the destination, and cleans its owned temporary file. Association/clean state update after success. Open/import validates before renderer replacement. Existing tests cover malformed Open, canceled Save As and some cleanup failures.",
+            "evidence": [
+              "desktop/main.cjs:285-312",
+              "desktop/main.cjs:405-459",
+              "app.mjs:1823-1844",
+              "app.mjs:1878-1887",
+              "core.mjs:3237-3245",
+              "tests/desktop-unit.test.cjs:131-175",
+              "tests/import-files.test.cjs:17-37",
+              "tests/advanced-security.test.cjs:25"
+            ],
+            "gap": "Renderer/editor adoption, actual saved-fingerprint/dirty/UndoRedo/cancel/discard/exchange/development-state and useful operation/next-step errors remain unqualified. Passed host/core matrix is not a corruption defect.",
+            "acceptance": [
+              "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
+              "Malformed or canceled import leaves active drawing contents, identity, selection and undo/redo unchanged.",
+              "Errors identify the failed Save/Open/import operation and a useful next step.",
+              "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
+            ],
+            "nextAction": "Complete actual renderer source-function Save/Open/discard failure/cancel references using idle synthetic editors and real prior Undo/Redo, saved fingerprint/import flags/name and editor identity. Preserve successful Save baseline changes before a canceled chooser. Keep DXF/DWG/converter, development persistence/discard authorization and native/crash qualifications explicit. Define an independent failing operation/next-step diagnostic contract before any production fix; do not repeat unchanged passing gates or the blocked application route.",
+            "dependencies": [
+              "LC-REL-01: ordered investigation; not a claim that save safety depends on batch implementation"
+            ],
+            "relatedIds": [
+              "LC-MON-007",
+              "LC-DEV-001",
+              "LC-MAINT-01"
+            ],
+            "riskConfirmed": false,
+            "priorityBasis": "P0 integrity investigation; no reproduced data loss and no justification to interrupt stable nearly completed work.",
+            "rollback": "Focused revert of this test/documentation/candidate-profile checkpoint, preserving beta9runtime and prior independent work; no installed rollback.",
+            "reviewedSourceCommit": "ccd99b00e306c356f05430e5e733b588a6126cef",
+            "recommendationNotVerifiedFinding": true,
+            "acceptanceComplete": false,
+            "verificationScope": "Reviewed36/36host/corechecks;freshexpandedfast46/46stages1158portablechecks216inputs;runtimeandmanifestunchanged;noapp/native/installed/converterexecution",
+            "completionRequirements": [
+              "Record the verified problem and affected behavior before a product change.",
+              "Record implementation and relevant executed checks; acceptance must pass before completion.",
+              "For performance work record reproducible before/after measurements.",
+              "Record remaining limitations and the exact rollback method."
+            ],
+            "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md",
+            "progress": {
+              "scope": "Bounded host/core save/native-import preservation",
+              "assessment": "already satisfied in36checks",
+              "status": "verified coverage; no runtime repair",
+              "parentAcceptanceComplete": false,
+              "runtimeChanged": false,
+              "nextAction": "Complete actual renderer source-function Save/Open/discard failure/cancel references using idle synthetic editors and real prior Undo/Redo, saved fingerprint/import flags/name and editor identity. Preserve successful Save baseline changes before a canceled chooser. Keep DXF/DWG/converter, development persistence/discard authorization and native/crash qualifications explicit. Define an independent failing operation/next-step diagnostic contract before any production fix; do not repeat unchanged passing gates or the blocked application route."
+            }
+          },
+          "assessment": "partially implemented",
+          "validation": "Reviewed36/36host/corechecks;freshexpandedfast46/46stages1158portablechecks216inputs;runtimeandmanifestunchanged;noapp/native/installed/converterexecution",
+          "change": "New actual-main/fakeElectron/owned-filesystem and real-core preservation references; explicit candidate suite selection and documentation only. No productfix.",
+          "boundedPreservation": {
+            "assessment": "already satisfied",
+            "checks": 36,
+            "hostChecks": 31,
+            "realCoreChecks": 5,
+            "runtimeChanged": false,
+            "record": "docs/SAVE-IMPORT-ISOLATION.md",
+            "mainSHA256": "fc4e12b6831a5e9feb4e91b4cd7c8d167e7290315dd38ce5963efe0e56e13fcf",
+            "testSHA256": "ae0c080911a34ecf10dbeecc13db199d0accf94de9060a03db31f6f2e512b286",
+            "parentComplete": false
+          }
         }
       ],
       "assessment": "partially implemented",
-      "validation": "Reviewed36/36host/corechecks;freshexpandedfast46/46stages1158portablechecks216inputs;runtimeandmanifestunchanged;noapp/native/installed/converterexecution",
-      "change": "New actual-main/fakeElectron/owned-filesystem and real-core preservation references; explicit candidate suite selection and documentation only. No productfix.",
+      "validation": "Renderer65/65checks64namedcases;freshprofile47/47stages1223portablechecks217inputs;priorhost/core36keepsscope. Runtime/manifest/package/CI unchanged;no actualrenderer/app/native/converterexecution.",
+      "change": "ActualsourcefunctionVM references with realcore/fingerprint/replacement and explicitUI/IPC adapters; candidateprofile/docs only;no productfix.",
       "boundedPreservation": {
         "assessment": "already satisfied",
         "checks": 36,
@@ -2312,6 +2420,18 @@
         "record": "docs/SAVE-IMPORT-ISOLATION.md",
         "mainSHA256": "fc4e12b6831a5e9feb4e91b4cd7c8d167e7290315dd38ce5963efe0e56e13fcf",
         "testSHA256": "ae0c080911a34ecf10dbeecc13db199d0accf94de9060a03db31f6f2e512b286",
+        "parentComplete": false
+      },
+      "rendererReference": {
+        "assessment": "already satisfied in executed VM scope",
+        "tests": 65,
+        "semanticCases": 64,
+        "pass": 65,
+        "runtimeChanged": false,
+        "appSHA256": "f7649f4ffe6cb255726f32c5966ec437797e33cd428b4e1abae444d020d915a0",
+        "testSHA256": "81df69d9db76dad532a4c14ae99aa2b545691e4ed639ec946ebb307ec406985f",
+        "record": "docs/RENDERER-ISOLATION-REFERENCES.md",
+        "fullApplicationQualified": false,
         "parentComplete": false
       }
     },
@@ -2889,9 +3009,9 @@
     ],
     "latestBoundedResult": {
       "id": "LC-REL-02",
-      "record": "docs/SAVE-IMPORT-ISOLATION.md",
+      "record": "docs/RENDERER-ISOLATION-REFERENCES.md",
       "fullItemComplete": false,
-      "next": "Complete actual renderer source-function Save/Open/discard failure/cancel references using idle synthetic editors and real prior Undo/Redo, saved fingerprint/import flags/name and editor identity. Preserve successful Save baseline changes before a canceled chooser. Keep DXF/DWG/converter, development persistence/discard authorization and native/crash qualifications explicit. Define an independent failing operation/next-step diagnostic contract before any production fix; do not repeat unchanged passing gates or the blocked application route."
+      "next": "Freeze an independent failing Save/Open/import operation and useful next-step diagnostic contract in the existing synthetic host harness. Preserve ok/error/canceled/busy compatibility and private-path handling; reuse LC-MAINT-01 vocabulary incrementally. Inspect actual error paths before a small justified fix. Keep full renderer/preload/queued-open, host integration, exchange/converter, development/discard authorization, clipboard, paper/3D and native/crash/daily-use qualification explicit. Do not repeat completed preservation references, unchanged passing gates or the blocked application route."
     },
     "followupResults": [
       {
@@ -2916,6 +3036,12 @@
         "id": "LC-REL-02",
         "record": "docs/SAVE-IMPORT-ISOLATION.md",
         "status": "36/36boundedpreservationchecks;parentpartial;no runtimechange",
+        "fullItemComplete": false
+      },
+      {
+        "id": "LC-REL-02",
+        "record": "docs/RENDERER-ISOLATION-REFERENCES.md",
+        "status": "65/65rendererVMsourcechecks;parentpartial;no runtimechange",
         "fullItemComplete": false
       }
     ]

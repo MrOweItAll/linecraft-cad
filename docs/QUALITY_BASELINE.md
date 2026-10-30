@@ -645,3 +645,20 @@ operation/next-step diagnostics and broad crash/platform durability remain open.
 Next define renderer Save/Open/discard failure/cancel references before any fix.
 No application/native/installed acceptance or unchanged startup retry ran; earlier
 beta9 and historical beta6 receipts retain their original scope.
+
+
+## Renderer document-state source references - October 30, 2026 UTC
+
+The [renderer source-function reference](RENDERER-ISOLATION-REFERENCES.md) passes
+65 checks: 64 named scenarios plus inventory. Real editors and actual fingerprint,
+Save/discard/replacement/Open functions verify identity/history, saved/imported
+state, controlled late edits, accepted Save before canceled Open and native versus
+fresh imported adoption. UI/transport adapters remain explicit. Runtime is unchanged.
+The expanded profile passes 47/47 stages, 1,223 portable checks and 217 inputs.
+No version, manifest, dependency or CI change occurred.
+
+LC-REL-02 stays partial. Next freeze a failing operation/next-step diagnostic
+contract before any product fix. Full renderer/preload/queued-open, host integration,
+paper/3D, development/clipboard/native/crash and daily-use qualification remain open.
+No Electron/application/PDF/build/converter acceptance or unchanged startup retry
+ran. The first fixture-API failure is retained separately from production behavior.

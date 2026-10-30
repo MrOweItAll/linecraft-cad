@@ -342,3 +342,13 @@ file and real-core malformed-input matrix. LC-REL-02 remains partially implement
 renderer/discard/exchange/development-state and operation/next-step diagnostics
 are still unqualified. No destructive-save finding or product fix follows from
 these passing cases; retain the original intake and current results separately.
+
+
+## LC-REL-02 renderer source-function coverage
+
+The [65-check VM reference](RENDERER-ISOLATION-REFERENCES.md) verifies the tested
+Save/Open/discard fingerprint, identity and real-history behavior on unchanged
+runtime. That bounded logic is already satisfied; LC-REL-02 remains partial.
+Next define the independently failing operation/next-step diagnostic acceptance
+before a small justified fix. No full renderer/native integration or destructive
+save finding follows from these source-function checks.

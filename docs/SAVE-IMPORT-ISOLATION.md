@@ -1,5 +1,9 @@
 # Save and native-import isolation references
 
+Current follow-up: renderer source-function logic now has a separate passing
+[VM reference](RENDERER-ISOLATION-REFERENCES.md). The historical host/core result
+below keeps its scope; full application/native integration remains unqualified.
+
 LC-REL-02 remains **partially implemented**. A new 36-check reference qualifies
 existing host file-preservation and real-core malformed-import behavior. All36
 checks pass on unchanged beta9 runtime. No runtime repair, destructive-save defect

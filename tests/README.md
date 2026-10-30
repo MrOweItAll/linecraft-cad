@@ -360,3 +360,16 @@ The test-only read-only association observer is appended in memory, never export
 by production. Optional LINECRAFT_SAVE_ISOLATION_REPORT includes local paths/raw
 errors and must remain private. Real renderer/native/converter/crash acceptance
 is not inferred; cleanup-denied and collided fixtures are intentionally retained.
+
+
+## Renderer Save/Open/discard source functions
+
+`node --test --test-concurrency=1 tests/renderer-isolation-reference.test.cjs`
+runs 64 named VM scenarios plus inventory (65/65). It extracts actual fingerprint,
+Save/discard/replacement/Open bodies and uses real core editors and zoomExtents
+with explicit UI/IPC adapters. Rejected bridge Promises propagate from these
+functions; runAction/full renderer integration is outside this reference.
+The candidate profile selects it: 47 stages / 1,223 checks / 217 inputs on unchanged
+beta9 runtime. See [oracles and limits](../docs/RENDERER-ISOLATION-REFERENCES.md).
+Optional LINECRAFT_RENDERER_ISOLATION_REPORT must remain private. The initial
+fixture void-API failure is preserved and is not a production defect.
