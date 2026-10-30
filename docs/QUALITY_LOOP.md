@@ -790,3 +790,23 @@ three beta10 deltas. Real app/PDF/build/unpacked/native/installed/upgrade/daily-
 transport/storage/crash and beta7 startup cause remain unqualified. LC-REL-02
 parent remains partial; two repair approaches are consumed. Continue independent
 LC-REL-03 fake-process diagnostics next; no actual converter retry is authorized.
+
+
+## Pending converter lifecycle reference - October 30, 2026 UTC
+
+[The explicit source reference](CONVERTER-LIFECYCLE-REFERENCE.md) has 28 checks:
+21 pass and seven expected failures, with 27 named cases and no final harness
+errors. Three failures remain pending at the prospective close-confirmation grace,
+two request cleanup before confirmed close, and two return synthetic private path
+markers in successful warnings. The unchanged main import error boundary already
+passes its exact structured/sanitized contract; no raw-error IPC leak is claimed.
+
+Fake children, real owned synthetic files and a manual clock qualify this source
+slice only. Completed deletion before close and real orphan/process termination
+are not established. Teardown closes cannot qualify product settlement, and
+positive deferred cleanup after bounded rejection remains blocked. Runtime stays
+beta11; no product repair or actual converter attempt occurred. The fresh selected
+fast gate passes54/54stages,1,390checks,228inputs; this pending reference is auxiliary
+only. LC-REL-03 remains partial with zero approaches used. Next review the bounded
+lifecycle/warning repair plan; all application/native/installed and prior limits
+remain. Preserve the initial cross-realm fixture failure and historical receipts.

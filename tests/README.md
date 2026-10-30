@@ -437,3 +437,13 @@ checks pass. Historical pending descriptions above retain their beta10 scope.
 Fresh beta11 fast qualification is54stages/1,390checks/227inputs.
 See [the source repair, fixture adaptations and limits](../docs/DEVELOPMENT-RECOVERY-BINDING.md).
 No application/native/installed or real-transport acceptance follows.
+
+
+The explicit pending converter lifecycle/warning reference is run with
+`node --test tests/converter-lifecycle-reference.test.cjs`. Its frozen result is
+28 checks:21pass/7expectedfail,27namedcases and zero unexpected harness errors.
+It is fingerprinted as an auxiliary, excluded from passing candidate acceptance;
+the selected beta11 profile is54/54stages,1390checks,228inputs. See
+[its contract and fake-process limits](../docs/CONVERTER-LIFECYCLE-REFERENCE.md).
+Do not substitute teardown closure for bounded product settlement or infer real
+converter/process-tree/native acceptance from these source projections.
