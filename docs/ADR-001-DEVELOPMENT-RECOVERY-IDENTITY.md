@@ -115,7 +115,7 @@ work. These are lifecycle obligations, not reasons to broaden drawing formats.
 
 1. [x] Freeze source-level legacy/frame/reset-before-sync and generation-allocation prerequisites in the identity boundary reference.
 2. [x] Retain the unchanged paired10 safety reference and its6pass/4pending failures; do not rerun it without changed evidence.
-3. [ ] Before product edits, finish independently expected positive-generation, queued compensation, live-generation replay and integrated file-action ownership controls. The separate renderer reference now freezes healthy/dirty/imported recovery, returned-binding update ordering and returned reset failure; these remain expected failures, not implemented behavior.
+3. [x] Freeze independently expected positive-generation, queued compensation, live-generation replay and integrated file-action ownership controls in the separate ownership reference. The renderer reference retains healthy/dirty/imported recovery, returned-binding update ordering and returned reset failure. Missing prerequisites still block positive implementation branches; frozen controls are not passing product acceptance.
 4. [x] Freeze a challenge/confirmation regression; actual bounded ordering and healthy renderer prerequisites remain unqualified (see RECOVERY-PROTOCOL-REFERENCE.md).
 5. [ ] Use at most the one remaining LC-REL-02 repair approach; preserve all prior failures and stop that scope if the budget is consumed.
 6. [ ] Qualify exact source bytes, packaged compatibility and separate code/test/privacy reviews. Application/native/installed acceptance remains outside this contract.
@@ -127,3 +127,9 @@ It freezes source deadline and late-reply expectations; current production never
 starts negotiation, so the deadline branches are not yet exercised successfully.
 Healthy renderer negotiation may finish before dispatching native Save. It must
 not upgrade a native Save that already entered main while unverified.
+
+The [live-generation/ownership reference](RECOVERY-OWNERSHIP-REFERENCE.md) adds
+actual reply/disk/confirmation probes and verbatim runAction/queue ownership
+controls. Its existing busy controls pass; awaited-recovery races stop at the
+absent negotiation prerequisite. Early ownership reservation and a valid check
+across the await are both acceptable ways to preserve exclusive file actions.

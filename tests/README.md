@@ -417,3 +417,14 @@ LINECRAFT_RECOVERY_NEGOTIATION_REPORT writes private local traces only.
 See [the source adapters, manual-clock expectations and limits](../docs/RECOVERY-NEGOTIATION-REFERENCE.md).
 No main/preload/realIPC/native/application execution or working deadline follows.
 The unchanged protocol37,identity14 and paired10 references were not rerun.
+
+
+## Pending recovery ownership reference
+
+`node --test --test-concurrency=1 tests/recovery-ownership-reference.test.cjs`
+is explicit and auxiliary-only:18checks,8pass(seven controls plus inventory),
+10expectedfailures and17namedcases, with no unexpected harness errors.
+Actual main generation probes and renderer runAction/queue ownership projections
+are distinguished in [the scope record](../docs/RECOVERY-OWNERSHIP-REFERENCE.md).
+Optional LINECRAFT_RECOVERY_OWNERSHIP_REPORT contains private local traces.
+The unchanged renderer23/protocol37/identity14/paired10 packs were not rerun.

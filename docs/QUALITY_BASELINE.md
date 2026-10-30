@@ -782,3 +782,28 @@ application/native/installed/real-storage limits and unknown beta7 cause persist
 The fresh selected fast gate passes49/49stages,1,288portablechecks and225bound
 inputs. All four pending recovery packs are auxiliary-only and excluded from
 passing acceptance; input identity and focused results are recorded separately.
+
+
+## Recovery live-generation and file-action ownership - October 30, 2026 UTC
+
+[The new ownership reference](RECOVERY-OWNERSHIP-REFERENCE.md) freezes 18 checks:
+seven controls plus inventory pass; ten expected failures stop at seven missing
+actual-main UUID replies, one missing main recovery channel and two absent
+renderer negotiation requests. All 17 named cases execute without unexpected
+harness errors. Existing native-await/post-peek busy and cleanup controls pass;
+positive generation and recovery-await races remain unqualified.
+
+Actual reply/disk/confirmation probes freeze live-generation retention after
+queue rejection/compensation and replay/conflict, while verbatim runAction and
+queue bodies observe owned busy UI and retries. No guessed binding observer or
+rewritten busy proxy is used. This is auxiliary-only, alongside unchanged
+renderer23/protocol37/identity14/paired10; old pending packs were not rerun.
+Runtime/helper/manifest/package/version/CI remain unchanged beta10; no repair
+approach is consumed. Next review the focused main/app/preload plan against all
+frozen contracts, then use at most the one remaining LC-REL-02 repair approach.
+LC-REL-01 remains exhausted; application/native/installed/storage/crash and the
+unknown beta7 startup cause remain unqualified.
+
+The fresh selected fast gate passes49/49stages,1,288portablechecks and226bound
+inputs. All five pending recovery references are fingerprinted auxiliaries,
+excluded from passing acceptance. Exact final source input binding is separate.
