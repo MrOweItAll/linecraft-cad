@@ -306,3 +306,16 @@ clean and existing Undo/Redo history, earlier accepted edits, successful trim an
 erase grouping, and pre-mutation rejection. The candidate fast profile includes
 this suite and fingerprints beta8's beta7 parent manifest. See
 [the bounded result](../docs/ATOMIC-BATCH-FAILURE-RECOVERY.md).
+
+
+## Pending transform atomicity reference
+
+`node --test tests/transform-atomicity-reference.test.mjs` is an explicit pending
+LC-REL-01 contract, not a selected passing gate. On beta8 it produces four passes
+and five expected failures across nine tests. Artificial per-editor read faults
+occur after the literal two-object MOVE assignment at commit follow-up or history
+snapshot; successful MOVE/typed ROTATE and invalid-input controls remain separate.
+No normal drawing-loss, renderer dirty, native or installed claim follows. See
+[the observations and proposed recovery boundary](../docs/TRANSFORM-FAILURE-BOUNDARIES.md).
+Do not run all retained references by glob and call that the supported passing
+profile; preserve these failures until the bounded recovery contract is repaired.

@@ -300,3 +300,12 @@ qualification do not complete LC-REL-01 across other batch commands. The origina
 intake assessments above retain their scope; the persistent register records the
 bounded result and next transform-boundary investigation. No natural drawing-loss,
 application/native or installed acceptance follows from the injected failure.
+
+
+## Subsequent MOVE boundary finding
+
+The [explicit transform reference](TRANSFORM-FAILURE-BOUNDARIES.md) confirms an
+unrepaired LC-REL-01 deficiency within artificial post-MOVE read faults. The
+register now records that bounded confirmed deficiency while preserving the
+original intake and fence-repair history. Overall acceptance remains incomplete;
+no ordinary drawing-file loss or production repair is claimed by this follow-up.

@@ -539,3 +539,19 @@ No new app/PDF/build/unpacked/native/installed/remote-CI gate ran. The prior bet
 startup cause remains unknown; beta6 remains the historical built/native candidate.
 The broader LC-REL-01 item stays incomplete; next characterize one transform's
 commit/history failure boundary before considering another repair.
+
+
+## Pending MOVE failure-recovery contract - October 30, 2026 UTC
+
+A separate LC-REL-01 [transform boundary reference](TRANSFORM-FAILURE-BOUNDARIES.md)
+exposes five expected failures in nine explicit pure checks: artificial
+post-assignment MOVE exceptions leave moved geometry; subsequent normal Cancel
+records that move and clears prior Redo. Four success/prevalidation controls pass.
+This is not a naturally triggered file-loss finding or renderer dirty test.
+The pending reference is outside the selected passing candidate profile.
+
+No runtime repair or unchanged gate/app retry was made. Beta8's prior fence repair
+and historical fast qualification retain their scope; all 211 bound inputs are
+unchanged. Broader atomicity remains incomplete. Next freeze reviewed differential
+references for repeated COPY, terminal-input and history publication before the
+remaining narrow semantic repair. A generic command-start rollback is not a fix.
