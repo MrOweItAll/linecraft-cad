@@ -411,3 +411,24 @@ additional repair approach was attempted. LC-REL-02 remains partial; review dura
 paired identity/legacy migration and compatibility before its one remaining attempt.
 LC-REL-01 retains zero remaining attempts. All application/storage/transport/native/
 installed/crash/ordinary-loss limits and beta7's unknown startup cause remain.
+
+
+## Recovery identity/legacy contract - October 30, 2026 UTC
+
+[ADR-001](ADR-001-DEVELOPMENT-RECOVERY-IDENTITY.md) freezes paired opaque generation
+and explicit legacy fallback, with implementation prerequisites still open. The
+[new boundary reference](DEVELOPMENT-IDENTITY-REFERENCE.md) has14checks:3pass and
+11expectedfailures across13scenarios. Nine are protected routing probes and two
+are absent-binding prerequisites, not11overwrites. Positive-generation branches,
+full frame ordering and the remaining lifecycle controls are unqualified.
+
+The reviewed selected fast profile passes49/49stages,1,288checks and223boundinputs.
+It fingerprints but excludes identity14 and the unchanged paired10 references;
+it does not claim either pending contract passes. Paired10 was not rerun unchanged.
+Independent review added literal content/name/dirty preservation and explicit null
+import/reset metadata. Runtime/app/manifest/package/version/CI pins remain beta10.
+No product repair or additional semantic approach was used. LC-REL-02 remains
+partial with one earlier approach used and at most one remaining; LC-REL-01 has0.
+Next complete the ADR prerequisites, then use only the remaining reviewed approach.
+All application/realtransport/storage/native/installed limits and the unknown
+beta7 startup cause remain; no unchanged application retry or promotion occurred.

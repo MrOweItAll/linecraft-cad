@@ -33,8 +33,8 @@ async function host({record='valid',packaged=false,restartOf=null}={}){
   if(!previous&&record!=='absent')await fs.writeFile(checkpoint,checkpointText);
   const beforeStartup={nativeA:await fs.readFile(a,'utf8'),nativeB:await fs.readFile(b,'utf8'),checkpoint:await fs.readFile(checkpoint,'utf8').catch(error=>{if(error.code==='ENOENT')return null;throw error;})};
   const handlers=new Map(),events=new Map(),choices={open:[],save:[],confirm:[]},trace=[],warnings=[];
-  let phase=null,window,startup,hold=null,checkpointRenames=0,protectA=false;
-  const blockedNativeWrites=[],dialogCalls={open:0,save:0,confirm:0};
+  let phase=null,window,startup,hold=null,checkpointRenames=0;
+  const protectedTargets=new Set(),blockedNativeWrites=[],dialogCalls={open:0,save:0,confirm:0};
   const owned=filename=>assert.ok(path.resolve(filename).startsWith(directory+path.sep),'Only owned writes are permitted.');
   const choose=async queue=>{const result=queue.shift();if(result instanceof Error)throw result;return typeof result==='function'?result():result;};
   const facade={...fs,
@@ -43,7 +43,8 @@ async function host({record='valid',packaged=false,restartOf=null}={}){
       owned(filename);assert.equal(flags,'wx');assert.equal(mode,0o600);
       assert.ok(path.basename(filename).startsWith('.')&&filename.endsWith('.tmp'));
       const scoped=path.dirname(filename)===profile;trace.push({operation:'open',filename,scoped});
-      if(protectA&&!scoped&&path.dirname(filename)===path.dirname(a)&&path.basename(filename).startsWith('.'+path.basename(a)+'.')){blockedNativeWrites.push({target:a,temporary:filename});throw Object.assign(Error('SYNTHETIC_WRONG_TARGET_WRITE_BLOCKED'),{code:'EACCES'});}
+      const protectedTarget=[...protectedTargets].find(target=>!scoped&&path.dirname(filename)===path.dirname(target)&&path.basename(filename).startsWith('.'+path.basename(target)+'.'));
+      if(protectedTarget){blockedNativeWrites.push({target:protectedTarget,temporary:filename});throw Object.assign(Error('SYNTHETIC_WRONG_TARGET_WRITE_BLOCKED'),{code:'EACCES'});}
       if(scoped&&phase==='open')throw failure();
       const handle=await fs.open(filename,flags,mode);let closes=0;
       return {writeFile:async(text,encoding)=>{trace.push({operation:'write',filename,scoped});if(scoped&&['write','cleanup'].includes(phase)){await handle.writeFile(Buffer.from(text).subarray(0,9));throw failure();}return handle.writeFile(text,encoding);},
@@ -92,7 +93,8 @@ async function host({record='valid',packaged=false,restartOf=null}={}){
     invalidUpdate:value=>events.get('linecraft:document-state')({sender:{},senderFrame:{}},value),
     untrustedConfirm:()=>handlers.get('linecraft:confirm-discard')({sender:{},senderFrame:{}},'Untrusted'),
     holdCheckpoint:()=>{hold={entered:deferred(),release:deferred()};return hold;},
-    protectOriginalA:()=>{protectA=true;},
+    protectOriginalA:()=>protectedTargets.add(a),protectOriginalB:()=>protectedTargets.add(b),
+    rendererReload:()=>window.webContents.emit('did-start-loading'),
     enqueue:filename=>{assert.ok([a,b].includes(filename));app.emit('open-file',{preventDefault:()=>{}},filename);},
     queue:async()=>{app.emit('open-file',{preventDefault:()=>{}},b);const peek=await invoke('linecraft:open-request',{action:'peek'});assert.ok(peek.request);const prepared=await invoke('linecraft:open-request',{action:'prepare',id:peek.request.id});assert.equal(prepared.ok,true,prepared.error);assert.equal(prepared.text,B);return peek.request.id;},
   };ownedSessions.set(result,{directory});hosts.push(result);return result;

@@ -391,3 +391,10 @@ See [the bounded record](../docs/DEVELOPMENT-STATE-REFERENCES.md).
 not selected by the passing fast profile. Its10checks currently give6pass/4fail
 with9source-model scenarios. A write barrier preserves unrelated synthetic A
 before temporary creation. See [the pending record](../docs/PAIRED-RECOVERY-REFERENCES.md).
+
+
+`development-identity-contract.test.cjs` is a pre-implementation recovery contract,
+excluded from the passing fast profile. Its14checks currently report3pass/11fail:
+nine protected routing probes and two absent-binding prerequisites, with13scenario
+records. See [the bounded reference](../docs/DEVELOPMENT-IDENTITY-REFERENCE.md) and
+[ADR-001](../docs/ADR-001-DEVELOPMENT-RECOVERY-IDENTITY.md).

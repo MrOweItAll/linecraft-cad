@@ -2134,7 +2134,7 @@
     {
       "id": "LC-REL-02",
       "priority": 0,
-      "status": "partially implemented; confirmed conditional recovery target deficiency, pending10-check safety reference",
+      "status": "partially implemented; identity/legacy contract and14-check prerequisites frozen, implementation pending",
       "problem": "Under modeled two-session source recovery, accepted Save As B plus failed auxiliary association persistence leaves restored host target A while renderer content/baseline belongs to B; normal Save attempts unrelated A. Four guarded source references reproduce it, including equal basename/content. Guard prevents creation; no executed overwrite or real application drawing-loss finding.",
       "sourceCommit": "a59c96a6b7f3a6ee483678e193d992e98628b4b6",
       "sourceVersion": "1.36.1-beta.10",
@@ -2162,7 +2162,10 @@
         "docs/PAIRED-RECOVERY-REFERENCES.md",
         "app.mjs:319-346",
         "desktop/main.cjs:253-264",
-        "desktop/main.cjs:480-510"
+        "desktop/main.cjs:480-510",
+        "docs/ADR-001-DEVELOPMENT-RECOVERY-IDENTITY.md",
+        "docs/DEVELOPMENT-IDENTITY-REFERENCE.md",
+        "tests/development-identity-contract.test.cjs"
       ],
       "acceptance": [
         "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
@@ -2170,7 +2173,7 @@
         "Errors identify the failed Save/Open/import operation and a useful next step.",
         "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
       ],
-      "next": "Review and freeze a narrow paired recovery identity/migration contract before the remaining LC-REL-02 semantic repair attempt. Preserve accepted Save As target and content, legitimate renderer-only reload and intentional fresh recovery history. Equal names or equal content/baselines cannot establish file identity; unverified legacy associations need an explicit safe fallback. Use the frozen10-check reference (6controls/pass,4pendingfailures), extend only justified missing dirty/imported/ordinary-Open/compensation controls, and establish failing expectations before any product change. One LC-REL-02 approach is used, at most one remains; LC-REL-01 has zero. Do not rerun unchanged references/gates or the blocked application route.",
+      "next": "Complete the ADR-001 implementation prerequisites: freeze independently expected positive-generation, dirty/imported, failed/busy New/reset, queued compensation and stale/duplicate-frame controls, and prove bounded reconciliation ordering. The current fake reload reuses its frame object and does not prove stale-frame rejection. Then use at most the one remaining reviewed LC-REL-02 repair approach for paired UUID consistency and explicit legacy fallback, preserving accepted Save As, stable verified ordinary Save, exact packaged replies and fresh recovery history. No name/content identity heuristic or generic rollback. Preserve the frozen paired10 and identity14 references; do not rerun unchanged references/gates or the blocked application route. LC-REL-01 remains exhausted.",
       "confirmedDefect": true,
       "implementationAttempts": 1,
       "acceptanceComplete": false,
@@ -2194,14 +2197,14 @@
           "tests/import-files.test.cjs:17-37",
           "tests/advanced-security.test.cjs:25"
         ],
-        "gap": "Pending paired recovery identity/Save-routing safety failures; real application/transport/storage/native/crash and existing other limits unqualified.",
+        "gap": "Identitycontractimplementation plus positive-generation/dirty/imported/New-returned-failure/queuedcompensation/stale-duplicate-frame controls remain required. Existing broader qualification limits retained.",
         "acceptance": [
           "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
           "Malformed or canceled import leaves active drawing contents, identity, selection and undo/redo unchanged.",
           "Errors identify the failed Save/Open/import operation and a useful next step.",
           "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
         ],
-        "nextAction": "Review and freeze a narrow paired recovery identity/migration contract before the remaining LC-REL-02 semantic repair attempt. Preserve accepted Save As target and content, legitimate renderer-only reload and intentional fresh recovery history. Equal names or equal content/baselines cannot establish file identity; unverified legacy associations need an explicit safe fallback. Use the frozen10-check reference (6controls/pass,4pendingfailures), extend only justified missing dirty/imported/ordinary-Open/compensation controls, and establish failing expectations before any product change. One LC-REL-02 approach is used, at most one remains; LC-REL-01 has zero. Do not rerun unchanged references/gates or the blocked application route.",
+        "nextAction": "Complete the ADR-001 implementation prerequisites: freeze independently expected positive-generation, dirty/imported, failed/busy New/reset, queued compensation and stale/duplicate-frame controls, and prove bounded reconciliation ordering. The current fake reload reuses its frame object and does not prove stale-frame rejection. Then use at most the one remaining reviewed LC-REL-02 repair approach for paired UUID consistency and explicit legacy fallback, preserving accepted Save As, stable verified ordinary Save, exact packaged replies and fresh recovery history. No name/content identity heuristic or generic rollback. Preserve the frozen paired10 and identity14 references; do not rerun unchanged references/gates or the blocked application route. LC-REL-01 remains exhausted.",
         "dependencies": [
           "LC-REL-01: ordered investigation; not a claim that save safety depends on batch implementation"
         ],
@@ -2216,7 +2219,7 @@
         "reviewedSourceCommit": "a59c96a6b7f3a6ee483678e193d992e98628b4b6",
         "recommendationNotVerifiedFinding": true,
         "acceptanceComplete": false,
-        "verificationScope": "Explicitpaired10checks6pass4pendingfail9scenarios,0harnesserrors;sourceA/acceptedBpreservedbeforetemporarycreation. Pendingreferenceoutsidepassingprofile. Runtime/app unchanged.",
+        "verificationScope": "Identity14checks3pass11expectedfail13scenarios0harnesserrors:9guardedrouting+2missingmetadataprerequisites. Paired10notrerununchanged. Positivebinding/staleframe/queued/importedimplementationprerequisitesnotqualified.",
         "completionRequirements": [
           "Record the verified problem and affected behavior before a product change.",
           "Record implementation and relevant executed checks; acceptance must pass before completion.",
@@ -2225,12 +2228,12 @@
         ],
         "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md",
         "progress": {
-          "scope": "Paired development recovery target safety",
-          "assessment": "confirmed deficiency in modeled source envelope",
+          "scope": "Identity/legacy safety contract and source prerequisites",
+          "assessment": "contract frozen; implementation pending",
           "parentAcceptanceComplete": false,
           "runtimeChanged": false,
-          "pendingSafetyFailures": 4,
-          "nextAction": "Review and freeze a narrow paired recovery identity/migration contract before the remaining LC-REL-02 semantic repair attempt. Preserve accepted Save As target and content, legitimate renderer-only reload and intentional fresh recovery history. Equal names or equal content/baselines cannot establish file identity; unverified legacy associations need an explicit safe fallback. Use the frozen10-check reference (6controls/pass,4pendingfailures), extend only justified missing dirty/imported/ordinary-Open/compensation controls, and establish failing expectations before any product change. One LC-REL-02 approach is used, at most one remains; LC-REL-01 has zero. Do not rerun unchanged references/gates or the blocked application route."
+          "sourceProductFixAttemptsThisWake": 0,
+          "nextAction": "Complete the ADR-001 implementation prerequisites: freeze independently expected positive-generation, dirty/imported, failed/busy New/reset, queued compensation and stale/duplicate-frame controls, and prove bounded reconciliation ordering. The current fake reload reuses its frame object and does not prove stale-frame rejection. Then use at most the one remaining reviewed LC-REL-02 repair approach for paired UUID consistency and explicit legacy fallback, preserving accepted Save As, stable verified ordinary Save, exact packaged replies and fresh recovery history. No name/content identity heuristic or generic rollback. Preserve the frozen paired10 and identity14 references; do not rerun unchanged references/gates or the blocked application route. LC-REL-01 remains exhausted."
         }
       },
       "history": [
@@ -2826,11 +2829,188 @@
             "twoSessionRendererCoherence": "not run; hypothesis remains open",
             "parentComplete": false
           }
+        },
+        {
+          "id": "LC-REL-02",
+          "priority": 0,
+          "status": "partially implemented; confirmed conditional recovery target deficiency, pending10-check safety reference",
+          "problem": "Under modeled two-session source recovery, accepted Save As B plus failed auxiliary association persistence leaves restored host target A while renderer content/baseline belongs to B; normal Save attempts unrelated A. Four guarded source references reproduce it, including equal basename/content. Guard prevents creation; no executed overwrite or real application drawing-loss finding.",
+          "sourceCommit": "a59c96a6b7f3a6ee483678e193d992e98628b4b6",
+          "sourceVersion": "1.36.1-beta.10",
+          "evidence": [
+            "desktop/main.cjs:278-345",
+            "desktop/main.cjs:438-511",
+            "app.mjs:1823-1844",
+            "app.mjs:1878-1887",
+            "core.mjs:3237-3245",
+            "tests/desktop-unit.test.cjs:131-175",
+            "tests/import-files.test.cjs:17-37",
+            "tests/advanced-security.test.cjs:25",
+            "tests/save-isolation-reference.test.cjs",
+            "docs/SAVE-IMPORT-ISOLATION.md",
+            "tests/renderer-isolation-reference.test.cjs",
+            "docs/RENDERER-ISOLATION-REFERENCES.md",
+            "app.mjs:297-314",
+            "app.mjs:1823-1860",
+            "tests/file-diagnostics-reference.test.cjs",
+            "docs/FILE-OPERATION-DIAGNOSTICS.md",
+            "tests/development-state-host.cjs",
+            "tests/development-state-reference.test.cjs",
+            "docs/DEVELOPMENT-STATE-REFERENCES.md",
+            "tests/paired-recovery-reference.test.cjs",
+            "docs/PAIRED-RECOVERY-REFERENCES.md",
+            "app.mjs:319-346",
+            "desktop/main.cjs:253-264",
+            "desktop/main.cjs:480-510"
+          ],
+          "acceptance": [
+            "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
+            "Malformed or canceled import leaves active drawing contents, identity, selection and undo/redo unchanged.",
+            "Errors identify the failed Save/Open/import operation and a useful next step.",
+            "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
+          ],
+          "next": "Review and freeze a narrow paired recovery identity/migration contract before the remaining LC-REL-02 semantic repair attempt. Preserve accepted Save As target and content, legitimate renderer-only reload and intentional fresh recovery history. Equal names or equal content/baselines cannot establish file identity; unverified legacy associations need an explicit safe fallback. Use the frozen10-check reference (6controls/pass,4pendingfailures), extend only justified missing dirty/imported/ordinary-Open/compensation controls, and establish failing expectations before any product change. One LC-REL-02 approach is used, at most one remains; LC-REL-01 has zero. Do not rerun unchanged references/gates or the blocked application route.",
+          "confirmedDefect": true,
+          "implementationAttempts": 1,
+          "acceptanceComplete": false,
+          "recommendationReview": {
+            "requestedId": "LC-REL-02",
+            "canonicalId": "LC-REL-02",
+            "queueId": "LC-REL-02",
+            "title": "Safe save and failed-import isolation",
+            "requestedPriority": 0,
+            "priority": 0,
+            "assessment": "partially implemented",
+            "problem": "Under modeled two-session source recovery, accepted Save As B plus failed auxiliary association persistence leaves restored host target A while renderer content/baseline belongs to B; normal Save attempts unrelated A. Four guarded source references reproduce it, including equal basename/content. Guard prevents creation; no executed overwrite or real application drawing-loss finding.",
+            "implemented": "New actual-main/queue/core/fake-Electron development profile and discard reference suite/helper, explicit selection and documentation only; no runtime fix.",
+            "evidence": [
+              "desktop/main.cjs:278-345",
+              "desktop/main.cjs:438-511",
+              "app.mjs:1823-1844",
+              "app.mjs:1878-1887",
+              "core.mjs:3237-3245",
+              "tests/desktop-unit.test.cjs:131-175",
+              "tests/import-files.test.cjs:17-37",
+              "tests/advanced-security.test.cjs:25"
+            ],
+            "gap": "Pending paired recovery identity/Save-routing safety failures; real application/transport/storage/native/crash and existing other limits unqualified.",
+            "acceptance": [
+              "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
+              "Malformed or canceled import leaves active drawing contents, identity, selection and undo/redo unchanged.",
+              "Errors identify the failed Save/Open/import operation and a useful next step.",
+              "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
+            ],
+            "nextAction": "Review and freeze a narrow paired recovery identity/migration contract before the remaining LC-REL-02 semantic repair attempt. Preserve accepted Save As target and content, legitimate renderer-only reload and intentional fresh recovery history. Equal names or equal content/baselines cannot establish file identity; unverified legacy associations need an explicit safe fallback. Use the frozen10-check reference (6controls/pass,4pendingfailures), extend only justified missing dirty/imported/ordinary-Open/compensation controls, and establish failing expectations before any product change. One LC-REL-02 approach is used, at most one remains; LC-REL-01 has zero. Do not rerun unchanged references/gates or the blocked application route.",
+            "dependencies": [
+              "LC-REL-01: ordered investigation; not a claim that save safety depends on batch implementation"
+            ],
+            "relatedIds": [
+              "LC-MON-007",
+              "LC-DEV-001",
+              "LC-MAINT-01"
+            ],
+            "riskConfirmed": true,
+            "priorityBasis": "Confirmed conditional source-model wrong-target attempt warrants P0 investigation before performance; no ordinary application loss or overwrite demonstrated.",
+            "rollback": "Focused revert of this pending-reference/helper/profile/docs checkpoint; preserve beta10 runtime and all existing evidence.",
+            "reviewedSourceCommit": "a59c96a6b7f3a6ee483678e193d992e98628b4b6",
+            "recommendationNotVerifiedFinding": true,
+            "acceptanceComplete": false,
+            "verificationScope": "Explicitpaired10checks6pass4pendingfail9scenarios,0harnesserrors;sourceA/acceptedBpreservedbeforetemporarycreation. Pendingreferenceoutsidepassingprofile. Runtime/app unchanged.",
+            "completionRequirements": [
+              "Record the verified problem and affected behavior before a product change.",
+              "Record implementation and relevant executed checks; acceptance must pass before completion.",
+              "For performance work record reproducible before/after measurements.",
+              "Record remaining limitations and the exact rollback method."
+            ],
+            "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md",
+            "progress": {
+              "scope": "Paired development recovery target safety",
+              "assessment": "confirmed deficiency in modeled source envelope",
+              "parentAcceptanceComplete": false,
+              "runtimeChanged": false,
+              "pendingSafetyFailures": 4,
+              "nextAction": "Review and freeze a narrow paired recovery identity/migration contract before the remaining LC-REL-02 semantic repair attempt. Preserve accepted Save As target and content, legitimate renderer-only reload and intentional fresh recovery history. Equal names or equal content/baselines cannot establish file identity; unverified legacy associations need an explicit safe fallback. Use the frozen10-check reference (6controls/pass,4pendingfailures), extend only justified missing dirty/imported/ordinary-Open/compensation controls, and establish failing expectations before any product change. One LC-REL-02 approach is used, at most one remains; LC-REL-01 has zero. Do not rerun unchanged references/gates or the blocked application route."
+            }
+          },
+          "assessment": "partially implemented",
+          "validation": "Explicitpaired10checks6pass4pendingfail9scenarios,0harnesserrors;sourceA/acceptedBpreservedbeforetemporarycreation. Pendingreferenceoutsidepassingprofile. Runtime/app unchanged.",
+          "change": "Pending paired source recovery safety reference and token-based fixture reconstruction/protection, auxiliary fingerprint binding and docs only. No product fix.",
+          "boundedPreservation": {
+            "assessment": "already satisfied",
+            "checks": 36,
+            "hostChecks": 31,
+            "realCoreChecks": 5,
+            "runtimeChanged": false,
+            "record": "docs/SAVE-IMPORT-ISOLATION.md",
+            "mainSHA256": "fc4e12b6831a5e9feb4e91b4cd7c8d167e7290315dd38ce5963efe0e56e13fcf",
+            "testSHA256": "ae0c080911a34ecf10dbeecc13db199d0accf94de9060a03db31f6f2e512b286",
+            "parentComplete": false
+          },
+          "rendererReference": {
+            "assessment": "already satisfied in executed VM scope",
+            "tests": 65,
+            "semanticCases": 64,
+            "pass": 65,
+            "runtimeChanged": false,
+            "appSHA256": "f7649f4ffe6cb255726f32c5966ec437797e33cd428b4e1abae444d020d915a0",
+            "testSHA256": "81df69d9db76dad532a4c14ae99aa2b545691e4ed639ec946ebb307ec406985f",
+            "record": "docs/RENDERER-ISOLATION-REFERENCES.md",
+            "fullApplicationQualified": false,
+            "parentComplete": false
+          },
+          "diagnosticRepair": {
+            "assessment": "confirmed deficiency repaired within qualified scope",
+            "record": "docs/FILE-OPERATION-DIAGNOSTICS.md",
+            "baseline": {
+              "checks": 20,
+              "pass": 3,
+              "fail": 17
+            },
+            "finalChecks": 22,
+            "pass": 22,
+            "codeReviewCompatibilityCorrection": true,
+            "remainingParentLimits": true,
+            "mainSHA256": "27f59afc0af4c2bfb9787aba8ac6709c700bf5291195807a3310bb987672f512",
+            "testSHA256": "449520003204bdb468e0e19ec955af431dfb8ef29f3c457d5097c8c543f5c59b",
+            "rollback": "Focused revert of this diagnostic source/test/profile/version checkpoint; preserve all receipts and beta9 runtime baseline."
+          },
+          "sourceCommitRole": "Unchanged beta10 runtime; pending reference/profile checkpoint qualified separately.",
+          "newIntegrityDefectConfirmed": true,
+          "developmentHostReference": {
+            "assessment": "already satisfied within executed host scope",
+            "tests": 43,
+            "namedCases": 42,
+            "pass": 43,
+            "runtimeChanged": false,
+            "record": "docs/DEVELOPMENT-STATE-REFERENCES.md",
+            "mainSHA256": "27f59afc0af4c2bfb9787aba8ac6709c700bf5291195807a3310bb987672f512",
+            "testSHA256": "7bb5fca6b976318b391407b236c894864864d41510c9c2697b56b6747a7d1f92",
+            "helperSHA256": "f53730f94dcc3e8e7ce6a793afe3213e0e04b33af0956a93c0d7741cb6d14590",
+            "twoSessionRendererCoherence": "not run; hypothesis remains open",
+            "parentComplete": false
+          },
+          "ordinaryApplicationDrawingLossConfirmed": false,
+          "pairedRecoveryReference": {
+            "assessment": "confirmed deficiency within qualified source-model envelope",
+            "record": "docs/PAIRED-RECOVERY-REFERENCES.md",
+            "tests": 10,
+            "pass": 6,
+            "pendingFailures": 4,
+            "scenarios": 9,
+            "harnessErrors": 0,
+            "runtimeChanged": false,
+            "selectedPassingProfile": false,
+            "barrierPreservesOriginalA": true,
+            "ordinaryApplicationDrawingLossConfirmed": false,
+            "testSHA256": "50e93b4eecd08dbb9cfba777ac273fcfec192c4e46cb3cd7b4e7249ad97b7d51",
+            "helperSHA256": "097bf7982a9ca61e930df78fca1633c20f44750d68b71d9f61bbc91b8e26ec2b",
+            "parentComplete": false
+          }
         }
       ],
       "assessment": "partially implemented",
-      "validation": "Explicitpaired10checks6pass4pendingfail9scenarios,0harnesserrors;sourceA/acceptedBpreservedbeforetemporarycreation. Pendingreferenceoutsidepassingprofile. Runtime/app unchanged.",
-      "change": "Pending paired source recovery safety reference and token-based fixture reconstruction/protection, auxiliary fingerprint binding and docs only. No product fix.",
+      "validation": "Identity14checks3pass11expectedfail13scenarios0harnesserrors:9guardedrouting+2missingmetadataprerequisites. Paired10notrerununchanged. Positivebinding/staleframe/queued/importedimplementationprerequisitesnotqualified.",
+      "change": "Accepted recovery identity/legacy ADR, differential prerequisite reference, owned A/B fixture guards and explicit auxiliary binding/docs only; no runtime repair.",
       "boundedPreservation": {
         "assessment": "already satisfied",
         "checks": 36,
@@ -2870,7 +3050,7 @@
         "testSHA256": "449520003204bdb468e0e19ec955af431dfb8ef29f3c457d5097c8c543f5c59b",
         "rollback": "Focused revert of this diagnostic source/test/profile/version checkpoint; preserve all receipts and beta9 runtime baseline."
       },
-      "sourceCommitRole": "Unchanged beta10 runtime; pending reference/profile checkpoint qualified separately.",
+      "sourceCommitRole": "Unchanged beta10 runtime; contract/reference/profile checkpoint qualified separately.",
       "newIntegrityDefectConfirmed": true,
       "developmentHostReference": {
         "assessment": "already satisfied within executed host scope",
@@ -2900,6 +3080,24 @@
         "ordinaryApplicationDrawingLossConfirmed": false,
         "testSHA256": "50e93b4eecd08dbb9cfba777ac273fcfec192c4e46cb3cd7b4e7249ad97b7d51",
         "helperSHA256": "097bf7982a9ca61e930df78fca1633c20f44750d68b71d9f61bbc91b8e26ec2b",
+        "parentComplete": false
+      },
+      "identityContract": {
+        "assessment": "accepted safety/lifecycle contract; implementation pending",
+        "record": "docs/ADR-001-DEVELOPMENT-RECOVERY-IDENTITY.md",
+        "referenceRecord": "docs/DEVELOPMENT-IDENTITY-REFERENCE.md",
+        "tests": 14,
+        "pass": 3,
+        "expectedFail": 11,
+        "scenarios": 13,
+        "guardedRoutingPrerequisites": 9,
+        "missingGenerationPrerequisites": 2,
+        "positiveGenerationBranchesQualified": false,
+        "currentFrameOrderingQualified": false,
+        "runtimeChanged": false,
+        "selectedPassingProfile": false,
+        "testSHA256": "dbddb275c27f8bef3c3a31c29b6193099f150aacfb78ed1620d12114224d9c60",
+        "helperSHA256": "e08e2b9633f8bd3f94175b6d33ca3ba72eac65a68fef03d174835c40f5735616",
         "parentComplete": false
       }
     },
@@ -3537,8 +3735,18 @@
         "pendingFail": 4,
         "parentComplete": false,
         "runtimeChanged": false
+      },
+      {
+        "id": "LC-REL-02",
+        "scope": "Identitycontractprerequisites",
+        "record": "docs/DEVELOPMENT-IDENTITY-REFERENCE.md",
+        "tests": 14,
+        "pass": 3,
+        "expectedFail": 11,
+        "runtimeChanged": false,
+        "parentComplete": false
       }
     ],
-    "nextReadyAction": "Review and freeze a narrow paired recovery identity/migration contract before the remaining LC-REL-02 semantic repair attempt. Preserve accepted Save As target and content, legitimate renderer-only reload and intentional fresh recovery history. Equal names or equal content/baselines cannot establish file identity; unverified legacy associations need an explicit safe fallback. Use the frozen10-check reference (6controls/pass,4pendingfailures), extend only justified missing dirty/imported/ordinary-Open/compensation controls, and establish failing expectations before any product change. One LC-REL-02 approach is used, at most one remains; LC-REL-01 has zero. Do not rerun unchanged references/gates or the blocked application route."
+    "nextReadyAction": "Complete the ADR-001 implementation prerequisites: freeze independently expected positive-generation, dirty/imported, failed/busy New/reset, queued compensation and stale/duplicate-frame controls, and prove bounded reconciliation ordering. The current fake reload reuses its frame object and does not prove stale-frame rejection. Then use at most the one remaining reviewed LC-REL-02 repair approach for paired UUID consistency and explicit legacy fallback, preserving accepted Save As, stable verified ordinary Save, exact packaged replies and fresh recovery history. No name/content identity heuristic or generic rollback. Preserve the frozen paired10 and identity14 references; do not rerun unchanged references/gates or the blocked application route. LC-REL-01 remains exhausted."
   }
 }
