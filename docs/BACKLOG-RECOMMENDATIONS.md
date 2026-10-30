@@ -539,3 +539,22 @@ broad privacy/reason custody or application/native/installed readiness. LC-REL-0
 parent remains partial with1approachused/atmost1remaining; LC-REL-01/02 remain
 exhausted. Next freeze the existing LC-REL-04 synthetic resource/cancellation
 reference, preserving current bounds; no real converter or application retry ran.
+
+
+## Import work and group-boundary reference - October 30, 2026 UTC
+
+[The LC-REL-04 source reference](IMPORT-BUDGET-REFERENCE.md) has26checks:19pass and
+7expectedfail,25namedcases and zero unexpected errors. Literal geometry and
+observed20/14/15record-plus-cell units preserve ordinary/nested/empty/sibling
+controls. Three failures concern a proposed work cap and two a proposed pre-abort
+interface, neither currently supported. Two checks expose one actual readDXF
+transport inconsistency:1,000,001complete comment/EOF pairs are accepted without a
+final newline but rejected with it. No active drawing loss or overwrite is shown.
+
+Bounded worker settings contain only the tests; no product cancellation or whole
+memory guarantee follows. Existing input/output/entity/depth/cycle/array/geometry
+bounds remain. Runtime/manifest/version/CI are unchangedbeta12; no product approach
+is used. The selected fast profile passes55/55stages,1,438checks,230inputs and
+excludes the pending26reference. Next review work-option/default/fatal-error
+propagation and awaited importer cancellation/cleanup/adoption controls. All
+application/native/installed and prior limits remain; no actual converter ran.

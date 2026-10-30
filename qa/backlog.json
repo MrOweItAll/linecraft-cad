@@ -3686,9 +3686,9 @@
       "id": "LC-REL-04",
       "priority": 1,
       "status": "partially implemented",
-      "problem": "Existing byte/entity/geometry/depth budgets do not yet establish responsive end-to-end cancellation or bounded work throughout synchronous parse/recursive expansion.",
-      "sourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
-      "sourceVersion": "1.36.1-beta.7",
+      "problem": "The source reference confirms final-newline-dependent group-budget admission and freezes missing prospective cumulative-work/pre-abort interfaces. Existing byte/entity/geometry/depth/array budgets remain; end-to-end cancellation/adoption acceptance is incomplete.",
+      "sourceCommit": "04aac6de35d5f4057c8fe21f17e3718e8f0dd72c",
+      "sourceVersion": "1.36.1-beta.12",
       "evidence": [
         "desktop/import-files.cjs:8-20",
         "desktop/import-files.cjs:49-78",
@@ -3701,7 +3701,9 @@
         "dwg-import.mjs:252-300",
         "core.mjs:1224-1287",
         "core.mjs:1349",
-        "advanced-geometry.mjs:25"
+        "advanced-geometry.mjs:25",
+        "tests/import-budget-reference.test.mjs",
+        "docs/IMPORT-BUDGET-REFERENCE.md"
       ],
       "acceptance": [
         "Inspect input bytes, converter output, entity/vertex counts, block expansion, nesting depth, elapsed time and memory growth throughout the pipeline.",
@@ -3710,8 +3712,8 @@
         "Ordinary supported files continue to import correctly.",
         "Evaluate streaming only after profiling demonstrates benefit and the complete pipeline can support it."
       ],
-      "next": "Freeze deterministic synthetic boundary and cumulative-expansion-work expectations, then characterize cancellation/cleanup contracts without a real converter. Propose only the missing bound or cancellation slice justified by that evidence; streaming stays deferred.",
-      "confirmedDefect": false,
+      "next": "Review the LC-REL-04 prospective workBudget/signal vocabulary, production default and error identity propagation through recursive per-record catches before a first product repair. Freeze awaited importer cancellation/cleanup and actual validation/adoption expectations next; current pre-abort cases only test missing source-interface prerequisites. Preserve existing byte/output/entity/depth/cycle/per-array/geometry budgets and ordinary imports. Streaming stays deferred. LC-REL-04 has zero repair approaches used; LC-REL-01/02 remain exhausted and LC-REL-03 has at most one remaining. No actual converter or unchanged application retry, native/installed/client action or publication is authorized.",
+      "confirmedDefect": true,
       "implementationAttempts": 0,
       "acceptanceComplete": false,
       "recommendationReview": {
@@ -3722,7 +3724,7 @@
         "requestedPriority": 1,
         "priority": 1,
         "assessment": "partially implemented",
-        "problem": "Existing byte/entity/geometry/depth budgets do not yet establish responsive end-to-end cancellation or bounded work throughout synchronous parse/recursive expansion.",
+        "problem": "The source reference confirms final-newline-dependent group-budget admission and freezes missing prospective cumulative-work/pre-abort interfaces. Existing byte/entity/geometry/depth/array budgets remain; end-to-end cancellation/adoption acceptance is incomplete.",
         "implemented": "Input/generated-read and normalized-document byte limits, process output/time limits, DXF group/object/depth/cycle/INSERT-array controls, and native aggregate HATCH/planar/3D/entity/block budgets already exist.",
         "evidence": [
           "desktop/import-files.cjs:8-20",
@@ -3738,7 +3740,7 @@
           "core.mjs:1349",
           "advanced-geometry.mjs:25"
         ],
-        "gap": "No import cancellation token/cooperative synchronous-parser interruption is exposed. Cumulative visited-record/expansion work and parse deadline need focused evidence; generated-file growth is checked after process exit. Existing aggregate geometry bounds must not be discarded or described as absent.",
+        "gap": "Three work-budget and two pre-abort prerequisites remain unsupported; one group-transport inconsistency has two failing assertions. Awaited importer cancellation/cleanup/adoption, full pipeline visited-work/deadline and real memory behavior remain unqualified.",
         "acceptance": [
           "Inspect input bytes, converter output, entity/vertex counts, block expansion, nesting depth, elapsed time and memory growth throughout the pipeline.",
           "Oversized/pathological inputs fail predictably with useful resource diagnostics.",
@@ -3746,7 +3748,7 @@
           "Ordinary supported files continue to import correctly.",
           "Evaluate streaming only after profiling demonstrates benefit and the complete pipeline can support it."
         ],
-        "nextAction": "Freeze deterministic synthetic boundary and cumulative-expansion-work expectations, then characterize cancellation/cleanup contracts without a real converter. Propose only the missing bound or cancellation slice justified by that evidence; streaming stays deferred.",
+        "nextAction": "Review the LC-REL-04 prospective workBudget/signal vocabulary, production default and error identity propagation through recursive per-record catches before a first product repair. Freeze awaited importer cancellation/cleanup and actual validation/adoption expectations next; current pre-abort cases only test missing source-interface prerequisites. Preserve existing byte/output/entity/depth/cycle/per-array/geometry budgets and ordinary imports. Streaming stays deferred. LC-REL-04 has zero repair approaches used; LC-REL-01/02 remain exhausted and LC-REL-03 has at most one remaining. No actual converter or unchanged application retry, native/installed/client action or publication is authorized.",
         "dependencies": [
           "LC-REL-02: active-document preservation reference",
           "LC-REL-03: process cleanup/diagnostics"
@@ -3756,13 +3758,13 @@
           "LC-REL-03",
           "LC-MAINT-01"
         ],
-        "riskConfirmed": false,
+        "riskConfirmed": true,
         "priorityBasis": "P1 resource/cancellation investigation after integrity checks; missing acceptance is not proof that ordinary supported input loses drawings.",
-        "rollback": "Preserve existing resource limits and ordinary-import controls; record focused rollback before completing any future change.",
-        "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+        "rollback": "Reference/profile/docs-only checkpoint; preserve pending failures and immutable beta12 runtime/manifests. No installed rollback implied.",
+        "reviewedSourceCommit": "04aac6de35d5f4057c8fe21f17e3718e8f0dd72c",
         "recommendationNotVerifiedFinding": true,
         "acceptanceComplete": false,
-        "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+        "verificationScope": "Actual parser/core, observation-only record/cell source copy compared to direct output;4owned256MiBold-generation/4MiBstack/15sworker watchdogs.26checks19pass7expectedfail0unexpected. No runtime repair or actual converter/application execution.",
         "completionRequirements": [
           "Record the verified problem and affected behavior before a product change.",
           "Record implementation and relevant executed checks; acceptance must pass before completion.",
@@ -3770,7 +3772,89 @@
           "Record remaining limitations and the exact rollback method."
         ],
         "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
-      }
+      },
+      "historicalProblem": "Existing byte/entity/geometry/depth budgets do not yet establish responsive end-to-end cancellation or bounded work throughout synchronous parse/recursive expansion.",
+      "importBudgetReference": {
+        "tests": 26,
+        "pass": 19,
+        "expectedFail": 7,
+        "namedCases": 25,
+        "unexpectedErrors": 0,
+        "prospectiveWorkFailures": 3,
+        "prospectiveAbortFailures": 2,
+        "groupBoundaryAssertions": 2,
+        "distinctConfirmedCurrentIssues": 1,
+        "selectedPassingProfile": false,
+        "auxiliaryOnly": true,
+        "runtimeChanged": false,
+        "productRepairApproachesUsed": 0,
+        "atMostRemaining": 2,
+        "productionDefaultSelected": false,
+        "midParseCancellationQualified": false,
+        "wholeProcessMemoryQualified": false,
+        "activeDocumentAdoptionQualified": false,
+        "parentComplete": false,
+        "record": "docs/IMPORT-BUDGET-REFERENCE.md"
+      },
+      "recommendationReviewHistory": [
+        {
+          "requestedId": "LC-REL-04",
+          "canonicalId": "LC-REL-04",
+          "queueId": "LC-REL-04",
+          "title": "Import resource budgets and cancellation",
+          "requestedPriority": 1,
+          "priority": 1,
+          "assessment": "partially implemented",
+          "problem": "Existing byte/entity/geometry/depth budgets do not yet establish responsive end-to-end cancellation or bounded work throughout synchronous parse/recursive expansion.",
+          "implemented": "Input/generated-read and normalized-document byte limits, process output/time limits, DXF group/object/depth/cycle/INSERT-array controls, and native aggregate HATCH/planar/3D/entity/block budgets already exist.",
+          "evidence": [
+            "desktop/import-files.cjs:8-20",
+            "desktop/import-files.cjs:49-78",
+            "desktop/preload.cjs:19",
+            "desktop/main.cjs:202",
+            "dwg-import.mjs:5",
+            "dwg-import.mjs:42-61",
+            "dwg-import.mjs:150-169",
+            "dwg-import.mjs:213",
+            "dwg-import.mjs:252-300",
+            "core.mjs:1224-1287",
+            "core.mjs:1349",
+            "advanced-geometry.mjs:25"
+          ],
+          "gap": "No import cancellation token/cooperative synchronous-parser interruption is exposed. Cumulative visited-record/expansion work and parse deadline need focused evidence; generated-file growth is checked after process exit. Existing aggregate geometry bounds must not be discarded or described as absent.",
+          "acceptance": [
+            "Inspect input bytes, converter output, entity/vertex counts, block expansion, nesting depth, elapsed time and memory growth throughout the pipeline.",
+            "Oversized/pathological inputs fail predictably with useful resource diagnostics.",
+            "Cancellation releases owned resources and preserves the current drawing.",
+            "Ordinary supported files continue to import correctly.",
+            "Evaluate streaming only after profiling demonstrates benefit and the complete pipeline can support it."
+          ],
+          "nextAction": "Freeze deterministic synthetic boundary and cumulative-expansion-work expectations, then characterize cancellation/cleanup contracts without a real converter. Propose only the missing bound or cancellation slice justified by that evidence; streaming stays deferred.",
+          "dependencies": [
+            "LC-REL-02: active-document preservation reference",
+            "LC-REL-03: process cleanup/diagnostics"
+          ],
+          "relatedIds": [
+            "LC-REL-02",
+            "LC-REL-03",
+            "LC-MAINT-01"
+          ],
+          "riskConfirmed": false,
+          "priorityBasis": "P1 resource/cancellation investigation after integrity checks; missing acceptance is not proof that ordinary supported input loses drawings.",
+          "rollback": "Preserve existing resource limits and ordinary-import controls; record focused rollback before completing any future change.",
+          "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+          "recommendationNotVerifiedFinding": true,
+          "acceptanceComplete": false,
+          "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+          "completionRequirements": [
+            "Record the verified problem and affected behavior before a product change.",
+            "Record implementation and relevant executed checks; acceptance must pass before completion.",
+            "For performance work record reproducible before/after measurements.",
+            "Record remaining limitations and the exact rollback method."
+          ],
+          "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+        }
+      ]
     },
     {
       "id": "LC-PERF-02",
@@ -4282,6 +4366,6 @@
         "approachesUsed": 2
       }
     ],
-    "nextReadyAction": "Retain the qualified beta12 bounded LC-REL-03 source repair; its broader recommendation remains partial. One coherent repair approach is used and at most one remains; do not spend another without independently failing evidence. Next independent registered work is LC-REL-04: freeze deterministic synthetic boundary and cumulative-expansion-work expectations, then characterize cancellation/cleanup without a real converter. Preserve existing resource bounds and ordinary-import controls; streaming remains deferred. LC-REL-01/02 stay partial and exhausted. No actual converter or unchanged application retry, native/installed/client action or publication is authorized."
+    "nextReadyAction": "Review the LC-REL-04 prospective workBudget/signal vocabulary, production default and error identity propagation through recursive per-record catches before a first product repair. Freeze awaited importer cancellation/cleanup and actual validation/adoption expectations next; current pre-abort cases only test missing source-interface prerequisites. Preserve existing byte/output/entity/depth/cycle/per-array/geometry budgets and ordinary imports. Streaming stays deferred. LC-REL-04 has zero repair approaches used; LC-REL-01/02 remain exhausted and LC-REL-03 has at most one remaining. No actual converter or unchanged application retry, native/installed/client action or publication is authorized."
   }
 }

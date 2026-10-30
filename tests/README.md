@@ -454,3 +454,11 @@ inventory), including deferred cleanup/admission and reviewed warning-path cases
 The fresh selected profile passes55/55stages,1438checks,229inputs. The older
 pending28 result above is historical beta11 evidence. See
 [the repair and precise limits](../docs/CONVERTER-SETTLEMENT-CUSTODY.md).
+
+
+Run the pending import-budget reference explicitly with
+`node --test tests/import-budget-reference.test.mjs`. Frozen result:26checks,
+19pass/7expectedfail,25named and no unexpected errors. It is an auxiliary only;
+selected55/55stages,1438checks,230inputs do not qualify pending options. See
+[the literal work/geometry oracles and limits](../docs/IMPORT-BUDGET-REFERENCE.md).
+No production default or mid-parse/renderer cancellation is established.
