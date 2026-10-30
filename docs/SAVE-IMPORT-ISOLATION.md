@@ -123,3 +123,22 @@ preserving beta9 runtime and earlier independent work. No runtime or installed-a
 rollback is needed. Optional LINECRAFT_SAVE_ISOLATION_REPORT contains full paths,
 raw errors and synthetic state; retain it privately. Default unique fixture work
 folders are synthetic artifacts, not a native application profile.
+
+
+## Recorded Windows retry oracle - October 30, 2026 UTC
+
+A later selected gate observed an ordinary successful synthetic Save using two
+native rename calls. The prior exact-one trace assertion failed after destination
+bytes, state, baseline and cleanup assertions passed. Existing runtime already
+permits at most six Windows attempts for EPERM/EACCES/EBUSY. The first receipt did
+not record the actual error code; no specific sharing or filesystem cause is
+established.
+
+The 36-case reference now records each rename outcome/code and whether its error
+was injected or returned by the filesystem. Successful attempts require a bounded
+contiguous rename group, allowlisted preterminal errors and exactly one final
+success. Literal permanent/exhausted/transient injected error counts and all file,
+state, routing and operation-order assertions remain. Observations are preserved
+before assertions, with later routing traces captured separately. This corrects a
+fixture expectation against an existing contract; no runtime repair or LC-REL-02
+semantic approach was used. The initial failed gate is preserved privately.
