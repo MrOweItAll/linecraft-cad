@@ -2,7 +2,7 @@
 
 Baseline commit: f37aba5ebe19f27088847cd8f983ecf5facf8eac, version1.36.0,
 origin https://github.com/MrOweItAll/linecraft-cad.git. Local ownership branch:
-codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; current candidate1.36.1-beta.8. Exact local paths and
+codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; current candidate1.36.1-beta.9. Exact local paths and
 checkpoint/installer hashes are in the private session report, outside this tree.
 
 The opening baseline observations and dated sections below retain their historical
@@ -607,3 +607,23 @@ references stay outside the selected passing profile. LC-REL-01 remains open;
 next review the narrow terminal-branch checkpoint and its preparation/cost
 before the remaining semantic repair. Earlier beta8 fence, beta6 built/native
 and beta7 blocked-startup evidence retain their scope.
+
+
+## Beta9 terminal transform recovery - October 30, 2026 UTC
+
+The [bounded checkpoint repair](TRANSFORM-CHECKPOINT-RECOVERY.md) restores the
+immediate pre-attempt live document, continuation, selection/revision and actual
+Undo/Redo entries after qualified transient terminal-transform faults. It keeps
+earlier accepted COPY batches and monotonic identity/order reservations. The
+unchanged MOVE9/differential44 plus eight new preparation/control checks pass
+61/61; the fresh beta9 fast gate passes45/45 stages,1,122portable checks and215
+bound inputs. The cumulative identity retains59runtime/12resources and six prior
+change entries; only core differs from beta8. No dependency/public API/schema change.
+
+Full pure terminal probes record added checkpoint cost: for2,000LINEs, laterCOPY
+warm medians rise from0.760-0.848ms to4.450-4.745ms. This is not an optimization,
+app performance baseline or heavy-drawing qualification. Overall LC-REL-01 stays
+partially implemented, with its two-attempt budget consumed. Next perform the
+independent P0 LC-REL-02 save/import isolation evidence matrix. No new app/PDF/
+build/unpacked/native/installed/converter acceptance ran; beta7 startup remains
+unexplained and beta6 historical built/native evidence remains separate.

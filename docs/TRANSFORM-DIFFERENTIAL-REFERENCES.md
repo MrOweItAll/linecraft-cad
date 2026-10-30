@@ -1,5 +1,9 @@
 # Transform differential recovery references
 
+Current status: beta9 repairs this qualified fault envelope; the unchanged
+reference is now selected and passing. The pending results below describe the
+preserved beta8 checkpoint. See [the repair and remaining limits](TRANSFORM-CHECKPOINT-RECOVERY.md).
+
 This is an explicit pending LC-REL-01 recovery contract on unchanged beta8
 runtime code. It adds synthetic references, not a runtime repair. Ordinary-input
 reachability, drawing-file loss, renderer dirty state, crash recovery and native

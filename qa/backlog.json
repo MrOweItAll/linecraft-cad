@@ -1486,10 +1486,10 @@
     {
       "id": "LC-REL-01",
       "priority": 0,
-      "status": "confirmed deficiency under artificial transform faults; reviewed differential references frozen, recovery unimplemented",
-      "problem": "Artificial transient transform faults retain rejected document edits; later COPY retries/local Undo retain rejected copies, caller state can change, and post-publication rejection loses the old Redo branch. No ordinary-input or drawing-file loss route is established.",
-      "sourceCommit": "c30bafa2fc5ca3021d387d861d48f4c52f06d6e5",
-      "sourceVersion": "1.36.1-beta.8",
+      "status": "partially implemented; qualified terminal transform recovery repaired in beta9",
+      "problem": "Qualified artificial terminal-transform document/caller/history recovery is repaired. Remaining all-batch, broad architecture/3D failure, renderer dirty, crash and native acceptance are unqualified; no ordinary-input drawing-file loss route was established.",
+      "sourceCommit": "31815bb5ed8bfc40c7bd9d172a6c1a8665dd37b3",
+      "sourceVersion": "1.36.1-beta.9",
       "evidence": [
         "core.mjs:1642-1675",
         "core.mjs:1680-1687",
@@ -1508,7 +1508,10 @@
         "tests/transform-atomicity-reference.test.mjs",
         "docs/TRANSFORM-FAILURE-BOUNDARIES.md",
         "tests/transform-differential-reference.test.mjs",
-        "docs/TRANSFORM-DIFFERENTIAL-REFERENCES.md"
+        "docs/TRANSFORM-DIFFERENTIAL-REFERENCES.md",
+        "tests/transform-checkpoint-preparation.test.mjs",
+        "docs/TRANSFORM-CHECKPOINT-RECOVERY.md",
+        "qa/CANDIDATE-SOURCE-1.36.1-beta.9.json"
       ],
       "acceptance": [
         "Inject a failure midway through a representative batch operation.",
@@ -1516,9 +1519,9 @@
         "A successful operation follows the established undo convention, including previously accepted repeated edits.",
         "Validate before mutation where practical; retain command-state/revision observations without treating a revision-only discrepancy as drawing loss."
       ],
-      "next": "Review the frozen 44-check/49-scenario differential pack and the narrow pre-terminal-input checkpoint for COPY destination/Exit, MIRROR choice and typed/point transform routes. Preserve accepted COPY batches, actual Undo/Redo entries and monotonic reservations; qualify checkpoint-preparation rejection and record checkpoint-copy cost before the remaining bounded semantic repair. Run changed recovery references and relevant gates only after an implementation change; do not repeat unchanged pending references or the blocked application route.",
+      "next": "Qualified terminal transform recovery is repaired in beta9; parent breadth remains incomplete and this bounded scope has consumed two semantic attempts. Next independent P0 work: LC-REL-02 synthetic existing-valid-file save failure and failed/canceled import isolation matrix; inspect current paths and freeze complete-state/literal file expectations before a fix. Do not repeat unchanged passing gates, completed fence/transform repairs or the blocked application route.",
       "confirmedDefect": true,
-      "implementationAttempts": 1,
+      "implementationAttempts": 2,
       "acceptanceComplete": false,
       "recommendationReview": {
         "requestedId": "LC-REL-01",
@@ -1527,8 +1530,8 @@
         "title": "Atomic multi-object commands",
         "requestedPriority": 0,
         "priority": 0,
-        "assessment": "confirmed deficiency",
-        "problem": "Artificial transient transform faults retain rejected document edits; later COPY retries/local Undo retain rejected copies, caller state can change, and post-publication rejection loses the old Redo branch. No ordinary-input or drawing-file loss route is established.",
+        "assessment": "partially implemented",
+        "problem": "Qualified artificial terminal-transform document/caller/history recovery is repaired. Remaining all-batch, broad architecture/3D failure, renderer dirty, crash and native acceptance are unqualified; no ordinary-input drawing-file loss route was established.",
         "implemented": "Transforms validate proposals before commit; fence edits have document rollback; scripted revisions stage in another editor and commit once. Existing tests cover pre-mutation rejection and successful grouped history.",
         "evidence": [
           "core.mjs:1642-1675",
@@ -1544,25 +1547,25 @@
           "tests/trim-comprehensive.test.mjs:22-23",
           "tests/scripting.test.mjs:115-123"
         ],
-        "gap": "Recovery remains unimplemented for the44-check differential contract. Review a pre-terminal-input checkpoint preserving immediate pre-batch accepted COPY state, caller context, actual Undo/Redo entries and monotonic reservations; qualify new checkpoint preparation/cost.",
+        "gap": "Qualified transient terminal recovery passes; all remaining batch/architecture/3D/renderer/crash/native breadth unqualified. Two semantic attempts consumed; next independent P0 evidence is LC-REL-02.",
         "acceptance": [
           "Inject a failure midway through a representative batch operation.",
           "A failed atomic command restores document contents/resources/entity identity, selection, dirty state, and undo/redo history to their pre-command state; a failing batch within an established repeated-edit command restores its pre-batch state while retaining earlier accepted repeated edits. No partial edit or spurious undo entry from the failed batch remains.",
           "A successful operation follows the established undo convention, including previously accepted repeated edits.",
           "Validate before mutation where practical; retain command-state/revision observations without treating a revision-only discrepancy as drawing loss."
         ],
-        "nextAction": "Review the frozen 44-check/49-scenario differential pack and the narrow pre-terminal-input checkpoint for COPY destination/Exit, MIRROR choice and typed/point transform routes. Preserve accepted COPY batches, actual Undo/Redo entries and monotonic reservations; qualify checkpoint-preparation rejection and record checkpoint-copy cost before the remaining bounded semantic repair. Run changed recovery references and relevant gates only after an implementation change; do not repeat unchanged pending references or the blocked application route.",
+        "nextAction": "Qualified terminal transform recovery is repaired in beta9; parent breadth remains incomplete and this bounded scope has consumed two semantic attempts. Next independent P0 work: LC-REL-02 synthetic existing-valid-file save failure and failed/canceled import isolation matrix; inspect current paths and freeze complete-state/literal file expectations before a fix. Do not repeat unchanged passing gates, completed fence/transform repairs or the blocked application route.",
         "dependencies": [],
         "relatedIds": [
           "LC-QA-BETA7-UNPACKED-STARTUP"
         ],
         "riskConfirmed": false,
         "priorityBasis": "P0 integrity investigation, not a confirmed P0 defect. Only demonstrated corruption/data-loss risk may preempt stable nearly completed work; complete this evidence step before performance optimization.",
-        "rollback": "Reference/documentation-only checkpoint; focused revert preserves prior runtime fence repair and other independent work.",
+        "rollback": "Focused revert of beta9 code/metadata/test selection/CI manifest pin, preserving historical fence repair and later independent changes. No installed rollback.",
         "reviewedSourceCommit": "c30bafa2fc5ca3021d387d861d48f4c52f06d6e5",
         "recommendationNotVerifiedFinding": true,
         "acceptanceComplete": false,
-        "verificationScope": "Executed explicit pure differential reference:44 checks17pass27expectedfail,49scenarios,noharness errors; no runtime repair or app/native execution.",
+        "verificationScope": "Unchanged MOVE9+differential44 and new preparation8 pass61/61; freshbeta9fast45/45stages1122portablechecks215inputs. Clone/terminalcost measured with addedlatency; no app/native/installed acceptance.",
         "completionRequirements": [
           "Record the verified problem and affected behavior before a product change.",
           "Record implementation and relevant executed checks; acceptance must pass before completion.",
@@ -1571,16 +1574,18 @@
         ],
         "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md",
         "progress": {
-          "scope": "Reviewed differential transform recovery references",
-          "status": "44-check pending pack frozen; runtime recovery unimplemented",
+          "scope": "Qualified terminal transform recovery",
+          "status": "repaired; parent partially implemented",
           "parentAcceptanceComplete": false,
-          "runtimeChanged": false,
+          "runtimeChanged": true,
           "fenceRepairRetained": true,
-          "nextAction": "Review the frozen 44-check/49-scenario differential pack and the narrow pre-terminal-input checkpoint for COPY destination/Exit, MIRROR choice and typed/point transform routes. Preserve accepted COPY batches, actual Undo/Redo entries and monotonic reservations; qualify checkpoint-preparation rejection and record checkpoint-copy cost before the remaining bounded semantic repair. Run changed recovery references and relevant gates only after an implementation change; do not repeat unchanged pending references or the blocked application route."
+          "nextAction": "Qualified terminal transform recovery is repaired in beta9; parent breadth remains incomplete and this bounded scope has consumed two semantic attempts. Next independent P0 work: LC-REL-02 synthetic existing-valid-file save failure and failed/canceled import isolation matrix; inspect current paths and freeze complete-state/literal file expectations before a fix. Do not repeat unchanged passing gates, completed fence/transform repairs or the blocked application route.",
+          "remainingSemanticRepairAttempts": 0
         },
-        "riskScope": "Artificial in-memory transform/document/Undo recovery only; no ordinary-input or drawing-file loss route established.",
+        "riskScope": "Historical artificial in-memory fault scope repaired in declared envelope; no ordinary-input file-loss route established.",
         "faultInjectedDeficiencyConfirmed": true,
-        "riskMeaning": "No naturally occurring drawing-file corruption/data-loss risk or stable-work preemption authority is established; artificial fault document/history deficiency is confirmed separately."
+        "riskMeaning": "No naturally occurring drawing-file corruption/data-loss risk or stable-work preemption authority is established; artificial fault document/history deficiency is confirmed separately.",
+        "qualifiedScopeRepairComplete": true
       },
       "history": [
         {
@@ -1954,30 +1959,176 @@
           "lastCharacterizedCodeCommit": "46521bcd78aa2464388c7046e99f07469ff21289",
           "characterization": "Nine private scenarios; exact inventory/facts checked; explicit public pending reference9tests4pass5expectedfail. No runtime change or fresh default fast gate.",
           "deferredRepairReason": "Shared transform completion includes terminal caller updates, repeated COPY, view/ID reservations and history publication/eviction. Freeze and review the narrow checkpoint/differential contract before the remaining semantic repair; generic restore(transactionBefore) can discard accepted work."
+        },
+        {
+          "id": "LC-REL-01",
+          "priority": 0,
+          "status": "confirmed deficiency under artificial transform faults; reviewed differential references frozen, recovery unimplemented",
+          "problem": "Artificial transient transform faults retain rejected document edits; later COPY retries/local Undo retain rejected copies, caller state can change, and post-publication rejection loses the old Redo branch. No ordinary-input or drawing-file loss route is established.",
+          "sourceCommit": "c30bafa2fc5ca3021d387d861d48f4c52f06d6e5",
+          "sourceVersion": "1.36.1-beta.8",
+          "evidence": [
+            "core.mjs:1642-1675",
+            "core.mjs:1680-1687",
+            "core.mjs:1893-1911",
+            "core.mjs:2012-2035",
+            "core.mjs:2069-2070",
+            "core.mjs:2184-2250",
+            "app.mjs:297-308",
+            "tests/core.test.mjs:735-738",
+            "tests/core.test.mjs:883-892",
+            "tests/core.test.mjs:1735-1748",
+            "tests/trim-comprehensive.test.mjs:22-23",
+            "tests/scripting.test.mjs:115-123",
+            "tests/atomic-batch-independent.test.mjs",
+            "docs/ATOMIC-BATCH-FAILURE-RECOVERY.md",
+            "tests/transform-atomicity-reference.test.mjs",
+            "docs/TRANSFORM-FAILURE-BOUNDARIES.md",
+            "tests/transform-differential-reference.test.mjs",
+            "docs/TRANSFORM-DIFFERENTIAL-REFERENCES.md"
+          ],
+          "acceptance": [
+            "Inject a failure midway through a representative batch operation.",
+            "A failed atomic command restores document contents/resources/entity identity, selection, dirty state, and undo/redo history to their pre-command state; a failing batch within an established repeated-edit command restores its pre-batch state while retaining earlier accepted repeated edits. No partial edit or spurious undo entry from the failed batch remains.",
+            "A successful operation follows the established undo convention, including previously accepted repeated edits.",
+            "Validate before mutation where practical; retain command-state/revision observations without treating a revision-only discrepancy as drawing loss."
+          ],
+          "next": "Review the frozen 44-check/49-scenario differential pack and the narrow pre-terminal-input checkpoint for COPY destination/Exit, MIRROR choice and typed/point transform routes. Preserve accepted COPY batches, actual Undo/Redo entries and monotonic reservations; qualify checkpoint-preparation rejection and record checkpoint-copy cost before the remaining bounded semantic repair. Run changed recovery references and relevant gates only after an implementation change; do not repeat unchanged pending references or the blocked application route.",
+          "confirmedDefect": true,
+          "implementationAttempts": 1,
+          "acceptanceComplete": false,
+          "recommendationReview": {
+            "requestedId": "LC-REL-01",
+            "canonicalId": "LC-REL-01",
+            "queueId": "LC-REL-01",
+            "title": "Atomic multi-object commands",
+            "requestedPriority": 0,
+            "priority": 0,
+            "assessment": "confirmed deficiency",
+            "problem": "Artificial transient transform faults retain rejected document edits; later COPY retries/local Undo retain rejected copies, caller state can change, and post-publication rejection loses the old Redo branch. No ordinary-input or drawing-file loss route is established.",
+            "implemented": "Transforms validate proposals before commit; fence edits have document rollback; scripted revisions stage in another editor and commit once. Existing tests cover pre-mutation rejection and successful grouped history.",
+            "evidence": [
+              "core.mjs:1642-1675",
+              "core.mjs:1680-1687",
+              "core.mjs:1893-1911",
+              "core.mjs:2012-2035",
+              "core.mjs:2069-2070",
+              "core.mjs:2184-2250",
+              "app.mjs:297-308",
+              "tests/core.test.mjs:735-738",
+              "tests/core.test.mjs:883-892",
+              "tests/core.test.mjs:1735-1748",
+              "tests/trim-comprehensive.test.mjs:22-23",
+              "tests/scripting.test.mjs:115-123"
+            ],
+            "gap": "Recovery remains unimplemented for the44-check differential contract. Review a pre-terminal-input checkpoint preserving immediate pre-batch accepted COPY state, caller context, actual Undo/Redo entries and monotonic reservations; qualify new checkpoint preparation/cost.",
+            "acceptance": [
+              "Inject a failure midway through a representative batch operation.",
+              "A failed atomic command restores document contents/resources/entity identity, selection, dirty state, and undo/redo history to their pre-command state; a failing batch within an established repeated-edit command restores its pre-batch state while retaining earlier accepted repeated edits. No partial edit or spurious undo entry from the failed batch remains.",
+              "A successful operation follows the established undo convention, including previously accepted repeated edits.",
+              "Validate before mutation where practical; retain command-state/revision observations without treating a revision-only discrepancy as drawing loss."
+            ],
+            "nextAction": "Review the frozen 44-check/49-scenario differential pack and the narrow pre-terminal-input checkpoint for COPY destination/Exit, MIRROR choice and typed/point transform routes. Preserve accepted COPY batches, actual Undo/Redo entries and monotonic reservations; qualify checkpoint-preparation rejection and record checkpoint-copy cost before the remaining bounded semantic repair. Run changed recovery references and relevant gates only after an implementation change; do not repeat unchanged pending references or the blocked application route.",
+            "dependencies": [],
+            "relatedIds": [
+              "LC-QA-BETA7-UNPACKED-STARTUP"
+            ],
+            "riskConfirmed": false,
+            "priorityBasis": "P0 integrity investigation, not a confirmed P0 defect. Only demonstrated corruption/data-loss risk may preempt stable nearly completed work; complete this evidence step before performance optimization.",
+            "rollback": "Reference/documentation-only checkpoint; focused revert preserves prior runtime fence repair and other independent work.",
+            "reviewedSourceCommit": "c30bafa2fc5ca3021d387d861d48f4c52f06d6e5",
+            "recommendationNotVerifiedFinding": true,
+            "acceptanceComplete": false,
+            "verificationScope": "Executed explicit pure differential reference:44 checks17pass27expectedfail,49scenarios,noharness errors; no runtime repair or app/native execution.",
+            "completionRequirements": [
+              "Record the verified problem and affected behavior before a product change.",
+              "Record implementation and relevant executed checks; acceptance must pass before completion.",
+              "For performance work record reproducible before/after measurements.",
+              "Record remaining limitations and the exact rollback method."
+            ],
+            "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md",
+            "progress": {
+              "scope": "Reviewed differential transform recovery references",
+              "status": "44-check pending pack frozen; runtime recovery unimplemented",
+              "parentAcceptanceComplete": false,
+              "runtimeChanged": false,
+              "fenceRepairRetained": true,
+              "nextAction": "Review the frozen 44-check/49-scenario differential pack and the narrow pre-terminal-input checkpoint for COPY destination/Exit, MIRROR choice and typed/point transform routes. Preserve accepted COPY batches, actual Undo/Redo entries and monotonic reservations; qualify checkpoint-preparation rejection and record checkpoint-copy cost before the remaining bounded semantic repair. Run changed recovery references and relevant gates only after an implementation change; do not repeat unchanged pending references or the blocked application route."
+            },
+            "riskScope": "Artificial in-memory transform/document/Undo recovery only; no ordinary-input or drawing-file loss route established.",
+            "faultInjectedDeficiencyConfirmed": true,
+            "riskMeaning": "No naturally occurring drawing-file corruption/data-loss risk or stable-work preemption authority is established; artificial fault document/history deficiency is confirmed separately."
+          },
+          "confirmedDefectScope": "Artificial one-shot synchronous preparation/commit/pre-Undo/post-publication transform state-read envelope; no exceptions inside history storage operations or natural-input/file-loss claim.",
+          "drawingDataLossConfirmed": false,
+          "validation": "Current explicit differential reference44tests17pass27expectedfail,49scenarios,noharness errors. Historical fence regression8/8 and beta8fast42/42with1061checks/211inputs retained unchanged; prior pendingMOVE9tests4pass5fail not rerun. No fresh application/build/native acceptance.",
+          "change": "Current milestone adds pending differential references and documentation only; no runtime mutation. Historical pre-fence selection/revision recovery remains intact.",
+          "assessment": "confirmed deficiency",
+          "rejectedOperationDocumentMutationConfirmed": true,
+          "priorRedoLossConfirmedAfterCancel": true,
+          "lastCharacterizedCodeCommit": "46521bcd78aa2464388c7046e99f07469ff21289",
+          "characterization": "Reviewed differential pack44checks17pass27expectedfail,49scenarios; prior nine-scenario MOVE contract retained unchanged, not rerun. No runtime repair or fresh passing aggregate.",
+          "deferredRepairReason": "Reference milestone only. Review the specific terminal-branch snapshot/restore and added copy cost before the remaining semantic repair; generic command-start rollback discards accepted COPY work.",
+          "differentialReference": {
+            "file": "tests/transform-differential-reference.test.mjs",
+            "sha256": "0a3943786fde69b7dd9219e2e8894d2afb66d1f44467ae6334be3b8525e7e5c3",
+            "tests": 44,
+            "pass": 17,
+            "expectedFail": 27,
+            "scenarios": 49,
+            "harnessErrors": 0,
+            "selectedPassingProfile": false,
+            "runtimeChanged": false,
+            "record": "docs/TRANSFORM-DIFFERENTIAL-REFERENCES.md",
+            "fullItemComplete": false
+          }
         }
       ],
       "confirmedDefectScope": "Artificial one-shot synchronous preparation/commit/pre-Undo/post-publication transform state-read envelope; no exceptions inside history storage operations or natural-input/file-loss claim.",
       "drawingDataLossConfirmed": false,
-      "validation": "Current explicit differential reference44tests17pass27expectedfail,49scenarios,noharness errors. Historical fence regression8/8 and beta8fast42/42with1061checks/211inputs retained unchanged; prior pendingMOVE9tests4pass5fail not rerun. No fresh application/build/native acceptance.",
-      "change": "Current milestone adds pending differential references and documentation only; no runtime mutation. Historical pre-fence selection/revision recovery remains intact.",
-      "assessment": "confirmed deficiency",
-      "rejectedOperationDocumentMutationConfirmed": true,
-      "priorRedoLossConfirmedAfterCancel": true,
+      "validation": "Unchanged MOVE9+differential44 and new preparation8 pass61/61; freshbeta9fast45/45stages1122portablechecks215inputs. Clone/terminalcost measured with addedlatency; no app/native/installed acceptance.",
+      "change": "Private live fixed-key terminal checkpoint; direct restore of document/context/selection/revision and actual histories, preserving accepted COPY and monotonic reservations. Cumulativebeta9identity retains59runtime12resources6changes.",
+      "assessment": "partially implemented",
+      "rejectedOperationDocumentMutationConfirmed": false,
+      "priorRedoLossConfirmedAfterCancel": false,
       "lastCharacterizedCodeCommit": "46521bcd78aa2464388c7046e99f07469ff21289",
-      "characterization": "Reviewed differential pack44checks17pass27expectedfail,49scenarios; prior nine-scenario MOVE contract retained unchanged, not rerun. No runtime repair or fresh passing aggregate.",
-      "deferredRepairReason": "Reference milestone only. Review the specific terminal-branch snapshot/restore and added copy cost before the remaining semantic repair; generic command-start rollback discards accepted COPY work.",
+      "characterization": "Historical beta8 MOVE4/5 and differential17/27 results retained; unchanged reference bytes now pass53/53 with eight additional preparation/control passes.",
+      "deferredRepairReason": "No further semantic repair remains in this two-attempt bounded scope; broad parent qualification is not complete. Independent P0 save/import evidence is next.",
       "differentialReference": {
         "file": "tests/transform-differential-reference.test.mjs",
         "sha256": "0a3943786fde69b7dd9219e2e8894d2afb66d1f44467ae6334be3b8525e7e5c3",
         "tests": 44,
-        "pass": 17,
-        "expectedFail": 27,
+        "pass": 44,
+        "expectedFail": 0,
         "scenarios": 49,
         "harnessErrors": 0,
-        "selectedPassingProfile": false,
-        "runtimeChanged": false,
+        "selectedPassingProfile": true,
+        "runtimeChanged": true,
         "record": "docs/TRANSFORM-DIFFERENTIAL-REFERENCES.md",
-        "fullItemComplete": false
+        "fullItemComplete": false,
+        "passCountAfterRepair": 44,
+        "failCountAfterRepair": 0,
+        "qualificationRecord": "docs/TRANSFORM-CHECKPOINT-RECOVERY.md",
+        "historicalBeta8Result": {
+          "pass": 17,
+          "expectedFail": 27
+        }
+      },
+      "historicalFaultInjectedDeficiencyConfirmed": true,
+      "qualifiedScopeRepairComplete": true,
+      "remainingSemanticRepairAttempts": 0,
+      "terminalCheckpointRecovery": {
+        "status": "verified bounded repair",
+        "focusedTests": 61,
+        "focusedPass": 61,
+        "fastStages": "45/45",
+        "portableChecks": 1122,
+        "inputHashes": 215,
+        "scope": "Declared one-shot synchronous terminal fault envelope only",
+        "remainingSemanticRepairAttempts": 0,
+        "fullItemComplete": false,
+        "record": "docs/TRANSFORM-CHECKPOINT-RECOVERY.md",
+        "coreSHA256": "8bdf8e3af32129f92ab7082c016fc8d15e8551623cbfccc83778c5c3e2966d99"
       }
     },
     {
@@ -2553,7 +2704,7 @@
       "LC-MAINT-01",
       "LC-MAINT-VIEWPORT-NAVIGATION"
     ],
-    "nextReadyInvestigation": "LC-REL-01",
+    "nextReadyInvestigation": "LC-REL-02",
     "optimizationDependencies": {
       "LC-PERF-02": "LC-QA-006",
       "LC-PERF-03": "LC-QA-006",
@@ -2564,7 +2715,7 @@
         "requestedId": "LC-REL-01",
         "canonicalId": "LC-REL-01",
         "queueId": "LC-REL-01",
-        "assessment": "confirmed deficiency",
+        "assessment": "partially implemented",
         "priority": 0
       },
       {
@@ -2633,9 +2784,9 @@
     ],
     "latestBoundedResult": {
       "id": "LC-REL-01",
-      "record": "docs/TRANSFORM-DIFFERENTIAL-REFERENCES.md",
+      "record": "docs/TRANSFORM-CHECKPOINT-RECOVERY.md",
       "fullItemComplete": false,
-      "next": "Review the frozen 44-check/49-scenario differential pack and the narrow pre-terminal-input checkpoint for COPY destination/Exit, MIRROR choice and typed/point transform routes. Preserve accepted COPY batches, actual Undo/Redo entries and monotonic reservations; qualify checkpoint-preparation rejection and record checkpoint-copy cost before the remaining bounded semantic repair. Run changed recovery references and relevant gates only after an implementation change; do not repeat unchanged pending references or the blocked application route."
+      "next": "LC-REL-02 existing-valid-file save/failed-import isolation evidence"
     },
     "followupResults": [
       {
@@ -2648,6 +2799,12 @@
         "id": "LC-REL-01",
         "record": "docs/TRANSFORM-DIFFERENTIAL-REFERENCES.md",
         "status": "reviewed differential contract44checks17pass27expectedfail; no runtime repair",
+        "fullItemComplete": false
+      },
+      {
+        "id": "LC-REL-01",
+        "record": "docs/TRANSFORM-CHECKPOINT-RECOVERY.md",
+        "status": "qualifiedterminalrepair61/61; overallpartial; twoattemptsconsumed",
         "fullItemComplete": false
       }
     ]

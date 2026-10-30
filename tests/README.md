@@ -333,3 +333,17 @@ See [the fault envelope and remaining guard contract](../docs/TRANSFORM-DIFFEREN
 Optional LINECRAFT_REFERENCE_REPORT output is private: synthetic traces include
 local stack paths. Do not run all retained pending references by glob and report
 a green candidate gate or ordinary-input corruption finding.
+
+
+## Beta9 terminal checkpoint recovery
+
+Beta9 now selects transform-atomicity-reference.test.mjs (9),
+transform-differential-reference.test.mjs (44), and the new
+transform-checkpoint-preparation.test.mjs (8): all61focused checks pass. The first
+two retain their original bytes and historical pending-beta8 descriptions above.
+The preparation suite includes early/late one-shot capture failures, actual prior
+history traversal, no tentative allocation and unrelated UI callback compatibility.
+The candidate fast profile is45stages/1,122checks/215inputs. See
+[the bounded repair and measured added cost](../docs/TRANSFORM-CHECKPOINT-RECOVERY.md).
+Optional synthetic stack reports remain private. No native/file-loss/installed
+or broad all-command atomicity claim follows.

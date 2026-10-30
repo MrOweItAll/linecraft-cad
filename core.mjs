@@ -2019,6 +2019,19 @@ export function createEditor(initialState = {}) {
     const is3D=state.commandData.threeD,destination = is3D?point3(rawValue):point(rawValue), delta = is3D?point3({x:destination.x-base.x,y:destination.y-base.y,z:destination.z-(base.z??0)}):point({ x: destination.x - base.x, y: destination.y - base.y });
     return transformSources.map(entity => translateEntity(entity, delta,state));
   };
+  const transformCheckpointKeys=[...Object.keys(document),'command','commandPhase','commandData','commandSelectionIds','commandPoints','prompt','selectionIds','lastPoint','revision'];
+  // One synchronous terminal attempt, retaining accepted COPY batches and burned IDs.
+  const transformAttempt=callback=>{
+    const saved=structuredClone(Object.fromEntries(transformCheckpointKeys.filter(key=>Object.hasOwn(state,key)).map(key=>[key,state[key]])));
+    const prior={transactionBefore,transactionIds:[...transactionIds],transformSources,copyBatches:[...copyBatches],editingSteps:[...editingSteps],pendingCut,modelView,undo:[...undoStack],redo:[...redoStack],scopes:new Map(entityScopes)};
+    try{return callback();}catch(error){
+      for(const key of transformCheckpointKeys){if(Object.hasOwn(saved,key))state[key]=saved[key];else delete state[key];}
+      ({transactionBefore,transactionIds,transformSources,copyBatches,editingSteps,pendingCut,modelView}=prior);
+      undoStack.splice(0,undoStack.length,...prior.undo);redoStack.splice(0,redoStack.length,...prior.redo);
+      entityScopes.clear();for(const [key,value] of prior.scopes)entityScopes.set(key,value);
+      throw error;
+    }
+  };
   const completeTransform = value => {
     const command = state.command, transformed = transformedGeometry(value);
     if (command === 'COPY' || command === 'MIRROR' && !state.commandData.deleteOriginal) {
@@ -2499,15 +2512,15 @@ export function createEditor(initialState = {}) {
               state.prompt = 'COPY Specify second point or [Exit/Undo] <Exit>:'; response = result(true, 'Last COPY destination removed.', true);
             }
           } else if (state.command === 'COPY' && state.commandPhase === 'target' && (inputText === '' || ['E', 'EXIT'].includes(token))) {
-            state.selectionIds = []; response = finish('COPY completed.');
+            response=transformAttempt(()=>{state.selectionIds=[];return finish('COPY completed.');});
           } else if (state.command === 'MIRROR' && state.commandPhase === 'delete-choice') {
             if (inputText === '' || ['N', 'NO', 'Y', 'YES'].includes(token)) {
-              state.commandData.deleteOriginal = ['Y', 'YES'].includes(token); response = completeTransform(state.commandPoints[1]);
+              response=transformAttempt(()=>{state.commandData.deleteOriginal=['Y','YES'].includes(token);return completeTransform(state.commandPoints[1]);});
             } else response = result(false, 'Choose Yes or No to delete the source objects.');
-          } else if (state.command === 'SCALE' && state.commandPhase === 'factor' && typeof inputText === 'string' && new RegExp(`^${NUMBER}$`).test(inputText)) response = completeTransform(scalar(inputText, 'Scale factor'));
+          } else if (state.command === 'SCALE' && state.commandPhase === 'factor' && typeof inputText === 'string' && new RegExp(`^${NUMBER}$`).test(inputText)) response = transformAttempt(()=>completeTransform(scalar(inputText, 'Scale factor')));
           else if ((state.commandPhase === 'base' && ['D', 'DISPLACEMENT'].includes(token)) || (state.command === 'COPY' && state.commandPhase === 'target' && ['A', 'ARRAY'].includes(token)) || (state.command === 'ROTATE' && state.commandPhase === 'angle' && ['R', 'REFERENCE', 'C', 'COPY'].includes(token)) || (state.command === 'SCALE' && state.commandPhase === 'factor' && ['R', 'REFERENCE', 'C', 'COPY'].includes(token))) response = result(false, `That ${state.command} option is not implemented. Follow the current point or angle prompt.`);
           else if (inputText === '') response = result(false, state.commandPhase === 'angle' ? 'Enter a rotation angle or pick a direction point.' : 'Enter a point or press Escape to cancel.');
-          else if (state.commandPhase === 'angle' && scalarInput(inputText)) response = completeTransform(angleScalar(inputText));
+          else if (state.commandPhase === 'angle' && scalarInput(inputText)) response = transformAttempt(()=>completeTransform(angleScalar(inputText)));
           else response = editor.submitPoint(parseCoordinate(inputText, state.commandPoints.at(-1) ?? state.lastPoint));
         } else if(state.command==='ARC') {
           if(inputText==='')response=result(false,'ARC requires three points, or press Escape to cancel.');
@@ -2765,14 +2778,13 @@ export function createEditor(initialState = {}) {
           if (state.commandPhase === 'angle') {
             const base = state.commandPoints[0];
             if(state.command==='ROTATE3D'){
-              const axis=state.commandData.axis,dx=p.x-base.x,dy=p.y-base.y,dz=p.z-base.z,first=axis==='X'?dy:axis==='Y'?dz:dx,second=axis==='X'?dz:axis==='Y'?dx:dy;if(first===0&&second===0)return result(false,'Direction point must differ from the rotation axis.');return completeTransform(Math.atan2(second,first)*180/Math.PI);
+              const axis=state.commandData.axis,dx=p.x-base.x,dy=p.y-base.y,dz=p.z-base.z,first=axis==='X'?dy:axis==='Y'?dz:dx,second=axis==='X'?dz:axis==='Y'?dx:dy;if(first===0&&second===0)return result(false,'Direction point must differ from the rotation axis.');return transformAttempt(()=>completeTransform(Math.atan2(second,first)*180/Math.PI));
             }
             if (samePoint(base, p)) return result(false, 'Pick a direction point away from the base point.');
-            state.lastPoint = { ...p };
-            return completeTransform(Math.atan2(p.y - base.y, p.x - base.x) * 180 / Math.PI);
+            return transformAttempt(()=>{state.lastPoint={...p};return completeTransform(Math.atan2(p.y-base.y,p.x-base.x)*180/Math.PI);});
           }
           if (state.commandPhase === 'factor') {
-            const base = state.commandPoints[0]; return completeTransform(Math.hypot(p.x - base.x, p.y - base.y,...(state.commandData.threeD?[p.z-base.z]:[])));
+            const base = state.commandPoints[0]; return transformAttempt(()=>completeTransform(Math.hypot(p.x-base.x,p.y-base.y,...(state.commandData.threeD?[p.z-base.z]:[]))));
           }
           if (state.commandPhase === 'mirror-second') {
             transformedGeometry(p); // Validate all geometry before asking about deletion.
@@ -2780,7 +2792,7 @@ export function createEditor(initialState = {}) {
             state.prompt = 'MIRROR Delete source objects? [Yes/No] <No>:'; return result(true, 'Mirror axis accepted.');
           }
           if (state.commandPhase === 'delete-choice') return result(false, 'Choose Yes or No using the command line.');
-          const response=completeTransform(p);if(response.ok)state.lastPoint={...p};return response;
+          return transformAttempt(()=>{const response=completeTransform(p);if(response.ok)state.lastPoint={...p};return response;});
         }
         if (!['LINE', 'PLINE', 'RECTANG', 'CIRCLE','ARC'].includes(state.command)) return result(false, 'Start a drawing command before entering a point.');
         const layer = state.layers.find(item => item.name === state.currentLayer);

@@ -1,5 +1,9 @@
 # MOVE commit and history failure boundaries
 
+Current status: beta9 repairs this qualified fault envelope; the unchanged
+reference is now selected and passing. The pending results below describe the
+preserved beta8 checkpoint. See [the repair and remaining limits](TRANSFORM-CHECKPOINT-RECOVERY.md).
+
 Code under characterization: `46521bcd78aa2464388c7046e99f07469ff21289` (beta8).
 
 LC-REL-01 remains incomplete. This beta8 characterization demonstrates an

@@ -15,9 +15,9 @@ It does not establish installed/upgrade or broader native qualification. Earlier
 automated checkpoint descriptions below do not include this later native session.
 
 ```
-npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.8.json
-npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.8.json
-npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.8.json
+npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.9.json
+npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.9.json
+npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.9.json
 ```
 
 These reuse desktop/dev-tools.cjs. Fast selects the existing bounded public core
@@ -573,3 +573,23 @@ references stay outside the selected passing profile. LC-REL-01 remains open;
 next review the narrow terminal-branch checkpoint and its preparation/cost
 before the remaining semantic repair. Earlier beta8 fence, beta6 built/native
 and beta7 blocked-startup evidence retain their scope.
+
+
+## Beta9 terminal transform recovery - October 30, 2026 UTC
+
+The [bounded checkpoint repair](TRANSFORM-CHECKPOINT-RECOVERY.md) restores the
+immediate pre-attempt live document, continuation, selection/revision and actual
+Undo/Redo entries after qualified transient terminal-transform faults. It keeps
+earlier accepted COPY batches and monotonic identity/order reservations. The
+unchanged MOVE9/differential44 plus eight new preparation/control checks pass
+61/61; the fresh beta9 fast gate passes45/45 stages,1,122portable checks and215
+bound inputs. The cumulative identity retains59runtime/12resources and six prior
+change entries; only core differs from beta8. No dependency/public API/schema change.
+
+Full pure terminal probes record added checkpoint cost: for2,000LINEs, laterCOPY
+warm medians rise from0.760-0.848ms to4.450-4.745ms. This is not an optimization,
+app performance baseline or heavy-drawing qualification. Overall LC-REL-01 stays
+partially implemented, with its two-attempt budget consumed. Next perform the
+independent P0 LC-REL-02 save/import isolation evidence matrix. No new app/PDF/
+build/unpacked/native/installed/converter acceptance ran; beta7 startup remains
+unexplained and beta6 historical built/native evidence remains separate.

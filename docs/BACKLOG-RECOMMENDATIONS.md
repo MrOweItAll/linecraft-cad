@@ -320,3 +320,15 @@ incomplete within the declared artificial fault envelope. No runtime fix or
 ordinary drawing-file-loss route is established. IDs and recommendation merges
 are retained; next review a narrow pre-terminal-input guard with monotonic
 reservations, actual Undo/Redo entries and bounded checkpoint cost.
+
+
+## Beta9 qualified terminal recovery
+
+The [terminal checkpoint repair](TRANSFORM-CHECKPOINT-RECOVERY.md) passes the
+unchanged9/44reference checks and8new preparation/control checks,61/61total.
+LC-REL-01 returns to partially implemented: its demonstrated terminal slice is
+repaired, while broad batch/architecture/3D/crash/renderer acceptance remains open.
+The measured full-drawing checkpoint adds latency; no optimization is claimed.
+Two bounded semantic attempts are consumed. Continue the independent P0 LC-REL-02
+save/import isolation matrix before speculative performance work. Historical
+findings/IDs and the recommendation merges remain preserved.
