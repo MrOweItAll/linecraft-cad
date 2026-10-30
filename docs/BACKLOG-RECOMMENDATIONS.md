@@ -309,3 +309,14 @@ unrepaired LC-REL-01 deficiency within artificial post-MOVE read faults. The
 register now records that bounded confirmed deficiency while preserving the
 original intake and fence-repair history. Overall acceptance remains incomplete;
 no ordinary drawing-file loss or production repair is claimed by this follow-up.
+
+
+## Differential transform follow-up
+
+The [44-check differential reference](TRANSFORM-DIFFERENTIAL-REFERENCES.md) adds
+reviewed repeated/single COPY, terminal caller-state, paper identity and history
+publication expectations. Its 17 passes and 27 expected failures leave LC-REL-01
+incomplete within the declared artificial fault envelope. No runtime fix or
+ordinary drawing-file-loss route is established. IDs and recommendation merges
+are retained; next review a narrow pre-terminal-input guard with monotonic
+reservations, actual Undo/Redo entries and bounded checkpoint cost.

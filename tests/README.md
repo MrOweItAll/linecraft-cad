@@ -319,3 +319,17 @@ No normal drawing-loss, renderer dirty, native or installed claim follows. See
 [the observations and proposed recovery boundary](../docs/TRANSFORM-FAILURE-BOUNDARIES.md).
 Do not run all retained references by glob and call that the supported passing
 profile; preserve these failures until the bounded recovery contract is repaired.
+
+
+## Pending differential transform recovery reference
+
+`node --test --test-concurrency=1 tests/transform-differential-reference.test.mjs`
+is an explicit pending contract, outside the selected passing candidate profile.
+Its reviewed beta8 result is 44 checks: 17 passes and 27 expected failures across
+49 cached scenarios, with no harness errors. It covers repeated/single COPY,
+MIRROR, typed/point ROTATE, mixed paper geometry/viewport and selected history
+publication boundaries with literal success controls. No runtime repair occurs.
+See [the fault envelope and remaining guard contract](../docs/TRANSFORM-DIFFERENTIAL-REFERENCES.md).
+Optional LINECRAFT_REFERENCE_REPORT output is private: synthetic traces include
+local stack paths. Do not run all retained pending references by glob and report
+a green candidate gate or ordinary-input corruption finding.

@@ -1486,9 +1486,9 @@
     {
       "id": "LC-REL-01",
       "priority": 0,
-      "status": "confirmed deficiency under artificial post-MOVE read faults; recovery contract unimplemented",
-      "problem": "Post-assignment artificial MOVE exceptions can return failure with moved in-memory geometry; subsequent Cancel records that move and clears prior Redo. Ordinary-input reachability and file-loss risk remain unproven.",
-      "sourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+      "status": "confirmed deficiency under artificial transform faults; reviewed differential references frozen, recovery unimplemented",
+      "problem": "Artificial transient transform faults retain rejected document edits; later COPY retries/local Undo retain rejected copies, caller state can change, and post-publication rejection loses the old Redo branch. No ordinary-input or drawing-file loss route is established.",
+      "sourceCommit": "c30bafa2fc5ca3021d387d861d48f4c52f06d6e5",
       "sourceVersion": "1.36.1-beta.8",
       "evidence": [
         "core.mjs:1642-1675",
@@ -1506,7 +1506,9 @@
         "tests/atomic-batch-independent.test.mjs",
         "docs/ATOMIC-BATCH-FAILURE-RECOVERY.md",
         "tests/transform-atomicity-reference.test.mjs",
-        "docs/TRANSFORM-FAILURE-BOUNDARIES.md"
+        "docs/TRANSFORM-FAILURE-BOUNDARIES.md",
+        "tests/transform-differential-reference.test.mjs",
+        "docs/TRANSFORM-DIFFERENTIAL-REFERENCES.md"
       ],
       "acceptance": [
         "Inject a failure midway through a representative batch operation.",
@@ -1514,7 +1516,7 @@
         "A successful operation follows the established undo convention, including previously accepted repeated edits.",
         "Validate before mutation where practical; retain command-state/revision observations without treating a revision-only discrepancy as drawing loss."
       ],
-      "next": "Implement and independently review a bounded pure differential reference pack for repeated COPY (accepted first destination, failed later destination, retry, local Undo, exit/global Undo/Redo), COPY single, MIRROR keep/delete, point/scalar terminal-input updates and one mixed paper geometry/viewport case. Define the exact one-shot history-publication envelope and monotonic ID reservation policy, then choose the narrow guard before spending the remaining semantic repair attempt. Preserve the explicit MOVE failures and do not retry the blocked application route.",
+      "next": "Review the frozen 44-check/49-scenario differential pack and the narrow pre-terminal-input checkpoint for COPY destination/Exit, MIRROR choice and typed/point transform routes. Preserve accepted COPY batches, actual Undo/Redo entries and monotonic reservations; qualify checkpoint-preparation rejection and record checkpoint-copy cost before the remaining bounded semantic repair. Run changed recovery references and relevant gates only after an implementation change; do not repeat unchanged pending references or the blocked application route.",
       "confirmedDefect": true,
       "implementationAttempts": 1,
       "acceptanceComplete": false,
@@ -1526,7 +1528,7 @@
         "requestedPriority": 0,
         "priority": 0,
         "assessment": "confirmed deficiency",
-        "problem": "Stronger full-state rollback and mid-batch failure acceptance remain to be established; no drawing-corruption defect was reproduced by this intake.",
+        "problem": "Artificial transient transform faults retain rejected document edits; later COPY retries/local Undo retain rejected copies, caller state can change, and post-publication rejection loses the old Redo branch. No ordinary-input or drawing-file loss route is established.",
         "implemented": "Transforms validate proposals before commit; fence edits have document rollback; scripted revisions stage in another editor and commit once. Existing tests cover pre-mutation rejection and successful grouped history.",
         "evidence": [
           "core.mjs:1642-1675",
@@ -1542,25 +1544,25 @@
           "tests/trim-comprehensive.test.mjs:22-23",
           "tests/scripting.test.mjs:115-123"
         ],
-        "gap": "Document snapshots do not encompass every selection/command/revision/history field. Inject failure after an earlier mutation and compare all required state before deciding whether a product fix is justified. Preserve previously accepted repeated COPY/TRIM edits and existing cancel conventions.",
+        "gap": "Recovery remains unimplemented for the44-check differential contract. Review a pre-terminal-input checkpoint preserving immediate pre-batch accepted COPY state, caller context, actual Undo/Redo entries and monotonic reservations; qualify new checkpoint preparation/cost.",
         "acceptance": [
           "Inject a failure midway through a representative batch operation.",
           "A failed atomic command restores document contents/resources/entity identity, selection, dirty state, and undo/redo history to their pre-command state; a failing batch within an established repeated-edit command restores its pre-batch state while retaining earlier accepted repeated edits. No partial edit or spurious undo entry from the failed batch remains.",
           "A successful operation follows the established undo convention, including previously accepted repeated edits.",
           "Validate before mutation where practical; retain command-state/revision observations without treating a revision-only discrepancy as drawing loss."
         ],
-        "nextAction": "Implement and independently review a bounded pure differential reference pack for repeated COPY (accepted first destination, failed later destination, retry, local Undo, exit/global Undo/Redo), COPY single, MIRROR keep/delete, point/scalar terminal-input updates and one mixed paper geometry/viewport case. Define the exact one-shot history-publication envelope and monotonic ID reservation policy, then choose the narrow guard before spending the remaining semantic repair attempt. Preserve the explicit MOVE failures and do not retry the blocked application route.",
+        "nextAction": "Review the frozen 44-check/49-scenario differential pack and the narrow pre-terminal-input checkpoint for COPY destination/Exit, MIRROR choice and typed/point transform routes. Preserve accepted COPY batches, actual Undo/Redo entries and monotonic reservations; qualify checkpoint-preparation rejection and record checkpoint-copy cost before the remaining bounded semantic repair. Run changed recovery references and relevant gates only after an implementation change; do not repeat unchanged pending references or the blocked application route.",
         "dependencies": [],
         "relatedIds": [
           "LC-QA-BETA7-UNPACKED-STARTUP"
         ],
         "riskConfirmed": false,
         "priorityBasis": "P0 integrity investigation, not a confirmed P0 defect. Only demonstrated corruption/data-loss risk may preempt stable nearly completed work; complete this evidence step before performance optimization.",
-        "rollback": "Intake changes documentation only. A future runtime repair must record its exact commit and a focused revert/recovery method before completion.",
-        "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+        "rollback": "Reference/documentation-only checkpoint; focused revert preserves prior runtime fence repair and other independent work.",
+        "reviewedSourceCommit": "c30bafa2fc5ca3021d387d861d48f4c52f06d6e5",
         "recommendationNotVerifiedFinding": true,
         "acceptanceComplete": false,
-        "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+        "verificationScope": "Executed explicit pure differential reference:44 checks17pass27expectedfail,49scenarios,noharness errors; no runtime repair or app/native execution.",
         "completionRequirements": [
           "Record the verified problem and affected behavior before a product change.",
           "Record implementation and relevant executed checks; acceptance must pass before completion.",
@@ -1569,14 +1571,14 @@
         ],
         "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md",
         "progress": {
-          "scope": "MOVE post-assignment commit/history boundary",
-          "status": "confirmed deficiency under artificial faults; repair pending reviewed differential contract",
+          "scope": "Reviewed differential transform recovery references",
+          "status": "44-check pending pack frozen; runtime recovery unimplemented",
           "parentAcceptanceComplete": false,
           "runtimeChanged": false,
           "fenceRepairRetained": true,
-          "nextAction": "Implement and independently review a bounded pure differential reference pack for repeated COPY (accepted first destination, failed later destination, retry, local Undo, exit/global Undo/Redo), COPY single, MIRROR keep/delete, point/scalar terminal-input updates and one mixed paper geometry/viewport case. Define the exact one-shot history-publication envelope and monotonic ID reservation policy, then choose the narrow guard before spending the remaining semantic repair attempt. Preserve the explicit MOVE failures and do not retry the blocked application route."
+          "nextAction": "Review the frozen 44-check/49-scenario differential pack and the narrow pre-terminal-input checkpoint for COPY destination/Exit, MIRROR choice and typed/point transform routes. Preserve accepted COPY batches, actual Undo/Redo entries and monotonic reservations; qualify checkpoint-preparation rejection and record checkpoint-copy cost before the remaining bounded semantic repair. Run changed recovery references and relevant gates only after an implementation change; do not repeat unchanged pending references or the blocked application route."
         },
-        "riskScope": "Artificial MOVE in-memory document/Undo recovery only; no ordinary-input or drawing-file loss route established.",
+        "riskScope": "Artificial in-memory transform/document/Undo recovery only; no ordinary-input or drawing-file loss route established.",
         "faultInjectedDeficiencyConfirmed": true,
         "riskMeaning": "No naturally occurring drawing-file corruption/data-loss risk or stable-work preemption authority is established; artificial fault document/history deficiency is confirmed separately."
       },
@@ -1844,18 +1846,139 @@
           "drawingDataLossConfirmed": false,
           "validation": "Private observation 6pass/1fail; corrected public regression3pass/5fail before repair,8/8after; beta8fast42/42with1061selectedportablechecks and211inputhashes; no application/build/native acceptance",
           "change": "Capture pre-fence selection/revision and restore after existing document rollback; preserve prior accepted edits/history and success behavior"
+        },
+        {
+          "id": "LC-REL-01",
+          "priority": 0,
+          "status": "confirmed deficiency under artificial post-MOVE read faults; recovery contract unimplemented",
+          "problem": "Post-assignment artificial MOVE exceptions can return failure with moved in-memory geometry; subsequent Cancel records that move and clears prior Redo. Ordinary-input reachability and file-loss risk remain unproven.",
+          "sourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+          "sourceVersion": "1.36.1-beta.8",
+          "evidence": [
+            "core.mjs:1642-1675",
+            "core.mjs:1680-1687",
+            "core.mjs:1893-1911",
+            "core.mjs:2012-2035",
+            "core.mjs:2069-2070",
+            "core.mjs:2184-2250",
+            "app.mjs:297-308",
+            "tests/core.test.mjs:735-738",
+            "tests/core.test.mjs:883-892",
+            "tests/core.test.mjs:1735-1748",
+            "tests/trim-comprehensive.test.mjs:22-23",
+            "tests/scripting.test.mjs:115-123",
+            "tests/atomic-batch-independent.test.mjs",
+            "docs/ATOMIC-BATCH-FAILURE-RECOVERY.md",
+            "tests/transform-atomicity-reference.test.mjs",
+            "docs/TRANSFORM-FAILURE-BOUNDARIES.md"
+          ],
+          "acceptance": [
+            "Inject a failure midway through a representative batch operation.",
+            "A failed atomic command restores document contents/resources/entity identity, selection, dirty state, and undo/redo history to their pre-command state; a failing batch within an established repeated-edit command restores its pre-batch state while retaining earlier accepted repeated edits. No partial edit or spurious undo entry from the failed batch remains.",
+            "A successful operation follows the established undo convention, including previously accepted repeated edits.",
+            "Validate before mutation where practical; retain command-state/revision observations without treating a revision-only discrepancy as drawing loss."
+          ],
+          "next": "Implement and independently review a bounded pure differential reference pack for repeated COPY (accepted first destination, failed later destination, retry, local Undo, exit/global Undo/Redo), COPY single, MIRROR keep/delete, point/scalar terminal-input updates and one mixed paper geometry/viewport case. Define the exact one-shot history-publication envelope and monotonic ID reservation policy, then choose the narrow guard before spending the remaining semantic repair attempt. Preserve the explicit MOVE failures and do not retry the blocked application route.",
+          "confirmedDefect": true,
+          "implementationAttempts": 1,
+          "acceptanceComplete": false,
+          "recommendationReview": {
+            "requestedId": "LC-REL-01",
+            "canonicalId": "LC-REL-01",
+            "queueId": "LC-REL-01",
+            "title": "Atomic multi-object commands",
+            "requestedPriority": 0,
+            "priority": 0,
+            "assessment": "confirmed deficiency",
+            "problem": "Stronger full-state rollback and mid-batch failure acceptance remain to be established; no drawing-corruption defect was reproduced by this intake.",
+            "implemented": "Transforms validate proposals before commit; fence edits have document rollback; scripted revisions stage in another editor and commit once. Existing tests cover pre-mutation rejection and successful grouped history.",
+            "evidence": [
+              "core.mjs:1642-1675",
+              "core.mjs:1680-1687",
+              "core.mjs:1893-1911",
+              "core.mjs:2012-2035",
+              "core.mjs:2069-2070",
+              "core.mjs:2184-2250",
+              "app.mjs:297-308",
+              "tests/core.test.mjs:735-738",
+              "tests/core.test.mjs:883-892",
+              "tests/core.test.mjs:1735-1748",
+              "tests/trim-comprehensive.test.mjs:22-23",
+              "tests/scripting.test.mjs:115-123"
+            ],
+            "gap": "Document snapshots do not encompass every selection/command/revision/history field. Inject failure after an earlier mutation and compare all required state before deciding whether a product fix is justified. Preserve previously accepted repeated COPY/TRIM edits and existing cancel conventions.",
+            "acceptance": [
+              "Inject a failure midway through a representative batch operation.",
+              "A failed atomic command restores document contents/resources/entity identity, selection, dirty state, and undo/redo history to their pre-command state; a failing batch within an established repeated-edit command restores its pre-batch state while retaining earlier accepted repeated edits. No partial edit or spurious undo entry from the failed batch remains.",
+              "A successful operation follows the established undo convention, including previously accepted repeated edits.",
+              "Validate before mutation where practical; retain command-state/revision observations without treating a revision-only discrepancy as drawing loss."
+            ],
+            "nextAction": "Implement and independently review a bounded pure differential reference pack for repeated COPY (accepted first destination, failed later destination, retry, local Undo, exit/global Undo/Redo), COPY single, MIRROR keep/delete, point/scalar terminal-input updates and one mixed paper geometry/viewport case. Define the exact one-shot history-publication envelope and monotonic ID reservation policy, then choose the narrow guard before spending the remaining semantic repair attempt. Preserve the explicit MOVE failures and do not retry the blocked application route.",
+            "dependencies": [],
+            "relatedIds": [
+              "LC-QA-BETA7-UNPACKED-STARTUP"
+            ],
+            "riskConfirmed": false,
+            "priorityBasis": "P0 integrity investigation, not a confirmed P0 defect. Only demonstrated corruption/data-loss risk may preempt stable nearly completed work; complete this evidence step before performance optimization.",
+            "rollback": "Intake changes documentation only. A future runtime repair must record its exact commit and a focused revert/recovery method before completion.",
+            "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+            "recommendationNotVerifiedFinding": true,
+            "acceptanceComplete": false,
+            "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+            "completionRequirements": [
+              "Record the verified problem and affected behavior before a product change.",
+              "Record implementation and relevant executed checks; acceptance must pass before completion.",
+              "For performance work record reproducible before/after measurements.",
+              "Record remaining limitations and the exact rollback method."
+            ],
+            "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md",
+            "progress": {
+              "scope": "MOVE post-assignment commit/history boundary",
+              "status": "confirmed deficiency under artificial faults; repair pending reviewed differential contract",
+              "parentAcceptanceComplete": false,
+              "runtimeChanged": false,
+              "fenceRepairRetained": true,
+              "nextAction": "Implement and independently review a bounded pure differential reference pack for repeated COPY (accepted first destination, failed later destination, retry, local Undo, exit/global Undo/Redo), COPY single, MIRROR keep/delete, point/scalar terminal-input updates and one mixed paper geometry/viewport case. Define the exact one-shot history-publication envelope and monotonic ID reservation policy, then choose the narrow guard before spending the remaining semantic repair attempt. Preserve the explicit MOVE failures and do not retry the blocked application route."
+            },
+            "riskScope": "Artificial MOVE in-memory document/Undo recovery only; no ordinary-input or drawing-file loss route established.",
+            "faultInjectedDeficiencyConfirmed": true,
+            "riskMeaning": "No naturally occurring drawing-file corruption/data-loss risk or stable-work preemption authority is established; artificial fault document/history deficiency is confirmed separately."
+          },
+          "confirmedDefectScope": "Artificial per-editor synchronous state read fault after full MOVE assignment, at commit follow-up or pre-Undo snapshot.",
+          "drawingDataLossConfirmed": false,
+          "validation": "Private observation 6pass/1fail; corrected public regression3pass/5fail before repair,8/8after; beta8fast42/42with1061selectedportablechecks and211inputhashes; no application/build/native acceptance",
+          "change": "Capture pre-fence selection/revision and restore after existing document rollback; preserve prior accepted edits/history and success behavior",
+          "assessment": "confirmed deficiency",
+          "rejectedOperationDocumentMutationConfirmed": true,
+          "priorRedoLossConfirmedAfterCancel": true,
+          "lastCharacterizedCodeCommit": "46521bcd78aa2464388c7046e99f07469ff21289",
+          "characterization": "Nine private scenarios; exact inventory/facts checked; explicit public pending reference9tests4pass5expectedfail. No runtime change or fresh default fast gate.",
+          "deferredRepairReason": "Shared transform completion includes terminal caller updates, repeated COPY, view/ID reservations and history publication/eviction. Freeze and review the narrow checkpoint/differential contract before the remaining semantic repair; generic restore(transactionBefore) can discard accepted work."
         }
       ],
-      "confirmedDefectScope": "Artificial per-editor synchronous state read fault after full MOVE assignment, at commit follow-up or pre-Undo snapshot.",
+      "confirmedDefectScope": "Artificial one-shot synchronous preparation/commit/pre-Undo/post-publication transform state-read envelope; no exceptions inside history storage operations or natural-input/file-loss claim.",
       "drawingDataLossConfirmed": false,
-      "validation": "Private observation 6pass/1fail; corrected public regression3pass/5fail before repair,8/8after; beta8fast42/42with1061selectedportablechecks and211inputhashes; no application/build/native acceptance",
-      "change": "Capture pre-fence selection/revision and restore after existing document rollback; preserve prior accepted edits/history and success behavior",
+      "validation": "Current explicit differential reference44tests17pass27expectedfail,49scenarios,noharness errors. Historical fence regression8/8 and beta8fast42/42with1061checks/211inputs retained unchanged; prior pendingMOVE9tests4pass5fail not rerun. No fresh application/build/native acceptance.",
+      "change": "Current milestone adds pending differential references and documentation only; no runtime mutation. Historical pre-fence selection/revision recovery remains intact.",
       "assessment": "confirmed deficiency",
       "rejectedOperationDocumentMutationConfirmed": true,
       "priorRedoLossConfirmedAfterCancel": true,
       "lastCharacterizedCodeCommit": "46521bcd78aa2464388c7046e99f07469ff21289",
-      "characterization": "Nine private scenarios; exact inventory/facts checked; explicit public pending reference9tests4pass5expectedfail. No runtime change or fresh default fast gate.",
-      "deferredRepairReason": "Shared transform completion includes terminal caller updates, repeated COPY, view/ID reservations and history publication/eviction. Freeze and review the narrow checkpoint/differential contract before the remaining semantic repair; generic restore(transactionBefore) can discard accepted work."
+      "characterization": "Reviewed differential pack44checks17pass27expectedfail,49scenarios; prior nine-scenario MOVE contract retained unchanged, not rerun. No runtime repair or fresh passing aggregate.",
+      "deferredRepairReason": "Reference milestone only. Review the specific terminal-branch snapshot/restore and added copy cost before the remaining semantic repair; generic command-start rollback discards accepted COPY work.",
+      "differentialReference": {
+        "file": "tests/transform-differential-reference.test.mjs",
+        "sha256": "0a3943786fde69b7dd9219e2e8894d2afb66d1f44467ae6334be3b8525e7e5c3",
+        "tests": 44,
+        "pass": 17,
+        "expectedFail": 27,
+        "scenarios": 49,
+        "harnessErrors": 0,
+        "selectedPassingProfile": false,
+        "runtimeChanged": false,
+        "record": "docs/TRANSFORM-DIFFERENTIAL-REFERENCES.md",
+        "fullItemComplete": false
+      }
     },
     {
       "id": "LC-REL-02",
@@ -2510,15 +2633,21 @@
     ],
     "latestBoundedResult": {
       "id": "LC-REL-01",
-      "record": "docs/TRANSFORM-FAILURE-BOUNDARIES.md",
+      "record": "docs/TRANSFORM-DIFFERENTIAL-REFERENCES.md",
       "fullItemComplete": false,
-      "next": "Differential COPY/terminal/history reference pack before the remaining semantic repair"
+      "next": "Review the frozen 44-check/49-scenario differential pack and the narrow pre-terminal-input checkpoint for COPY destination/Exit, MIRROR choice and typed/point transform routes. Preserve accepted COPY batches, actual Undo/Redo entries and monotonic reservations; qualify checkpoint-preparation rejection and record checkpoint-copy cost before the remaining bounded semantic repair. Run changed recovery references and relevant gates only after an implementation change; do not repeat unchanged pending references or the blocked application route."
     },
     "followupResults": [
       {
         "id": "LC-REL-01",
         "record": "docs/TRANSFORM-FAILURE-BOUNDARIES.md",
         "status": "confirmed artificial-fault deficiency; no runtime change",
+        "fullItemComplete": false
+      },
+      {
+        "id": "LC-REL-01",
+        "record": "docs/TRANSFORM-DIFFERENTIAL-REFERENCES.md",
+        "status": "reviewed differential contract44checks17pass27expectedfail; no runtime repair",
         "fullItemComplete": false
       }
     ]

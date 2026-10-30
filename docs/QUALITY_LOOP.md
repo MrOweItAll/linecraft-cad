@@ -555,3 +555,21 @@ and historical fast qualification retain their scope; all 211 bound inputs are
 unchanged. Broader atomicity remains incomplete. Next freeze reviewed differential
 references for repeated COPY, terminal-input and history publication before the
 remaining narrow semantic repair. A generic command-start rollback is not a fix.
+
+
+## Differential transform recovery reference - October 30, 2026 UTC
+
+The [differential reference pack](TRANSFORM-DIFFERENTIAL-REFERENCES.md) freezes
+repeated/single COPY, MIRROR, typed/point ROTATE, mixed paper geometry/viewport,
+preparation and post-publication history contracts. The reviewed explicit run
+has 44 checks: 17 pass and 27 expected failures, with 49 scenario traces and no
+harness errors. Independent review added missing failed-COPY history branches
+and complete metadata comparisons. These remain artificial transient fault
+findings, with no normal drawing-file loss or renderer/native claim.
+
+No runtime repair or unchanged gate rerun occurred. All 211 historical fast
+inputs and the prior pending MOVE reference remain unchanged. Both pending
+references stay outside the selected passing profile. LC-REL-01 remains open;
+next review the narrow terminal-branch checkpoint and its preparation/cost
+before the remaining semantic repair. Earlier beta8 fence, beta6 built/native
+and beta7 blocked-startup evidence retain their scope.
