@@ -486,7 +486,7 @@
     },
     {
       "id": "LC-QA-006",
-      "priority": 2,
+      "priority": 1,
       "symptom": "No comparable raw larger-drawing operation measurement baseline",
       "expected": "Fixed synthetic input and finite repeated actual source/unpacked observations with independent correctness and honest timing boundaries",
       "sourceVersion": "1.36.1-beta.5",
@@ -509,7 +509,68 @@
       "fullGates": "unchanged existing candidate gate preserved; not rerun",
       "nativeCandidateAcceptance": "not run",
       "installedAcceptance": "not run",
-      "dailyUseReady": false
+      "dailyUseReady": false,
+      "recommendationReview": {
+        "requestedId": "LC-PERF-01",
+        "canonicalId": "LC-QA-006",
+        "queueId": "LC-QA-PERFORMANCE",
+        "title": "Representative performance baseline",
+        "requestedPriority": 1,
+        "priority": 1,
+        "assessment": "partially implemented",
+        "problem": "The retained baseline covers one deterministic 2,000-line drawing, not the requested survey/residential/multi-viewport/heavy workload matrix or practical regression thresholds.",
+        "implemented": "Existing synthetic fixture, warm-up plus five measured rounds, hidden source/unpacked action/frame-drain timings, exact geometry/hash checks and independent audit are reusable historical evidence. They are not a current beta7 benchmark or human latency measurement.",
+        "evidence": [
+          "docs/PERFORMANCE-BASELINE.md:10-59",
+          "docs/PERFORMANCE-BASELINE.md:84-117",
+          "tests/performance-fixture.mjs:1-8",
+          "tests/performance-workflow.cjs:16-17",
+          "tests/performance-workflow.cjs:45-65",
+          "tests/audit-performance.py"
+        ],
+        "gap": "Add independently authored survey plat, residential plan, several-viewport layout and heavy drawing references; entity/vertex counts, hardware/runtime, import/redraw/interaction/peak-memory observations, clearly defined cold/warm boundaries and baseline-derived thresholds are not all qualified. Do not manufacture timings or thresholds during intake.",
+        "acceptance": [
+          "Reusable authorized/sanitized fixtures cover survey plat, residential plan, several-viewport paper layout and synthetic heavy drawing.",
+          "Record entity/vertex counts, runtime/hardware, redraw/interaction latency, import time and peak memory where measurable, including explicitly defined cold and warm runs.",
+          "Results are reproducible enough for comparisons; derive practical regression thresholds from measured variability.",
+          "Identify the measured bottleneck before choosing an optimization and preserve existing correctness references."
+        ],
+        "nextAction": "Retain the completed bounded baseline and extend its existing ID. After integrity investigations, prepare the four literal fixture/protocol definitions without launching the unchanged blocked beta7 route. Actual app measurements require a justified, runnable qualification path and exact current identity.",
+        "dependencies": [
+          "LC-REL-01/02: integrity investigations first",
+          "LC-QA-BETA7-UNPACKED-STARTUP: actual hidden beta7 measurement path remains blocked until changed evidence"
+        ],
+        "relatedIds": [
+          "LC-QA-006",
+          "LC-QA-PERFORMANCE",
+          "LC-PERF-02",
+          "LC-PERF-03",
+          "LC-PERF-04"
+        ],
+        "riskConfirmed": false,
+        "priorityBasis": "P1 measurement prerequisite, ahead of speculative P2 optimization but after integrity evidence. Existing bounded completion remains intact.",
+        "rollback": "Preserve the original fixture/CSV/audit and add distinct workload/version results. No optimization or fabricated before/after measurement is part of intake.",
+        "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+        "recommendationNotVerifiedFinding": true,
+        "acceptanceComplete": false,
+        "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+        "completionRequirements": [
+          "Record the verified problem and affected behavior before a product change.",
+          "Record implementation and relevant executed checks; acceptance must pass before completion.",
+          "For performance work record reproducible before/after measurements.",
+          "Record remaining limitations and the exact rollback method."
+        ],
+        "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+      },
+      "recommendationAliases": [
+        "LC-PERF-01"
+      ],
+      "priorityHistory": [
+        {
+          "previousPriority": 2,
+          "reason": "Representative baseline follow-up is a P1 prerequisite for conditional performance optimizations; historical bounded baseline remains verified."
+        }
+      ]
     },
     {
       "id": "LC-DEV-001",
@@ -987,7 +1048,60 @@
       "review": "Independent runtime/test and cumulative candidate/CI review passed",
       "nativeInstalledAcceptance": "not run for beta7",
       "dailyUseReady": false,
-      "nextAction": "Preserve beta6 historical binary/native evidence. Any beta7 build/unpacked/native qualification is a separate milestone; reassess further coherent extractions independently."
+      "nextAction": "Preserve beta6 historical binary/native evidence. Any beta7 build/unpacked/native qualification is a separate milestone; reassess further coherent extractions independently.",
+      "recommendationReview": {
+        "requestedId": "LC-MAINT-02",
+        "canonicalId": "LC-MAINT-VIEWPORT-NAVIGATION",
+        "queueId": "LC-MAINT-MODULES",
+        "title": "Targeted module separation",
+        "requestedPriority": 3,
+        "priority": 3,
+        "assessment": "partially implemented",
+        "problem": "The bounded viewport navigation extraction is complete, while further geometry/mutation/render/UI separation needs a justified affected subsystem rather than a file-length target.",
+        "implemented": "Four pure navigation helpers live in paper-space with unchanged public exports and independent navigation contracts plus historical source workflow/PDF comparisons. Existing viewport extraction completion is preserved.",
+        "evidence": [
+          "paper-space.mjs:8-26",
+          "core.mjs:1-9",
+          "tests/viewport-navigation-independent.test.mjs",
+          "docs/QUALITY_LOOP.md:viewport navigation source extraction",
+          "docs/QUALITY_BASELINE.md:viewport navigation source extraction"
+        ],
+        "gap": "Future extractions and behavior-based test splits require fresh purpose/contract evidence; no broad reorganization is justified by this intake.",
+        "acceptance": [
+          "Separate pure geometry, document mutation, rendering and UI/IPC responsibilities incrementally when working in affected code.",
+          "Split large test files by behavior only where it improves diagnosis.",
+          "Each extraction has a clear purpose and preserves public behavior, drawing accuracy/identity, file compatibility and undo/redo.",
+          "Avoid repository-wide reorganization solely to reduce file length."
+        ],
+        "nextAction": "Merge this recommendation into the existing navigation/module work, preserve the completed extraction, and defer another extraction until a higher-priority change exposes a concrete responsibility boundary. Reuse independent geometry/history/save/PDF and candidate-identity checks appropriate to the actual change.",
+        "dependencies": [
+          "A separately justified affected subsystem; integrity and measured user benefit take precedence"
+        ],
+        "relatedIds": [
+          "LC-MAINT-MODULES",
+          "LC-MAINT-VIEWPORT-NAVIGATION",
+          "LC-QA-STRUCTURAL-CONTRACTS",
+          "LC-QA-STRUCTURAL-FILES"
+        ],
+        "riskConfirmed": false,
+        "deferredReason": "Additional extraction deferred until there is a concrete affected subsystem; completed navigation extraction remains verified only in its existing scope.",
+        "priorityBasis": "P3 incremental maintenance, merged under existing IDs rather than duplicating a completed extraction.",
+        "rollback": "Preserve public API and historical artifacts; any future extraction names the exact change and focused revert path.",
+        "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+        "recommendationNotVerifiedFinding": true,
+        "acceptanceComplete": false,
+        "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+        "completionRequirements": [
+          "Record the verified problem and affected behavior before a product change.",
+          "Record implementation and relevant executed checks; acceptance must pass before completion.",
+          "For performance work record reproducible before/after measurements.",
+          "Record remaining limitations and the exact rollback method."
+        ],
+        "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+      },
+      "recommendationAliases": [
+        "LC-MAINT-02"
+      ]
     },
     {
       "id": "LC-REL-RECEIPT-IDENTITY",
@@ -1368,6 +1482,740 @@
       "change": "No product/runtime/manifest/workflow change; immutable failure and scope recorded",
       "next": "Reassess saved startup evidence and changed prerequisites before any scoped diagnostic or qualification retry; do not repeat unchanged gate or bypass denials",
       "limits": "Cause undiagnosed; no sandbox/permission/product attribution; no hidden-window acceptance or normal-profile byte measurement; beta6 historical build/native evidence retained; beta7 native/installed/daily-use unqualified"
+    },
+    {
+      "id": "LC-REL-01",
+      "priority": 0,
+      "status": "partially implemented",
+      "problem": "Stronger full-state rollback and mid-batch failure acceptance remain to be established; no drawing-corruption defect was reproduced by this intake.",
+      "sourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+      "sourceVersion": "1.36.1-beta.7",
+      "evidence": [
+        "core.mjs:1642-1675",
+        "core.mjs:1680-1687",
+        "core.mjs:1893-1911",
+        "core.mjs:2012-2035",
+        "core.mjs:2069-2070",
+        "core.mjs:2184-2250",
+        "app.mjs:297-308",
+        "tests/core.test.mjs:735-738",
+        "tests/core.test.mjs:883-892",
+        "tests/core.test.mjs:1735-1748",
+        "tests/trim-comprehensive.test.mjs:22-23",
+        "tests/scripting.test.mjs:115-123"
+      ],
+      "acceptance": [
+        "Inject a failure midway through a representative batch operation.",
+        "A failed atomic command restores document contents/resources/entity identity, selection, dirty state, and undo/redo history to their pre-command state; a failing batch within an established repeated-edit command restores its pre-batch state while retaining earlier accepted repeated edits. No partial edit or spurious undo entry from the failed batch remains.",
+        "A successful operation follows the established undo convention, including previously accepted repeated edits.",
+        "Validate before mutation where practical; retain command-state/revision observations without treating a revision-only discrepancy as drawing loss."
+      ],
+      "next": "First ready investigation: use an owned synthetic two-target batch/fence in the existing pure editor harness; inject a deterministic failure after the first accepted mutation and compare literal document/selection/dirty/history behavior plus successful-command controls. Record the result before any narrowly justified repair. No Electron or converter retry is required.",
+      "confirmedDefect": false,
+      "implementationAttempts": 0,
+      "acceptanceComplete": false,
+      "recommendationReview": {
+        "requestedId": "LC-REL-01",
+        "canonicalId": "LC-REL-01",
+        "queueId": "LC-REL-01",
+        "title": "Atomic multi-object commands",
+        "requestedPriority": 0,
+        "priority": 0,
+        "assessment": "partially implemented",
+        "problem": "Stronger full-state rollback and mid-batch failure acceptance remain to be established; no drawing-corruption defect was reproduced by this intake.",
+        "implemented": "Transforms validate proposals before commit; fence edits have document rollback; scripted revisions stage in another editor and commit once. Existing tests cover pre-mutation rejection and successful grouped history.",
+        "evidence": [
+          "core.mjs:1642-1675",
+          "core.mjs:1680-1687",
+          "core.mjs:1893-1911",
+          "core.mjs:2012-2035",
+          "core.mjs:2069-2070",
+          "core.mjs:2184-2250",
+          "app.mjs:297-308",
+          "tests/core.test.mjs:735-738",
+          "tests/core.test.mjs:883-892",
+          "tests/core.test.mjs:1735-1748",
+          "tests/trim-comprehensive.test.mjs:22-23",
+          "tests/scripting.test.mjs:115-123"
+        ],
+        "gap": "Document snapshots do not encompass every selection/command/revision/history field. Inject failure after an earlier mutation and compare all required state before deciding whether a product fix is justified. Preserve previously accepted repeated COPY/TRIM edits and existing cancel conventions.",
+        "acceptance": [
+          "Inject a failure midway through a representative batch operation.",
+          "A failed atomic command restores document contents/resources/entity identity, selection, dirty state, and undo/redo history to their pre-command state; a failing batch within an established repeated-edit command restores its pre-batch state while retaining earlier accepted repeated edits. No partial edit or spurious undo entry from the failed batch remains.",
+          "A successful operation follows the established undo convention, including previously accepted repeated edits.",
+          "Validate before mutation where practical; retain command-state/revision observations without treating a revision-only discrepancy as drawing loss."
+        ],
+        "nextAction": "First ready investigation: use an owned synthetic two-target batch/fence in the existing pure editor harness; inject a deterministic failure after the first accepted mutation and compare literal document/selection/dirty/history behavior plus successful-command controls. Record the result before any narrowly justified repair. No Electron or converter retry is required.",
+        "dependencies": [],
+        "relatedIds": [
+          "LC-QA-BETA7-UNPACKED-STARTUP"
+        ],
+        "riskConfirmed": false,
+        "priorityBasis": "P0 integrity investigation, not a confirmed P0 defect. Only demonstrated corruption/data-loss risk may preempt stable nearly completed work; complete this evidence step before performance optimization.",
+        "rollback": "Intake changes documentation only. A future runtime repair must record its exact commit and a focused revert/recovery method before completion.",
+        "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+        "recommendationNotVerifiedFinding": true,
+        "acceptanceComplete": false,
+        "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+        "completionRequirements": [
+          "Record the verified problem and affected behavior before a product change.",
+          "Record implementation and relevant executed checks; acceptance must pass before completion.",
+          "For performance work record reproducible before/after measurements.",
+          "Record remaining limitations and the exact rollback method."
+        ],
+        "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+      }
+    },
+    {
+      "id": "LC-REL-02",
+      "priority": 0,
+      "status": "partially implemented",
+      "problem": "Atomic save and validate-before-adoption already exist; the requested existing-valid-file fault matrix and complete active-state failure comparisons remain unqualified.",
+      "sourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+      "sourceVersion": "1.36.1-beta.7",
+      "evidence": [
+        "desktop/main.cjs:285-312",
+        "desktop/main.cjs:405-459",
+        "app.mjs:1823-1844",
+        "app.mjs:1878-1887",
+        "core.mjs:3225-3233",
+        "tests/desktop-unit.test.cjs:131-175",
+        "tests/import-files.test.cjs:17-37",
+        "tests/advanced-security.test.cjs:25"
+      ],
+      "acceptance": [
+        "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
+        "Malformed or canceled import leaves active drawing contents, identity, selection and undo/redo unchanged.",
+        "Errors identify the failed Save/Open/import operation and a useful next step.",
+        "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
+      ],
+      "next": "After LC-REL-01's focused evidence step, extend the existing desktop IPC/filesystem harness with the existing-file failure matrix and complete import-state comparisons; preserve successful overwrite and chooser/cancel controls before considering production changes.",
+      "confirmedDefect": false,
+      "implementationAttempts": 0,
+      "acceptanceComplete": false,
+      "recommendationReview": {
+        "requestedId": "LC-REL-02",
+        "canonicalId": "LC-REL-02",
+        "queueId": "LC-REL-02",
+        "title": "Safe save and failed-import isolation",
+        "requestedPriority": 0,
+        "priority": 0,
+        "assessment": "partially implemented",
+        "problem": "Atomic save and validate-before-adoption already exist; the requested existing-valid-file fault matrix and complete active-state failure comparisons remain unqualified.",
+        "implemented": "Native save writes and flushes an exclusive sibling, renames without deleting the destination, and cleans its owned temporary file. Association/clean state update after success. Open/import validates before renderer replacement. Existing tests cover malformed Open, canceled Save As and some cleanup failures.",
+        "evidence": [
+          "desktop/main.cjs:285-312",
+          "desktop/main.cjs:405-459",
+          "app.mjs:1823-1844",
+          "app.mjs:1878-1887",
+          "core.mjs:3225-3233",
+          "tests/desktop-unit.test.cjs:131-175",
+          "tests/import-files.test.cjs:17-37",
+          "tests/advanced-security.test.cjs:25"
+        ],
+        "gap": "Inject write/sync/rename failures while overwriting an existing valid native drawing. Compare file bytes and complete renderer/editor state for malformed and canceled import. Generic error strings do not establish operation-specific next-step guidance. No claim of power-loss/crash durability follows from sibling rename inspection.",
+        "acceptance": [
+          "Simulated write failure preserves the previous valid drawing, file association and clean/dirty baseline; include write, flush and replacement failure stages.",
+          "Malformed or canceled import leaves active drawing contents, identity, selection and undo/redo unchanged.",
+          "Errors identify the failed Save/Open/import operation and a useful next step.",
+          "Use the platform's supported atomic-save mechanism where available and clean up only owned temporary files safely."
+        ],
+        "nextAction": "After LC-REL-01's focused evidence step, extend the existing desktop IPC/filesystem harness with the existing-file failure matrix and complete import-state comparisons; preserve successful overwrite and chooser/cancel controls before considering production changes.",
+        "dependencies": [
+          "LC-REL-01: ordered investigation; not a claim that save safety depends on batch implementation"
+        ],
+        "relatedIds": [
+          "LC-MON-007",
+          "LC-DEV-001",
+          "LC-MAINT-01"
+        ],
+        "riskConfirmed": false,
+        "priorityBasis": "P0 integrity investigation; no reproduced data loss and no justification to interrupt stable nearly completed work.",
+        "rollback": "Documentation-only intake; retain original valid files and fault receipts. Record a focused rollback method for any future repair.",
+        "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+        "recommendationNotVerifiedFinding": true,
+        "acceptanceComplete": false,
+        "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+        "completionRequirements": [
+          "Record the verified problem and affected behavior before a product change.",
+          "Record implementation and relevant executed checks; acceptance must pass before completion.",
+          "For performance work record reproducible before/after measurements.",
+          "Record remaining limitations and the exact rollback method."
+        ],
+        "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+      }
+    },
+    {
+      "id": "LC-REL-03",
+      "priority": 1,
+      "status": "partially implemented",
+      "problem": "The converter already has substantial bounded execution/cleanup; structured diagnostic custody and unsuccessful-termination acceptance remain incomplete.",
+      "sourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+      "sourceVersion": "1.36.1-beta.7",
+      "evidence": [
+        "desktop/import-files.cjs:8-76",
+        "desktop/main.cjs:87",
+        "desktop/main.cjs:277-282",
+        "tests/import-files.test.cjs:11-37",
+        "tests/converter-identity.cjs:5-10",
+        "dwg-import.mjs:23"
+      ],
+      "acceptance": [
+        "Cover missing binaries, unsupported versions, nonzero exit, stderr-only failure, malformed output, hangs and excessive output.",
+        "Each failure returns a stable structured diagnostic with useful operation/context and bounded privacy-safe technical details.",
+        "No unhandled rejection, orphan process or partial active document remains; execution and owned cleanup are bounded."
+      ],
+      "next": "After integrity evidence, use the existing fake-process importer harness for a focused diagnostic/termination matrix, including kill-false and missing-close behavior. No actual converter retry or new dependency is authorized by this item.",
+      "confirmedDefect": false,
+      "implementationAttempts": 0,
+      "acceptanceComplete": false,
+      "recommendationReview": {
+        "requestedId": "LC-REL-03",
+        "canonicalId": "LC-REL-03",
+        "queueId": "LC-REL-03",
+        "title": "External converter resilience",
+        "requestedPriority": 1,
+        "priority": 1,
+        "assessment": "partially implemented",
+        "problem": "The converter already has substantial bounded execution/cleanup; structured diagnostic custody and unsuccessful-termination acceptance remain incomplete.",
+        "implemented": "Fixed shell-free hidden invocation, 30-second shared deadline, combined 512-KiB stdout/stderr budget, error-stderr/nonzero rejection, bounded file reads, private cleanup and output validation are implemented. Tests pin existing converter identity and cover many failure classes.",
+        "evidence": [
+          "desktop/import-files.cjs:8-76",
+          "desktop/main.cjs:87",
+          "desktop/main.cjs:277-282",
+          "tests/import-files.test.cjs:11-37",
+          "tests/converter-identity.cjs:5-10",
+          "dwg-import.mjs:23"
+        ],
+        "gap": "Current IPC failures are usually ok:false/error:string. Missing-binary/spawn errors and bounded stderr warnings can contain paths. Kill-false/no-close/orphan behavior is unqualified; existing fake processes emit close on kill.",
+        "acceptance": [
+          "Cover missing binaries, unsupported versions, nonzero exit, stderr-only failure, malformed output, hangs and excessive output.",
+          "Each failure returns a stable structured diagnostic with useful operation/context and bounded privacy-safe technical details.",
+          "No unhandled rejection, orphan process or partial active document remains; execution and owned cleanup are bounded."
+        ],
+        "nextAction": "After integrity evidence, use the existing fake-process importer harness for a focused diagnostic/termination matrix, including kill-false and missing-close behavior. No actual converter retry or new dependency is authorized by this item.",
+        "dependencies": [
+          "LC-REL-01/02: integrity investigations first",
+          "LC-MAINT-01: incremental diagnostic vocabulary"
+        ],
+        "relatedIds": [
+          "LC-FMT-001",
+          "LC-FMT-002",
+          "LC-FMT-003",
+          "LC-REL-02",
+          "LC-MAINT-01"
+        ],
+        "riskConfirmed": false,
+        "priorityBasis": "P1 controlled-failure investigation. DWG writer/editability fidelity records remain separate; this is not a duplicate converter-writing attempt.",
+        "rollback": "Retain failure/success controls and original converter resources; future implementation must name a focused rollback commit.",
+        "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+        "recommendationNotVerifiedFinding": true,
+        "acceptanceComplete": false,
+        "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+        "completionRequirements": [
+          "Record the verified problem and affected behavior before a product change.",
+          "Record implementation and relevant executed checks; acceptance must pass before completion.",
+          "For performance work record reproducible before/after measurements.",
+          "Record remaining limitations and the exact rollback method."
+        ],
+        "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+      }
+    },
+    {
+      "id": "LC-REL-04",
+      "priority": 1,
+      "status": "partially implemented",
+      "problem": "Existing byte/entity/geometry/depth budgets do not yet establish responsive end-to-end cancellation or bounded work throughout synchronous parse/recursive expansion.",
+      "sourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+      "sourceVersion": "1.36.1-beta.7",
+      "evidence": [
+        "desktop/import-files.cjs:8-20",
+        "desktop/import-files.cjs:49-78",
+        "desktop/preload.cjs:19",
+        "desktop/main.cjs:202",
+        "dwg-import.mjs:5",
+        "dwg-import.mjs:42-61",
+        "dwg-import.mjs:150-169",
+        "dwg-import.mjs:213",
+        "dwg-import.mjs:252-300",
+        "core.mjs:1224-1287",
+        "core.mjs:1349",
+        "advanced-geometry.mjs:25"
+      ],
+      "acceptance": [
+        "Inspect input bytes, converter output, entity/vertex counts, block expansion, nesting depth, elapsed time and memory growth throughout the pipeline.",
+        "Oversized/pathological inputs fail predictably with useful resource diagnostics.",
+        "Cancellation releases owned resources and preserves the current drawing.",
+        "Ordinary supported files continue to import correctly.",
+        "Evaluate streaming only after profiling demonstrates benefit and the complete pipeline can support it."
+      ],
+      "next": "Freeze deterministic synthetic boundary and cumulative-expansion-work expectations, then characterize cancellation/cleanup contracts without a real converter. Propose only the missing bound or cancellation slice justified by that evidence; streaming stays deferred.",
+      "confirmedDefect": false,
+      "implementationAttempts": 0,
+      "acceptanceComplete": false,
+      "recommendationReview": {
+        "requestedId": "LC-REL-04",
+        "canonicalId": "LC-REL-04",
+        "queueId": "LC-REL-04",
+        "title": "Import resource budgets and cancellation",
+        "requestedPriority": 1,
+        "priority": 1,
+        "assessment": "partially implemented",
+        "problem": "Existing byte/entity/geometry/depth budgets do not yet establish responsive end-to-end cancellation or bounded work throughout synchronous parse/recursive expansion.",
+        "implemented": "Input/generated-read and normalized-document byte limits, process output/time limits, DXF group/object/depth/cycle/INSERT-array controls, and native aggregate HATCH/planar/3D/entity/block budgets already exist.",
+        "evidence": [
+          "desktop/import-files.cjs:8-20",
+          "desktop/import-files.cjs:49-78",
+          "desktop/preload.cjs:19",
+          "desktop/main.cjs:202",
+          "dwg-import.mjs:5",
+          "dwg-import.mjs:42-61",
+          "dwg-import.mjs:150-169",
+          "dwg-import.mjs:213",
+          "dwg-import.mjs:252-300",
+          "core.mjs:1224-1287",
+          "core.mjs:1349",
+          "advanced-geometry.mjs:25"
+        ],
+        "gap": "No import cancellation token/cooperative synchronous-parser interruption is exposed. Cumulative visited-record/expansion work and parse deadline need focused evidence; generated-file growth is checked after process exit. Existing aggregate geometry bounds must not be discarded or described as absent.",
+        "acceptance": [
+          "Inspect input bytes, converter output, entity/vertex counts, block expansion, nesting depth, elapsed time and memory growth throughout the pipeline.",
+          "Oversized/pathological inputs fail predictably with useful resource diagnostics.",
+          "Cancellation releases owned resources and preserves the current drawing.",
+          "Ordinary supported files continue to import correctly.",
+          "Evaluate streaming only after profiling demonstrates benefit and the complete pipeline can support it."
+        ],
+        "nextAction": "Freeze deterministic synthetic boundary and cumulative-expansion-work expectations, then characterize cancellation/cleanup contracts without a real converter. Propose only the missing bound or cancellation slice justified by that evidence; streaming stays deferred.",
+        "dependencies": [
+          "LC-REL-02: active-document preservation reference",
+          "LC-REL-03: process cleanup/diagnostics"
+        ],
+        "relatedIds": [
+          "LC-REL-02",
+          "LC-REL-03",
+          "LC-MAINT-01"
+        ],
+        "riskConfirmed": false,
+        "priorityBasis": "P1 resource/cancellation investigation after integrity checks; missing acceptance is not proof that ordinary supported input loses drawings.",
+        "rollback": "Preserve existing resource limits and ordinary-import controls; record focused rollback before completing any future change.",
+        "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+        "recommendationNotVerifiedFinding": true,
+        "acceptanceComplete": false,
+        "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+        "completionRequirements": [
+          "Record the verified problem and affected behavior before a product change.",
+          "Record implementation and relevant executed checks; acceptance must pass before completion.",
+          "For performance work record reproducible before/after measurements.",
+          "Record remaining limitations and the exact rollback method."
+        ],
+        "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+      }
+    },
+    {
+      "id": "LC-PERF-02",
+      "priority": 2,
+      "status": "deferred with reason",
+      "problem": "Representative measured query bottlenecks and maintenance/memory costs have not justified an index.",
+      "sourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+      "sourceVersion": "1.36.1-beta.7",
+      "evidence": [
+        "core.mjs:928-941",
+        "core.mjs:984-1028",
+        "core.mjs:1029-1041",
+        "app.mjs:272-294"
+      ],
+      "acceptance": [
+        "Proceed only if representative benchmarks justify an index for hit testing, window/crossing selection or snapping; use it to select candidates and retain exact geometry checks.",
+        "Handle model/paper space, transformed blocks, edits, deletion and undo/redo; indexed results match existing behavior on representative/boundary cases.",
+        "Measure query benefit including index maintenance and memory cost.",
+        "Document worst-case behavior and do not promise universal O(log N) queries."
+      ],
+      "next": "Defer implementation until LC-QA-006's expanded baseline identifies a relevant measured bottleneck; then propose one candidate-only index slice with differential correctness controls.",
+      "confirmedDefect": false,
+      "implementationAttempts": 0,
+      "acceptanceComplete": false,
+      "recommendationReview": {
+        "requestedId": "LC-PERF-02",
+        "canonicalId": "LC-PERF-02",
+        "queueId": "LC-PERF-02",
+        "title": "Spatial indexing",
+        "requestedPriority": 2,
+        "priority": 2,
+        "assessment": "deferred with reason",
+        "problem": "Representative measured query bottlenecks and maintenance/memory costs have not justified an index.",
+        "implemented": "Inspected selection/snap paths scan supplied entities and retain exact geometry/visibility behavior, including block traversal. This observation does not assert that every subsystem lacks an index.",
+        "evidence": [
+          "core.mjs:928-941",
+          "core.mjs:984-1028",
+          "core.mjs:1029-1041",
+          "app.mjs:272-294"
+        ],
+        "gap": "No representative comparative measurement supports replacing or augmenting these paths yet.",
+        "acceptance": [
+          "Proceed only if representative benchmarks justify an index for hit testing, window/crossing selection or snapping; use it to select candidates and retain exact geometry checks.",
+          "Handle model/paper space, transformed blocks, edits, deletion and undo/redo; indexed results match existing behavior on representative/boundary cases.",
+          "Measure query benefit including index maintenance and memory cost.",
+          "Document worst-case behavior and do not promise universal O(log N) queries."
+        ],
+        "nextAction": "Defer implementation until LC-QA-006's expanded baseline identifies a relevant measured bottleneck; then propose one candidate-only index slice with differential correctness controls.",
+        "dependencies": [
+          "LC-QA-006: representative baseline and bottleneck evidence"
+        ],
+        "relatedIds": [
+          "LC-QA-006"
+        ],
+        "riskConfirmed": false,
+        "deferredReason": "Speculative optimization without measured benefit; avoid dependency/maintenance cost and selection/snap regressions.",
+        "priorityBasis": "P2 conditional optimization after integrity and measurement.",
+        "rollback": "If later justified, retain the exact scan path for comparison and define index-disable/revert behavior.",
+        "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+        "recommendationNotVerifiedFinding": true,
+        "acceptanceComplete": false,
+        "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+        "completionRequirements": [
+          "Record the verified problem and affected behavior before a product change.",
+          "Record implementation and relevant executed checks; acceptance must pass before completion.",
+          "For performance work record reproducible before/after measurements.",
+          "Record remaining limitations and the exact rollback method."
+        ],
+        "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+      }
+    },
+    {
+      "id": "LC-PERF-03",
+      "priority": 2,
+      "status": "deferred with reason",
+      "problem": "The inspected curve/hatch display path performs geometry work, but profiling has not established a cache-worthy hotspot or acceptable memory budget.",
+      "sourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+      "sourceVersion": "1.36.1-beta.7",
+      "evidence": [
+        "app.mjs:225-242",
+        "core.mjs:1224-1231"
+      ],
+      "acceptance": [
+        "Cache expensive hatch/spline/curve display geometry only where profiling supports it.",
+        "Track geometry, block, transform and display-tolerance dependencies; bound memory and release obsolete entries.",
+        "Edits and undo/redo never display stale geometry; zoom-dependent accuracy remains appropriate.",
+        "Demonstrate reduced repeated work without unacceptable memory growth, including before/after measurements."
+      ],
+      "next": "Defer until the expanded baseline measures repeated tessellation cost. If justified, propose one bounded cache and independently test edit/block/transform/tolerance/undo invalidation.",
+      "confirmedDefect": false,
+      "implementationAttempts": 0,
+      "acceptanceComplete": false,
+      "recommendationReview": {
+        "requestedId": "LC-PERF-03",
+        "canonicalId": "LC-PERF-03",
+        "queueId": "LC-PERF-03",
+        "title": "Bounded tessellation caches",
+        "requestedPriority": 2,
+        "priority": 2,
+        "assessment": "deferred with reason",
+        "problem": "The inspected curve/hatch display path performs geometry work, but profiling has not established a cache-worthy hotspot or acceptable memory budget.",
+        "implemented": "Display curve sampling already adapts to scale with bounded sample counts, and hatch/block display primitives have defined geometry paths. No blanket claim about all caches is made.",
+        "evidence": [
+          "app.mjs:225-242",
+          "core.mjs:1224-1231"
+        ],
+        "gap": "Repeated-work savings, invalidation keys and cache memory limits remain to be justified before adding state.",
+        "acceptance": [
+          "Cache expensive hatch/spline/curve display geometry only where profiling supports it.",
+          "Track geometry, block, transform and display-tolerance dependencies; bound memory and release obsolete entries.",
+          "Edits and undo/redo never display stale geometry; zoom-dependent accuracy remains appropriate.",
+          "Demonstrate reduced repeated work without unacceptable memory growth, including before/after measurements."
+        ],
+        "nextAction": "Defer until the expanded baseline measures repeated tessellation cost. If justified, propose one bounded cache and independently test edit/block/transform/tolerance/undo invalidation.",
+        "dependencies": [
+          "LC-QA-006: representative profiling and memory evidence"
+        ],
+        "relatedIds": [
+          "LC-QA-006",
+          "LC-PERF-04"
+        ],
+        "riskConfirmed": false,
+        "deferredReason": "No measured benefit or memory budget yet; new cache state could compromise display accuracy.",
+        "priorityBasis": "P2 conditional optimization, after integrity/measurement.",
+        "rollback": "Future cache must have a bypass/revert path while retaining direct geometry generation.",
+        "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+        "recommendationNotVerifiedFinding": true,
+        "acceptanceComplete": false,
+        "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+        "completionRequirements": [
+          "Record the verified problem and affected behavior before a product change.",
+          "Record implementation and relevant executed checks; acceptance must pass before completion.",
+          "For performance work record reproducible before/after measurements.",
+          "Record remaining limitations and the exact rollback method."
+        ],
+        "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+      }
+    },
+    {
+      "id": "LC-PERF-04",
+      "priority": 2,
+      "status": "deferred with reason",
+      "problem": "The inspected paper draw path redraws viewport content, but no representative measurement establishes redundant viewport work as the bottleneck.",
+      "sourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+      "sourceVersion": "1.36.1-beta.7",
+      "evidence": [
+        "app.mjs:2215-2229",
+        "app.mjs:2568-2604",
+        "paper-space.mjs:8-26",
+        "tests/viewport-navigation-independent.test.mjs"
+      ],
+      "acceptance": [
+        "Reuse viewport rendering only when dependencies are unchanged, including model revisions, view transforms, layer overrides, clipping, block changes and display settings.",
+        "Affected viewports refresh correctly and unaffected viewports avoid redundant work.",
+        "Screen and plotted/exported output remain consistent, including edits and undo/redo.",
+        "Demonstrate measured benefit with before/after multi-viewport results."
+      ],
+      "next": "Defer render reuse until the multi-viewport baseline identifies redundant repaint cost; then document dependencies and choose one independently reviewable invalidation slice.",
+      "confirmedDefect": false,
+      "implementationAttempts": 0,
+      "acceptanceComplete": false,
+      "recommendationReview": {
+        "requestedId": "LC-PERF-04",
+        "canonicalId": "LC-PERF-04",
+        "queueId": "LC-PERF-04",
+        "title": "Viewport invalidation",
+        "requestedPriority": 2,
+        "priority": 2,
+        "assessment": "deferred with reason",
+        "problem": "The inspected paper draw path redraws viewport content, but no representative measurement establishes redundant viewport work as the bottleneck.",
+        "implemented": "Paper rendering establishes per-viewport clipping/context, renders model content and then paper/borders; current repaint remains the comparison oracle. The existing navigation extraction did not implement viewport render reuse.",
+        "evidence": [
+          "app.mjs:2215-2229",
+          "app.mjs:2568-2604",
+          "paper-space.mjs:8-26",
+          "tests/viewport-navigation-independent.test.mjs"
+        ],
+        "gap": "A complete dependency/invalidation model and benefit over current repaint have not been established.",
+        "acceptance": [
+          "Reuse viewport rendering only when dependencies are unchanged, including model revisions, view transforms, layer overrides, clipping, block changes and display settings.",
+          "Affected viewports refresh correctly and unaffected viewports avoid redundant work.",
+          "Screen and plotted/exported output remain consistent, including edits and undo/redo.",
+          "Demonstrate measured benefit with before/after multi-viewport results."
+        ],
+        "nextAction": "Defer render reuse until the multi-viewport baseline identifies redundant repaint cost; then document dependencies and choose one independently reviewable invalidation slice.",
+        "dependencies": [
+          "LC-QA-006: multi-viewport measurement",
+          "LC-PERF-03: coordinate shared dependencies if caches are independently justified"
+        ],
+        "relatedIds": [
+          "LC-QA-006",
+          "LC-MAINT-VIEWPORT-NAVIGATION"
+        ],
+        "riskConfirmed": false,
+        "deferredReason": "No measured bottleneck or complete invalidation contract yet; preserve current screen/plot correctness.",
+        "priorityBasis": "P2 conditional optimization; navigation extraction remains a completed separate behavior-preserving milestone.",
+        "rollback": "Future reuse must retain full repaint as a correctness/bypass path and record a focused rollback.",
+        "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+        "recommendationNotVerifiedFinding": true,
+        "acceptanceComplete": false,
+        "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+        "completionRequirements": [
+          "Record the verified problem and affected behavior before a product change.",
+          "Record implementation and relevant executed checks; acceptance must pass before completion.",
+          "For performance work record reproducible before/after measurements.",
+          "Record remaining limitations and the exact rollback method."
+        ],
+        "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+      }
+    },
+    {
+      "id": "LC-MAINT-01",
+      "priority": 3,
+      "status": "partially implemented",
+      "problem": "Some stable codes/busy flags exist, while common file/converter failures primarily expose message strings; a consolidated incremental vocabulary is not established.",
+      "sourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+      "sourceVersion": "1.36.1-beta.7",
+      "evidence": [
+        "desktop/main.cjs:87-88",
+        "desktop/main.cjs:325-330",
+        "desktop/open-files.cjs:40",
+        "desktop/open-files.cjs:51",
+        "desktop/open-files.cjs:72"
+      ],
+      "acceptance": [
+        "Introduce or consolidate stable validation, geometry, resource-limit, conversion and file-operation error codes incrementally.",
+        "Separate concise user messages from technical diagnostics and preserve privacy.",
+        "UI and tests can use stable codes rather than fragile message matching.",
+        "Existing callers remain compatible or receive an explicit migration."
+      ],
+      "next": "Treat this as shared vocabulary for the next justified reliability change, beginning with a small converter/file diagnostic contract; do not undertake a repository-wide error rewrite.",
+      "confirmedDefect": false,
+      "implementationAttempts": 0,
+      "acceptanceComplete": false,
+      "recommendationReview": {
+        "requestedId": "LC-MAINT-01",
+        "canonicalId": "LC-MAINT-01",
+        "queueId": "LC-MAINT-01",
+        "title": "Structured error categories",
+        "requestedPriority": 3,
+        "priority": 3,
+        "assessment": "partially implemented",
+        "problem": "Some stable codes/busy flags exist, while common file/converter failures primarily expose message strings; a consolidated incremental vocabulary is not established.",
+        "implemented": "Existing IPC ok/error/canceled shapes and OPEN_REQUEST_BUSY code are compatibility contracts to retain.",
+        "evidence": [
+          "desktop/main.cjs:87-88",
+          "desktop/main.cjs:325-330",
+          "desktop/open-files.cjs:40",
+          "desktop/open-files.cjs:51",
+          "desktop/open-files.cjs:72"
+        ],
+        "gap": "Stable validation/geometry/resource/conversion/file categories and separate user/technical fields should be introduced only in touched paths with compatibility controls.",
+        "acceptance": [
+          "Introduce or consolidate stable validation, geometry, resource-limit, conversion and file-operation error codes incrementally.",
+          "Separate concise user messages from technical diagnostics and preserve privacy.",
+          "UI and tests can use stable codes rather than fragile message matching.",
+          "Existing callers remain compatible or receive an explicit migration."
+        ],
+        "nextAction": "Treat this as shared vocabulary for the next justified reliability change, beginning with a small converter/file diagnostic contract; do not undertake a repository-wide error rewrite.",
+        "dependencies": [
+          "A justified touched reliability path; may supply a small prerequisite slice within LC-REL-02/03/04"
+        ],
+        "relatedIds": [
+          "LC-REL-02",
+          "LC-REL-03",
+          "LC-REL-04"
+        ],
+        "riskConfirmed": false,
+        "priorityBasis": "P3 cross-cutting maintenance; a minimal code contract may accompany a higher-priority justified reliability change without elevating a broad rewrite.",
+        "rollback": "Preserve current ok/error/canceled/busy fields until a tested migration; future change records exact rollback.",
+        "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+        "recommendationNotVerifiedFinding": true,
+        "acceptanceComplete": false,
+        "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+        "completionRequirements": [
+          "Record the verified problem and affected behavior before a product change.",
+          "Record implementation and relevant executed checks; acceptance must pass before completion.",
+          "For performance work record reproducible before/after measurements.",
+          "Record remaining limitations and the exact rollback method."
+        ],
+        "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+      }
     }
-  ]
+  ],
+  "recommendationTriage": {
+    "format": "LinecraftRecommendationTriage/1",
+    "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+    "recommendationCount": 10,
+    "record": "docs/BACKLOG-RECOMMENDATIONS.md",
+    "rules": [
+      "Recommendations are investigations, not verified findings; completion requires the item acceptance criteria.",
+      "Confirmed drawing-corruption/data-loss defects precede performance work.",
+      "P0 on LC-REL-01/02 labels integrity investigation priority; no P0 corruption defect was confirmed by this intake.",
+      "Do not interrupt stable nearly completed work unless confirmed drawing-corruption/data-loss risk warrants it.",
+      "Preserve drawing accuracy, file compatibility, entity identity, undo/redo and established drafting/cancel conventions.",
+      "One justified improvement at a time; inspect first, use independent expectations/failing regression before a product fix, and reuse the current development workflow.",
+      "Avoid broad rewrites and new dependencies without demonstrated benefit; no speculative indexing/cache/render-reuse implementation.",
+      "Keep original fixtures, baselines, histories, artifacts and failed evidence; preserve source/hidden/native/installed/daily-use qualification boundaries.",
+      "Completed items record verified behavior, implementation/checks, performance before/after where applicable, limitations and rollback."
+    ],
+    "knownOpenConstraints": [
+      {
+        "id": "LC-QA-BETA7-UNPACKED-STARTUP",
+        "priority": 1,
+        "state": "Existing generic launch failure remains blocked; no cause established and no unchanged retry authorized."
+      },
+      {
+        "id": "LC-SEC-SCRIPT-DESCRIPTOR",
+        "priority": 1,
+        "state": "Native helper/OS/runtime admission remains unqualified; preserve existing production boundary."
+      },
+      {
+        "id": "LC-FMT-001",
+        "priority": 1,
+        "state": "DWG writer/editability fidelity remains unqualified and separate from reader-process robustness; no new converter attempt granted."
+      }
+    ],
+    "workOrder": [
+      "LC-REL-01",
+      "LC-REL-02",
+      "LC-REL-03",
+      "LC-REL-04",
+      "LC-QA-006",
+      "LC-PERF-02",
+      "LC-PERF-03",
+      "LC-PERF-04",
+      "LC-MAINT-01",
+      "LC-MAINT-VIEWPORT-NAVIGATION"
+    ],
+    "nextReadyInvestigation": "LC-REL-01",
+    "optimizationDependencies": {
+      "LC-PERF-02": "LC-QA-006",
+      "LC-PERF-03": "LC-QA-006",
+      "LC-PERF-04": "LC-QA-006"
+    },
+    "mappings": [
+      {
+        "requestedId": "LC-REL-01",
+        "canonicalId": "LC-REL-01",
+        "queueId": "LC-REL-01",
+        "assessment": "partially implemented",
+        "priority": 0
+      },
+      {
+        "requestedId": "LC-REL-02",
+        "canonicalId": "LC-REL-02",
+        "queueId": "LC-REL-02",
+        "assessment": "partially implemented",
+        "priority": 0
+      },
+      {
+        "requestedId": "LC-REL-03",
+        "canonicalId": "LC-REL-03",
+        "queueId": "LC-REL-03",
+        "assessment": "partially implemented",
+        "priority": 1
+      },
+      {
+        "requestedId": "LC-REL-04",
+        "canonicalId": "LC-REL-04",
+        "queueId": "LC-REL-04",
+        "assessment": "partially implemented",
+        "priority": 1
+      },
+      {
+        "requestedId": "LC-PERF-01",
+        "canonicalId": "LC-QA-006",
+        "queueId": "LC-QA-PERFORMANCE",
+        "assessment": "partially implemented",
+        "priority": 1
+      },
+      {
+        "requestedId": "LC-PERF-02",
+        "canonicalId": "LC-PERF-02",
+        "queueId": "LC-PERF-02",
+        "assessment": "deferred with reason",
+        "priority": 2
+      },
+      {
+        "requestedId": "LC-PERF-03",
+        "canonicalId": "LC-PERF-03",
+        "queueId": "LC-PERF-03",
+        "assessment": "deferred with reason",
+        "priority": 2
+      },
+      {
+        "requestedId": "LC-PERF-04",
+        "canonicalId": "LC-PERF-04",
+        "queueId": "LC-PERF-04",
+        "assessment": "deferred with reason",
+        "priority": 2
+      },
+      {
+        "requestedId": "LC-MAINT-01",
+        "canonicalId": "LC-MAINT-01",
+        "queueId": "LC-MAINT-01",
+        "assessment": "partially implemented",
+        "priority": 3
+      },
+      {
+        "requestedId": "LC-MAINT-02",
+        "canonicalId": "LC-MAINT-VIEWPORT-NAVIGATION",
+        "queueId": "LC-MAINT-MODULES",
+        "assessment": "partially implemented",
+        "priority": 3
+      }
+    ]
+  }
 }
