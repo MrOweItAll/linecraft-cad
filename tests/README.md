@@ -373,3 +373,9 @@ The candidate profile selects it: 47 stages / 1,223 checks / 217 inputs on uncha
 beta9 runtime. See [oracles and limits](../docs/RENDERER-ISOLATION-REFERENCES.md).
 Optional LINECRAFT_RENDERER_ISOLATION_REPORT must remain private. The initial
 fixture void-API failure is preserved and is not a production defect.
+
+
+`file-diagnostics-reference.test.cjs` runs actual main source under fake Electron
+and owned files:22 controls for ordinary Save/Open/import diagnostic/privacy and
+compatibility contracts, with canned import dispatch and no application/converter.
+See [the scoped record](../docs/FILE-OPERATION-DIAGNOSTICS.md).

@@ -274,6 +274,39 @@ function sendAction(action) {
   if (ACTIONS.has(action) && mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('linecraft:action', action);
 }
 
+// Only ordinary Save/Open diagnostics use this catalog. Other IPC contracts stay unchanged.
+const FILE_FAILURES = Object.freeze({
+  request: ['FILE_REQUEST_INVALID', 'Review the file request and try again.'],
+  validation: ['DRAWING_VALIDATION_FAILED', 'Choose a supported drawing within 25 MiB or recover a known-good backup.'],
+  dialog: ['FILE_DIALOG_FAILED', 'Retry the file chooser.'],
+  write: ['FILE_WRITE_FAILED', 'Keep the drawing open and try Save As to a writable location with free space.'],
+  read: ['FILE_READ_FAILED', 'Choose a readable copy of the drawing.'],
+  import: ['FILE_IMPORT_FAILED', 'Review the source drawing or choose another supported file.'],
+  finalize: ['FILE_FINALIZATION_FAILED', 'Check the current drawing and saved file before trying again.'],
+});
+const FILE_SYSTEM_CODES = new Set(['EACCES','EBUSY','EEXIST','EIO','EISDIR','EMFILE','ENAMETOOLONG','ENOENT','ENOSPC','ENOTDIR','EPERM','EROFS']);
+function ownErrorValue(error, key) {
+  try { return error && Object.getOwnPropertyDescriptor(error, key)?.value; }
+  catch { return undefined; }
+}
+function fileSystemCode(error) {
+  const value = ownErrorValue(error, 'code');
+  return typeof value === 'string' && FILE_SYSTEM_CODES.has(value) ? value : undefined;
+}
+function fileFailure(error, operation, stage) {
+  const diagnostic = {stage}, systemCode = fileSystemCode(error);
+  if (systemCode) diagnostic.systemCode = systemCode;
+  const message = ownErrorValue(error, 'message');
+  // Exact authored messages only: appended backend details are never reflected.
+  if (message === 'A modeling, paper, plane or units helper changed. Restart launch-dev.cmd to refresh native validation; the drawing checkpoint is preserved.' ||
+      message === 'An imported DWG/PDF modeling dependency changed. Restart launch-dev.cmd to refresh its native module graph; the drawing checkpoint is preserved.') {
+    const nextStep = 'A modeling, paper, plane or units helper changed. Restart launch-dev.cmd to refresh native validation.';
+    return {ok:false, error:`Could not ${operation} the drawing. ${nextStep}`, code:'DEVELOPMENT_RESTART_REQUIRED', operation, nextStep, diagnostic};
+  }
+  const [code, nextStep] = FILE_FAILURES[stage];
+  return {ok:false, error:`Could not ${operation} the drawing. ${nextStep}`, code, operation, nextStep, diagnostic};
+}
+
 async function fileOperation(operation) {
   if (fileOperationBusy) return failure('Another file operation is already in progress.');
   fileOperationBusy = true;
@@ -307,7 +340,7 @@ async function atomicWrite(destination, text) {
   } finally {
     if (handle) { try { await handle.close(); } catch {} }
     // Cleanup is limited to the unique temporary file created by this operation.
-    if (created) { try { await fs.unlink(temporary); } catch (error) { if (error.code !== 'ENOENT') console.warn('Could not remove temporary save file:', error.message); } }
+    if (created) { try { await fs.unlink(temporary); } catch (error) { if (error.code !== 'ENOENT') console.warn('Could not remove temporary save file.', fileSystemCode(error) ?? 'UNKNOWN'); } }
   }
   return absolute;
 }
@@ -405,6 +438,8 @@ function registerIPC() {
   ipcMain.handle('linecraft:open', event => {
     if (!trusted(event)) return failure('Untrusted file request.');
     return fileOperation(async () => {
+      let operation = 'open', stage = 'dialog';
+      try {
       const chosen = await dialog.showOpenDialog(mainWindow, {
         title: 'Open drawing', properties: ['openFile'],
         filters: [{ name: 'Supported drawings', extensions: ['linecraft','json','dwg','dxf'] },{name:'Linecraft drawing',extensions:['linecraft','json']},{name:'DWG/DXF drawing',extensions:['dwg','dxf']}],
@@ -412,18 +447,25 @@ function registerIPC() {
       if (chosen.canceled || !chosen.filePaths[0]) return canceled();
       const destination = path.resolve(chosen.filePaths[0]);
       if(['.dwg','.dxf'].includes(path.extname(destination).toLowerCase())){
+        operation = 'import'; stage = 'import';
         const imported=await importExchangeDrawing(destination);
+        stage = 'finalize';
         // Import is complete and validated before changing any private association.
         // A source DWG/DXF is never an eligible native Save destination.
         drawingPath=null;importSaveName=`${path.parse(destination).name}.linecraft`;discardAuthorization=null;
         await persistDevelopmentPath();documentState={dirty:true,name:importSaveName,text:imported.text};updateTitle();
         return {ok:true,text:imported.text,name:importSaveName,imported:true,importInfo:imported.importInfo};
       }
+      stage = 'read';
       const status = await fs.stat(destination);
+      stage = 'validation';
       if (!status.isFile()) throw new Error('Select a drawing file.');
       if (status.size > MAX_TEXT_BYTES) throw new Error('Drawing exceeds the 25 MiB size limit.');
+      stage = 'read';
       const text = await fs.readFile(destination, 'utf8');
+      stage = 'validation';
       await validateDrawing(text);
+      stage = 'finalize';
       drawingPath = destination;
       importSaveName = null;
       discardAuthorization = null;
@@ -431,16 +473,21 @@ function registerIPC() {
       documentState = { dirty: false, name: path.basename(destination), text };
       updateTitle();
       return { ok: true, text, name: path.basename(destination) };
+      } catch (error) { return fileFailure(error, operation, stage); }
     });
   });
 
   ipcMain.handle('linecraft:save', (event, text, saveAs = false) => {
     if (!trusted(event)) return failure('Untrusted file request.');
     return fileOperation(async () => {
+      let stage = 'request';
+      try {
       if (typeof saveAs !== 'boolean') throw new Error('Save As must be true or false.');
+      stage = 'validation';
       await validateDrawing(text);
       let destination = drawingPath;
       if (!destination || saveAs) {
+        stage = 'dialog';
         const chosen = await dialog.showSaveDialog(mainWindow, {
           title: saveAs ? 'Save Linecraft drawing as' : 'Save Linecraft drawing',
           defaultPath: drawingPath ?? importSaveName ?? 'Untitled.linecraft',
@@ -449,7 +496,9 @@ function registerIPC() {
         if (chosen.canceled || !chosen.filePath) return canceled();
         destination = withExtension(chosen.filePath, 'linecraft');
       }
+      stage = 'write';
       const writtenPath = await atomicWrite(destination, text);
+      stage = 'finalize';
       drawingPath = writtenPath;
       importSaveName = null;
       discardAuthorization = null;
@@ -457,6 +506,7 @@ function registerIPC() {
       documentState = { dirty: false, name: path.basename(writtenPath), text };
       updateTitle();
       return { ok: true, name: path.basename(writtenPath) };
+      } catch (error) { return fileFailure(error, 'save', stage); }
     });
   });
 

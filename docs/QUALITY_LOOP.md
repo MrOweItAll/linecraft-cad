@@ -628,3 +628,21 @@ contract before any product fix. Full renderer/preload/queued-open, host integra
 paper/3D, development/clipboard/native/crash and daily-use qualification remain open.
 No Electron/application/PDF/build/converter acceptance or unchanged startup retry
 ran. The first fixture-API failure is retained separately from production behavior.
+
+
+## Beta10 ordinary file diagnostics - October 30, 2026 UTC
+
+The [focused diagnostic repair](FILE-OPERATION-DIAGNOSTICS.md) adds controlled
+operation/category/next-step errors for ordinary Save/Open/import, retaining exact
+success/cancel/busy/trust responses and unchanged file replacement semantics.
+The frozen baseline has 3/20 passing controls and 17 diagnostic-contract failures;
+the final suite passes 22/22. Independent review caught and reproduced a development
+restart wording regression before correction. Both fast runs and failures remain.
+The final fast profile passes 48/48 stages, 1,245 portable checks and 219 inputs.
+Beta10 changes only main from beta9, retaining 59 runtime/12 resources and seven
+cumulative changes. No dependency/schema/geometry or installed state changed.
+
+LC-REL-02 remains partial; next investigate development checkpoint/discard state
+boundaries. Real renderer/transport/converter, crash, application/PDF/build/native/
+installed/daily-use qualification remains open. Beta7 startup is still unexplained;
+no unchanged application retry occurred. Historical beta6 acceptance keeps its scope.
