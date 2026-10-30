@@ -539,3 +539,15 @@ and actual native file bytes match; measured PDF geometry and raster match exact
 PDF file hashes differ. Independent code/test and cumulative candidate/CI reviews
 passed. These are source checks: beta7 has no new build, unpacked, visible native,
 installed or daily-use qualification. Historical beta6 evidence retains its scope.
+
+## First beta7 unpacked attempt - October 30, 2026 UTC
+
+A fresh isolated unpacked command passed 41 portable stages/1053 checks and failed
+at its first hidden source Electron launch before any application acceptance or
+independent PDF check. Its generic Playwright launch error leaves the startup
+cause unknown. No build output or installer was produced. All 395 tracked source
+files and 209 bound inputs were unchanged through the attempt; eight synthetic
+inputs were generated before launch. Failed receipts and prior reports are retained.
+No unchanged retry, bypass, runtime fix or tolerance change followed. Historical
+beta6 built/native evidence remains separate. Beta7 automated build/unpacked,
+visible native, installed/upgrade and daily-use readiness remain unqualified.

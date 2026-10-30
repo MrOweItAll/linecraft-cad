@@ -502,3 +502,18 @@ with all32 cases and the unchanged checksum-block digest passing. Both PowerShel
 references are explicit auxiliaries; no actual publisher, remote, native or
 installed action runs. This is a bounded two-field policy fix, not full-schema,
 artifact-authenticity or general candidate-release qualification.
+
+## First beta7 unpacked qualification attempt - October 30, 2026 UTC
+
+The existing isolated unpacked route passed 41 portable stages with 1053 checks,
+then failed at the first hidden source Electron launch. The generic
+Playwright launch error does not identify an application, dependency, permission,
+sandbox or GPU cause. No application acceptance/PDF audit completed; packaging,
+unpacked execution and installer compilation were not reached. Synthetic input
+files were prepared before launch. Source and all 209 gate inputs stayed unchanged.
+
+Failure evidence is retained privately. No unchanged retry, visibility/permission
+workaround or product fix was attempted. This is a blocked beta7 attempt, not a
+passing candidate gate. Beta6 remains the historical built/native candidate;
+beta7 build/native/installed and daily-use qualification remain open. Continue
+fresh evidence/intake review with the hourly task active while startup is unresolved.

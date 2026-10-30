@@ -1354,6 +1354,20 @@
       "repairAttempts": 1,
       "limits": "Field-value admission only; not fullJSON/rootobject schema, authenticity, actual assets or publisher/CI/native/installed/daily-use qualification",
       "repairScope": "One demonstrated case-sensitive collation gap repaired with guarded System.String.Equals Ordinal; before/initial/Unicode failure receipts retained"
+    },
+    {
+      "id": "LC-QA-BETA7-UNPACKED-STARTUP",
+      "priority": 1,
+      "status": "blocked at first hidden source Electron startup; beta7 unpacked not built",
+      "problem": "First beta7 unpacked qualification stopped before application acceptance and packaging at a generic Playwright Electron launch failure",
+      "fixture": "Existing synthetic ordinary-grip inputs and explicit isolated hidden source profile; no client or installed executable selected",
+      "validation": "41 portable stages/1053 checks passed; stage 42 launch failed; 0 application/PDF acceptance; no build/installer; 395 source files/209 inputs unchanged",
+      "implementationAttempts": 0,
+      "qualificationAttempts": 1,
+      "repairAttempts": 0,
+      "change": "No product/runtime/manifest/workflow change; immutable failure and scope recorded",
+      "next": "Reassess saved startup evidence and changed prerequisites before any scoped diagnostic or qualification retry; do not repeat unchanged gate or bypass denials",
+      "limits": "Cause undiagnosed; no sandbox/permission/product attribution; no hidden-window acceptance or normal-profile byte measurement; beta6 historical build/native evidence retained; beta7 native/installed/daily-use unqualified"
     }
   ]
 }
