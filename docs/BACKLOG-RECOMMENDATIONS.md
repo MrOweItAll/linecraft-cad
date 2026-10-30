@@ -389,3 +389,25 @@ loss is established. Next investigate exact host/renderer recovery coherence and
 Save routing before repair. Renderer history/gating/storage, warning privacy,
 OS watching/transport, converter/crash/native/installed/daily-use remain open.
 No Electron/application/PDF/build/converter or unchanged startup retry ran.
+
+
+## Pending paired recovery target safety - October 30, 2026 UTC
+
+The [frozen paired reference](PAIRED-RECOVERY-REFERENCES.md) has10checks:
+6pass/4pending safety failures,9scenario traces and no harness errors. After an
+accepted Save As and failed auxiliary checkpoint, fresh actual-main modules and
+verbatim renderer recovery/Save source attempt unrelated A. A precreation barrier
+preserves A and accepted B. Equal names and equal baselines plus a new recovered
+edit also fail; they cannot establish identity. This is a source-model finding,
+not an executed overwrite or real application-restart/drawing-loss result.
+
+The pending reference is outside the selected passing fast profile, but its bytes
+are bound as an auxiliary input. The fresh selected fast result is49/49stages,
+1,288checks and222inputs; it does not claim the pending contract passes. Two earlier
+9-check receipts and the initial fast profile remain preserved; independent review
+strengthened safe outcomes, identity ambiguity and history before final binding.
+Runtime/app/manifest/package/version/CI are unchanged beta10. No productfix or
+additional repair approach was attempted. LC-REL-02 remains partial; review durable
+paired identity/legacy migration and compatibility before its one remaining attempt.
+LC-REL-01 retains zero remaining attempts. All application/storage/transport/native/
+installed/crash/ordinary-loss limits and beta7's unknown startup cause remain.

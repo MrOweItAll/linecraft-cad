@@ -8,15 +8,19 @@ const A=JSON.stringify({format:'Linecraft/1',entities:[{id:'A',type:'LINE',layer
 const B=JSON.stringify({format:'Linecraft/1',entities:[{id:'B',type:'CIRCLE',layer:'0',center:{x:20,y:40},radius:8}]});
 const C=JSON.stringify({format:'Linecraft/1',entities:[{id:'C',type:'LINE',layer:'0',start:{x:100,y:200},end:{x:130,y:240}}]});
 const marker='UNRELATED OWNED FILE',directories=[],hosts=[];
+const ownedSessions=new WeakMap();
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
 function deferred(){let resolve;const promise=new Promise(r=>{resolve=r;});return {promise,resolve};}
 const failure=()=>Object.assign(Error('SYNTHETIC_PRIVATE_CHECKPOINT_MESSAGE'),{code:'EIO'});
-async function host({record='valid',packaged=false}={}){
-  const directory=path.join(root,'work','development-state-reference',Date.now()+'-'+randomUUID());
+async function host({record='valid',packaged=false,restartOf=null}={}){
+  const previous=restartOf===null?null:ownedSessions.get(restartOf);
+  if(restartOf!==null){assert.ok(previous,'Restart requires a fixture-created host token.');assert.equal(restartOf.snapshot().busy,false);assert.equal(record,'valid');}
+  const directory=previous?.directory??path.join(root,'work','development-state-reference',Date.now()+'-'+randomUUID());
   const profile=path.join(directory,'profile'),a=path.join(directory,'A.linecraft'),b=path.join(directory,'B.linecraft');
   const checkpoint=path.join(profile,'development-document-path.json'),sentinel=path.join(directory,'unrelated.tmp');
-  await fs.mkdir(profile,{recursive:true});directories.push(directory);
-  await fs.writeFile(a,A);await fs.writeFile(b,B);await fs.writeFile(sentinel,marker);
+  if(!previous){await fs.mkdir(profile,{recursive:true});directories.push(directory);
+    await fs.writeFile(a,A);await fs.writeFile(b,B);await fs.writeFile(sentinel,marker);}
+  else assert.equal(await fs.readFile(sentinel,'utf8'),marker);
   const association=(drawingPath=a,importSaveName=null)=>JSON.stringify({format:'LinecraftDevelopmentPath/1',drawingPath,importSaveName});
   let checkpointText=association();
   if(record==='malformed')checkpointText='{broken';
@@ -26,10 +30,11 @@ async function host({record='valid',packaged=false}={}){
   if(record==='directory')checkpointText=association(profile);
   if(record==='invalid-target')await fs.writeFile(a,'{invalid');
   if(record==='import-name')checkpointText=association(null,'Imported.linecraft');
-  if(record!=='absent')await fs.writeFile(checkpoint,checkpointText);
-  const beforeStartup={nativeA:await fs.readFile(a,'utf8'),nativeB:await fs.readFile(b,'utf8'),checkpoint:record==='absent'?null:await fs.readFile(checkpoint,'utf8')};
+  if(!previous&&record!=='absent')await fs.writeFile(checkpoint,checkpointText);
+  const beforeStartup={nativeA:await fs.readFile(a,'utf8'),nativeB:await fs.readFile(b,'utf8'),checkpoint:await fs.readFile(checkpoint,'utf8').catch(error=>{if(error.code==='ENOENT')return null;throw error;})};
   const handlers=new Map(),events=new Map(),choices={open:[],save:[],confirm:[]},trace=[],warnings=[];
-  let phase=null,window,startup,hold=null,checkpointRenames=0;
+  let phase=null,window,startup,hold=null,checkpointRenames=0,protectA=false;
+  const blockedNativeWrites=[],dialogCalls={open:0,save:0,confirm:0};
   const owned=filename=>assert.ok(path.resolve(filename).startsWith(directory+path.sep),'Only owned writes are permitted.');
   const choose=async queue=>{const result=queue.shift();if(result instanceof Error)throw result;return typeof result==='function'?result():result;};
   const facade={...fs,
@@ -38,6 +43,7 @@ async function host({record='valid',packaged=false}={}){
       owned(filename);assert.equal(flags,'wx');assert.equal(mode,0o600);
       assert.ok(path.basename(filename).startsWith('.')&&filename.endsWith('.tmp'));
       const scoped=path.dirname(filename)===profile;trace.push({operation:'open',filename,scoped});
+      if(protectA&&!scoped&&path.dirname(filename)===path.dirname(a)&&path.basename(filename).startsWith('.'+path.basename(a)+'.')){blockedNativeWrites.push({target:a,temporary:filename});throw Object.assign(Error('SYNTHETIC_WRONG_TARGET_WRITE_BLOCKED'),{code:'EACCES'});}
       if(scoped&&phase==='open')throw failure();
       const handle=await fs.open(filename,flags,mode);let closes=0;
       return {writeFile:async(text,encoding)=>{trace.push({operation:'write',filename,scoped});if(scoped&&['write','cleanup'].includes(phase)){await handle.writeFile(Buffer.from(text).subarray(0,9));throw failure();}return handle.writeFile(text,encoding);},
@@ -66,7 +72,7 @@ async function host({record='valid',packaged=false}={}){
     show(){throw Error('No real or fake window show is expected.');}close(){}
   }
   const electron={app,BrowserWindow:FakeWindow,Menu:{buildFromTemplate:x=>x,setApplicationMenu:()=>{}},
-    dialog:{showOpenDialog:async()=>await choose(choices.open)??{canceled:true,filePaths:[]},showSaveDialog:async()=>await choose(choices.save)??{canceled:true},showMessageBox:async()=>await choose(choices.confirm)??{response:2},showErrorBox:()=>{throw Error('Unexpected startup error dialog.');}},
+    dialog:{showOpenDialog:async()=>{dialogCalls.open++;return await choose(choices.open)??{canceled:true,filePaths:[]};},showSaveDialog:async()=>{dialogCalls.save++;return await choose(choices.save)??{canceled:true};},showMessageBox:async()=>{dialogCalls.confirm++;return await choose(choices.confirm)??{response:2};},showErrorBox:()=>{throw Error('Unexpected startup error dialog.');}},
     ipcMain:{handle:(name,callback)=>handlers.set(name,callback),on:(name,callback)=>events.set(name,callback)},
     session:{defaultSession:{setPermissionRequestHandler:()=>{},setPermissionCheckHandler:()=>{},webRequest:{onBeforeRequest:()=>{},onHeadersReceived:()=>{}}}},
   };
@@ -80,14 +86,15 @@ async function host({record='valid',packaged=false}={}){
   assert.ok(startup);await startup;assert.ok(window&&handlers.has('linecraft:save'));
   const event={sender:window.webContents,senderFrame:window.webContents.mainFrame};
   const invoke=(name,...args)=>handlers.get(name)(event,...args),snapshot=()=>structuredClone(instance.exports.snapshot());
-  const result={directory,profile,a,b,checkpoint,sentinel,trace,warnings,choices,invoke,snapshot,association,beforeStartup,mainSHA256:hash(source),
+  const result={directory,profile,a,b,checkpoint,sentinel,trace,warnings,choices,invoke,snapshot,association,beforeStartup,blockedNativeWrites,dialogCalls,mainSHA256:hash(source),
     get title(){return window.title;},setPhase:value=>{phase=value;checkpointRenames=0;},
     update:value=>events.get('linecraft:document-state')(event,value),
     invalidUpdate:value=>events.get('linecraft:document-state')({sender:{},senderFrame:{}},value),
     untrustedConfirm:()=>handlers.get('linecraft:confirm-discard')({sender:{},senderFrame:{}},'Untrusted'),
     holdCheckpoint:()=>{hold={entered:deferred(),release:deferred()};return hold;},
+    protectOriginalA:()=>{protectA=true;},
     enqueue:filename=>{assert.ok([a,b].includes(filename));app.emit('open-file',{preventDefault:()=>{}},filename);},
     queue:async()=>{app.emit('open-file',{preventDefault:()=>{}},b);const peek=await invoke('linecraft:open-request',{action:'peek'});assert.ok(peek.request);const prepared=await invoke('linecraft:open-request',{action:'prepare',id:peek.request.id});assert.equal(prepared.ok,true,prepared.error);assert.equal(prepared.text,B);return peek.request.id;},
-  };hosts.push(result);return result;
+  };ownedSessions.set(result,{directory});hosts.push(result);return result;
 }
 module.exports={host,A,B,C,marker,hash,directories,hosts,deferred};

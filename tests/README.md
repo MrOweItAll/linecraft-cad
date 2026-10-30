@@ -385,3 +385,9 @@ See [the scoped record](../docs/FILE-OPERATION-DIAGNOSTICS.md).
 `development-state-host.cjs`:43 source/fake-host checks for development association
 and discard/queued-adoption boundaries, owned profiles and no application/watchers.
 See [the bounded record](../docs/DEVELOPMENT-STATE-REFERENCES.md).
+
+
+`paired-recovery-reference.test.cjs` is an explicit pending safety contract,
+not selected by the passing fast profile. Its10checks currently give6pass/4fail
+with9source-model scenarios. A write barrier preserves unrelated synthetic A
+before temporary creation. See [the pending record](../docs/PAIRED-RECOVERY-REFERENCES.md).
