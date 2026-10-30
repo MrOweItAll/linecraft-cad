@@ -23,26 +23,29 @@ function createDrawingImporter({converterPath,converterArguments,parseDXF,parseD
     const object=context.trimStart().match(/^(?:WARN(?:ING)?:\s*)?Unsupported object (ACDB[A-Z0-9_]{1,60})\b/i);
     return object?`WARNING: Unsupported object ${object[1]}. Path details omitted.`:'DWG converter reported a warning. Path details omitted.';
   }
-  async function boundedRead(filename,maxBytes){
+  const cancellation=()=>{const error=new Error('Drawing import was canceled.');error.name='AbortError';error.code='IMPORT_ABORTED';return error;};
+  const checkSignal=signal=>{if(signal?.aborted)throw cancellation();};
+  async function boundedRead(filename,maxBytes,signal){
+    checkSignal(signal);
     const handle=await fs.open(filename,'r');
     try{
-      const status=await handle.stat();if(!status.isFile())throw new Error('Select a drawing file.');if(status.size>maxBytes)throw new Error(`Drawing exceeds the ${Math.floor(maxBytes/1048576)} MiB import size limit.`);
+      checkSignal(signal);const status=await handle.stat();checkSignal(signal);if(!status.isFile())throw new Error('Select a drawing file.');if(status.size>maxBytes)throw new Error(`Drawing exceeds the ${Math.floor(maxBytes/1048576)} MiB import size limit.`);
       const chunks=[];let total=0,position=0;
-      while(true){const buffer=Buffer.allocUnsafe(Math.min(65536,maxBytes-total+1)),{bytesRead}=await handle.read(buffer,0,buffer.length,position);if(!bytesRead)break;total+=bytesRead;if(total>maxBytes)throw new Error('Drawing grew beyond the import size limit.');chunks.push(buffer.subarray(0,bytesRead));position+=bytesRead;}
+      while(true){const buffer=Buffer.allocUnsafe(Math.min(65536,maxBytes-total+1)),{bytesRead}=await handle.read(buffer,0,buffer.length,position);checkSignal(signal);if(!bytesRead)break;total+=bytesRead;if(total>maxBytes)throw new Error('Drawing grew beyond the import size limit.');chunks.push(buffer.subarray(0,bytesRead));position+=bytesRead;}
       return Buffer.concat(chunks,total);
     }finally{await handle.close();}
   }
-  function convert(input,output,cwd,format,budget,custody){
+  function convert(input,output,cwd,format,budget,custody,signal){
     return new Promise((resolve,reject)=>{
-      let child,settled=false,closed=false,timer,grace,abortError=null;const diagnosticChunks=[];
-      const finish=(error,result={warnings:[]})=>{if(settled)return;settled=true;clearTimeout(timer);clearTimeout(grace);error?reject(error):resolve(result);};
-      if(Date.now()>=budget.deadline){finish(new Error('DWG conversion exceeded its time limit. The original drawing is unchanged.'));return;}
+      let child,settled=false,closed=false,timer,grace,onAbort,abortError=null;const diagnosticChunks=[];
+      const finish=(error,result={warnings:[]})=>{if(settled)return;settled=true;clearTimeout(timer);clearTimeout(grace);if(onAbort)signal.removeEventListener('abort',onAbort);error?reject(error):resolve(result);};
+      checkSignal(signal);if(Date.now()>=budget.deadline){finish(new Error('DWG conversion exceeded its time limit. The original drawing is unchanged.'));return;}
       try{child=spawn(binary,converterArguments(input,output,format),{cwd,shell:false,windowsHide:true,stdio:['ignore','pipe','pipe']});}
       catch{finish(new Error('DWG converter could not start.'));return;}
       custody.children.add(child);
-      const abort=message=>{
+      const abort=error=>{
         if(settled||closed||abortError)return;
-        abortError=new Error(message);clearTimeout(timer);
+        abortError=typeof error==='string'?new Error(error):error;clearTimeout(timer);
         // A successful kill request is not exit confirmation. Set state before
         // calling kill because an adapter may synchronously deliver close.
         try{child.kill('SIGKILL');}catch{}
@@ -65,7 +68,8 @@ function createDrawingImporter({converterPath,converterArguments,parseDXF,parseD
         if(lines.some(line=>/\b(?:error|fatal)\b/i.test(line))){finish(new Error('DWG converter reported an error despite its exit status. The original drawing is unchanged.'));return;}
         finish(null,{warnings:lines.slice(0,20).map(warningText),warningCount:lines.length});
       });
-      timer=setTimeout(()=>abort('DWG conversion exceeded its time limit. The original drawing is unchanged.'),Math.max(1,budget.deadline-Date.now()));
+      if(signal){onAbort=()=>abort(cancellation());signal.addEventListener('abort',onAbort);if(signal.aborted)onAbort();}
+      if(!settled&&!closed&&!abortError)timer=setTimeout(()=>abort('DWG conversion exceeded its time limit. The original drawing is unchanged.'),Math.max(1,budget.deadline-Date.now()));
     });
   }
   async function safelyRemove(directory,realDirectory){
@@ -73,13 +77,14 @@ function createDrawingImporter({converterPath,converterArguments,parseDXF,parseD
     if(path.dirname(resolved)!==privateRoot||!path.basename(resolved).startsWith('linecraft-import-'))return false;
     try{const status=await fs.lstat(resolved);if(status.isSymbolicLink()||!status.isDirectory()||await fs.realpath(resolved)!==realDirectory)return false;await fs.rm(resolved,{recursive:true,force:true});return true;}catch(error){if(error.code==='ENOENT')return true;console.warn('Private import cleanup was skipped.');return false;}
   }
-  async function importDrawing(filename){
+  async function importDrawing(filename,{signal}={}){
+    checkSignal(signal);
     if(typeof filename!=='string'||!path.isAbsolute(filename))throw new Error('Choose an absolute drawing file.');
     const extension=path.extname(filename).toLowerCase();if(!['.dwg','.dxf'].includes(extension))throw new Error('This import accepts DWG or DXF files.');
     const custody=extension==='.dwg'?{children:new Set(),finalizing:false,cleanupPromise:null}:null;
     if(custody&&pendingImports.size)throw new Error('A previous DWG import has not completed cleanup. Keep the original and use a DXF copy while it is unresolved.');
     if(custody)pendingImports.add(custody);
-    let bytes,temporary=null,realTemporary=null,conversion={warnings:[],warningCount:0},dwgMetadata;
+    let bytes,temporary=null,realTemporary=null,conversion={warnings:[],warningCount:0},dwgMetadata,candidate;
     if(custody)custody.cleanup=()=>{
       if(!custody.finalizing||custody.children.size)return;
       if(!custody.cleanupPromise)custody.cleanupPromise=Promise.resolve().then(async()=>{
@@ -88,29 +93,32 @@ function createDrawingImporter({converterPath,converterArguments,parseDXF,parseD
       return custody.cleanupPromise;
     };
     try{
-      const original=await boundedRead(filename,extension==='.dwg'?limits.dwg:limits.dxfInput);bytes=original;
+      const original=await boundedRead(filename,extension==='.dwg'?limits.dwg:limits.dxfInput,signal);checkSignal(signal);bytes=original;
       if(extension==='.dwg'){
-        const binaryStatus=await fs.stat(binary);if(!binaryStatus.isFile())throw new Error('The bundled DWG converter is unavailable.');
-        await fs.mkdir(privateRoot,{recursive:true});temporary=await fs.mkdtemp(path.join(privateRoot,'linecraft-import-'));realTemporary=await fs.realpath(temporary);
+        const binaryStatus=await fs.stat(binary);checkSignal(signal);if(!binaryStatus.isFile())throw new Error('The bundled DWG converter is unavailable.');
+        await fs.mkdir(privateRoot,{recursive:true});checkSignal(signal);temporary=await fs.mkdtemp(path.join(privateRoot,'linecraft-import-'));realTemporary=await fs.realpath(temporary);checkSignal(signal);
         const input=path.join(temporary,'input.dwg'),output=path.join(temporary,'output.dxf'),budget={deadline:Date.now()+limits.timeoutMs,outputBytes:0};
-        await fs.writeFile(input,original,{flag:'wx',mode:0o600});conversion=await convert(input,output,temporary,'DXF',budget,custody);
-        const readOutput=async(filename,label)=>{const status=await fs.lstat(filename);if(status.isSymbolicLink()||!status.isFile()||path.dirname(await fs.realpath(filename))!==realTemporary)throw new Error(`DWG converter did not produce a private regular ${label} file.`);return boundedRead(filename,limits.dxf);};
-        bytes=await readOutput(output,'DXF');
+        await fs.writeFile(input,original,{flag:'wx',mode:0o600});checkSignal(signal);conversion=await convert(input,output,temporary,'DXF',budget,custody,signal);checkSignal(signal);
+        const readOutput=async(filename,label)=>{checkSignal(signal);const status=await fs.lstat(filename);checkSignal(signal);const actual=await fs.realpath(filename);checkSignal(signal);if(status.isSymbolicLink()||!status.isFile()||path.dirname(actual)!==realTemporary)throw new Error(`DWG converter did not produce a private regular ${label} file.`);return boundedRead(filename,limits.dxf,signal);};
+        bytes=await readOutput(output,'DXF');checkSignal(signal);
         if(parseDWGMetadata){
-          const metadataOutput=path.join(temporary,'metadata.json'),second=await convert(input,metadataOutput,temporary,'JSON',budget,custody);
-          dwgMetadata=await parseDWGMetadata(await readOutput(metadataOutput,'JSON metadata'));
+          const metadataOutput=path.join(temporary,'metadata.json'),second=await convert(input,metadataOutput,temporary,'JSON',budget,custody,signal);checkSignal(signal);
+          const metadataBytes=await readOutput(metadataOutput,'JSON metadata');checkSignal(signal);dwgMetadata=await parseDWGMetadata(metadataBytes);checkSignal(signal);
           if(!dwgMetadata||typeof dwgMetadata!=='object'||Array.isArray(dwgMetadata))throw new Error('DWG metadata decoder returned invalid layer information.');
           conversion={warnings:[...conversion.warnings,...second.warnings].slice(0,20),warningCount:conversion.warningCount+second.warningCount};
         }
       }
-      const parsed=await parseDXF(bytes,{dwgMetadata});
+      checkSignal(signal);const parsed=await parseDXF(bytes,{dwgMetadata,signal});checkSignal(signal);
       if(!parsed||typeof parsed.text!=='string')throw new Error('Drawing import did not produce a valid document.');
       if(Buffer.byteLength(parsed.text,'utf8')>limits.drawing)throw new Error('Imported document exceeds the 25 MiB drawing size limit.');
-      await validateDrawing(parsed.text);
+      await validateDrawing(parsed.text);checkSignal(signal);
       const summary=parsed.report;
       if(!summary||!Number.isInteger(summary.importedEntities)||summary.importedEntities<=0)throw new Error('This drawing contains no supported objects.');
-      return {text:parsed.text,importInfo:{...summary,warnings:[...(Array.isArray(summary.warnings)?summary.warnings:[]),...conversion.warnings],converterWarningCount:conversion.warningCount,sourceFormat:extension.slice(1).toUpperCase(),converted:extension==='.dwg'}};
+      candidate={text:parsed.text,importInfo:{...summary,warnings:[...(Array.isArray(summary.warnings)?summary.warnings:[]),...conversion.warnings],converterWarningCount:conversion.warningCount,sourceFormat:extension.slice(1).toUpperCase(),converted:extension==='.dwg'}};
     }finally{if(custody){custody.finalizing=true;await custody.cleanup();}}
+    // Reached only after success: cancellation during cleanup cannot replace an
+    // earlier operation failure, and cannot return a successful stale candidate.
+    checkSignal(signal);return candidate;
   }
   return Object.freeze({importDrawing});
 }

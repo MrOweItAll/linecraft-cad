@@ -2,7 +2,9 @@
 import {createEditor as defaultCreateEditor,textLayout,triangulatePolygon,parseRichText,canonicalFontFamily,modelUnitMillimeters} from './core.mjs';
 import {validateEllipse,validateSpline} from './advanced-geometry.mjs';
 
-const MAX_BYTES=50*1024*1024,MAX_RECORDS=1000000,MAX_ENTITIES=100000;
+const MAX_BYTES=50*1024*1024,MAX_RECORDS=1000000,MAX_ENTITIES=100000,MAX_WORK_UNITS=1000000;
+const fatalImportErrors=new WeakSet();
+function importControlError(code,message,name='Error'){const error=new Error(message);error.code=code;error.name=name;fatalImportErrors.add(error);return error;}
 const first=(record,code,fallback)=>record.groups.find(pair=>pair[0]===code)?.[1]??fallback;
 const num=(record,code,fallback)=>{const raw=first(record,code,fallback);if(raw===undefined||String(raw).trim()===''||!Number.isFinite(Number(raw)))throw Error(`Invalid ${record.type} coordinate/value ${code}.`);return Number(raw);};
 const xyz=(record,code=10)=>({x:num(record,code),y:num(record,code+10),z:num(record,code+20,0)});
@@ -44,7 +46,7 @@ export function readDXF(source){
   if(source.startsWith('AutoCAD Binary DXF'))throw Error('Binary DXF is unsupported; convert to ASCII DXF.');
   // GNU's Windows writer can produce CRCRLF; all recognized record line endings are transport.
   const rows=source.replace(/^\uFEFF/,'').split(/\r*\n|\r/),records=[],header=Object.create(null);
-  if(rows.length>MAX_RECORDS*2+2)throw Error('DXF exceeds one million group pairs.');
+  if(Math.floor(rows.length/2)>MAX_RECORDS)throw Error('DXF exceeds one million group pairs.');
   let section=null,pending=false,current=null,variable=null,ended=false;
   const flush=()=>{if(current)records.push(current);current=null;};
   for(let i=0;i+1<rows.length;i+=2){
@@ -106,7 +108,11 @@ function ocs(record){
 function compact(points,closed=false){const p=points.filter((v,i)=>!i||!eq(v,points[i-1]));if(closed&&p.length>1&&eq(p[0],p.at(-1)))p.pop();return p;}
 
 /** Import model space; recursively expand ordinary INSERTs with bounded affine transformations. */
-export function importDXF(source,{sourceName='Imported DXF',createEditor=defaultCreateEditor,dwgMetadata=null}={}){
+export function importDXF(source,{sourceName='Imported DXF',createEditor=defaultCreateEditor,dwgMetadata=null,workBudget,signal}={}){
+  const checkSignal=()=>{if(signal?.aborted)throw importControlError('IMPORT_ABORTED','Drawing import was canceled.','AbortError');};
+  checkSignal();const maxUnits=workBudget===undefined?MAX_WORK_UNITS:workBudget?.maxUnits;
+  if(!Number.isSafeInteger(maxUnits)||maxUnits<1||maxUnits>MAX_WORK_UNITS)throw importControlError('IMPORT_BUDGET_INVALID','Import work budget must be a positive safe integer at most 1000000.');
+  let workUnits=0;const spendWork=()=>{checkSignal();if(++workUnits>maxUnits)throw importControlError('IMPORT_WORK_LIMIT','Drawing import exceeded its work limit.');};
   const {records,header}=readDXF(source),warnings=new Map(),unsupported=new Map(),entities=[],layers=new Map(),blocks=new Map(),styles=new Map(),dimStyles=new Map(),handleStyles=new Map(),imageResources=[],layouts=[];let currentPaperLayout=null;
   const warn=(key,message)=>{const old=warnings.get(key);warnings.set(key,{message,count:(old?.count??0)+1});};
   const skip=(type,message)=>{unsupported.set(type,(unsupported.get(type)??0)+1);if(message)warn(type,message);};
@@ -168,7 +174,7 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
   const decodeRecords=(list,context={transform:identity,layer:null,color:null},depth=0,ancestry=[])=>{
     if(depth>16)throw Error('Block nesting exceeds 16 levels.');
     for(let i=0;i<list.length;i++){
-      const record=list[i];if(['VERTEX','SEQEND','ATTRIB','ATTDEF'].includes(record.type)){if(record.type==='ATTRIB'||record.type==='ATTDEF')skip(record.type,'Block attributes are not editable/imported annotations.');continue;}
+      spendWork();const record=list[i];if(['VERTEX','SEQEND','ATTRIB','ATTDEF'].includes(record.type)){if(record.type==='ATTRIB'||record.type==='ATTDEF')skip(record.type,'Block attributes are not editable/imported annotations.');continue;}
       const common=styleFor(record,context),transform=context.transform;
       try{
         if(record.type==='LEADER'){
@@ -253,7 +259,7 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
           const basis=ocs(record),position=basis.point(xyz(record)),sx=num(record,41,1),sy=num(record,42,1),sz=num(record,43,1),rotation=radians(num(record,50,0)),columns=num(record,70,1),rows=num(record,71,1);
           if(!sx||!sy||!sz||!Number.isInteger(columns)||!Number.isInteger(rows)||columns<1||rows<1||columns*rows>10000)throw Error('Invalid block scale or array.');
           const c=Math.cos(rotation),s=Math.sin(rotation);
-          for(let row=0;row<rows;row++)for(let column=0;column<columns;column++){
+          for(let row=0;row<rows;row++)for(let column=0;column<columns;column++){spendWork();
             const apply=p=>{const x=(p.x-block.base.x)*sx+column*num(record,44,0),y=(p.y-block.base.y)*sy+row*num(record,45,0),z=(p.z-block.base.z)*sz;return transform(add(position,add(add(mul(basis.a,x*c-y*s),mul(basis.b,x*s+y*c)),mul(basis.n,z))));};
             decodeRecords(block.records,{transform:apply,layer:common.layer,color:common.color??layers.get(common.layer)?.color,colorSource:common.colorSource??layers.get(common.layer)?.colorSource},depth+1,[...ancestry,name]);
           }
@@ -294,7 +300,7 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
         if(record.type==='POINT'){skip('POINT','Standalone points are unsupported.');continue;}
         skip(record.type,`Unsupported ${record.type} objects were not imported.`);
       }catch(error){
-        if(/nesting exceeds|Cyclic block|exceeds 100000/.test(error.message))throw error;
+        if(fatalImportErrors.has(error)||/nesting exceeds|Cyclic block|exceeds 100000/.test(error.message))throw error;
         skip(record.type,`Some ${record.type} objects cannot be represented: ${error.message}`);
       }
     }
@@ -330,8 +336,8 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
   if(angularFormat==='dms'&&nativeAngularPrecision<4)warn('coarse-dms','Source degrees-only or degree/minute precision uses whole-second DMS display; geometric angles are retained.');
   const unitSettings={units,precision,linearFormat,fractionPrecision:linearFormat==='architectural'?precision:4,angularInputUnit:angularCode===3?'radians':'degrees',angularFormat,angularPrecision:angularFormat==='dms'?Math.max(0,nativeAngularPrecision-4):nativeAngularPrecision};
   const document={format:'Linecraft/1',entities,layers:[...layers.values()],currentLayer,textStyles:[...styles.values()],dimStyles:[...dimStyles.values()],settings:unitSettings,workspace:entities.some(entity=>['MESH','POLY3D','CIRCLE3D','ARC3D'].includes(entity.type))?'3d':'2d',...(layouts.length?{layouts,activeSpace:'paper',activeLayoutId:layouts[0].id}:{}),...(imageResources.length?{imageResources,rasterSettings:{frame:num(records.find(record=>record.type==='RASTERVARIABLES')??{groups:[]},70,1)}}:{})};
-  const editor=createEditor(),accepted=editor.importJSON(JSON.stringify(document));if(!accepted.ok)throw Error(`Imported geometry did not pass document validation: ${accepted.message}`);
-  const text=editor.serialize();if(new TextEncoder().encode(text).length>25*1024*1024)throw Error('Normalized drawing exceeds the 25MiB document limit.');
+  checkSignal();const editor=createEditor();checkSignal();const accepted=editor.importJSON(JSON.stringify(document));checkSignal();if(!accepted.ok)throw Error(`Imported geometry did not pass document validation: ${accepted.message}`);
+  const text=editor.serialize();checkSignal();if(new TextEncoder().encode(text).length>25*1024*1024)throw Error('Normalized drawing exceeds the 25MiB document limit.');
   const report={sourceFormat:'DXF',sourceName:String(sourceName).slice(0,1024),modelSourceEntities:modelRecords.filter(record=>!['VERTEX','SEQEND'].includes(record.type)).length,importedEntities:editor.state.entities.length,unsupportedByType:Object.fromEntries(unsupported),unsupportedEntities:[...unsupported.values()].reduce((sum,n)=>sum+n,0),warnings:[...warnings.values()],modelSpaceOnly:!layouts.length,paperLayouts:layouts.map(l=>({id:l.id,name:l.name,entities:editor.state.entities.filter(e=>e.layoutId===l.id).length,viewports:l.viewports.length,paper:l.paper,plotSettings:l.plotSettings})),sourceLayerStatesFromDWG:dwgMetadata!==null,sourceAssociationAdopted:false,originalFileWritten:false,scope:'Supported model and owned paper primitives with bounded ordinary block expansion, editable rich MTEXT and linked raster resources. Unsupported objects, missing image/font resources and rich-text layout limitations are reported; proprietary solids, xrefs and unrestricted native compatibility are not claimed.'};
-  return{text,report};
+  checkSignal();return{text,report};
 }
