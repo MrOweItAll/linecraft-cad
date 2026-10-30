@@ -462,3 +462,12 @@ Run the pending import-budget reference explicitly with
 selected55/55stages,1438checks,230inputs do not qualify pending options. See
 [the literal work/geometry oracles and limits](../docs/IMPORT-BUDGET-REFERENCE.md).
 No production default or mid-parse/renderer cancellation is established.
+
+
+The superseding work reference has36checks (20pass/16expectedfail), and
+`node --test tests/import-cancellation-reference.test.cjs` has21checks
+(6pass/15expectedfail), both with zero final unexpected errors. They are pending
+auxiliaries, bound among231inputs and excluded from selected55/55stages and
+1438checks. See [the reviewed contract](../docs/ADR-002-IMPORT-WORK-CANCELLATION.md)
+and [source projection limits](../docs/IMPORT-BUDGET-REFERENCE.md). Runtime remains
+beta12, zero LC-REL-04 repair approaches used; the older26-check record is history.

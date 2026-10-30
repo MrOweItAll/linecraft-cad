@@ -94,3 +94,47 @@ real resource-exhaustion acceptance, application/PDF/build/unpacked/native/insta
 upgrade/client or daily-use qualification ran. Beta7 startup cause remains unknown.
 LC-REL-01/02 stay exhausted; LC-REL-03 keeps its one remaining approach and existing
 beta12 source qualification. All prior restrictions and receipts remain in force.
+
+## Reviewed default and awaited cancellation prerequisite - October 30, 2026 UTC
+
+The older26-check result above is preserved history. The expanded work reference
+now has36checks:20pass/16expectedfail across35namedcases, zero unexpected errors.
+Twelve work failures comprise the three existing tightening cases, one default-over
+case, seven invalid overrides and one malformed-input precedence case. Two pre-abort
+prerequisites and two assertions
+for the one actual group-transport inconsistency remain. The new default worker
+uses literal LINE endpoints and `1+999+999*1000` units, producing999LINEs and
+998,001skippedPOINTs at the inclusive boundary. A corrected worker-template escape
+failure is preserved separately as fixture evidence, not a product defect.
+
+[ADR-002](ADR-002-IMPORT-WORK-CANCELLATION.md) chooses a prospective1,000,000-unit
+default and positive-safe-integer tightening-only overrides, owned fatal error
+identity through recursive catches, acquisition-safe cancellation and first-error
+preservation. This is an accepted future implementation contract; current beta12
+still implements neither new work option nor signal handling.
+
+The separate `import-cancellation-reference.test.cjs` has21checks:6pass and
+15expectedfail across20namedcases, zero final unexpected errors. Actual importer
+module bodies use owned real files/handles and real core validation, canned
+parse/metadata candidates, fake children/manual timers and actual AbortSignals.
+Held open/read/mkdtemp/metadata/parse/validation/cleanup schedules pin resource
+custody, candidate suppression, exact first-timeout preservation and synchronous
+kill-close/registration races. The no-close case pins a prospective1,000ms grace
+and deferred late-close cleanup; teardown closure alone cannot qualify it.
+
+Three cases bind the actual importer into verbatim main Open/fileOperation/
+fileFailure bodies with explicit helper state and binding/persistence/title
+adapters. The successful candidate and invalid-validation controls pass; ignored
+cancellation currently adopts the canned candidate. This is a limited source
+projection, not real IPC/full exchange/renderer or checkpoint atomicity. It does
+not cover every possible stat/realpath/write/output-read fault schedule. Earlier
+fixture setup errors remain preserved and superseded, with no assertion weakened.
+
+Both references are fingerprinted auxiliaries, excluded from passing acceptance.
+The fresh selected profile remains55/55stages and1,438checks, now231exactinputs.
+Converter48 and recovery102 remain selected. Runtime, manifest, version, package
+and CI are unchanged beta12. Zero LC-REL-04 product repair approaches are used.
+Next implement the first reviewed ADR-002 approach, qualifying both references
+and compatibility controls before acceptance. Streaming remains deferred. All
+broader application/native/installed, real-memory, FS-stall, crash and transport
+limits above remain; no actual converter or unchanged application retry ran.

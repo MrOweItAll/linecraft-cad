@@ -558,3 +558,21 @@ is used. The selected fast profile passes55/55stages,1,438checks,230inputs and
 excludes the pending26reference. Next review work-option/default/fatal-error
 propagation and awaited importer cancellation/cleanup/adoption controls. All
 application/native/installed and prior limits remain; no actual converter ran.
+
+
+## Reviewed import cancellation contract - October 30, 2026 UTC
+
+[ADR-002](ADR-002-IMPORT-WORK-CANCELLATION.md) freezes a prospective1,000,000-unit
+shared decoder/cell default, tightening-only overrides, owned fatal identity and
+acquisition-safe trusted cancellation with first-error preservation. Runtime stays
+beta12; this is prerequisite work and consumes zero LC-REL-04 repair approaches.
+The expanded work pack is36checks:20pass/16expectedfail; the new awaited-importer
+and bounded main-Open projection is21checks:6pass/15expectedfail. Both have zero
+final unexpected errors; fixture failures and earlier26-check evidence are retained.
+Canned parser/metadata candidates, real core/file I/O, fake children/manual timers
+and explicit main helper adapters limit these claims. No real IPC, renderer,
+filesystem-stall deadline, mid-parse responsiveness or drawing-loss claim follows.
+Both packs remain auxiliary-only. The fresh selected fast gate is55/55stages,
+1,438checks,231exactinputs; converter48/recovery102 remain selected. Next implement
+the first reviewed ADR-002 approach and qualify both pending packs. Broader
+application/native/installed/daily-use limits persist; no actual converter ran.

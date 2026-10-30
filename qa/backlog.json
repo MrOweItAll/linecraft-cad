@@ -3687,7 +3687,7 @@
       "priority": 1,
       "status": "partially implemented",
       "problem": "The source reference confirms final-newline-dependent group-budget admission and freezes missing prospective cumulative-work/pre-abort interfaces. Existing byte/entity/geometry/depth/array budgets remain; end-to-end cancellation/adoption acceptance is incomplete.",
-      "sourceCommit": "04aac6de35d5f4057c8fe21f17e3718e8f0dd72c",
+      "sourceCommit": "c03b9e2420c03458c2e6d60e70ed1129497039c7",
       "sourceVersion": "1.36.1-beta.12",
       "evidence": [
         "desktop/import-files.cjs:8-20",
@@ -3703,7 +3703,9 @@
         "core.mjs:1349",
         "advanced-geometry.mjs:25",
         "tests/import-budget-reference.test.mjs",
-        "docs/IMPORT-BUDGET-REFERENCE.md"
+        "docs/IMPORT-BUDGET-REFERENCE.md",
+        "tests/import-cancellation-reference.test.cjs",
+        "docs/ADR-002-IMPORT-WORK-CANCELLATION.md"
       ],
       "acceptance": [
         "Inspect input bytes, converter output, entity/vertex counts, block expansion, nesting depth, elapsed time and memory growth throughout the pipeline.",
@@ -3712,7 +3714,7 @@
         "Ordinary supported files continue to import correctly.",
         "Evaluate streaming only after profiling demonstrates benefit and the complete pipeline can support it."
       ],
-      "next": "Review the LC-REL-04 prospective workBudget/signal vocabulary, production default and error identity propagation through recursive per-record catches before a first product repair. Freeze awaited importer cancellation/cleanup and actual validation/adoption expectations next; current pre-abort cases only test missing source-interface prerequisites. Preserve existing byte/output/entity/depth/cycle/per-array/geometry budgets and ordinary imports. Streaming stays deferred. LC-REL-04 has zero repair approaches used; LC-REL-01/02 remain exhausted and LC-REL-03 has at most one remaining. No actual converter or unchanged application retry, native/installed/client action or publication is authorized.",
+      "next": "Implement the first reviewed LC-REL-04 ADR-002 approach: consistent complete-pair admission, shared default/tightening-only decoded-record/cell budget with owned fatal propagation, and acquisition-safe trusted importer cancellation preserving the first failure and beta12 cleanup custody. Both pending work36 and cancellation21 packs must pass exact source before acceptance; preserve converter48/recovery102, existing resource bounds and ordinary imports. Record the approach and cumulative 59-runtime/12-resource manifest before runtime mutation. LC-REL-04 remains zero used/at most two; LC-REL-01/02 exhausted and LC-REL-03 at most one remaining. Streaming deferred; no actual converter, unchanged application retry, native/installed/client action or publication.",
       "confirmedDefect": true,
       "implementationAttempts": 0,
       "acceptanceComplete": false,
@@ -3740,7 +3742,7 @@
           "core.mjs:1349",
           "advanced-geometry.mjs:25"
         ],
-        "gap": "Three work-budget and two pre-abort prerequisites remain unsupported; one group-transport inconsistency has two failing assertions. Awaited importer cancellation/cleanup/adoption, full pipeline visited-work/deadline and real memory behavior remain unqualified.",
+        "gap": "Reviewed work/default/owned-error and awaited cancellation prerequisites remain unimplemented: work36 has20pass/16expectedfail and cancellation21 has6pass/15expectedfail, both zero final unexpected errors. Full pipeline/native/IPC/memory/FS-stall acceptance remains incomplete.",
         "acceptance": [
           "Inspect input bytes, converter output, entity/vertex counts, block expansion, nesting depth, elapsed time and memory growth throughout the pipeline.",
           "Oversized/pathological inputs fail predictably with useful resource diagnostics.",
@@ -3748,7 +3750,7 @@
           "Ordinary supported files continue to import correctly.",
           "Evaluate streaming only after profiling demonstrates benefit and the complete pipeline can support it."
         ],
-        "nextAction": "Review the LC-REL-04 prospective workBudget/signal vocabulary, production default and error identity propagation through recursive per-record catches before a first product repair. Freeze awaited importer cancellation/cleanup and actual validation/adoption expectations next; current pre-abort cases only test missing source-interface prerequisites. Preserve existing byte/output/entity/depth/cycle/per-array/geometry budgets and ordinary imports. Streaming stays deferred. LC-REL-04 has zero repair approaches used; LC-REL-01/02 remain exhausted and LC-REL-03 has at most one remaining. No actual converter or unchanged application retry, native/installed/client action or publication is authorized.",
+        "nextAction": "Implement the first reviewed LC-REL-04 ADR-002 approach: consistent complete-pair admission, shared default/tightening-only decoded-record/cell budget with owned fatal propagation, and acquisition-safe trusted importer cancellation preserving the first failure and beta12 cleanup custody. Both pending work36 and cancellation21 packs must pass exact source before acceptance; preserve converter48/recovery102, existing resource bounds and ordinary imports. Record the approach and cumulative 59-runtime/12-resource manifest before runtime mutation. LC-REL-04 remains zero used/at most two; LC-REL-01/02 exhausted and LC-REL-03 at most one remaining. Streaming deferred; no actual converter, unchanged application retry, native/installed/client action or publication.",
         "dependencies": [
           "LC-REL-02: active-document preservation reference",
           "LC-REL-03: process cleanup/diagnostics"
@@ -3764,7 +3766,7 @@
         "reviewedSourceCommit": "04aac6de35d5f4057c8fe21f17e3718e8f0dd72c",
         "recommendationNotVerifiedFinding": true,
         "acceptanceComplete": false,
-        "verificationScope": "Actual parser/core, observation-only record/cell source copy compared to direct output;4owned256MiBold-generation/4MiBstack/15sworker watchdogs.26checks19pass7expectedfail0unexpected. No runtime repair or actual converter/application execution.",
+        "verificationScope": "Actual parser/core with observation-only work counters, bounded owned workers; actual importer module with owned files/core validation, canned parse/metadata, fake children/manual timers and bounded main Open callback projection. No runtime repair or real converter/application execution.",
         "completionRequirements": [
           "Record the verified problem and affected behavior before a product change.",
           "Record implementation and relevant executed checks; acceptance must pass before completion.",
@@ -3775,12 +3777,12 @@
       },
       "historicalProblem": "Existing byte/entity/geometry/depth budgets do not yet establish responsive end-to-end cancellation or bounded work throughout synchronous parse/recursive expansion.",
       "importBudgetReference": {
-        "tests": 26,
-        "pass": 19,
-        "expectedFail": 7,
-        "namedCases": 25,
+        "tests": 36,
+        "pass": 20,
+        "expectedFail": 16,
+        "namedCases": 35,
         "unexpectedErrors": 0,
-        "prospectiveWorkFailures": 3,
+        "prospectiveWorkFailures": 12,
         "prospectiveAbortFailures": 2,
         "groupBoundaryAssertions": 2,
         "distinctConfirmedCurrentIssues": 1,
@@ -3794,7 +3796,10 @@
         "wholeProcessMemoryQualified": false,
         "activeDocumentAdoptionQualified": false,
         "parentComplete": false,
-        "record": "docs/IMPORT-BUDGET-REFERENCE.md"
+        "record": "docs/IMPORT-BUDGET-REFERENCE.md",
+        "designDefaultSelected": true,
+        "proposedDefaultMaxUnits": 1000000,
+        "implemented": false
       },
       "recommendationReviewHistory": [
         {
@@ -3853,8 +3858,105 @@
             "Record remaining limitations and the exact rollback method."
           ],
           "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+        },
+        {
+          "requestedId": "LC-REL-04",
+          "canonicalId": "LC-REL-04",
+          "queueId": "LC-REL-04",
+          "title": "Import resource budgets and cancellation",
+          "requestedPriority": 1,
+          "priority": 1,
+          "assessment": "partially implemented",
+          "problem": "The source reference confirms final-newline-dependent group-budget admission and freezes missing prospective cumulative-work/pre-abort interfaces. Existing byte/entity/geometry/depth/array budgets remain; end-to-end cancellation/adoption acceptance is incomplete.",
+          "implemented": "Input/generated-read and normalized-document byte limits, process output/time limits, DXF group/object/depth/cycle/INSERT-array controls, and native aggregate HATCH/planar/3D/entity/block budgets already exist.",
+          "evidence": [
+            "desktop/import-files.cjs:8-20",
+            "desktop/import-files.cjs:49-78",
+            "desktop/preload.cjs:19",
+            "desktop/main.cjs:202",
+            "dwg-import.mjs:5",
+            "dwg-import.mjs:42-61",
+            "dwg-import.mjs:150-169",
+            "dwg-import.mjs:213",
+            "dwg-import.mjs:252-300",
+            "core.mjs:1224-1287",
+            "core.mjs:1349",
+            "advanced-geometry.mjs:25"
+          ],
+          "gap": "Three work-budget and two pre-abort prerequisites remain unsupported; one group-transport inconsistency has two failing assertions. Awaited importer cancellation/cleanup/adoption, full pipeline visited-work/deadline and real memory behavior remain unqualified.",
+          "acceptance": [
+            "Inspect input bytes, converter output, entity/vertex counts, block expansion, nesting depth, elapsed time and memory growth throughout the pipeline.",
+            "Oversized/pathological inputs fail predictably with useful resource diagnostics.",
+            "Cancellation releases owned resources and preserves the current drawing.",
+            "Ordinary supported files continue to import correctly.",
+            "Evaluate streaming only after profiling demonstrates benefit and the complete pipeline can support it."
+          ],
+          "nextAction": "Review the LC-REL-04 prospective workBudget/signal vocabulary, production default and error identity propagation through recursive per-record catches before a first product repair. Freeze awaited importer cancellation/cleanup and actual validation/adoption expectations next; current pre-abort cases only test missing source-interface prerequisites. Preserve existing byte/output/entity/depth/cycle/per-array/geometry budgets and ordinary imports. Streaming stays deferred. LC-REL-04 has zero repair approaches used; LC-REL-01/02 remain exhausted and LC-REL-03 has at most one remaining. No actual converter or unchanged application retry, native/installed/client action or publication is authorized.",
+          "dependencies": [
+            "LC-REL-02: active-document preservation reference",
+            "LC-REL-03: process cleanup/diagnostics"
+          ],
+          "relatedIds": [
+            "LC-REL-02",
+            "LC-REL-03",
+            "LC-MAINT-01"
+          ],
+          "riskConfirmed": true,
+          "priorityBasis": "P1 resource/cancellation investigation after integrity checks; missing acceptance is not proof that ordinary supported input loses drawings.",
+          "rollback": "Reference/profile/docs-only checkpoint; preserve pending failures and immutable beta12 runtime/manifests. No installed rollback implied.",
+          "reviewedSourceCommit": "04aac6de35d5f4057c8fe21f17e3718e8f0dd72c",
+          "recommendationNotVerifiedFinding": true,
+          "acceptanceComplete": false,
+          "verificationScope": "Actual parser/core, observation-only record/cell source copy compared to direct output;4owned256MiBold-generation/4MiBstack/15sworker watchdogs.26checks19pass7expectedfail0unexpected. No runtime repair or actual converter/application execution.",
+          "completionRequirements": [
+            "Record the verified problem and affected behavior before a product change.",
+            "Record implementation and relevant executed checks; acceptance must pass before completion.",
+            "For performance work record reproducible before/after measurements.",
+            "Record remaining limitations and the exact rollback method."
+          ],
+          "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
         }
-      ]
+      ],
+      "importBudgetReferenceHistory": [
+        {
+          "tests": 26,
+          "pass": 19,
+          "expectedFail": 7,
+          "namedCases": 25,
+          "unexpectedErrors": 0,
+          "prospectiveWorkFailures": 3,
+          "prospectiveAbortFailures": 2,
+          "groupBoundaryAssertions": 2,
+          "distinctConfirmedCurrentIssues": 1,
+          "selectedPassingProfile": false,
+          "auxiliaryOnly": true,
+          "runtimeChanged": false,
+          "productRepairApproachesUsed": 0,
+          "atMostRemaining": 2,
+          "productionDefaultSelected": false,
+          "midParseCancellationQualified": false,
+          "wholeProcessMemoryQualified": false,
+          "activeDocumentAdoptionQualified": false,
+          "parentComplete": false,
+          "record": "docs/IMPORT-BUDGET-REFERENCE.md"
+        }
+      ],
+      "importCancellationReference": {
+        "tests": 21,
+        "pass": 6,
+        "expectedFail": 15,
+        "namedCases": 20,
+        "unexpectedErrors": 0,
+        "auxiliaryOnly": true,
+        "selectedPassingProfile": false,
+        "runtimeChanged": false,
+        "fullMainExchangeQualified": false,
+        "realIPCQualified": false,
+        "parserMetadataCandidates": "canned",
+        "coreValidation": "actual",
+        "record": "docs/IMPORT-BUDGET-REFERENCE.md",
+        "contract": "docs/ADR-002-IMPORT-WORK-CANCELLATION.md"
+      }
     },
     {
       "id": "LC-PERF-02",
@@ -4366,6 +4468,6 @@
         "approachesUsed": 2
       }
     ],
-    "nextReadyAction": "Review the LC-REL-04 prospective workBudget/signal vocabulary, production default and error identity propagation through recursive per-record catches before a first product repair. Freeze awaited importer cancellation/cleanup and actual validation/adoption expectations next; current pre-abort cases only test missing source-interface prerequisites. Preserve existing byte/output/entity/depth/cycle/per-array/geometry budgets and ordinary imports. Streaming stays deferred. LC-REL-04 has zero repair approaches used; LC-REL-01/02 remain exhausted and LC-REL-03 has at most one remaining. No actual converter or unchanged application retry, native/installed/client action or publication is authorized."
+    "nextReadyAction": "Implement the first reviewed LC-REL-04 ADR-002 approach: consistent complete-pair admission, shared default/tightening-only decoded-record/cell budget with owned fatal propagation, and acquisition-safe trusted importer cancellation preserving the first failure and beta12 cleanup custody. Both pending work36 and cancellation21 packs must pass exact source before acceptance; preserve converter48/recovery102, existing resource bounds and ordinary imports. Record the approach and cumulative 59-runtime/12-resource manifest before runtime mutation. LC-REL-04 remains zero used/at most two; LC-REL-01/02 exhausted and LC-REL-03 at most one remaining. Streaming deferred; no actual converter, unchanged application retry, native/installed/client action or publication."
   }
 }

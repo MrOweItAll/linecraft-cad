@@ -59,6 +59,7 @@ if(candidate)auxiliaries.push('tests/recovery-ownership-reference.test.cjs');
 if(candidate)auxiliaries.push('tests/converter-lifecycle-reference.test.cjs');
 if(candidate)suites.push('tests/converter-lifecycle-reference.test.cjs');
 if(candidate)auxiliaries.push('tests/import-budget-reference.test.mjs');
+if(candidate)auxiliaries.push('tests/import-cancellation-reference.test.cjs');
 if(candidate)auxiliaries.push('qa/CANDIDATE-SOURCE-1.36.1-beta.11.json');
 if(candidate)suites.push('tests/paired-recovery-reference.test.cjs','tests/development-identity-contract.test.cjs','tests/recovery-protocol-reference.test.cjs','tests/recovery-negotiation-reference.test.cjs','tests/recovery-ownership-reference.test.cjs');
 if(candidate)auxiliaries.push('qa/CANDIDATE-SOURCE-1.36.1-beta.10.json');
