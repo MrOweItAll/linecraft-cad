@@ -12,18 +12,18 @@ async function renderer(h,{retainedStorage=null,kind='draft'}={}){
   const initial=core.createEditor(kind==='A'?JSON.parse(A):{entities:[{id:'old',type:'LINE',layer:'0',start:{x:1,y:2},end:{x:11,y:2}},{id:'marker',type:'CIRCLE',layer:'0',center:{x:100,y:100},radius:4}]});
   const baseline=initial.serialize();
   if(kind!=='A'){assert.equal(initial.setCircleRadius('marker',5).ok,true);assert.equal(initial.setCircleRadius('marker',6).ok,true);assert.equal(initial.undo().ok,true);assert.equal(initial.select(['old']).ok,true);}
-  const local=new Map(retainedStorage??[]),session=new Map(),logs=[];let api;
+  const local=new Map(retainedStorage??[]),session=new Map(),logs=[];let api,lastNativeReply;
   const storage=map=>({getItem:key=>map.get(key)??null,setItem:(key,value)=>map.set(key,String(value)),removeItem:key=>map.delete(key)});
-  const desktop={saveDrawing:(text,saveAs)=>h.invoke('linecraft:save',text,saveAs),setDocumentState:value=>h.update(plain(value))};
+  const desktop={saveDrawing:async(text,saveAs)=>{lastNativeReply=await h.invoke('linecraft:save',text,saveAs);return lastNativeReply;},developmentRecovery:request=>h.invoke('linecraft:development-recovery',plain(request)),setDocumentState:value=>h.update(plain(value))};
   const setup=`let editor=initialEditor,documentName='A.linecraft',savedFingerprint='',importedAwaitingSave=false;
     let gridEnabled=true,snapEnabled=true,orthoEnabled=false;
     const developmentMode=true,closingApplication=false,state=()=>editor.state;`;
   const finish=`({save,persistDevelopmentCheckpoint,syncDesktop,editor:()=>editor,
     snapshot:()=>({text:serializedDrawing(),name:documentName,fingerprint:documentFingerprint(),savedFingerprint,imported:importedAwaitingSave,dirty:isDirty(),selection:[...state().selectionIds],canUndo:editor.canUndo,canRedo:editor.canRedo,development:{...developmentState}})})`;
-  const sandbox={JSON,structuredClone,initialEditor:initial,desktop,createEditor:core.createEditor,localStorage:storage(local),sessionStorage:storage(session),console:{warn:(...args)=>logs.push(args)},update:()=>api.syncDesktop(),toast:()=>{},addLog:(...args)=>logs.push(args),download:()=>{throw Error('No browser download.');}};
+  const sandbox={JSON,structuredClone,setTimeout,clearTimeout,initialEditor:initial,desktop,createEditor:core.createEditor,localStorage:storage(local),sessionStorage:storage(session),console:{warn:(...args)=>logs.push(args)},update:()=>api.syncDesktop(),toast:()=>{},addLog:(...args)=>logs.push(args),download:()=>{throw Error('No browser download.');}};
   api=vm.runInNewContext(setup+chunks.helpers+'\nsavedFingerprint=contentFingerprint(JSON.parse(initialBaseline));\n'+chunks.recovery+chunks.save+finish,{...sandbox,initialBaseline:baseline},{filename:'paired-recovery-source.vm.js',timeout:1000});
   // Actual startup's synchronization projection; no DOM painting or preload transport.
-  api.syncDesktop();return {api,initial,local,logs,snapshot:()=>plain(api.snapshot())};
+  api.syncDesktop();return {api,initial,local,logs,nativeReply:()=>lastNativeReply,snapshot:()=>plain(api.snapshot())};
 }
 function ref(name,run){names.push(name);test(name,{timeout:10000},async()=>{const record={name};records.push(record);await run(record);});}
 async function bytes(h,target){return {A:await fs.readFile(h.a,'utf8'),accepted:await fs.readFile(target,'utf8'),B:await fs.readFile(h.b,'utf8'),checkpoint:await fs.readFile(h.checkpoint,'utf8').catch(error=>{if(error.code==='ENOENT')return null;throw error;})};}
@@ -38,7 +38,7 @@ async function accepted({fault=null,sameBasename=false,kind='draft'}={}){
   assert.equal(r.api.editor(),r.initial);assert.equal(saved.text,before.text);assert.deepEqual(saved.selection,before.selection);
   assert.equal(saved.canUndo,kind!=='A');assert.equal(saved.canRedo,kind!=='A');assert.equal(saved.dirty,false);assert.equal(saved.imported,false);assert.equal(saved.savedFingerprint,before.fingerprint);
   assert.equal(await fs.readFile(h.a,'utf8'),A);assert.equal(await fs.readFile(target,'utf8'),saved.text);
-  assert.equal(await fs.readFile(h.checkpoint,'utf8'),h.association(fault?h.a:target));
+  const acceptedBinding=r.nativeReply().developmentBinding;assert.match(acceptedBinding,/^[0-9a-f-]{36}$/);assert.equal(await fs.readFile(h.checkpoint,'utf8'),fault?h.association(h.a):JSON.stringify({format:'LinecraftDevelopmentPath/2',drawingPath:target,importSaveName:null,binding:acceptedBinding}));
   if(kind!=='A'){
     const radius=()=>JSON.parse(r.initial.serialize()).entities.find(entity=>entity.id==='marker').radius;
     assert.equal(r.initial.redo().ok,true);assert.equal(radius(),6);

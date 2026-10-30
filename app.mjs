@@ -314,6 +314,44 @@ function syncDesktop() {if(desktop)desktop.setDocumentState(documentInfo());}
 function displayName(name) {return String(name||'Untitled drawing').replace(/\.linecraft\.json$/i,'').replace(/\.json$/i,'');}
 savedFingerprint=documentFingerprint();
 const developmentState={restored:false,restoreError:null,historyReset:false,activeCommandCanceled:false};
+let developmentBinding=null,developmentTargetVerified=false,developmentNegotiationEpoch=0;
+let developmentNegotiationPromise=null,developmentNegotiationCancel=null;
+const validDevelopmentBinding=value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+function consumeDevelopmentBinding(reply){
+  if(!developmentMode)return;
+  developmentNegotiationEpoch++;developmentNegotiationCancel?.();developmentNegotiationCancel=null;developmentNegotiationPromise=null;
+  developmentBinding=validDevelopmentBinding(reply?.developmentBinding)?reply.developmentBinding:null;
+  developmentTargetVerified=developmentBinding!==null;
+}
+function negotiateDevelopmentRecovery(){
+  if(!developmentMode||developmentTargetVerified)return Promise.resolve(true);
+  if(developmentNegotiationPromise)return developmentNegotiationPromise;
+  let recover;
+  try{recover=desktop?.developmentRecovery;}catch{return Promise.resolve(false);}
+  if(typeof recover!=='function')return Promise.resolve(false);
+  const epoch=developmentNegotiationEpoch,binding=developmentBinding;
+  let active=true,finish;
+  const exact=(value,keys)=>value&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).sort().join(',')===keys;
+  developmentNegotiationPromise=new Promise(resolve=>{
+    const timer=setTimeout(()=>finish(false),1000);
+    finish=value=>{if(!active)return;active=false;clearTimeout(timer);resolve(value);};
+    developmentNegotiationCancel=()=>finish(false);
+  });
+  Promise.resolve().then(async()=>{
+    try{
+      if(!active||epoch!==developmentNegotiationEpoch)return;
+      const challenge=await recover.call(desktop,{version:1,action:'challenge'});
+      if(!active||epoch!==developmentNegotiationEpoch)return;
+      if(!exact(challenge,'challenge,ok')||challenge.ok!==true||!validDevelopmentBinding(challenge.challenge))return finish(false);
+      const confirmation=await recover.call(desktop,{version:1,action:'confirm',challenge:challenge.challenge,binding});
+      if(!active||epoch!==developmentNegotiationEpoch)return;
+      if(!exact(confirmation,'matched,ok')||confirmation.ok!==true||typeof confirmation.matched!=='boolean')return finish(false);
+      const matched=binding!==null&&confirmation.matched===true;
+      developmentTargetVerified=matched;finish(matched);
+    }catch{finish(false);}
+  });
+  return developmentNegotiationPromise;
+}
 const developmentCheckpointKey='linecraft-development-reload';
 let developmentCheckpointTimer;
 if(developmentMode){
@@ -321,12 +359,13 @@ if(developmentMode){
     const raw=sessionStorage.getItem(developmentCheckpointKey)||localStorage.getItem(developmentCheckpointKey);
     if(raw){
       const checkpoint=JSON.parse(raw);
-      if(checkpoint.version!==1||typeof checkpoint.text!=='string'||typeof checkpoint.savedFingerprint!=='string')throw new Error('Invalid drawing checkpoint.');
+      if(![1,2].includes(checkpoint.version)||typeof checkpoint.text!=='string'||typeof checkpoint.savedFingerprint!=='string')throw new Error('Invalid drawing checkpoint.');
       const recovered=JSON.parse(checkpoint.text),baseline=JSON.parse(checkpoint.savedFingerprint);
       const legacyDrafting={gridEnabled:checkpoint.gridEnabled!==false,snapEnabled:checkpoint.snapEnabled!==false,orthoEnabled:checkpoint.orthoEnabled===true};
       if(!recovered.settings)recovered.settings=legacyDrafting;if(!baseline.settings)baseline.settings=legacyDrafting;
       editor=createEditor(recovered);documentName=checkpoint.name||'Untitled drawing';savedFingerprint=contentFingerprint(editorDocument(createEditor(baseline)));
       importedAwaitingSave=checkpoint.importedAwaitingSave===true;
+      developmentBinding=checkpoint.version===2&&!importedAwaitingSave&&validDevelopmentBinding(checkpoint.developmentBinding)?checkpoint.developmentBinding:null;
       gridEnabled=editor.state.settings?.gridEnabled??checkpoint.gridEnabled!==false;snapEnabled=editor.state.settings?.snapEnabled??checkpoint.snapEnabled!==false;orthoEnabled=editor.state.settings?.orthoEnabled??checkpoint.orthoEnabled===true;
       developmentState.restored=true;developmentState.checkpointTime=checkpoint.time;
       developmentState.historyReset=true;developmentState.activeCommandCanceled=checkpoint.activeCommandCanceled===true;
@@ -339,12 +378,13 @@ function persistDevelopmentCheckpoint(activeCommandCanceled=Boolean(state().comm
   if(!developmentMode||closingApplication||developmentState.restoreError)return false;
   try{
     const time=Date.now();
-    const checkpoint=JSON.stringify({version:1,text:serializedDrawing(),name:documentName,savedFingerprint,importedAwaitingSave,gridEnabled,snapEnabled,orthoEnabled,time,activeCommandCanceled});
+    const checkpoint=JSON.stringify({version:2,developmentBinding,text:serializedDrawing(),name:documentName,savedFingerprint,importedAwaitingSave,gridEnabled,snapEnabled,orthoEnabled,time,activeCommandCanceled});
     localStorage.setItem(developmentCheckpointKey,checkpoint);
     if(localStorage.getItem(developmentCheckpointKey)!==checkpoint)throw new Error('Drawing checkpoint verification failed.');
     developmentState.lastCheckpointTime=time;developmentState.checkpointError=null;return checkpoint;
   }catch(error){developmentState.checkpointError=error.message;console.warn('Linecraft drawing checkpoint remains pending:',error.message);return false;}
 }
+if(developmentMode)void negotiateDevelopmentRecovery();
 function scheduleDevelopmentCheckpoint() {
   if(!developmentMode||closingApplication||developmentState.restoreError)return;
   clearTimeout(developmentCheckpointTimer);
@@ -1821,12 +1861,14 @@ function download(content, name, mime) {
 }
 function safeName() { return documentName.replace(/\.(json|linecraft)$/i, '').replace(/[<>:"/\\|?*]/g, '_') || 'Drawing'; }
 async function save(saveAs=false) {
+  const nativeSaveAs=developmentMode&&!saveAs?!await negotiateDevelopmentRecovery():saveAs;
   const text=serializedDrawing(), fingerprint=documentFingerprint();
   if(desktop){
-    const result=await desktop.saveDrawing(text,saveAs);
+    const result=await desktop.saveDrawing(text,nativeSaveAs);
     if(result?.canceled)return false;
     if(!result?.ok){addLog(result?.error||'The drawing could not be saved.','error');toast(result?.error||'The drawing could not be saved.');return false;}
     documentName=displayName(result.name||documentName);
+    if(developmentMode)consumeDevelopmentBinding(result);
     savedFingerprint=fingerprint;importedAwaitingSave=false;update();toast('Drawing saved.');return true;
   }
   download(text,`${safeName()}.linecraft.json`,'application/json');
@@ -1871,7 +1913,7 @@ function showImportReport(info){
 function setDocumentBusy(busy){documentActionBusy=busy;$('application').classList.toggle('application-busy',busy);for(const element of document.querySelectorAll('.workspace,.command-panel,.statusbar,.document-bar,.layout-tabbar'))element.inert=busy;$('settings-button').disabled=busy;}
 async function newDrawing() {
   if(!await canDiscard())return false;
-  if(desktop)await desktop.resetDocumentPath();
+  if(desktop){const result=await desktop.resetDocumentPath();if(!result?.ok){addLog(result?.error||'The drawing could not be reset.','error');toast(result?.error||'The drawing could not be reset.');return false;}if(developmentMode)consumeDevelopmentBinding(result);}
   replaceDrawing(createEditor(),'Untitled drawing');
   $('command-log').replaceChildren();addLog('New drawing. Enter a command, or open Commands to explore drawing and editing tools.');return true;
 }
@@ -1883,7 +1925,9 @@ async function openDrawing() {
   if(result?.canceled)return false;
   if(!result?.ok){addLog(result?.error||'The drawing could not be opened.','error');toast(result?.error||'The drawing could not be opened.');return false;}
   // A newly constructed editor starts with no import transaction in its undo stack.
-  replaceDrawing(createEditor(JSON.parse(result.text)),result.name,{imported:result.imported===true});
+  const fresh=createEditor(JSON.parse(result.text));
+  if(developmentMode)consumeDevelopmentBinding(result);
+  replaceDrawing(fresh,result.name,{imported:result.imported===true});
   addLog(`Opened ${result.name}.`);if(result.importInfo)showImportReport(result.importInfo);return true;
 }
 function fileOpenDeferralReason(){
@@ -1921,6 +1965,7 @@ async function openRequestedDrawing(request){
     const committed=await desktop.openRequest({action:'commit',id:request.id});
     if(committed?.busy)return{...request,status:'deferred'};
     if(!committed?.ok)throw Error(committed?.error||'The requested drawing could not be accepted.');
+    if(developmentMode)consumeDevelopmentBinding(committed);
     replaceDrawing(fresh,prepared.name||request.name);
     addLog(`Opened ${prepared.name||request.name}.`);
     return{...request,status:'opened'};
@@ -2001,7 +2046,7 @@ async function runAction(action) {
     if(action==='fit'){fit();syncDesktop();return true;}
     if(action==='about'){showHelp();return true;}
     if(action==='dev-reload')return reloadDevelopmentDrawing();
-    if(action==='close'&&desktop){if(!await canDiscard())return false;if(developmentMode)await desktop.resetDocumentPath();clearDevelopmentCheckpoint();closingApplication=true;await desktop.allowClose();return true;}
+    if(action==='close'&&desktop){if(!await canDiscard())return false;if(developmentMode){const result=await desktop.resetDocumentPath();if(!result?.ok){addLog(result?.error||'The drawing could not be reset.','error');toast(result?.error||'The drawing could not be reset.');return false;}consumeDevelopmentBinding(result);}clearDevelopmentCheckpoint();closingApplication=true;await desktop.allowClose();return true;}
     return false;
   }catch(error){addLog(error.message||String(error),'error');toast(error.message||'The action could not be completed.');return false;}
   finally{if(documentAction){setDocumentBusy(false);if(pendingDevelopmentReload&&!closingApplication){pendingDevelopmentReload=false;setTimeout(()=>runAction('dev-reload'),0);}}}

@@ -56,6 +56,8 @@ if(candidate)auxiliaries.push('tests/development-identity-contract.test.cjs');
 if(candidate)auxiliaries.push('tests/recovery-protocol-reference.test.cjs');
 if(candidate)auxiliaries.push('tests/recovery-negotiation-reference.test.cjs');
 if(candidate)auxiliaries.push('tests/recovery-ownership-reference.test.cjs');
+if(candidate)suites.push('tests/paired-recovery-reference.test.cjs','tests/development-identity-contract.test.cjs','tests/recovery-protocol-reference.test.cjs','tests/recovery-negotiation-reference.test.cjs','tests/recovery-ownership-reference.test.cjs');
+if(candidate)auxiliaries.push('qa/CANDIDATE-SOURCE-1.36.1-beta.10.json');
 if(candidate)auxiliaries.push('qa/CANDIDATE-SOURCE-1.36.1-beta.9.json');
 if(candidate)auxiliaries.push('qa/CANDIDATE-SOURCE-1.36.1-beta.7.json');
 if(candidate)auxiliaries.push('qa/CANDIDATE-SOURCE-1.36.1-beta.8.json');

@@ -2,6 +2,9 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs/promises'),path=require('node:path');
 const {host,A,B,C,marker,hash,directories,hosts,deferred}=require('./development-state-host.cjs');
 const records=[],expected=[],boundaries=[];
+const validUUID=value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+function devSuccess(reply,expected){assert.equal(validUUID(reply.developmentBinding),true);assert.deepEqual(reply,{...expected,developmentBinding:reply.developmentBinding});return reply.developmentBinding;}
+const associationV2=(h,target,binding)=>JSON.stringify({format:'LinecraftDevelopmentPath/2',drawingPath:target,importSaveName:null,binding});
 const seed=h=>h.update({dirty:true,name:'Synthetic A',text:C});
 function ref(name,run){expected.push(name);test(name,{timeout:10000},async()=>{await run();records.push(name);});}
 async function capture(name,h){boundaries.push({name,directory:h.directory,association:h.snapshot(),checkpoint:await fs.readFile(h.checkpoint,'utf8'),trace:structuredClone(h.trace)});}
@@ -11,7 +14,7 @@ const faults=['mkdir','open','write','sync','close','rename','cleanup'];
 for(const phase of faults)ref('Ordinary Save As accepts native write despite best-effort checkpoint '+phase,async()=>{
   const h=await host();seed(h);const prior=await fs.readFile(h.checkpoint,'utf8');h.setPhase(phase);
   h.choices.save.push({canceled:false,filePath:h.b});const response=await h.invoke('linecraft:save',C,true);
-  assert.deepEqual(response,{ok:true,name:'B.linecraft'});
+  devSuccess(response,{ok:true,name:'B.linecraft'});
   assert.equal(await fs.readFile(h.a,'utf8'),A);assert.equal(await fs.readFile(h.b,'utf8'),C);
   assert.equal(await fs.readFile(h.checkpoint,'utf8'),prior);assert.equal(await fs.readFile(h.sentinel,'utf8'),marker);
   assert.deepEqual(h.snapshot(),{drawingPath:h.b,importSaveName:null,dirty:false,name:'B.linecraft',text:C,authorization:null,authorized:false,busy:false});
@@ -20,7 +23,7 @@ for(const phase of faults)ref('Ordinary Save As accepts native write despite bes
 });
 for(const phase of ['mkdir','write','rename'])ref('Ordinary Open adopts validated native drawing despite checkpoint '+phase,async()=>{
   const h=await host();seed(h);h.setPhase(phase);h.choices.open.push({canceled:false,filePaths:[h.b]});
-  assert.deepEqual(await h.invoke('linecraft:open'),{ok:true,text:B,name:'B.linecraft'});
+  devSuccess(await h.invoke('linecraft:open'),{ok:true,text:B,name:'B.linecraft'});
   assert.equal(h.snapshot().drawingPath,h.b);assert.equal(h.snapshot().dirty,false);assert.equal(h.snapshot().text,B);
   assert.equal(await fs.readFile(h.checkpoint,'utf8'),h.association());await unchangedFiles(h);
 });
@@ -31,10 +34,10 @@ for(const phase of faults)ref('Strict queued adoption preserves current state on
   assert.deepEqual(h.snapshot(),before);assert.equal(h.title,title);await unchangedFiles(h);
   assert.equal(await fs.readFile(h.checkpoint,'utf8'),h.association());
   assert.equal((await h.invoke('linecraft:open-request',{action:'peek'})).request.id,id);
-  h.setPhase(null);assert.deepEqual(await h.invoke('linecraft:open-request',{action:'commit',id}),{ok:true,id,name:'B.linecraft'});
+  h.setPhase(null);const committed=await h.invoke('linecraft:open-request',{action:'commit',id});const acceptedBinding=devSuccess(committed,{ok:true,id,name:'B.linecraft'});
   assert.equal(h.snapshot().drawingPath,h.b);assert.equal(h.snapshot().text,B);assert.equal(h.snapshot().authorized,false);
   assert.equal((await h.invoke('linecraft:open-request',{action:'peek'})).request,null);
-  assert.equal(await fs.readFile(h.checkpoint,'utf8'),h.association(h.b));await unchangedFiles(h);
+  assert.equal(await fs.readFile(h.checkpoint,'utf8'),associationV2(h,h.b,acceptedBinding));await unchangedFiles(h);
 });
 ref('Dirty queued adoption without authorization is rejected before persistence',async()=>{
   const h=await host();seed(h);const id=await h.queue(),before=h.snapshot();
@@ -81,7 +84,7 @@ ref('Late state during strict checkpoint persistence is preserved and checkpoint
   const pending=h.invoke('linecraft:open-request',{action:'commit',id});await held.entered.promise;
   h.update({dirty:true,name:'Later accepted notification',text:B});const newer=h.snapshot();held.release.resolve();
   const response=await pending;assert.equal(response.ok,false);assert.match(response.error,/current drawing changed/i);
-  assert.deepEqual(h.snapshot(),{...newer,busy:false});assert.equal(await fs.readFile(h.checkpoint,'utf8'),h.association());
+  assert.deepEqual(h.snapshot(),{...newer,busy:false});assert.equal(await fs.readFile(h.checkpoint,'utf8'),associationV2(h,h.a,null));
   assert.equal(h.trace.filter(row=>row.operation==='rename'&&row.scoped).length,2);await unchangedFiles(h);
   assert.equal((await h.invoke('linecraft:open-request',{action:'peek'})).request.id,id);await capture('successful compensation immediate state',h);
   h.setPhase(null);await authorize(h);assert.equal((await h.invoke('linecraft:open-request',{action:'commit',id})).ok,true);
@@ -93,7 +96,7 @@ ref('A second checkpoint failure is characterized independently from live associ
   h.update({dirty:true,name:'Later accepted notification',text:B});const newer=h.snapshot();held.release.resolve();
   const response=await pending;assert.equal(response.ok,false);assert.deepEqual(h.snapshot(),{...newer,busy:false});
   // Observation/control, not an assertion that two independent writes are atomic together.
-  assert.equal(await fs.readFile(h.checkpoint,'utf8'),h.association(h.b));
+  const provisional=JSON.parse(await fs.readFile(h.checkpoint,'utf8'));assert.equal(validUUID(provisional.binding),true);assert.equal(await fs.readFile(h.checkpoint,'utf8'),associationV2(h,h.b,provisional.binding));
   assert.equal((await h.invoke('linecraft:open-request',{action:'peek'})).request.id,id);await unchangedFiles(h);
   await capture('failed compensation immediate state',h);h.setPhase(null);await authorize(h);
   assert.equal((await h.invoke('linecraft:open-request',{action:'commit',id})).ok,true);
@@ -101,10 +104,10 @@ ref('A second checkpoint failure is characterized independently from live associ
 });
 ref('Accepted Save before a canceled Open preserves its new native and checkpoint baselines',async()=>{
   const h=await host();seed(h);await authorize(h);h.choices.save.push({canceled:false,filePath:h.b});
-  assert.equal((await h.invoke('linecraft:save',C,true)).ok,true);const before=h.snapshot();assert.equal(before.authorization,null);
+  const saved=await h.invoke('linecraft:save',C,true);const acceptedBinding=devSuccess(saved,{ok:true,name:'B.linecraft'});const before=h.snapshot();assert.equal(before.authorization,null);
   h.choices.open.push({canceled:true,filePaths:[]});assert.deepEqual(await h.invoke('linecraft:open'),{ok:false,canceled:true});
   assert.deepEqual(h.snapshot(),before);assert.equal(await fs.readFile(h.a,'utf8'),A);assert.equal(await fs.readFile(h.b,'utf8'),C);
-  assert.equal(await fs.readFile(h.checkpoint,'utf8'),h.association(h.b));
+  assert.equal(await fs.readFile(h.checkpoint,'utf8'),associationV2(h,h.b,acceptedBinding));
 });
 for(const record of ['valid','absent','malformed','wrong-format','relative','missing-target','directory','invalid-target','import-name'])ref('Development restore is read-only and association-only: '+record,async()=>{
   const h=await host({record});const state=h.snapshot();assert.equal(state.drawingPath,record==='valid'?h.a:null);

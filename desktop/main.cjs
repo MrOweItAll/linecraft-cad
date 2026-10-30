@@ -41,6 +41,14 @@ let drawingPath = null;
 let importSaveName = null;
 let allowWindowClose = false;
 let fileOperationBusy = false;
+let developmentBinding = null, rendererLoadEpoch = 0, recoveryNonce = randomUUID();
+let recoveryVerified = false, recoveryConfirmation = null;
+const recoveryUUID=value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+const rendererOwner=event=>({frame:event.senderFrame,epoch:rendererLoadEpoch});
+const currentRenderer=owner=>owner.epoch===rendererLoadEpoch&&owner.frame===mainWindow?.webContents.mainFrame;
+function rotateRecovery(verified=false){if(app.isPackaged)return;recoveryNonce=randomUUID();recoveryConfirmation=null;recoveryVerified=verified;}
+function installDevelopmentBinding(binding,owner){if(app.isPackaged)return;developmentBinding=binding;rotateRecovery(Boolean(binding&&owner&&currentRenderer(owner)));}
+function developmentReply(binding=developmentBinding){return app.isPackaged?{}:{developmentBinding:binding};}
 let documentState = { dirty: false, name: 'Untitled drawing', text: '' };
 let corePromise = null;
 let developmentCoreVersion = null;
@@ -69,19 +77,20 @@ const nativeOpenQueue=createNativeOpenQueue({validateDrawing,onPending:request=>
 function documentAssociation(){return{drawingPath,importSaveName,dirty:documentState.dirty,name:documentState.name,text:documentState.text};}
 function sameDocumentAssociation(before){const current=documentAssociation();return Object.keys(current).every(key=>current[key]===before[key]);}
 function discardAuthorized(){return discardAuthorization&&sameDocumentAssociation(discardAuthorization);}
-async function persistRequestedAssociation(destination,importName=null){
+async function persistRequestedAssociation(destination,importName=null,binding=developmentBinding){
   if(app.isPackaged)return;
-  try{await fs.mkdir(app.getPath('userData'),{recursive:true});await atomicWrite(developmentPathFile(),JSON.stringify({format:'LinecraftDevelopmentPath/1',drawingPath:destination,importSaveName:importName}));}
+  try{await fs.mkdir(app.getPath('userData'),{recursive:true});await atomicWrite(developmentPathFile(),JSON.stringify({format:'LinecraftDevelopmentPath/2',drawingPath:destination,importSaveName:importName,binding}));}
   catch{throw Error('Requested drawing association could not be saved. The current drawing is unchanged.');}
 }
-async function adoptRequestedDrawing(candidate){
+async function adoptRequestedDrawing(candidate,owner){
   if(documentState.dirty&&!discardAuthorized())throw Error('Save or explicitly discard the current drawing before opening the requested file.');
-  const before=documentAssociation();await persistRequestedAssociation(candidate.path);
-  if(!sameDocumentAssociation(before)){
-    await persistRequestedAssociation(before.drawingPath,before.importSaveName);
+  const before=documentAssociation(),oldBinding=developmentBinding,proposed=app.isPackaged?null:randomUUID();
+  await persistRequestedAssociation(candidate.path,null,proposed);
+  if(!sameDocumentAssociation(before)||developmentBinding!==oldBinding||!currentRenderer(owner)){
+    await persistRequestedAssociation(before.drawingPath,before.importSaveName,oldBinding);
     throw Error('The current drawing changed before the requested file could be opened.');
   }
-  drawingPath=candidate.path;importSaveName=null;documentState={dirty:false,name:candidate.name,text:candidate.text};discardAuthorization=null;updateTitle();
+  drawingPath=candidate.path;importSaveName=null;installDevelopmentBinding(proposed,owner);documentState={dirty:false,name:candidate.name,text:candidate.text};discardAuthorization=null;updateTitle();return proposed;
 }
 
 function failure(error) { return { ok: false, error: error instanceof Error ? error.message : String(error) }; }
@@ -245,22 +254,24 @@ async function readGeometryClipboardRepresentation() {
 function developmentPathFile() {return path.join(app.getPath('userData'), 'development-document-path.json');}
 async function persistDevelopmentPath() {
   if (app.isPackaged) return;
+  const association={format:'LinecraftDevelopmentPath/2',drawingPath,importSaveName,binding:developmentBinding};
   try {
     await fs.mkdir(app.getPath('userData'), {recursive: true});
-    await atomicWrite(developmentPathFile(), JSON.stringify({format: 'LinecraftDevelopmentPath/1', drawingPath,importSaveName}));
+    await atomicWrite(developmentPathFile(), JSON.stringify(association));
   } catch (error) {console.warn(`[Linecraft dev] Could not checkpoint the file association: ${error.message}`);}
 }
 async function restoreDevelopmentPath() {
   if (app.isPackaged) return;
   try {
     const saved = JSON.parse(await fs.readFile(developmentPathFile(), 'utf8'));
-    if (saved.format !== 'LinecraftDevelopmentPath/1') return;
+    if (!['LinecraftDevelopmentPath/1','LinecraftDevelopmentPath/2'].includes(saved.format)) return;
     if(typeof saved.importSaveName==='string'&&path.basename(saved.importSaveName)===saved.importSaveName&&saved.importSaveName.endsWith('.linecraft'))importSaveName=safeName(saved.importSaveName);
     if(typeof saved.drawingPath !== 'string' || !path.isAbsolute(saved.drawingPath))return;
     const status = await fs.stat(saved.drawingPath);
     if (!status.isFile() || status.size > MAX_TEXT_BYTES) return;
     await validateDrawing(await fs.readFile(saved.drawingPath, 'utf8'));
     drawingPath = path.resolve(saved.drawingPath);
+    developmentBinding=saved.format==='LinecraftDevelopmentPath/2'&&recoveryUUID(saved.binding)?saved.binding:null;
   } catch (error) {if (error.code !== 'ENOENT') console.warn(`[Linecraft dev] File association recovery skipped: ${error.message}`);}
 }
 
@@ -348,6 +359,20 @@ async function atomicWrite(destination, text) {
 function withExtension(filename, extension) { return path.extname(filename) ? filename : `${filename}.${extension}`; }
 
 function registerIPC() {
+  if(!app.isPackaged)ipcMain.handle('linecraft:development-recovery',(event,payload)=>{
+    if(!trusted(event))return failure('Untrusted recovery request.');
+    try{
+    const record=payload&&typeof payload==='object'&&!Array.isArray(payload)&&[Object.prototype,null].includes(Object.getPrototypeOf(payload))&&Reflect.ownKeys(payload).every(key=>typeof key==='string'&&Object.getOwnPropertyDescriptor(payload,key).enumerable&&Object.hasOwn(Object.getOwnPropertyDescriptor(payload,key),'value'));
+    if(!record||payload.version!==1)return failure('Invalid recovery request.');
+    const keys=Object.keys(payload).sort().join(',');
+    if(payload.action==='challenge'&&keys==='action,version')return{ok:true,challenge:recoveryNonce};
+    if(payload.action!=='confirm'||keys!=='action,binding,challenge,version'||!recoveryUUID(payload.challenge)||(payload.binding!==null&&!recoveryUUID(payload.binding))||payload.challenge!==recoveryNonce)return failure('Invalid recovery request.');
+    if(recoveryConfirmation){if(recoveryConfirmation.binding!==payload.binding)return failure('Conflicting recovery request.');return{ok:true,matched:recoveryConfirmation.matched};}
+    const matched=Boolean(drawingPath&&developmentBinding&&payload.binding===developmentBinding);
+    recoveryConfirmation={binding:payload.binding,matched};if(matched)recoveryVerified=true;
+    return{ok:true,matched};
+    }catch{return failure('Invalid recovery request.');}
+  });
   ipcMain.handle('linecraft:open-request',(event,payload)=>{
     if(!trusted(event))return failure('Untrusted native open request.');
     try{
@@ -356,8 +381,11 @@ function registerIPC() {
       // Cancel is queue-only and need not wait behind an unrelated file dialog.
       if(request.action==='cancel'){const response=nativeOpenQueue.cancel(request.id);discardAuthorization=null;return response;}
       if(fileOperationBusy)return{ok:false,busy:true,error:'Another file operation is already in progress.'};
+      const owner=rendererOwner(event);
       return fileOperation(async()=>{
-        try{return request.action==='prepare'?await nativeOpenQueue.prepare(request.id):await nativeOpenQueue.commit(request.id,adoptRequestedDrawing);}
+        try{if(request.action==='prepare')return await nativeOpenQueue.prepare(request.id);
+          let acceptedBinding;const reply=await nativeOpenQueue.commit(request.id,async candidate=>{acceptedBinding=await adoptRequestedDrawing(candidate,owner);});
+          return{...reply,...developmentReply(acceptedBinding)};}
         catch(error){return{...failure(error),...(error.code==='OPEN_REQUEST_BUSY'?{busy:true}:{})};}
       });
     }catch(error){return{...failure(error),...(error.code==='OPEN_REQUEST_BUSY'?{busy:true}:{})};}
@@ -437,6 +465,7 @@ function registerIPC() {
 
   ipcMain.handle('linecraft:open', event => {
     if (!trusted(event)) return failure('Untrusted file request.');
+    const owner=rendererOwner(event);
     return fileOperation(async () => {
       let operation = 'open', stage = 'dialog';
       try {
@@ -452,9 +481,9 @@ function registerIPC() {
         stage = 'finalize';
         // Import is complete and validated before changing any private association.
         // A source DWG/DXF is never an eligible native Save destination.
-        drawingPath=null;importSaveName=`${path.parse(destination).name}.linecraft`;discardAuthorization=null;
+        drawingPath=null;importSaveName=`${path.parse(destination).name}.linecraft`;installDevelopmentBinding(null,owner);discardAuthorization=null;
         await persistDevelopmentPath();documentState={dirty:true,name:importSaveName,text:imported.text};updateTitle();
-        return {ok:true,text:imported.text,name:importSaveName,imported:true,importInfo:imported.importInfo};
+        return {ok:true,text:imported.text,name:importSaveName,imported:true,importInfo:imported.importInfo,...developmentReply(null)};
       }
       stage = 'read';
       const status = await fs.stat(destination);
@@ -468,24 +497,27 @@ function registerIPC() {
       stage = 'finalize';
       drawingPath = destination;
       importSaveName = null;
+      const acceptedBinding=app.isPackaged?null:randomUUID();installDevelopmentBinding(acceptedBinding,owner);
       discardAuthorization = null;
       await persistDevelopmentPath();
       documentState = { dirty: false, name: path.basename(destination), text };
       updateTitle();
-      return { ok: true, text, name: path.basename(destination) };
+      return { ok: true, text, name: path.basename(destination),...developmentReply(acceptedBinding) };
       } catch (error) { return fileFailure(error, operation, stage); }
     });
   });
 
   ipcMain.handle('linecraft:save', (event, text, saveAs = false) => {
     if (!trusted(event)) return failure('Untrusted file request.');
+    const owner=rendererOwner(event),entryPath=drawingPath,entryBinding=developmentBinding;
+    const requireChooser=!app.isPackaged&&!recoveryVerified;
     return fileOperation(async () => {
       let stage = 'request';
       try {
       if (typeof saveAs !== 'boolean') throw new Error('Save As must be true or false.');
       stage = 'validation';
       await validateDrawing(text);
-      let destination = drawingPath;
+      let destination = requireChooser?null:entryPath;
       if (!destination || saveAs) {
         stage = 'dialog';
         const chosen = await dialog.showSaveDialog(mainWindow, {
@@ -501,11 +533,13 @@ function registerIPC() {
       stage = 'finalize';
       drawingPath = writtenPath;
       importSaveName = null;
+      const acceptedBinding=app.isPackaged?null:(saveAs||requireChooser||!entryPath?randomUUID():entryBinding);
+      if(saveAs||requireChooser||!entryPath)installDevelopmentBinding(acceptedBinding,owner);
       discardAuthorization = null;
       await persistDevelopmentPath();
       documentState = { dirty: false, name: path.basename(writtenPath), text };
       updateTitle();
-      return { ok: true, name: path.basename(writtenPath) };
+      return { ok: true, name: path.basename(writtenPath),...developmentReply(acceptedBinding) };
       } catch (error) { return fileFailure(error, 'save', stage); }
     });
   });
@@ -542,12 +576,12 @@ function registerIPC() {
     } catch { return 'cancel'; }
   });
 
-  ipcMain.handle('linecraft:reset-path', async event => {
+  ipcMain.handle('linecraft:reset-path', event => {
     if (!trusted(event)) return failure('Untrusted document request.');
-    if (fileOperationBusy) return failure('Another file operation is already in progress.');
-    drawingPath = null; importSaveName=null;discardAuthorization=null;documentState = { dirty: false, name: 'Untitled drawing', text: '' }; updateTitle();
-    await persistDevelopmentPath();
-    return { ok: true };
+    return fileOperation(async()=>{
+      drawingPath = null; importSaveName=null;installDevelopmentBinding(null,rendererOwner(event));discardAuthorization=null;documentState = { dirty: false, name: 'Untitled drawing', text: '' }; updateTitle();
+      await persistDevelopmentPath();return { ok: true,...developmentReply(null) };
+    });
   });
 
   ipcMain.on('linecraft:document-state', (event, value) => {
@@ -639,7 +673,7 @@ function createWindow() {
     },
   });
   mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
-  mainWindow.webContents.on('did-start-loading',()=>nativeOpenQueue.rendererReset());
+  mainWindow.webContents.on('did-start-loading',()=>{rendererLoadEpoch++;rotateRecovery();nativeOpenQueue.rendererReset();});
   mainWindow.webContents.on('before-input-event', (event, input) => {
     if (input.type !== 'keyDown' || (!input.control && !input.meta) || input.alt) return;
     const key = String(input.key).toLowerCase();

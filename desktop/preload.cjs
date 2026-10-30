@@ -9,6 +9,7 @@ if (process.argv.includes('--linecraft-development')) {
 }
 
 contextBridge.exposeInMainWorld('linecraftDesktop', Object.freeze({
+  ...(process.argv.includes('--linecraft-development')?{developmentRecovery:payload=>ipcRenderer.invoke('linecraft:development-recovery',payload)}:{}),
   openRequest: payload => ipcRenderer.invoke('linecraft:open-request',payload),
   onOpenRequest(callback) {
     if(typeof callback!=='function')throw new TypeError('An open request callback is required.');
