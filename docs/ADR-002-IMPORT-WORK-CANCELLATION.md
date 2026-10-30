@@ -1,7 +1,7 @@
 # ADR-002: bounded import work and cancellation
 
-Status: accepted implementation contract; pending product implementation.
-Scope: LC-REL-04 trusted source interfaces. Runtime remains beta12.
+Status: accepted; bounded beta13 source implementation qualified, parent partial.
+Scope: LC-REL-04 trusted source interfaces. See the beta13 implementation record below.
 
 The source references establish literal geometry, cumulative decoder/cell work,
 a final-newline-dependent group-admission inconsistency and missing cancellation
@@ -69,25 +69,34 @@ I/O are real. Helper state, binding/persistence/title counters are explicit adap
 This proves neither full main exchange/renderer integration nor persistence/crash
 atomicity, which remain outside this source slice and LC-REL-02's exhausted scope.
 
-## Acceptance and rollback
+## Pre-product reference, acceptance and rollback
 
-Before repair, preserve both pending references and all fixture corrections. The
-work pack has36checks (20pass/16expectedfail); cancellation has21checks
-(6pass/15expectedfail). Both have zero final unexpected errors. Passing inclusive
-controls alone do not prove option enforcement. The first-timeout, synchronous
-kill-close and abort-during-registration controls must remain unchanged.
+The original f660dfa prerequisite checkpoint preserved work36 (20pass/16expectedfail)
+and cancellation21 (6pass/15expectedfail), both zero unexpected errors. Passing
+inclusive controls alone could not prove enforcement. First-timeout, synchronous
+kill-close and abort-during-registration controls remain unchanged.
 
-A future coherent two-file repair needs both packs passing, existing converter48
-and recovery102 controls, an independently reviewed cumulative manifest retaining
-59 runtime files/12 resources, and a fresh selected fast gate bound to exact source.
-Recheck transport compatibility and fatal propagation separately. No repair approach
-has been consumed by this reference/decision checkpoint. A focused local revert of
-its eventual test/profile/docs commit restores prerequisites only; beta12 runtime
-and immutable manifests are unchanged. Product rollback must be recorded before
-the first runtime mutation.
+The coherent two-file repair required both packs passing, converter48/recovery102,
+a reviewed cumulative59-runtime/12-resource manifest and a fresh exact-source fast
+gate. Beta13 meets this bounded source requirement, including separate transport
+and private fatal-identity controls, as recorded below. The original reference-only
+checkpoint consumed zero approaches; beta13 uses one coherent approach, at most
+one remains. Product rollback was recorded privately before runtime mutation.
+A focused local revert of runtime9fa9b5bc restores owned source/metadata/tests;
+immutable beta12 and every historical receipt remain preserved. No installed
+rollback or promotion is implied.
 
 Held awaits and cleanup release are harness schedules. No real converter, unbounded
 filesystem-stall deadline, responsive mid-parse cancellation, whole-process/native
 memory, IPC, restart/crash, application/PDF/build/unpacked/native/installed/upgrade/
 client or daily-use acceptance is established. Preserve beta6 receipts and all
 existing restrictions. LC-REL-01/02 remain exhausted; LC-REL-03 remains partial.
+
+
+## Beta13 source implementation
+
+Runtime9fa9b5bc6c7a02fae5d38c1dd437df57ae29838d qualifies the bounded contract with
+67/67focused checks and58/58selected stages,1505checks,233inputs. See
+[implementation, chronology and remaining limits](IMPORT-WORK-CANCELLATION.md).
+One approach is used; at most one remains. The earlier36/21 failing reference
+numbers above are preserved pre-product evidence, not current failures.

@@ -576,3 +576,27 @@ Both packs remain auxiliary-only. The fresh selected fast gate is55/55stages,
 1,438checks,231exactinputs; converter48/recovery102 remain selected. Next implement
 the first reviewed ADR-002 approach and qualify both pending packs. Broader
 application/native/installed/daily-use limits persist; no actual converter ran.
+
+
+## Beta13 bounded import work and cancellation - October 30, 2026 UTC
+
+[The reviewed repair](IMPORT-WORK-CANCELLATION.md) at runtime9fa9b5bc implements
+shared inclusive1,000,000record/cell work, tightening-only overrides, private fatal
+identity, consistent logical-pair admission and acquisition-safe trusted signal
+checks through final report return. Cleanup preserves prior timeout/validation
+against later abort; beta12 custody, first cause, shared budgets and grace remain.
+No renderer cancellation UI or event-loop responsiveness is implied.
+
+Final work36/cancellation22/compatibility9 pass67/67, zero unexpected errors. The
+fresh selected gate passes58/58stages,1,505checks,233exactinputs; all three packs,
+converter48 and recovery102 are selected. Separate legacy importer21 and actual
+DXF24 pass. Preserve initial fixture errors, valid pre-guard callback failure and
+retained-beta12 comparison chronology. Runtime delta frombeta12 is two files;
+cumulative manifest59runtime/12resources/9baselinechanges remains reviewed.
+
+LC-REL-04 parent remains partial:one coherent approach used,atmostone remaining.
+Actual IPC/renderer, real FS-stall/process/native-memory/crash and all beta13
+application/PDF/build/unpacked/native/installed/upgrade/daily-use qualification
+remain unperformed. Beta7 cause unknown; beta6 receipts and exhaustedLC-REL-01/02
+remain intact. Next registered work is LC-PERF-01/LC-QA-006 workload/protocol
+definitions, with no unchanged application retry, actual converter or optimization.

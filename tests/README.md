@@ -471,3 +471,10 @@ auxiliaries, bound among231inputs and excluded from selected55/55stages and
 1438checks. See [the reviewed contract](../docs/ADR-002-IMPORT-WORK-CANCELLATION.md)
 and [source projection limits](../docs/IMPORT-BUDGET-REFERENCE.md). Runtime remains
 beta12, zero LC-REL-04 repair approaches used; the older26-check record is history.
+
+
+Beta13 selects import-budget36, import-cancellation22 and import-budget-compatibility9:
+67/67pass, zero unexpected errors. The selected fast gate is58/58stages,1505checks,
+233inputs, including converter48/recovery102. Separate legacy importer21 and
+actual DXF24 are outside that total. Earlier pending results above are history.
+See [the repair and projection limits](../docs/IMPORT-WORK-CANCELLATION.md).

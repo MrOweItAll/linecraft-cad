@@ -1,5 +1,11 @@
 # Import work and group-boundary source reference
 
+Current beta13 qualification selects work36/cancellation22/compatibility9, all67
+passing. See [the implemented contract and limits](IMPORT-WORK-CANCELLATION.md).
+The26/36 prerequisite descriptions below retain their historical beta12 scope;
+they are not current pending failures. The beta13 runtime repair uses one coherent
+approach; LC-REL-04 remains partial outside the bounded source envelope.
+
 The explicit LC-REL-04 reference has **26 checks: 19 pass and seven expected
 failures**, across 25 named cases with zero unexpected errors. Runtime remains
 unchanged beta12; no product repair approach or actual converter attempt occurred.
