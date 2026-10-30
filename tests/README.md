@@ -294,3 +294,15 @@ fingerprinted but not a portable gate stage. non-inspector-probe.cjs is an expli
 Windows diagnostic with Node24 and PowerShell7, never a default application stage.
 Its source listener-ownership prerequisite currently fails closed; do not rerun
 Electron unchanged. See [scope and actual limits](../docs/NON-INSPECTOR-PROBE.md).
+
+
+## Rejected fence recovery
+
+`node --test tests/atomic-batch-independent.test.mjs` runs eight independent
+synthetic trim/erase fence cases. A per-editor one-shot state-read fault fires
+only after a proven accepted first mutation; it is not a malformed-file or GUI
+claim. Cases cover selection/revision/content recovery, a content-dirty oracle,
+clean and existing Undo/Redo history, earlier accepted edits, successful trim and
+erase grouping, and pre-mutation rejection. The candidate fast profile includes
+this suite and fingerprints beta8's beta7 parent manifest. See
+[the bounded result](../docs/ATOMIC-BATCH-FAILURE-RECOVERY.md).

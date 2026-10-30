@@ -290,3 +290,13 @@ above are definition/historical evidence, not fresh execution in this intake.
 This change edits backlog/documentation only. Reverting this intake commit
 restores the preceding public register; preserve later independent work when
 performing any rollback. No runtime rollback is needed for this intake.
+
+
+## Subsequent bounded LC-REL-01 result
+
+The beta8 [rejected-fence recovery](ATOMIC-BATCH-FAILURE-RECOVERY.md) repairs one
+fault-injected selection/revision rollback gap. Its eight pure cases and fast
+qualification do not complete LC-REL-01 across other batch commands. The original
+intake assessments above retain their scope; the persistent register records the
+bounded result and next transform-boundary investigation. No natural drawing-loss,
+application/native or installed acceptance follows from the injected failure.

@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '24'
-      - run: npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.7.json
+      - run: npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.8.json
   application:
     runs-on: windows-2025
     timeout-minutes: 20
@@ -45,5 +45,5 @@ jobs:
           python -m venv .venv
           .\.venv\Scripts\python.exe -m pip install -r tests/requirements-dev.txt
           if ($LASTEXITCODE -ne 0) { throw 'Independent PDF reader failed.' }
-          npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.7.json
+          npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.8.json
           if ($LASTEXITCODE -ne 0) { throw 'Application checks failed.' }

@@ -1486,10 +1486,10 @@
     {
       "id": "LC-REL-01",
       "priority": 0,
-      "status": "partially implemented",
-      "problem": "Stronger full-state rollback and mid-batch failure acceptance remain to be established; no drawing-corruption defect was reproduced by this intake.",
+      "status": "partially implemented; rejected synthetic fence selection/revision recovery repaired in beta8",
+      "problem": "Artificial mid-fence failure demonstrated selection loss after an erased target and a revision increment while serialized contents recovered; the bounded fence catch is repaired, with other batch-command acceptance still open",
       "sourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
-      "sourceVersion": "1.36.1-beta.7",
+      "sourceVersion": "1.36.1-beta.8",
       "evidence": [
         "core.mjs:1642-1675",
         "core.mjs:1680-1687",
@@ -1502,7 +1502,9 @@
         "tests/core.test.mjs:883-892",
         "tests/core.test.mjs:1735-1748",
         "tests/trim-comprehensive.test.mjs:22-23",
-        "tests/scripting.test.mjs:115-123"
+        "tests/scripting.test.mjs:115-123",
+        "tests/atomic-batch-independent.test.mjs",
+        "docs/ATOMIC-BATCH-FAILURE-RECOVERY.md"
       ],
       "acceptance": [
         "Inject a failure midway through a representative batch operation.",
@@ -1510,9 +1512,9 @@
         "A successful operation follows the established undo convention, including previously accepted repeated edits.",
         "Validate before mutation where practical; retain command-state/revision observations without treating a revision-only discrepancy as drawing loss."
       ],
-      "next": "First ready investigation: use an owned synthetic two-target batch/fence in the existing pure editor harness; inject a deterministic failure after the first accepted mutation and compare literal document/selection/dirty/history behavior plus successful-command controls. Record the result before any narrowly justified repair. No Electron or converter retry is required.",
-      "confirmedDefect": false,
-      "implementationAttempts": 0,
+      "next": "Characterize one representative transform commit/history failure boundary using existing pure synthetic fixtures. Compare document/resources/IDs, selection, content-derived dirty state and prior Undo/Redo; preserve prevalidation and successful-command controls. Record evidence before another narrow repair. Do not retry the blocked application route or treat the fence slice as full LC-REL-01 completion.",
+      "confirmedDefect": true,
+      "implementationAttempts": 1,
       "acceptanceComplete": false,
       "recommendationReview": {
         "requestedId": "LC-REL-01",
@@ -1563,8 +1565,104 @@
           "For performance work record reproducible before/after measurements.",
           "Record remaining limitations and the exact rollback method."
         ],
-        "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
-      }
+        "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md",
+        "progress": {
+          "scope": "Rejected trim/erase fence recovery",
+          "status": "bounded synthetic slice verified; overall recommendation incomplete",
+          "drawingDataLossConfirmed": false,
+          "applicationOrNativeQualification": false,
+          "nextAction": "Characterize one representative transform commit/history failure boundary using existing pure synthetic fixtures. Compare document/resources/IDs, selection, content-derived dirty state and prior Undo/Redo; preserve prevalidation and successful-command controls. Record evidence before another narrow repair. Do not retry the blocked application route or treat the fence slice as full LC-REL-01 completion."
+        }
+      },
+      "history": [
+        {
+          "id": "LC-REL-01",
+          "priority": 0,
+          "status": "partially implemented",
+          "problem": "Stronger full-state rollback and mid-batch failure acceptance remain to be established; no drawing-corruption defect was reproduced by this intake.",
+          "sourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+          "sourceVersion": "1.36.1-beta.7",
+          "evidence": [
+            "core.mjs:1642-1675",
+            "core.mjs:1680-1687",
+            "core.mjs:1893-1911",
+            "core.mjs:2012-2035",
+            "core.mjs:2069-2070",
+            "core.mjs:2184-2250",
+            "app.mjs:297-308",
+            "tests/core.test.mjs:735-738",
+            "tests/core.test.mjs:883-892",
+            "tests/core.test.mjs:1735-1748",
+            "tests/trim-comprehensive.test.mjs:22-23",
+            "tests/scripting.test.mjs:115-123"
+          ],
+          "acceptance": [
+            "Inject a failure midway through a representative batch operation.",
+            "A failed atomic command restores document contents/resources/entity identity, selection, dirty state, and undo/redo history to their pre-command state; a failing batch within an established repeated-edit command restores its pre-batch state while retaining earlier accepted repeated edits. No partial edit or spurious undo entry from the failed batch remains.",
+            "A successful operation follows the established undo convention, including previously accepted repeated edits.",
+            "Validate before mutation where practical; retain command-state/revision observations without treating a revision-only discrepancy as drawing loss."
+          ],
+          "next": "First ready investigation: use an owned synthetic two-target batch/fence in the existing pure editor harness; inject a deterministic failure after the first accepted mutation and compare literal document/selection/dirty/history behavior plus successful-command controls. Record the result before any narrowly justified repair. No Electron or converter retry is required.",
+          "confirmedDefect": false,
+          "implementationAttempts": 0,
+          "acceptanceComplete": false,
+          "recommendationReview": {
+            "requestedId": "LC-REL-01",
+            "canonicalId": "LC-REL-01",
+            "queueId": "LC-REL-01",
+            "title": "Atomic multi-object commands",
+            "requestedPriority": 0,
+            "priority": 0,
+            "assessment": "partially implemented",
+            "problem": "Stronger full-state rollback and mid-batch failure acceptance remain to be established; no drawing-corruption defect was reproduced by this intake.",
+            "implemented": "Transforms validate proposals before commit; fence edits have document rollback; scripted revisions stage in another editor and commit once. Existing tests cover pre-mutation rejection and successful grouped history.",
+            "evidence": [
+              "core.mjs:1642-1675",
+              "core.mjs:1680-1687",
+              "core.mjs:1893-1911",
+              "core.mjs:2012-2035",
+              "core.mjs:2069-2070",
+              "core.mjs:2184-2250",
+              "app.mjs:297-308",
+              "tests/core.test.mjs:735-738",
+              "tests/core.test.mjs:883-892",
+              "tests/core.test.mjs:1735-1748",
+              "tests/trim-comprehensive.test.mjs:22-23",
+              "tests/scripting.test.mjs:115-123"
+            ],
+            "gap": "Document snapshots do not encompass every selection/command/revision/history field. Inject failure after an earlier mutation and compare all required state before deciding whether a product fix is justified. Preserve previously accepted repeated COPY/TRIM edits and existing cancel conventions.",
+            "acceptance": [
+              "Inject a failure midway through a representative batch operation.",
+              "A failed atomic command restores document contents/resources/entity identity, selection, dirty state, and undo/redo history to their pre-command state; a failing batch within an established repeated-edit command restores its pre-batch state while retaining earlier accepted repeated edits. No partial edit or spurious undo entry from the failed batch remains.",
+              "A successful operation follows the established undo convention, including previously accepted repeated edits.",
+              "Validate before mutation where practical; retain command-state/revision observations without treating a revision-only discrepancy as drawing loss."
+            ],
+            "nextAction": "First ready investigation: use an owned synthetic two-target batch/fence in the existing pure editor harness; inject a deterministic failure after the first accepted mutation and compare literal document/selection/dirty/history behavior plus successful-command controls. Record the result before any narrowly justified repair. No Electron or converter retry is required.",
+            "dependencies": [],
+            "relatedIds": [
+              "LC-QA-BETA7-UNPACKED-STARTUP"
+            ],
+            "riskConfirmed": false,
+            "priorityBasis": "P0 integrity investigation, not a confirmed P0 defect. Only demonstrated corruption/data-loss risk may preempt stable nearly completed work; complete this evidence step before performance optimization.",
+            "rollback": "Intake changes documentation only. A future runtime repair must record its exact commit and a focused revert/recovery method before completion.",
+            "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+            "recommendationNotVerifiedFinding": true,
+            "acceptanceComplete": false,
+            "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+            "completionRequirements": [
+              "Record the verified problem and affected behavior before a product change.",
+              "Record implementation and relevant executed checks; acceptance must pass before completion.",
+              "For performance work record reproducible before/after measurements.",
+              "Record remaining limitations and the exact rollback method."
+            ],
+            "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+          }
+        }
+      ],
+      "confirmedDefectScope": "Artificial synchronous mid-fence state-read fault only; no ordinary-input drawing-loss finding",
+      "drawingDataLossConfirmed": false,
+      "validation": "Private observation 6pass/1fail; corrected public regression3pass/5fail before repair,8/8after; beta8fast42/42with1061selectedportablechecks and211inputhashes; no application/build/native acceptance",
+      "change": "Capture pre-fence selection/revision and restore after existing document rollback; preserve prior accepted edits/history and success behavior"
     },
     {
       "id": "LC-REL-02",
@@ -2216,6 +2314,12 @@
         "assessment": "partially implemented",
         "priority": 3
       }
-    ]
+    ],
+    "latestBoundedResult": {
+      "id": "LC-REL-01",
+      "record": "docs/ATOMIC-BATCH-FAILURE-RECOVERY.md",
+      "fullItemComplete": false,
+      "next": "Transform commit/history boundary characterization"
+    }
   }
 }

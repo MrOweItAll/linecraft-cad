@@ -15,9 +15,9 @@ It does not establish installed/upgrade or broader native qualification. Earlier
 automated checkpoint descriptions below do not include this later native session.
 
 ```
-npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.7.json
-npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.7.json
-npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.7.json
+npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.8.json
+npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.8.json
+npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.8.json
 ```
 
 These reuse desktop/dev-tools.cjs. Fast selects the existing bounded public core
@@ -517,3 +517,25 @@ workaround or product fix was attempted. This is a blocked beta7 attempt, not a
 passing candidate gate. Beta6 remains the historical built/native candidate;
 beta7 build/native/installed and daily-use qualification remain open. Continue
 fresh evidence/intake review with the hourly task active while startup is unresolved.
+
+
+## Beta8 rejected-fence recovery - October 30, 2026 UTC
+
+LC-REL-01 has a bounded synthetic fence recovery repair. A one-shot artificial
+state-read fault after the first accepted trim/erase restored drawing contents
+but lost an erased target's selection and advanced revision. The existing catch
+now restores pre-batch selection and revision after document restoration. Earlier
+accepted edits and successful local/grouped Undo/Redo behavior are preserved.
+
+The corrected eight-case regression produced five pre-fix failures and passes
+8/8 after one repair. The exact beta8 fast profile passes 42/42 stages with 1061
+selected portable checks and 211 fingerprinted inputs. Its cumulative manifest
+retains all 59 runtime files and 12 resources; only core changes relative to beta7.
+See [the fault model and limits](ATOMIC-BATCH-FAILURE-RECOVERY.md).
+
+This qualifies the executed pure synthetic slice, not all multi-object commands,
+renderer dirty-state behavior, naturally triggered corruption or crash recovery.
+No new app/PDF/build/unpacked/native/installed/remote-CI gate ran. The prior beta7
+startup cause remains unknown; beta6 remains the historical built/native candidate.
+The broader LC-REL-01 item stays incomplete; next characterize one transform's
+commit/history failure boundary before considering another repair.

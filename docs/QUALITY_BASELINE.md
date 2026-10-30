@@ -2,7 +2,7 @@
 
 Baseline commit: f37aba5ebe19f27088847cd8f983ecf5facf8eac, version1.36.0,
 origin https://github.com/MrOweItAll/linecraft-cad.git. Local ownership branch:
-codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; current candidate1.36.1-beta.7. Exact local paths and
+codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; current candidate1.36.1-beta.8. Exact local paths and
 checkpoint/installer hashes are in the private session report, outside this tree.
 
 The opening baseline observations and dated sections below retain their historical
@@ -551,3 +551,25 @@ inputs were generated before launch. Failed receipts and prior reports are retai
 No unchanged retry, bypass, runtime fix or tolerance change followed. Historical
 beta6 built/native evidence remains separate. Beta7 automated build/unpacked,
 visible native, installed/upgrade and daily-use readiness remain unqualified.
+
+
+## Beta8 rejected-fence recovery - October 30, 2026 UTC
+
+LC-REL-01 has a bounded synthetic fence recovery repair. A one-shot artificial
+state-read fault after the first accepted trim/erase restored drawing contents
+but lost an erased target's selection and advanced revision. The existing catch
+now restores pre-batch selection and revision after document restoration. Earlier
+accepted edits and successful local/grouped Undo/Redo behavior are preserved.
+
+The corrected eight-case regression produced five pre-fix failures and passes
+8/8 after one repair. The exact beta8 fast profile passes 42/42 stages with 1061
+selected portable checks and 211 fingerprinted inputs. Its cumulative manifest
+retains all 59 runtime files and 12 resources; only core changes relative to beta7.
+See [the fault model and limits](ATOMIC-BATCH-FAILURE-RECOVERY.md).
+
+This qualifies the executed pure synthetic slice, not all multi-object commands,
+renderer dirty-state behavior, naturally triggered corruption or crash recovery.
+No new app/PDF/build/unpacked/native/installed/remote-CI gate ran. The prior beta7
+startup cause remains unknown; beta6 remains the historical built/native candidate.
+The broader LC-REL-01 item stays incomplete; next characterize one transform's
+commit/history failure boundary before considering another repair.
