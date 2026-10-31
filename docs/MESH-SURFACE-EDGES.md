@@ -50,3 +50,10 @@ projection/sort/redraw and mesh-occlusion paths are profiling candidates. No GPU
 or VRAM bottleneck, frame-rate improvement or performance threshold is claimed.
 Next bound a synthetic 3D application/raster/profile run separately before
 optimizing or claiming the reported real drawing is fixed.
+
+## Subsequent actual raster result
+
+The [single beta14 observation session](MESH-3D-OBSERVATIONS.md) retained a dark
+diagonal in both flat fixtures despite the source stroke-inventory checks.
+Fold and wireframe checks passed. Flat-surface acceptance remains failed; keep
+the captured failure and frozen tolerance while diagnosing the residual seam.

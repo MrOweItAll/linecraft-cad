@@ -39,3 +39,10 @@ automatically. Installed binaries remain unchanged; no normal profile or client
 drawing was selected. This preparation changes no runtime, dependency or repair
 budget and does not establish a speedup, GPU/VRAM cause, native acceptance,
 installed/upgrade acceptance or daily-use readiness.
+
+## Subsequent authorized execution
+
+The one approved session has now run. [The actual observations](MESH-3D-OBSERVATIONS.md)
+record two failing flat rasters, passing fold/wireframe cases, and three audited
+performance captures. The preparation record above remains historical. Its
+launch approval is consumed; do not repeat the session automatically.

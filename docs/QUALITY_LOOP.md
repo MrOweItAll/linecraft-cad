@@ -1065,3 +1065,14 @@ The proposed single hidden run uses fresh owned profile/output paths and needs
 separate authorization. Runtime and all241 retained fast-gate input hashes remain
 unchanged; no unchanged passing gate was rerun. Performance, beta14 application,
 PDF/build/native/installed/upgrade and daily-use qualification remain open.
+
+## Actual synthetic 3D observations - October 31, 2026 UTC
+
+The approved one-shot beta14 session completed five startup and five observation
+groups, but its independent flat-raster acceptance failed. The unchanged reader
+reports two flat-seam failures and two fold/wireframe passes; all three profiles
+and 35 unprofiled observations were collected and audited. See
+[the actual result and limits](MESH-3D-OBSERVATIONS.md). Installed binaries and
+all 336 pinned inputs remain unchanged. No repair, tolerance relaxation or
+application retry occurred. Diagnose the residual seam using preserved evidence;
+the hourly loop stays active and the one-shot launch approval is consumed.

@@ -4869,10 +4869,10 @@
     {
       "id": "LC-3D-SURFACE-EDGES",
       "priority": 1,
-      "status": "beta14 source outline correction verified; application test prepared awaiting separate execution authorization",
-      "problem": "Ordinary shaded meshes outlined every triangle, displaying artificial coplanar diagonals; interactive3Dperformance separately reported slow",
+      "status": "beta14 actual flat raster acceptance failed; fold/wireframe pass; performance observations recorded",
+      "problem": "The source stroke-mask correction retains a dark diagonal in actual flat quad and coplanar-triangle rasters. Fold/crease and wireframe pass frozen probes. Reported real-drawing performance remains unqualified.",
       "expected": "Retain real outlines and sharp corners while suppressing internal coplanar triangulation edges; preserve geometry, roof rendering, wireframe, picking and painter order",
-      "reproduction": "Exact production drawModel in recordedCanvashost:10by10planarquad yields artificialdiagonal twice; independent expectedfourboundaryedges and fillarea100",
+      "reproduction": "Original recorded-Canvas production drawModel regression exposed explicit extra diagonal strokes; after their beta14 suppression, actual640x480 DPR1 quad and stored-triangle captures still show a dark diagonal. Frozen RGB tolerance8 rejects the first probe240,320, observing94/96/98 versus121/121/121.",
       "fixtureClass": "Literal public-safe synthetic indexed meshes; actual reported drawing not accessed",
       "sourceVersion": "1.36.1-beta.14",
       "implementationAttempts": 1,
@@ -4883,10 +4883,11 @@
         "docs/MESH-SURFACE-EDGES.md",
         "tests/mesh-surface-renderer.test.cjs",
         "qa/CANDIDATE-SOURCE-1.36.1-beta.14.json",
-        "docs/MESH-3D-VALIDATION-PLAN.md"
+        "docs/MESH-3D-VALIDATION-PLAN.md",
+        "docs/MESH-3D-OBSERVATIONS.md"
       ],
-      "limits": "RecordedCanvashost only; no beta14application/browserraster/picking/PDF/build/native/installed/upgrade/dailyuse orGPU/performance qualification. Additional adjacency work may costCPU/heap. No coordinatewelding across indices/entities. Actualdrawingnotread. Earlierbeta13workflowdoesnotqualifybeta14.",
-      "next": "Authorize one bounded hidden synthetic 3D visual and CPU observation session in the working outside-managed context after reviewing the prepared scope; no automatic launch, speculative optimization or additional repair attempt",
+      "limits": "Actual hidden synthetic beta14 run at DPR1 only: flat raster acceptance failed; fold/wireframe passed;3 profiles and35 unprofiled observations recorded. No broader picking/PDF/full-gate/build/native/installed/upgrade/daily-use/client qualification or speedup/GPU/VRAM diagnosis. No coordinate welding across indices/entities. Actual user drawing not read. Earlier beta13 PDF workflow stays historical.",
+      "next": "Diagnose the residual dark flat-face seam from the preserved actual quad/triangle PNGs using a source-only independent regression. Preserve frozen tolerance, painter ordering/occlusion, real outlines/creases, wireframe and geometry. One product repair approach used, at most one remains; this observation session spends none. The one-shot app authorization is consumed: no retry or speculative optimization.",
       "preparationHistory": [
         {
           "prior": {
@@ -4914,7 +4915,7 @@
         }
       ],
       "applicationValidationPreparation": {
-        "status": "prepared and independently reviewed; not executed",
+        "status": "Historical preparation complete before launch; actual subsequent execution is recorded separately in actual3DObservation",
         "document": "docs/MESH-3D-VALIDATION-PLAN.md",
         "syntheticNativeFixtures": 6,
         "plannedCanvasCaptures": 4,
@@ -4927,6 +4928,63 @@
         "applicationLaunchAuthorized": false,
         "productRepairApproachesAdded": 0,
         "selfChecks": "6 literal fixture inspections;4 analytic raster positives/13 negative pixel-metadata controls;4 encoded PNG role/hash positives/2 negative identity controls;1 positive-half rounding check;3 literal profile attribution checks/6 malformed profile controls; syntax and no-authorization guards"
+      },
+      "actualObservationHistory": [
+        {
+          "at": "2026-10-31T15:22:06.443717+00:00",
+          "previous": {
+            "status": "beta14 source outline correction verified; application test prepared awaiting separate execution authorization",
+            "problem": "Ordinary shaded meshes outlined every triangle, displaying artificial coplanar diagonals; interactive3Dperformance separately reported slow",
+            "next": "Authorize one bounded hidden synthetic 3D visual and CPU observation session in the working outside-managed context after reviewing the prepared scope; no automatic launch, speculative optimization or additional repair attempt",
+            "limits": "RecordedCanvashost only; no beta14application/browserraster/picking/PDF/build/native/installed/upgrade/dailyuse orGPU/performance qualification. Additional adjacency work may costCPU/heap. No coordinatewelding across indices/entities. Actualdrawingnotread. Earlierbeta13workflowdoesnotqualifybeta14.",
+            "reproduction": "Exact production drawModel in recordedCanvashost:10by10planarquad yields artificialdiagonal twice; independent expectedfourboundaryedges and fillarea100",
+            "evidence": [
+              "docs/MESH-SURFACE-EDGES.md",
+              "tests/mesh-surface-renderer.test.cjs",
+              "qa/CANDIDATE-SOURCE-1.36.1-beta.14.json",
+              "docs/MESH-3D-VALIDATION-PLAN.md"
+            ],
+            "applicationValidationPreparation": {
+              "status": "prepared and independently reviewed; not executed",
+              "document": "docs/MESH-3D-VALIDATION-PLAN.md",
+              "syntheticNativeFixtures": 6,
+              "plannedCanvasCaptures": 4,
+              "plannedUnprofiledActions": 42,
+              "plannedTimingWarmups": 7,
+              "plannedTimingObservations": 35,
+              "plannedSeparateProfiledActions": 42,
+              "actualAppLaunches": 0,
+              "actualPerformanceObservations": 0,
+              "applicationLaunchAuthorized": false,
+              "productRepairApproachesAdded": 0,
+              "selfChecks": "6 literal fixture inspections;4 analytic raster positives/13 negative pixel-metadata controls;4 encoded PNG role/hash positives/2 negative identity controls;1 positive-half rounding check;3 literal profile attribution checks/6 malformed profile controls; syntax and no-authorization guards"
+            }
+          }
+        }
+      ],
+      "acceptanceComplete": false,
+      "applicationLaunchAuthorized": false,
+      "actual3DObservation": {
+        "sourceAtTest": "70cd0f10340c749c406bf4b0f6d55b401b6a9b44",
+        "runtimeCommit": "efb833fc2098a970162b59d47e4a3d4cd63de0b9",
+        "applicationLaunches": 1,
+        "startupGroupsPassed": 5,
+        "workflowGroupsPassed": 5,
+        "rasterPassed": 2,
+        "rasterFailed": 2,
+        "profileFilesAudited": 3,
+        "measuredUnprofiledObservations": 35,
+        "warmupActions": 7,
+        "separateProfiledActions": 42,
+        "renderScaleDPR": 1,
+        "authorizationConsumed": true,
+        "productRepairApproachesAdded": 0,
+        "atMostRemaining": 1,
+        "evidence": [
+          "docs/MESH-3D-OBSERVATIONS.md"
+        ],
+        "installedBinariesUnchanged": true,
+        "performanceImprovementClaimed": false
       }
     }
   ],
