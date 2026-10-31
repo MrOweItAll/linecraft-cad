@@ -75,7 +75,7 @@ corrected those failures. The intermediate59pass receipt remains historical.
 
 Independent source review then froze a60-check challenge:58pass/2fail. A resealed
 entity type array coerced to LINE, and aggregate rejection occurred after16,796,093
-physical bytes. Strict string types and remaining-total-plus-one read sizes fix
+adapter-returned read bytes (source overlays, not measured physical disk I/O). Strict string types and remaining-total-plus-one read sizes fix
 both. Source, tests, deterministic corrupt inputs, logs and both refinements remain
 preserved privately; these are QA tool findings, not runtime drawing-loss claims.
 
