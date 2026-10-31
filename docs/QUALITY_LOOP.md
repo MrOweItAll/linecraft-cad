@@ -1168,3 +1168,31 @@ profile provide a bounded baseline, not a speedup/FPS/GPU claim. All346 launch p
 and85 preparation files remain exact; no runtime change, unchanged gate rerun or
 second application launch occurred. The one-run approval is consumed, the mesh-edge
 repair budget remains0, and broader/native/installed/daily-use limits remain open.
+
+
+## Beta15 candidate build and local trial installation - October 31, 2026 UTC
+
+The separately authorized personal-trial update completed at tested source
+`ac7e08b9addd7f571832f71a6ed47c943b23d0c5`, runtime
+`dc9aa4f3e666e3fc10614e9ec538f15ee4625e69`, version1.36.1-beta.15.
+The complete local candidate gate passed78/78 stages: selected portable checks,
+seven source and seven unpacked application/PDF workflows, unpacked packaging and
+NSIS compilation. This advances the current candidate record; it does not rerun
+or retroactively pass the historical beta7/managed-context failures, whose exact
+cause remains unresolved.
+
+The verified per-user installer completed once with exit0. All87 final packaged
+payload files match the installed copy, including 59 runtime files in app.asar
+and 12 external resources. Registry version and desktop/Start-menu shortcut targets
+match. The prior89-file installation and74-file profile were backed up and hash
+verified; all74 profile files remained unchanged, with no added profile files.
+DWG/DXF associations were preserved. No normal-profile startup or installed native
+input test was performed. Installation and exact-file verification are not broad
+upgrade compatibility, native/client or daily-use acceptance. The installer is
+unsigned, and nothing was published or uploaded.
+
+The resume request prompted this evidence reconciliation only: no application,
+test, build, installation, product repair or source-runtime change was repeated.
+The hourly loop remains active. Historical beta6 native evidence stays separate;
+new launches, reinstallations and exhausted mesh-edge repairs are not authorized
+by resuming the loop. Future work must have a concrete authorized scope.

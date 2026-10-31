@@ -1733,16 +1733,16 @@
     {
       "id": "LC-QA-BETA7-UNPACKED-STARTUP",
       "priority": 1,
-      "status": "focused synthetic source drawing/save-reopen/PDF workflow passed outside managed context; full candidate qualification incomplete",
-      "problem": "Managed-context startup failures remain historical; source startup and a focused synthetic drawing/save-reopen/PDF workflow now succeed outside that context. Exact execution-context cause and broader candidate qualification remain open.",
+      "status": "Historical beta7 failure retained; current beta15 candidate78/78 passed and local trial installation verified",
+      "problem": "Historical managed-context startup failures have no proven exact cause. Current beta15 source/unpacked application and PDF workflows pass outside that context; native input and broad daily-use qualification remain separate.",
       "fixture": "Copied synthetic mm DXF with one model ruler and one paper ruler; command API added a second model ruler; isolated hidden source profile and owned chooser replies, no client or installed executable selected",
-      "validation": "Current focused workflow: five startup and six drawing/Save As/New/Open/PDF groups pass; independent40/20/10mm positions and lengths meet0.02mm tolerance, page meets0.3mm tolerance, bound raster ink and seven rejected observation controls pass. Both processes exit0. Historical source smoke remains4pass/1incorrect-oracle-fail/5notrun, separately preserved; it is not retroactively passed.",
+      "validation": "Existing beta15 candidate gate78/78 at ac7e08b: seven source and seven unpacked application/PDF workflows plus portable/build/NSIS stages. One authorized per-user installer exit0;87installed payload files,59runtime/12resources and fullversion verified;74normalprofile files unchanged,0added;DWG/DXF defaults preserved. No rerun in reconciliation.",
       "implementationAttempts": 0,
       "qualificationAttempts": 1,
       "repairAttempts": 0,
       "change": "Bounded qualification evidence and corrected current summaries only; runtime/manifest/dependencies/security settings unchanged",
-      "next": "Preserve this focused same-process pass and historical failed smoke. Address separately scoped3D rendering intake with independent synthetic regression and measured performance evidence; further outside-context application launches need their own scope. Native/installed/upgrade/daily-use and complete candidate gates remain separate.",
-      "limits": "Focused source command-API/owned-chooser drawing/Save As/New/Open/PDF acceptance only. No native input, process restart, full application/PDF gate, build, converter, native/installed/upgrade/daily-use or performance qualification. Whole-profile byte preservation was not measured. The prior smoke omitted later assertions and logged two shutdown GPU errors with unresolved significance; those historical limits are not erased. The one focused-workflow launch authorization is consumed.",
+      "next": "Keep current beta15 candidate/install evidence separate from historical failure and beta6 native receipts. Await concrete new authorized work or personal-trial feedback; do not repeat completed gates/install or revive exhausted repairs.",
+      "limits": "Current bounded source/unpacked candidate gate and installed-file/version verification only. No normal-profile startup, installed native input, broad upgrade/downgrade/client/daily-use or expanded performance acceptance. Historical beta7/managed failures and incorrect smoke oracle remain preserved; no exact environmental root cause claimed. No further application/reinstall or repair authority follows.",
       "history": [
         {
           "id": "LC-QA-BETA7-UNPACKED-STARTUP",
@@ -1978,8 +1978,32 @@
             "next": "Use the actual optional-empty serializer contract in a separately authorized future test or run the existing full application/PDF workflow in the working context after scope review. Preserve the failed private assertion and all prior attempts. This one source-app launch authorization is consumed; do not automatically rerun.",
             "limits": "Readiness is demonstrated, not full smoke/workflow qualification. The captured document/snapshot was not persisted before the failed assertion. Final hidden-state, clean/idle/history/restore and later checks were not run. Two GPU ERROR-level messages occurred during shutdown; significance unresolved. Installed EXE/ASAR bytes match before/after, but whole-profile byte preservation was not measured. No drawing/Open/Save/PDF/build/converter/native/installed/daily-use or performance qualification."
           }
+        },
+        {
+          "at": "2026-10-31T19:19:01.138025+00:00",
+          "reason": "Reconcile completed beta15 candidate and separately authorized personal-trial installation; historical beta7 failure remains",
+          "previous": {
+            "status": "focused synthetic source drawing/save-reopen/PDF workflow passed outside managed context; full candidate qualification incomplete",
+            "problem": "Managed-context startup failures remain historical; source startup and a focused synthetic drawing/save-reopen/PDF workflow now succeed outside that context. Exact execution-context cause and broader candidate qualification remain open.",
+            "next": "Preserve this focused same-process pass and historical failed smoke. Address separately scoped3D rendering intake with independent synthetic regression and measured performance evidence; further outside-context application launches need their own scope. Native/installed/upgrade/daily-use and complete candidate gates remain separate.",
+            "validation": "Current focused workflow: five startup and six drawing/Save As/New/Open/PDF groups pass; independent40/20/10mm positions and lengths meet0.02mm tolerance, page meets0.3mm tolerance, bound raster ink and seven rejected observation controls pass. Both processes exit0. Historical source smoke remains4pass/1incorrect-oracle-fail/5notrun, separately preserved; it is not retroactively passed.",
+            "limits": "Focused source command-API/owned-chooser drawing/Save As/New/Open/PDF acceptance only. No native input, process restart, full application/PDF gate, build, converter, native/installed/upgrade/daily-use or performance qualification. Whole-profile byte preservation was not measured. The prior smoke omitted later assertions and logged two shutdown GPU errors with unresolved significance; those historical limits are not erased. The one focused-workflow launch authorization is consumed."
+          }
         }
-      ]
+      ],
+      "currentBeta15Candidate": {
+        "testedSource": "ac7e08b9addd7f571832f71a6ed47c943b23d0c5",
+        "runtimeCommit": "dc9aa4f3e666e3fc10614e9ec538f15ee4625e69",
+        "version": "1.36.1-beta.15",
+        "passedStages": 78,
+        "totalStages": 78,
+        "localTrialInstalled": true,
+        "installedPayloadFilesVerified": 87,
+        "normalProfileFilesUnchanged": 74,
+        "nativeInputAccepted": false,
+        "dailyUseQualified": false,
+        "historicalBeta7FailureRetroactivelyPassed": false
+      }
     },
     {
       "id": "LC-REL-01",
@@ -5224,7 +5248,14 @@
       {
         "id": "LC-QA-BETA7-UNPACKED-STARTUP",
         "priority": 1,
-        "state": "Existing generic launch failure remains blocked; no cause established and no unchanged retry authorized."
+        "state": "Historical beta7 and managed-context launch failures retain an unresolved exact cause. The current beta15 candidate passed all78source/portable/unpacked/build stages outside that context and the separately authorized local trial installation is verified. Preserve historical failures and unchanged-retry prohibition; normal-profile startup, installed native input and broader daily-use acceptance remain separate.",
+        "stateHistory": [
+          {
+            "at": "2026-10-31T19:19:01.138025+00:00",
+            "previous": "Existing generic launch failure remains blocked; no cause established and no unchanged retry authorized.",
+            "reason": "Current beta15 candidate and installation evidence reconciliation"
+          }
+        ]
       },
       {
         "id": "LC-SEC-SCRIPT-DESCRIPTOR",
