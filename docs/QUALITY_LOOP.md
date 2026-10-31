@@ -1114,3 +1114,16 @@ Corner/sliver controls expose bounded lateral overdraw, not boundary-color or
 corner-pixel acceptance. Existing app launch approvals remain consumed. Next
 prepare a bounded visual confirmation using the preserved fixture/probe contract
 plus explicit corner/sliver observations; no automatic launch or new repair.
+
+
+## User-requested planarity tolerance comparison - October 31, 2026 UTC
+
+The finite [synthetic tolerance experiment](MESH-PLANARITY-EXPERIMENT.md) compared
+six angular thresholds and six known-plane projection distances. It passed
+429 counted control groups and recorded 168 helper/copy timing observations.
+Looser classification and the preflattened copy did not improve measured helper
+speed; all 3,200 triangles remained. The same distance threshold can erase an
+intended shallow crease, so no universal auto-snap tolerance was adopted.
+Production files, the beta15 manifest and all 243 prior gate inputs remain
+unchanged; no unchanged gate or application run was repeated. User visual
+confirmation and any geometry-changing cleanup decision remain separate.

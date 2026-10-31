@@ -5054,6 +5054,23 @@
         "atMostRemaining": 0,
         "document": "docs/MESH-SURFACE-COVERAGE-REFERENCE.md"
       }
+    },
+    {
+      "id": "LC-3D-PLANARITY-TRIAL",
+      "priority": 1,
+      "status": "Requested synthetic tolerance comparison complete; no production tolerance or geometry change",
+      "problem": "User proposed near-coplanarity tolerances and optional alignment for performance and visual quality",
+      "expected": "Compare angular classification versus absolute geometric displacement and preserve intentional features; seek user approval for geometry changes",
+      "validation": "429 counted control groups;192 angular/unit cases96 projection cases;168 helper/copy timing observations after56 warmups; independent square formula and signed/margin/intent/boundary controls",
+      "finding": "Looser1e-2 and preflattened copy suppress more edges but did not speed measured helper;3200 triangles retained. .01mm snap removes same-size intentional crease as well as noise.",
+      "evidence": [
+        "docs/MESH-PLANARITY-EXPERIMENT.md"
+      ],
+      "sourceVersion": "1.36.1-beta.15",
+      "implementationAttempts": 0,
+      "runtimeChanged": false,
+      "limits": "One-process synthetic helper/copy wall times only; no browser/app/GPU/FPS/client/installed qualification. Projection used known z=0 plane, not general best-fit planarization. No universal tolerance established.",
+      "next": "Keep production tolerance unchanged. Prepare bounded beta15 visual confirmation; any future geometry cleanup needs explicit surface/plane selection, unit-aware distance and user approval."
     }
   ],
   "recommendationTriage": {
