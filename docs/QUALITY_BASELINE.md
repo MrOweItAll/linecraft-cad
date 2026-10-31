@@ -969,3 +969,31 @@ A queue review found no next concrete ready milestone under current prerequisite
 Keep hourly ACTIVE; reassess changed intake/evidence/prerequisites, stay quiet when
 unchanged, and do not invent a metadata sequel or rerun passing checks. Actual
 measurements, startup cause and all broader qualification limits remain open.
+
+
+## Instrumented Electron startup diagnostics - October 31, 2026 UTC
+
+Two user-resumed isolated launch approaches characterized the blocked application
+route at source55fbe051, with beta13 runtime9fa9b5bc unchanged. Pinned Playwright
+with current source and a direct minimal bootstrap without Playwright, debugger
+flags or Linecraft code emitted identical600-byte native EXCEPTION_BREAKPOINT
+output. The direct process exited0x80000003 before its first bootstrap entry
+marker. No installed application was running at either attempt. This reproduces
+an early runtime/environment startup failure independently of Linecraft code;
+the specific cause, including any Windows-update effect, remains unresolved.
+
+All73distribution files match the retained cached release archive byte for byte;
+this is not a new independent vendor-checksum verification. Read-only fuse
+inspection permits Node inspection and leaves browser-specific snapshot selection
+disabled; the nearest snapshot-symbol stack frame does not prove a fuse/snapshot
+cause. No fuse, dependency, runtime, manifest, security setting or drawing changed.
+
+The first Playwright driver ended on an internal unhandled rejection before its
+structured final report; bounded raw logs and execution evidence are preserved.
+Its owned-tree cleanup reported an authentication error; permitted process checks
+after both attempts found no relevant process. This is not global orphan proof.
+No hidden-window/application/PDF/build/native/installed acceptance or performance
+measurement follows. Preserve the historical failed gate and beta6 receipts.
+Next review an explicitly authorized normal-desktop minimal control or precise
+native crash evidence; do not repeat unchanged managed launches or repair a
+merely suspected cause. Broader qualification remains incomplete.

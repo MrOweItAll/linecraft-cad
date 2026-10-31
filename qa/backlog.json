@@ -1733,16 +1733,44 @@
     {
       "id": "LC-QA-BETA7-UNPACKED-STARTUP",
       "priority": 1,
-      "status": "blocked at first hidden source Electron startup; beta7 unpacked not built",
-      "problem": "First beta7 unpacked qualification stopped before application acceptance and packaging at a generic Playwright Electron launch failure",
+      "status": "blocked at native Electron startup before the first independent bootstrap entry marker; current candidate unqualified",
+      "problem": "Historical beta7 qualification failed generically; two new instrumented current-runtime controls now expose an early native EXCEPTION_BREAKPOINT",
       "fixture": "Existing synthetic ordinary-grip inputs and explicit isolated hidden source profile; no client or installed executable selected",
-      "validation": "41 portable stages/1053 checks passed; stage 42 launch failed; 0 application/PDF acceptance; no build/installer; 395 source files/209 inputs unchanged",
+      "validation": "Historical41portable stages/1053checks and failed stage42 retained. Two current diagnostic launches: pinned Playwright/current source and direct minimal bootstrap without Playwright/debugger/Linecraftcode; identical600-byte native exception output. Direct exit0x80000003, bootstrap entry marker absent. No application/PDF acceptance, build or installer.",
       "implementationAttempts": 0,
       "qualificationAttempts": 1,
       "repairAttempts": 0,
-      "change": "No product/runtime/manifest/workflow change; immutable failure and scope recorded",
-      "next": "Reassess saved startup evidence and changed prerequisites before any scoped diagnostic or qualification retry; do not repeat unchanged gate or bypass denials",
-      "limits": "Cause undiagnosed; no sandbox/permission/product attribution; no hidden-window acceptance or normal-profile byte measurement; beta6 historical build/native evidence retained; beta7 native/installed/daily-use unqualified"
+      "change": "Diagnostic evidence and blocker wording only; no product/runtime/manifest/dependency/security-setting change",
+      "next": "Review one additional identical minimal control in an explicitly authorized normal desktop context, or obtain authorized precise native crash evidence. Do not repeat unchanged managed launches, bypass denials, flip fuses or repair an unproved cause.",
+      "limits": "Specific native runtime/environment cause unresolved; nearest snapshot-symbol frame does not establish a fuse/snapshot cause. Installed app absent at these attempts. All73live distribution files match retained cache archive, not a newly verified independent vendor checksum. First driver lost its structured final report after a Playwright internal unhandled rejection; raw bounded logs retained. Owned taskkill returned an authentication error; permitted process checks afterward found no relevant processes. No global orphan, hidden-window, application/PDF/build/native/installed/daily-use qualification.",
+      "history": [
+        {
+          "id": "LC-QA-BETA7-UNPACKED-STARTUP",
+          "priority": 1,
+          "status": "blocked at first hidden source Electron startup; beta7 unpacked not built",
+          "problem": "First beta7 unpacked qualification stopped before application acceptance and packaging at a generic Playwright Electron launch failure",
+          "fixture": "Existing synthetic ordinary-grip inputs and explicit isolated hidden source profile; no client or installed executable selected",
+          "validation": "41 portable stages/1053 checks passed; stage 42 launch failed; 0 application/PDF acceptance; no build/installer; 395 source files/209 inputs unchanged",
+          "implementationAttempts": 0,
+          "qualificationAttempts": 1,
+          "repairAttempts": 0,
+          "change": "No product/runtime/manifest/workflow change; immutable failure and scope recorded",
+          "next": "Reassess saved startup evidence and changed prerequisites before any scoped diagnostic or qualification retry; do not repeat unchanged gate or bypass denials",
+          "limits": "Cause undiagnosed; no sandbox/permission/product attribution; no hidden-window acceptance or normal-profile byte measurement; beta6 historical build/native evidence retained; beta7 native/installed/daily-use unqualified"
+        }
+      ],
+      "diagnostics": {
+        "sourceVersion": "1.36.1-beta.13",
+        "sourceCommit": "55fbe051dc3e1decd159f887d4ad5665ba3cf143",
+        "runtimeCommitUnchanged": "9fa9b5bc6c7a02fae5d38c1dd437df57ae29838d",
+        "launchApproaches": 2,
+        "qualificationAttemptsAdded": 0,
+        "repairApproachesAdded": 0,
+        "minimalReturnCode": "0x80000003",
+        "bootstrapEntryMarkerReached": false,
+        "runtimeArchiveEntriesMatched": 73,
+        "productCauseEstablished": false
+      }
     },
     {
       "id": "LC-REL-01",
