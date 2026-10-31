@@ -1017,3 +1017,29 @@ performance workload ran. Runtime/version/manifest/dependencies remain unchanged
 The one-control authorization is consumed; next evaluate a separately authorized
 isolated source/application run in the working context. No further launch or
 broader qualification is implied by this minimal control.
+
+
+## Isolated source-app startup smoke - October 31, 2026 UTC
+
+One explicitly authorized hidden source-app launch outside the managed tool
+context reached Node/Chromium debugger attachment and actual renderer/preload
+APIs. Four groups passed: source mode/pinned package-Electron identity, exact owned
+userData/sessionData, initial hidden window, and source index/editor-canvas APIs.
+The app closed normally with exit0; no forced cleanup or further launch occurred.
+Installed EXE/ASAR bytes match before/after; whole-profile byte preservation was
+not measured. Runtime/version/manifest/dependencies remain unchanged beta13.
+
+The smoke driver returned1: its private oracle incorrectly required serialized
+empty sheetSets=[] even though the serializer intentionally omits that optional
+empty field. The raw4passed/1failed/5notrun result and original assertion remain.
+A separate headless serializer check confirms the contract, not remaining app
+checks. The document/snapshot was not persisted before the failed assertion;
+final visibility and later clean/idle/history/restore checks are not qualified.
+Two GPU ERROR-level messages occurred during shutdown after debugger disconnect;
+their significance remains unresolved. No GPU/security setting was changed.
+
+This demonstrates source startup to renderer APIs, not a complete smoke, drawing,
+Open/Save/PDF/build/native/installed/daily-use or performance qualification. Next
+use the actual serialization contract or existing application/PDF workflows in a
+separately authorized scope. The single source-app authorization is consumed;
+do not automatically rerun or convert a harness failure into an app defect.

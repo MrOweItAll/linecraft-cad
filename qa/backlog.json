@@ -1733,16 +1733,16 @@
     {
       "id": "LC-QA-BETA7-UNPACKED-STARTUP",
       "priority": 1,
-      "status": "minimal Electron control passes outside managed tool context; full candidate application route unqualified",
-      "problem": "Managed-context controls failed natively; an explicitly authorized same-binary/bootstrap control now passes outside that tool context. Exact context-specific cause unresolved.",
+      "status": "isolated source startup reached renderer APIs outside managed context; smoke incomplete after incorrect serialization assertion",
+      "problem": "The outside-context source app now reaches readiness, but an added private smoke assertion conflated normalized empty sheet sets with optional serialized fields; no application defect is established by that assertion.",
       "fixture": "Existing synthetic ordinary-grip inputs and explicit isolated hidden source profile; no client or installed executable selected",
-      "validation": "Historical failed beta7 gate and two managed diagnostics retained. One additional authorized minimal control outside managed tool context reached entry/module/ready, its exact owned profile and hidden synthetic renderer, then exited0. Same Electron executable/bootstrap hashes; no Linecraft code, Playwright or drawing workflow ran.",
+      "validation": "One authorized source-app launch: source mode/version, owned userData/sessionData, initial hidden window and exact source index/renderer-preload APIs passed four groups. One group failed on the incorrect empty serialized sheetSets expectation; five later groups did not run. The app closed with exit0; driver returned1. A separate headless contract check confirmed intentional omission, without retroqualifying the smoke.",
       "implementationAttempts": 0,
       "qualificationAttempts": 1,
       "repairAttempts": 0,
-      "change": "Diagnostic context-control evidence and blocker wording only; no product/runtime/manifest/dependency/security-setting change",
-      "next": "Evaluate a separately authorized isolated Linecraft source/application run in the working outside-managed tool context. The one additional minimal-control authorization is consumed; do not automatically run another launch or infer full application qualification.",
-      "limits": "Observed execution-context difference, not a specific sandbox policy/token/OS cause or proof of manual interactive login. No administrator elevation requested; token/elevation not measured. Electron renderer sandbox remains enabled in the minimal bootstrap. No Linecraft/PDF/build/native/installed/daily-use or performance qualification; original managed crashes and cleanup limitations retained.",
+      "change": "Diagnostic evidence and harness-failure attribution only; no product/runtime/manifest/dependency/security-setting change",
+      "next": "Use the actual optional-empty serializer contract in a separately authorized future test or run the existing full application/PDF workflow in the working context after scope review. Preserve the failed private assertion and all prior attempts. This one source-app launch authorization is consumed; do not automatically rerun.",
+      "limits": "Readiness is demonstrated, not full smoke/workflow qualification. The captured document/snapshot was not persisted before the failed assertion. Final hidden-state, clean/idle/history/restore and later checks were not run. Two GPU ERROR-level messages occurred during shutdown; significance unresolved. Installed EXE/ASAR bytes match before/after, but whole-profile byte preservation was not measured. No drawing/Open/Save/PDF/build/converter/native/installed/daily-use or performance qualification.",
       "history": [
         {
           "id": "LC-QA-BETA7-UNPACKED-STARTUP",
@@ -1799,6 +1799,103 @@
             "runtimeArchiveEntriesMatched": 73,
             "productCauseEstablished": false
           }
+        },
+        {
+          "id": "LC-QA-BETA7-UNPACKED-STARTUP",
+          "priority": 1,
+          "status": "minimal Electron control passes outside managed tool context; full candidate application route unqualified",
+          "problem": "Managed-context controls failed natively; an explicitly authorized same-binary/bootstrap control now passes outside that tool context. Exact context-specific cause unresolved.",
+          "fixture": "Existing synthetic ordinary-grip inputs and explicit isolated hidden source profile; no client or installed executable selected",
+          "validation": "Historical failed beta7 gate and two managed diagnostics retained. One additional authorized minimal control outside managed tool context reached entry/module/ready, its exact owned profile and hidden synthetic renderer, then exited0. Same Electron executable/bootstrap hashes; no Linecraft code, Playwright or drawing workflow ran.",
+          "implementationAttempts": 0,
+          "qualificationAttempts": 1,
+          "repairAttempts": 0,
+          "change": "Diagnostic context-control evidence and blocker wording only; no product/runtime/manifest/dependency/security-setting change",
+          "next": "Evaluate a separately authorized isolated Linecraft source/application run in the working outside-managed tool context. The one additional minimal-control authorization is consumed; do not automatically run another launch or infer full application qualification.",
+          "limits": "Observed execution-context difference, not a specific sandbox policy/token/OS cause or proof of manual interactive login. No administrator elevation requested; token/elevation not measured. Electron renderer sandbox remains enabled in the minimal bootstrap. No Linecraft/PDF/build/native/installed/daily-use or performance qualification; original managed crashes and cleanup limitations retained.",
+          "history": [
+            {
+              "id": "LC-QA-BETA7-UNPACKED-STARTUP",
+              "priority": 1,
+              "status": "blocked at first hidden source Electron startup; beta7 unpacked not built",
+              "problem": "First beta7 unpacked qualification stopped before application acceptance and packaging at a generic Playwright Electron launch failure",
+              "fixture": "Existing synthetic ordinary-grip inputs and explicit isolated hidden source profile; no client or installed executable selected",
+              "validation": "41 portable stages/1053 checks passed; stage 42 launch failed; 0 application/PDF acceptance; no build/installer; 395 source files/209 inputs unchanged",
+              "implementationAttempts": 0,
+              "qualificationAttempts": 1,
+              "repairAttempts": 0,
+              "change": "No product/runtime/manifest/workflow change; immutable failure and scope recorded",
+              "next": "Reassess saved startup evidence and changed prerequisites before any scoped diagnostic or qualification retry; do not repeat unchanged gate or bypass denials",
+              "limits": "Cause undiagnosed; no sandbox/permission/product attribution; no hidden-window acceptance or normal-profile byte measurement; beta6 historical build/native evidence retained; beta7 native/installed/daily-use unqualified"
+            },
+            {
+              "id": "LC-QA-BETA7-UNPACKED-STARTUP",
+              "priority": 1,
+              "status": "blocked at native Electron startup before the first independent bootstrap entry marker; current candidate unqualified",
+              "problem": "Historical beta7 qualification failed generically; two new instrumented current-runtime controls now expose an early native EXCEPTION_BREAKPOINT",
+              "fixture": "Existing synthetic ordinary-grip inputs and explicit isolated hidden source profile; no client or installed executable selected",
+              "validation": "Historical41portable stages/1053checks and failed stage42 retained. Two current diagnostic launches: pinned Playwright/current source and direct minimal bootstrap without Playwright/debugger/Linecraftcode; identical600-byte native exception output. Direct exit0x80000003, bootstrap entry marker absent. No application/PDF acceptance, build or installer.",
+              "implementationAttempts": 0,
+              "qualificationAttempts": 1,
+              "repairAttempts": 0,
+              "change": "Diagnostic evidence and blocker wording only; no product/runtime/manifest/dependency/security-setting change",
+              "next": "Review one additional identical minimal control in an explicitly authorized normal desktop context, or obtain authorized precise native crash evidence. Do not repeat unchanged managed launches, bypass denials, flip fuses or repair an unproved cause.",
+              "limits": "Specific native runtime/environment cause unresolved; nearest snapshot-symbol frame does not establish a fuse/snapshot cause. Installed app absent at these attempts. All73live distribution files match retained cache archive, not a newly verified independent vendor checksum. First driver lost its structured final report after a Playwright internal unhandled rejection; raw bounded logs retained. Owned taskkill returned an authentication error; permitted process checks afterward found no relevant processes. No global orphan, hidden-window, application/PDF/build/native/installed/daily-use qualification.",
+              "history": [
+                {
+                  "id": "LC-QA-BETA7-UNPACKED-STARTUP",
+                  "priority": 1,
+                  "status": "blocked at first hidden source Electron startup; beta7 unpacked not built",
+                  "problem": "First beta7 unpacked qualification stopped before application acceptance and packaging at a generic Playwright Electron launch failure",
+                  "fixture": "Existing synthetic ordinary-grip inputs and explicit isolated hidden source profile; no client or installed executable selected",
+                  "validation": "41 portable stages/1053 checks passed; stage 42 launch failed; 0 application/PDF acceptance; no build/installer; 395 source files/209 inputs unchanged",
+                  "implementationAttempts": 0,
+                  "qualificationAttempts": 1,
+                  "repairAttempts": 0,
+                  "change": "No product/runtime/manifest/workflow change; immutable failure and scope recorded",
+                  "next": "Reassess saved startup evidence and changed prerequisites before any scoped diagnostic or qualification retry; do not repeat unchanged gate or bypass denials",
+                  "limits": "Cause undiagnosed; no sandbox/permission/product attribution; no hidden-window acceptance or normal-profile byte measurement; beta6 historical build/native evidence retained; beta7 native/installed/daily-use unqualified"
+                }
+              ],
+              "diagnostics": {
+                "sourceVersion": "1.36.1-beta.13",
+                "sourceCommit": "55fbe051dc3e1decd159f887d4ad5665ba3cf143",
+                "runtimeCommitUnchanged": "9fa9b5bc6c7a02fae5d38c1dd437df57ae29838d",
+                "launchApproaches": 2,
+                "qualificationAttemptsAdded": 0,
+                "repairApproachesAdded": 0,
+                "minimalReturnCode": "0x80000003",
+                "bootstrapEntryMarkerReached": false,
+                "runtimeArchiveEntriesMatched": 73,
+                "productCauseEstablished": false
+              }
+            }
+          ],
+          "diagnostics": {
+            "sourceVersion": "1.36.1-beta.13",
+            "sourceCommit": "55fbe051dc3e1decd159f887d4ad5665ba3cf143",
+            "runtimeCommitUnchanged": "9fa9b5bc6c7a02fae5d38c1dd437df57ae29838d",
+            "launchApproaches": 2,
+            "qualificationAttemptsAdded": 0,
+            "repairApproachesAdded": 0,
+            "minimalReturnCode": "0x80000003",
+            "bootstrapEntryMarkerReached": false,
+            "runtimeArchiveEntriesMatched": 73,
+            "productCauseEstablished": false
+          },
+          "outsideContextControl": {
+            "diagnosticLaunches": 1,
+            "executableAndBootstrapMatchManagedControl": true,
+            "returnCode": "0x00000000",
+            "entryReadyOwnedProfileHiddenRendererCleanQuitObserved": true,
+            "linecraftOrPlaywrightCodeImported": false,
+            "rendererSandboxEnabled": true,
+            "administratorElevationRequested": false,
+            "actualTokenElevationMeasured": false,
+            "fullQualificationAttemptsAdded": 0,
+            "repairApproachesAdded": 0,
+            "furtherLaunchAuthorized": false
+          }
         }
       ],
       "diagnostics": {
@@ -1824,6 +1921,27 @@
         "actualTokenElevationMeasured": false,
         "fullQualificationAttemptsAdded": 0,
         "repairApproachesAdded": 0,
+        "furtherLaunchAuthorized": false
+      },
+      "sourceAppControl": {
+        "launches": 1,
+        "outsideManagedToolContext": true,
+        "sourceStartupReadinessReached": true,
+        "exactOwnedUserAndSessionDataVerified": true,
+        "initialWindowHidden": true,
+        "startupGroupsPass": 4,
+        "startupGroupsFail": 1,
+        "startupGroupsNotRun": 5,
+        "fullSmokePassed": false,
+        "failedPrivateHarnessExpectation": "Serialized empty sheetSets=[] incorrectly required; field is intentionally omitted",
+        "headlessContractValidatedSeparately": true,
+        "ownedLaunchExit": 0,
+        "driverExit": 1,
+        "forcedCleanupNeeded": false,
+        "installedExeAsarHashesUnchanged": true,
+        "wholeProfilePreservationMeasured": false,
+        "productRepairApproachesAdded": 0,
+        "fullQualificationAttemptsAdded": 0,
         "furtherLaunchAuthorized": false
       }
     },
