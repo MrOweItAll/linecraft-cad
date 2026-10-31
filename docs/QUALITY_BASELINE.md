@@ -1174,3 +1174,17 @@ reader, syntax and refusal controls pass; original fixtures/auditor and all 243
 source-gate inputs remain exact without an unchanged gate rerun. The proposed
 one-run scope needs new approval; prior authorizations are consumed, and no
 product repair attempt remains under the current mesh-edge budget.
+
+
+## Full-precision comparison and teapot preparation - October 31, 2026 UTC
+
+The user-requested [follow-up](TEAPOT-NUMERICAL-LIGHTING-REVIEW.md) separates
+1 mm projection from numerical comparison with unchanged coordinates. Three
+processes showed a slower complete projection pipeline; no tested numerical
+threshold met both the predeclared speed and surface criteria. A synthetic
+7,096-triangle teapot and combined nine-view-pair application proposal are
+prepared without launching. Source inspection explains the dark shading range;
+open-source renderer options were researched without adding a dependency.
+Runtime beta15, production tolerance and source-gate inputs are unchanged.
+Actual teapot images, lighting judgment and application performance await the
+new concrete run approval. Broader qualification and repair limits remain open.

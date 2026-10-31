@@ -4888,10 +4888,11 @@
         "docs/MESH-SURFACE-COVERAGE-REFERENCE.md",
         "tests/mesh-surface-coverage-reference.test.cjs",
         "qa/CANDIDATE-SOURCE-1.36.1-beta.15.json",
-        "docs/MESH-BETA15-VISUAL-PLAN.md"
+        "docs/MESH-BETA15-VISUAL-PLAN.md",
+        "docs/TEAPOT-NUMERICAL-LIGHTING-REVIEW.md"
       ],
       "limits": "Source/analytic only for beta15: no application/raster/PDF/build/native/installed/upgrade/daily-use/performance qualification. Butt strokes have lateral corner/sliver overdraw and may repaint a prior outline corner; geometric bounds do not establish final boundary pixels. No geometry welding. Historical beta14 actual flat raster still failed; no new app run. No speedup/GPU/VRAM diagnosis.",
-      "next": "Request approval for the concrete one hidden beta15 visual-only run: five synthetic Opens, six canvas and six window captures, original frozen tolerance8, extra corner/sliver observations. No launch until approval; no third repair or automatic geometry snapping.",
+      "next": "New combined one-run proposal retains original frozen six visual roles and adds three teapot roles plus finite response/CPU observations. It replaces, rather than adds to, the prior unexecuted proposal. Await specific approval; no third mesh-edge repair.",
       "preparationHistory": [
         {
           "prior": {
@@ -5079,7 +5080,13 @@
         "performanceObservationsPlanned": 0,
         "repairApproachesAdded": 0,
         "stressAppearanceAccepted": false
-      }
+      },
+      "proposalHistory": [
+        {
+          "at": "2026-10-31T18:25:58.534185+00:00",
+          "previousNext": "Request approval for the concrete one hidden beta15 visual-only run: five synthetic Opens, six canvas and six window captures, original frozen tolerance8, extra corner/sliver observations. No launch until approval; no third repair or automatic geometry snapping."
+        }
+      ]
     },
     {
       "id": "LC-3D-PLANARITY-TRIAL",
@@ -5096,7 +5103,39 @@
       "implementationAttempts": 0,
       "runtimeChanged": false,
       "limits": "One-process synthetic helper/copy wall times only; no browser/app/GPU/FPS/client/installed qualification. Projection used known z=0 plane, not general best-fit planarization. No universal tolerance established.",
-      "next": "Keep production tolerance unchanged. Prepare bounded beta15 visual confirmation; any future geometry cleanup needs explicit surface/plane selection, unit-aware distance and user approval."
+      "next": "Keep full-precision coordinates and current comparison threshold. Review actual teapot rendering/CPU observations under the separately prepared combined one-run scope; no automatic geometry flattening or blanket epsilon change.",
+      "numericalFollowup": {
+        "document": "docs/TEAPOT-NUMERICAL-LIGHTING-REVIEW.md",
+        "userChoice": "Comparison tolerance with full-precision coordinates",
+        "oneMmCompletePathPercentChange": [
+          9.09,
+          8.65,
+          19.91
+        ],
+        "oneMmTimedCalls": 504,
+        "comparisonTimedCalls": 315,
+        "independentProcessesPerExperiment": 3,
+        "alternativeAdopted": false,
+        "productionNormalCrossThreshold": 1e-12,
+        "limits": "Synthetic source validation/adjacency only; no application speed claim; inch control converts perpendicular distance only"
+      }
+    },
+    {
+      "id": "LC-3D-TEAPOT-LIGHTING",
+      "priority": 1,
+      "status": "Synthetic fixture and combined application proposal prepared; source lighting/options review complete; actual rendering pending",
+      "problem": "User requests a teapot surface/performance demonstration and brighter professional-quality shading without unnecessary engine complexity",
+      "expected": "Keep full-precision geometry; inspect actual surface/lighting quality and measured response before choosing a focused correction or rendering-library integration",
+      "validation": "Native teapot3600 vertices3704faces7096triangles, exact core roundtrip and independent topology review; three authored image bindings, one observation positive and29 corrupt controls; syntax/execution-refusal guards pass",
+      "evidence": [
+        "docs/TEAPOT-NUMERICAL-LIGHTING-REVIEW.md"
+      ],
+      "runtimeChanged": false,
+      "applicationLaunches": 0,
+      "dependenciesAdded": 0,
+      "implementationAttempts": 0,
+      "limits": "No actual teapot image/profile, shader-engine installation or application speedup. Dark white-channel46..133 range is a source finding, not measured display brightness. Separate overlapping meshes and open rims, not standard Utah or watertight solid.",
+      "next": "Seek one explicit combined hidden source-app run approval; inspect actual images and CPU samples. Prefer a focused existing lighting correction if supported; no automatic engine migration."
     }
   ],
   "recommendationTriage": {

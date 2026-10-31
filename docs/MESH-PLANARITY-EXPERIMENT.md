@@ -100,3 +100,13 @@ final visual approval and feedback. Prepare that bounded visual confirmation
 with the preserved raster tolerances and additional corner/sliver observations;
 do not reuse a consumed launch authorization. Geometry-changing cleanup needs
 an agreed selection and tolerance before implementation on real drawings.
+
+
+## Follow-up: full precision and teapot workload
+
+The user subsequently chose comparison-tolerance experiments with full-precision
+coordinates. The separate requested 1 mm projection pipeline was slower in three
+processes. A five-threshold teapot comparison found no alternative meeting both
+its fixed speed and surface criteria. See [the results, teapot preparation and
+lighting assessment](TEAPOT-NUMERICAL-LIGHTING-REVIEW.md). No production setting
+was changed; actual application rendering remains pending.
