@@ -502,3 +502,11 @@ Exact production paint traces feed independent unit-pixel coverage arithmetic;
 this is not a browser raster test. It is outside the selected passing profile,
 whose existing 241 input hashes remain unchanged. See
 [the mechanism, controls and limits](../docs/MESH-SURFACE-COVERAGE-REFERENCE.md).
+
+
+Beta15 selects the expanded mesh coverage reference: 15/15 analytic checks,
+plus 17/17 exact-production renderer checks. The new fast gate is 62/62 stages,
+1,630 portable checks and 243 inputs. The older 11-test pending result above is
+historical beta14 evidence. Surface-colored internal edges pass the bounded
+paint model; actual repaired browser rasters have not run. Corner/sliver bounds
+are not pixel acceptance. See [current scope and limits](../docs/MESH-SURFACE-COVERAGE-REFERENCE.md).

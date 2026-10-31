@@ -4869,16 +4869,16 @@
     {
       "id": "LC-3D-SURFACE-EDGES",
       "priority": 1,
-      "status": "beta14 flat acceptance still failed; source-only fill-coverage diagnosis and independent pending regression complete",
+      "status": "beta15 surface-colored internal edges source-qualified; actual repaired raster not run",
       "problem": "The source stroke-mask correction retains a dark diagonal in actual flat quad and coplanar-triangle rasters. Fold/crease and wireframe pass frozen probes. Reported real-drawing performance remains unqualified.",
       "expected": "Retain real outlines and sharp corners while suppressing internal coplanar triangulation edges; preserve geometry, roof rendering, wireframe, picking and painter order",
       "reproduction": "Original recorded-Canvas production drawModel regression exposed explicit extra diagonal strokes; after their beta14 suppression, actual640x480 DPR1 quad and stored-triangle captures still show a dark diagonal. Frozen RGB tolerance8 rejects the first probe240,320, observing94/96/98 versus121/121/121.",
       "fixtureClass": "Literal public-safe synthetic indexed meshes; actual reported drawing not accessed",
-      "sourceVersion": "1.36.1-beta.14",
-      "implementationAttempts": 1,
-      "repairApproachesRemainingAtMost": 1,
-      "validation": "13focused source tests pass within61/61selected faststages,1611portablechecks,241exactworkinginputs; initial8checks3pass5fail included3actualdiagonalregressions and2missinghelperprerequisitefailures; original failures preserved",
-      "change": "Linear indexed adjacency and reused normals; suppress only two-sided coplanar seams, preserve uncertain boundaries; pertriangle masked outlines keep painter order",
+      "sourceVersion": "1.36.1-beta.15",
+      "implementationAttempts": 2,
+      "repairApproachesRemainingAtMost": 0,
+      "validation": "Final32/32focused(17renderer+15analytic), selected62/62stages1630portablechecks243exactinputs; first30tests26pass4genuinefail preserved; no new actual application raster",
+      "change": "User-directed exact shaded-fill color on classified internal coplanar edges, solid .7px butt strokes within each opaque ordinary triangle callback before its real outlines; no roof/translucent/wireframe/geometry changes",
       "evidence": [
         "docs/MESH-SURFACE-EDGES.md",
         "tests/mesh-surface-renderer.test.cjs",
@@ -4886,10 +4886,11 @@
         "docs/MESH-3D-VALIDATION-PLAN.md",
         "docs/MESH-3D-OBSERVATIONS.md",
         "docs/MESH-SURFACE-COVERAGE-REFERENCE.md",
-        "tests/mesh-surface-coverage-reference.test.cjs"
+        "tests/mesh-surface-coverage-reference.test.cjs",
+        "qa/CANDIDATE-SOURCE-1.36.1-beta.15.json"
       ],
-      "limits": "Actual hidden synthetic beta14 run at DPR1 only: flat raster acceptance failed; fold/wireframe passed;3 profiles and35 unprofiled observations recorded. No broader picking/PDF/full-gate/build/native/installed/upgrade/daily-use/client qualification or speedup/GPU/VRAM diagnosis. No coordinate welding across indices/entities. Actual user drawing not read. Earlier beta13 PDF workflow stays historical.",
-      "next": "Compare bounded source repair options and explicit painter-interleaving/occlusion, holes/disconnected regions, opacity/material, boundary and crease counterexamples before spending the at-most-one remaining product repair approach. Retain frozen RGB tolerance8 and geometry/roof/wireframe/picking. No automatic app launch; previous approval consumed.",
+      "limits": "Source/analytic only for beta15: no application/raster/PDF/build/native/installed/upgrade/daily-use/performance qualification. Butt strokes have lateral corner/sliver overdraw and may repaint a prior outline corner; geometric bounds do not establish final boundary pixels. No geometry welding. Historical beta14 actual flat raster still failed; no new app run. No speedup/GPU/VRAM diagnosis.",
+      "next": "Prepare a bounded beta15 visual confirmation from the preserved synthetic fixture/frozen-probe harness, including explicit corner/sliver observations. Do not launch without a new scoped authorization, relax tolerance8 or spend another product repair approach; current two-approach budget exhausted.",
       "preparationHistory": [
         {
           "prior": {
@@ -5021,6 +5022,37 @@
         "productRepairApproachesAdded": 0,
         "geometryChanged": false,
         "claim": "Coverage arithmetic consistent with preserved pixels, not an exact browser model or causal isolation"
+      },
+      "surfaceMatchingRepairHistory": [
+        {
+          "at": "2026-10-31T16:41:19.993385+00:00",
+          "previous": {
+            "status": "beta14 flat acceptance still failed; source-only fill-coverage diagnosis and independent pending regression complete",
+            "next": "Compare bounded source repair options and explicit painter-interleaving/occlusion, holes/disconnected regions, opacity/material, boundary and crease counterexamples before spending the at-most-one remaining product repair approach. Retain frozen RGB tolerance8 and geometry/roof/wireframe/picking. No automatic app launch; previous approval consumed.",
+            "sourceVersion": "1.36.1-beta.14",
+            "implementationAttempts": 1,
+            "repairApproachesRemainingAtMost": 1,
+            "validation": "13focused source tests pass within61/61selected faststages,1611portablechecks,241exactworkinginputs; initial8checks3pass5fail included3actualdiagonalregressions and2missinghelperprerequisitefailures; original failures preserved",
+            "change": "Linear indexed adjacency and reused normals; suppress only two-sided coplanar seams, preserve uncertain boundaries; pertriangle masked outlines keep painter order",
+            "limits": "Actual hidden synthetic beta14 run at DPR1 only: flat raster acceptance failed; fold/wireframe passed;3 profiles and35 unprofiled observations recorded. No broader picking/PDF/full-gate/build/native/installed/upgrade/daily-use/client qualification or speedup/GPU/VRAM diagnosis. No coordinate welding across indices/entities. Actual user drawing not read. Earlier beta13 PDF workflow stays historical."
+          }
+        }
+      ],
+      "surfaceMatchingRepair": {
+        "version": "1.36.1-beta.15",
+        "userDirection": "Match edges to surface colors; hiding internal mesh/polygon edges also acceptable",
+        "tests": 32,
+        "passed": 32,
+        "rendererChecks": 17,
+        "coverageChecks": 15,
+        "fastStages": 62,
+        "portableChecks": 1630,
+        "inputs": 243,
+        "applicationLaunches": 0,
+        "newRepairApproaches": 1,
+        "totalRepairApproaches": 2,
+        "atMostRemaining": 0,
+        "document": "docs/MESH-SURFACE-COVERAGE-REFERENCE.md"
       }
     }
   ],

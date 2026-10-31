@@ -15,19 +15,24 @@ function verifyPainterOrder(operations){
  const front=operations.flatMap((o,i)=>(style(o)||'').startsWith('#2060c0')?[i]:[]);
  assert.ok(back.length&&front.length);assert.ok(Math.max(...back)<Math.min(...front));
 }
-async function recorded(meshes,renderMode='shaded'){
+async function recorded(meshes,renderMode='shaded',options={}){
  const view3d=await import(pathToFileURL(path.join(root,'3d-view.mjs'))),operations=[];
- let points=[],style={},stack=[];
- const ctx={save(){stack.push({...style});},restore(){style=stack.pop();},setLineDash(){},beginPath(){points=[];},moveTo(x,y){points.push({move:true,x,y});},lineTo(x,y){points.push({x,y});},closePath(){if(points.length)points.push({...points[0],move:false});},fill(){operations.push({kind:'fill',points:structuredClone(points),...style});},stroke(){operations.push({kind:'stroke',points:structuredClone(points),...style});},fillText(){}};
- for(const property of ['fillStyle','strokeStyle','lineWidth','globalAlpha','font'])Object.defineProperty(ctx,property,{get:()=>style[property],set:value=>{style[property]=value;}});
+ let points=[],style={lineCap:options.inheritedLineCap??'butt'},stack=[];
+ const ctx={save(){stack.push({...style});},restore(){style=stack.pop();},setLineDash(value){style.dash=Array.from(value);},beginPath(){points=[];},moveTo(x,y){points.push({move:true,x,y});},lineTo(x,y){points.push({x,y});},closePath(){if(points.length)points.push({...points[0],move:false});},fill(){operations.push({kind:'fill',points:structuredClone(points),...style});},stroke(){operations.push({kind:'stroke',points:structuredClone(points),...style});},fillText(){}};
+ for(const property of ['fillStyle','strokeStyle','lineWidth','lineCap','globalAlpha','font'])Object.defineProperty(ctx,property,{get:()=>style[property],set:value=>{style[property]=value;}});
  const host={ctx,sceneForOrbit:()=>meshes,renderContext:{includeEdits:false},gripPreview:()=>null,currentRoofDragPreview:()=>null,camera3D:()=>({...view3d.defaultCamera(),renderMode}),state:()=>({selectionIds:[],architecture:null,architectureDerived:null}),inkFor:e=>e.color,architectureOwner:()=>null,roofDisplayEdges:()=>null,view3d,toScreen:p=>({...p,depth:p.z??0,clipped:false}),finiteScreenPoint:p=>Number.isFinite(p.x)&&Number.isFinite(p.y),shadeInk:(ink,intensity)=>`${ink}:${intensity}`,commandPreviewEntities:()=>[],orbitMode:null,drag:null,pointer:null,width:1000,height:1000,selectedSubobject:null,gripPropertyIndices:new Map(),projectionEdges:e=>view3d.meshEdges(e),strokeEntity:(entity,options)=>operations.push({kind:'wire',entity,options})};
+ host.state=()=>({selectionIds:options.selected?meshes.map(e=>e.id):[],architecture:null,architectureDerived:null});
+ host.roofDisplayEdges=()=>options.roofOwned?[]:null;
+ host.commandPreviewEntities=()=>options.ghost?[quad()]:[];
  vm.runInNewContext(`(${body})()`,host,{timeout:1000});
  const fills=operations.filter(o=>o.kind==='fill');
  // Mock shadeInk tags model styles; orientation axes have untagged fixed colors.
- const strokes=operations.filter(o=>o.kind==='stroke'&&/^#[a-f0-9]{6}:/.test(o.strokeStyle||''));
+ const modelStrokes=operations.filter(o=>o.kind==='stroke'&&/^#[a-f0-9]{6}:/.test(o.strokeStyle||''));
+ const strokes=modelStrokes.filter(o=>o.strokeStyle!==o.fillStyle);
+ const surfaceStrokes=modelStrokes.filter(o=>o.strokeStyle===o.fillStyle);
  const edges=[];
  for(const stroke of strokes)for(let i=1;i<stroke.points.length;i++)if(!stroke.points[i].move)edges.push(key(stroke.points[i-1],stroke.points[i]));
- return{operations,fills,strokes,edges};
+ return{operations,fills,strokes,surfaceStrokes,edges};
 }
 test('shaded quad fills100 square units with four real outlines and no fan diagonal',async()=>{
  const mesh=quad(),before=structuredClone(mesh),r=await recorded([mesh]);
@@ -97,4 +102,43 @@ test('translated flat surface and same-side overlapping faces remain conservativ
 test('separate entities retain their own boundaries even at identical coordinates',async()=>{
  const a=quad(),b=quad();a.faces=[[0,1,2]];b.faces=[[0,2,3]];b.id='other';
  const result=await recorded([a,b]);assert.equal(result.fills.length,2);assert.equal(result.edges.filter(e=>e==='0,0|10,10').length,2);assert.equal(result.edges.length,6);
+});
+
+test('internal coplanar edges use exact surface color and solid outline-width butt strokes',async()=>{
+ for(const triangles of [false,true]){
+  const mesh=quad();if(triangles)mesh.faces=[[0,1,2],[0,2,3]];
+  const r=await recorded([mesh],'shaded',{inheritedLineCap:'round'});assert.equal(r.surfaceStrokes.length,2);
+  for(const stroke of r.surfaceStrokes){
+   assert.equal(stroke.strokeStyle,r.fills[0].fillStyle);assert.equal(stroke.globalAlpha,1);
+   assert.equal(stroke.lineWidth,.7);assert.equal(stroke.lineCap,'butt');assert.deepEqual(stroke.dash,[]);
+   assert.equal(stroke.points.length,2);assert.equal(key(...stroke.points),'0,0|10,10');
+   const index=r.operations.indexOf(stroke);assert.equal(r.operations[index-1].kind,'fill');
+   assert.equal(r.operations[index-1].fillStyle,stroke.strokeStyle);
+   assert.equal(r.operations[index+1].kind,'stroke');assert.notEqual(r.operations[index+1].strokeStyle,stroke.strokeStyle);
+  }
+  assert.deepEqual(r.edges.sort(),boundary);
+  assert.ok(r.strokes.every(s=>s.lineCap==='round'),'Surface paint must restore inherited outline cap');
+ }
+});
+
+test('selected opaque surfaces match their actual selection fill color',async()=>{
+ const r=await recorded([quad()],'shaded',{selected:true});assert.equal(r.surfaceStrokes.length,2);
+ assert.ok(r.surfaceStrokes.every(s=>s.strokeStyle===r.fills[0].fillStyle && s.strokeStyle.startsWith('#79b9ff:')));
+});
+
+test('surface-color strokes do not touch roof-owned, translucent preview, or folded paths',async()=>{
+ for(const options of [{roofOwned:true},{ghost:true}]){
+  const r=await recorded(options.ghost?[]:[quad()],'shaded',options);assert.equal(r.surfaceStrokes.length,0);assert.equal(r.fills.length,2);
+  if(options.ghost)assert.ok(r.fills.every(f=>f.globalAlpha===.55));
+ }
+ const folded=quad();folded.vertices[3].z=5;assert.equal((await recorded([folded])).surfaceStrokes.length,0);
+});
+
+test('matching edges stay with their triangle when an occluder interleaves depths',async()=>{
+ const mesh=quad();mesh.color='#c08020';mesh.vertices=mesh.vertices.map(p=>({...p,z:p.x/10}));
+ const front={...quad(),id:'occluder',color:'#2060c0',faces:[[0,1,2]],vertices:quad().vertices.map(p=>({...p,z:.5}))};
+ const r=await recorded([mesh,front]);
+ assert.deepEqual(r.fills.map(f=>f.fillStyle.split(':')[0]),['#c08020','#2060c0','#c08020']);
+ assert.equal(r.surfaceStrokes.length,2);
+ for(const stroke of r.surfaceStrokes){const i=r.operations.indexOf(stroke);assert.equal(r.operations[i-1].kind,'fill');assert.equal(stroke.strokeStyle,r.operations[i-1].fillStyle);}
 });

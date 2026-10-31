@@ -15,9 +15,9 @@ It does not establish installed/upgrade or broader native qualification. Earlier
 automated checkpoint descriptions below do not include this later native session.
 
 ```
-npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.13.json
-npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.13.json
-npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.13.json
+npm run qa:fast -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.15.json
+npm run qa:application -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.15.json
+npm run qa:candidate -- --manifest=qa/CANDIDATE-SOURCE-1.36.1-beta.15.json
 ```
 
 These reuse desktop/dev-tools.cjs. Fast selects the existing bounded public core
@@ -1088,3 +1088,29 @@ pending test is outside the selected passing gate. Runtime and all 336 prepared
 inputs remain unchanged; no unchanged passing gate, application or performance
 test was rerun. One repair approach remains at most. Next compare bounded repair
 options and ordering/occlusion/transparency counterexamples before implementation.
+
+
+## Surface-colored internal mesh edges - October 31, 2026 UTC
+
+Beta15 follows the user's direction to match internal edge colors to their
+surface. Ordinary opaque shaded meshes paint classified internal coplanar edges
+with their exact shaded fill color, at the existing 0.7-pixel outline width.
+Each stroke stays with its depth-sorted triangle; real outlines/creases retain
+their paths. Roof-owned, translucent-preview and wireframe paths are unchanged.
+Saved geometry and dependencies do not change.
+
+The first regression had 30 tests, 26 passes and 4 genuine failures. The final
+focused suites pass 32/32; the new selected fast gate passes 62/62 stages,
+1,630 portable checks and 243 exact inputs. The prior beta14 manifest and failure
+evidence remain preserved. See [the paint model and limits](MESH-SURFACE-COVERAGE-REFERENCE.md).
+The runtime delta from beta14 is only app.mjs; the beta15 cumulative manifest
+still covers 59 runtime files, 12 resources and ten cumulative changed files.
+
+This consumes the second repair approach for LC-3D-SURFACE-EDGES, leaving none
+under the current budget. Actual beta15 application/raster/PDF/build/native,
+installed/upgrade/daily-use and performance qualification has not run. Analytic
+seam colors pass the unchanged RGB tolerance 8; they are not captured pixels.
+Corner/sliver controls expose bounded lateral overdraw, not boundary-color or
+corner-pixel acceptance. Existing app launch approvals remain consumed. Next
+prepare a bounded visual confirmation using the preserved fixture/probe contract
+plus explicit corner/sliver observations; no automatic launch or new repair.

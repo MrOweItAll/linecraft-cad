@@ -57,3 +57,35 @@ The [single beta14 observation session](MESH-3D-OBSERVATIONS.md) retained a dark
 diagonal in both flat fixtures despite the source stroke-inventory checks.
 Fold and wireframe checks passed. Flat-surface acceptance remains failed; keep
 the captured failure and frozen tolerance while diagnosing the residual seam.
+
+
+## Surface-colored internal mesh edges - October 31, 2026 UTC
+
+Beta15 follows the user's direction to match internal edge colors to their
+surface. Ordinary opaque shaded meshes paint classified internal coplanar edges
+with their exact shaded fill color, at the existing 0.7-pixel outline width.
+Each stroke stays with its depth-sorted triangle; real outlines/creases retain
+their paths. Roof-owned, translucent-preview and wireframe paths are unchanged.
+Saved geometry and dependencies do not change.
+
+The first regression had 30 tests, 26 passes and 4 genuine failures. The final
+focused suites pass 32/32; the new selected fast gate passes 62/62 stages,
+1,630 portable checks and 243 exact inputs. The prior beta14 manifest and failure
+evidence remain preserved. See [the paint model and limits](MESH-SURFACE-COVERAGE-REFERENCE.md).
+The runtime delta from beta14 is only app.mjs; the beta15 cumulative manifest
+still covers 59 runtime files, 12 resources and ten cumulative changed files.
+
+This consumes the second repair approach for LC-3D-SURFACE-EDGES, leaving none
+under the current budget. Actual beta15 application/raster/PDF/build/native,
+installed/upgrade/daily-use and performance qualification has not run. Analytic
+seam colors pass the unchanged RGB tolerance 8; they are not captured pixels.
+Corner/sliver controls expose bounded lateral overdraw, not boundary-color or
+corner-pixel acceptance. Existing app launch approvals remain consumed. Next
+prepare a bounded visual confirmation using the preserved fixture/probe contract
+plus explicit corner/sliver observations; no automatic launch or new repair.
+
+A later independent inherited-style check exposed a local line-cap side effect
+(17 tests, 16 passes, 1 failure). Saving/restoring only the internal-stroke
+style resolved it within the same repair approach. Both fast-gate receipts and
+the intervening failure remain preserved; final source qualification follows
+that correction, without a new application run.

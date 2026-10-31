@@ -53,6 +53,8 @@ if(candidate)suites.push('tests/transform-atomicity-reference.test.mjs','tests/t
 if(candidate)suites.push('tests/save-isolation-reference.test.cjs');
 if(candidate)suites.push('tests/renderer-isolation-reference.test.cjs');
 if(candidate)suites.push('tests/mesh-surface-renderer.test.cjs');
+if(candidate)suites.push('tests/mesh-surface-coverage-reference.test.cjs');
+if(candidate)auxiliaries.push('qa/CANDIDATE-SOURCE-1.36.1-beta.14.json');
 if(candidate)suites.push('tests/file-diagnostics-reference.test.cjs');
 if(candidate)suites.push('tests/development-state-reference.test.cjs');
 if(candidate)auxiliaries.push('tests/development-state-host.cjs');
