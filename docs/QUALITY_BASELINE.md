@@ -1110,3 +1110,15 @@ and 35 unprofiled observations were collected and audited. See
 all 336 pinned inputs remain unchanged. No repair, tolerance relaxation or
 application retry occurred. Diagnose the residual seam using preserved evidence;
 the hourly loop stays active and the one-shot launch approval is consumed.
+
+## Residual seam reference - October 31, 2026 UTC
+
+The source-only [coverage reference](MESH-SURFACE-COVERAGE-REFERENCE.md) models
+actual production fill polygons against independent opaque-surface expectations.
+Final result: 11 tests, 9 pass, 2 expected uniformity failures, exit 1. Calculated
+dark pixels agree closely with the preserved actual images; this supports a
+fill-coverage explanation without claiming an exact browser model. The new
+pending test is outside the selected passing gate. Runtime and all 336 prepared
+inputs remain unchanged; no unchanged passing gate, application or performance
+test was rerun. One repair approach remains at most. Next compare bounded repair
+options and ordering/occlusion/transparency counterexamples before implementation.

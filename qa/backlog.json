@@ -4869,7 +4869,7 @@
     {
       "id": "LC-3D-SURFACE-EDGES",
       "priority": 1,
-      "status": "beta14 actual flat raster acceptance failed; fold/wireframe pass; performance observations recorded",
+      "status": "beta14 flat acceptance still failed; source-only fill-coverage diagnosis and independent pending regression complete",
       "problem": "The source stroke-mask correction retains a dark diagonal in actual flat quad and coplanar-triangle rasters. Fold/crease and wireframe pass frozen probes. Reported real-drawing performance remains unqualified.",
       "expected": "Retain real outlines and sharp corners while suppressing internal coplanar triangulation edges; preserve geometry, roof rendering, wireframe, picking and painter order",
       "reproduction": "Original recorded-Canvas production drawModel regression exposed explicit extra diagonal strokes; after their beta14 suppression, actual640x480 DPR1 quad and stored-triangle captures still show a dark diagonal. Frozen RGB tolerance8 rejects the first probe240,320, observing94/96/98 versus121/121/121.",
@@ -4884,10 +4884,12 @@
         "tests/mesh-surface-renderer.test.cjs",
         "qa/CANDIDATE-SOURCE-1.36.1-beta.14.json",
         "docs/MESH-3D-VALIDATION-PLAN.md",
-        "docs/MESH-3D-OBSERVATIONS.md"
+        "docs/MESH-3D-OBSERVATIONS.md",
+        "docs/MESH-SURFACE-COVERAGE-REFERENCE.md",
+        "tests/mesh-surface-coverage-reference.test.cjs"
       ],
       "limits": "Actual hidden synthetic beta14 run at DPR1 only: flat raster acceptance failed; fold/wireframe passed;3 profiles and35 unprofiled observations recorded. No broader picking/PDF/full-gate/build/native/installed/upgrade/daily-use/client qualification or speedup/GPU/VRAM diagnosis. No coordinate welding across indices/entities. Actual user drawing not read. Earlier beta13 PDF workflow stays historical.",
-      "next": "Diagnose the residual dark flat-face seam from the preserved actual quad/triangle PNGs using a source-only independent regression. Preserve frozen tolerance, painter ordering/occlusion, real outlines/creases, wireframe and geometry. One product repair approach used, at most one remains; this observation session spends none. The one-shot app authorization is consumed: no retry or speculative optimization.",
+      "next": "Compare bounded source repair options and explicit painter-interleaving/occlusion, holes/disconnected regions, opacity/material, boundary and crease counterexamples before spending the at-most-one remaining product repair approach. Retain frozen RGB tolerance8 and geometry/roof/wireframe/picking. No automatic app launch; previous approval consumed.",
       "preparationHistory": [
         {
           "prior": {
@@ -4985,6 +4987,40 @@
         ],
         "installedBinariesUnchanged": true,
         "performanceImprovementClaimed": false
+      },
+      "coverageReferenceHistory": [
+        {
+          "at": "2026-10-31T16:01:35.718331+00:00",
+          "previous": {
+            "status": "beta14 actual flat raster acceptance failed; fold/wireframe pass; performance observations recorded",
+            "next": "Diagnose the residual dark flat-face seam from the preserved actual quad/triangle PNGs using a source-only independent regression. Preserve frozen tolerance, painter ordering/occlusion, real outlines/creases, wireframe and geometry. One product repair approach used, at most one remains; this observation session spends none. The one-shot app authorization is consumed: no retry or speculative optimization."
+          }
+        }
+      ],
+      "coverageReference": {
+        "document": "docs/MESH-SURFACE-COVERAGE-REFERENCE.md",
+        "test": "tests/mesh-surface-coverage-reference.test.cjs",
+        "tests": 11,
+        "passed": 9,
+        "expectedFailures": 2,
+        "unexpectedErrors": 0,
+        "exitCode": 1,
+        "selectedPassingGate": false,
+        "calculatedPixel": [
+          94,
+          96.5,
+          98.25
+        ],
+        "retainedRasterPixel": [
+          94,
+          96,
+          98
+        ],
+        "retainedRasterSitesCompared": 18,
+        "newApplicationLaunches": 0,
+        "productRepairApproachesAdded": 0,
+        "geometryChanged": false,
+        "claim": "Coverage arithmetic consistent with preserved pixels, not an exact browser model or causal isolation"
       }
     }
   ],

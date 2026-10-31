@@ -494,3 +494,11 @@ source profile is60/60stages,1598checks,239inputs. Independent trusted pins are
 separate from producer claims; all returned launch/geometry/environment flags
 remain false and observed performance rows remain0. The retained stdlib25 audit
 was not rerun. See [loader contract, failures and limits](../docs/PERFORMANCE-PLAN-LOADER.md).
+
+Run the explicit pending flat-surface coverage reference with
+`node --test --test-reporter=tap tests/mesh-surface-coverage-reference.test.cjs`.
+Its frozen result is 11 tests: 9 pass, 2 expected seam-uniformity failures, exit 1.
+Exact production paint traces feed independent unit-pixel coverage arithmetic;
+this is not a browser raster test. It is outside the selected passing profile,
+whose existing 241 input hashes remain unchanged. See
+[the mechanism, controls and limits](../docs/MESH-SURFACE-COVERAGE-REFERENCE.md).

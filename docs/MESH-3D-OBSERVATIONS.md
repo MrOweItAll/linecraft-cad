@@ -85,3 +85,10 @@ Full beta14 application/PDF/build/package/native/installed/upgrade/daily-use
 qualification remains open. Earlier beta13 PDF results remain bound to their
 earlier runtime. The installed application and candidate publication state are
 unchanged; the hourly review remains active.
+
+The subsequent [source-only coverage reference](MESH-SURFACE-COVERAGE-REFERENCE.md)
+now reproduces a fill-coverage mechanism consistent with the retained flat
+pixels. Its 11 tests have 9 passes and 2 genuine uniformity failures. Diagnosis
+and the independent pending regression are complete; no product repair or
+application rerun occurred. Repair design must still preserve painter order,
+occlusion, real boundaries and geometry before using the remaining approach.
