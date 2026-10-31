@@ -5226,6 +5226,34 @@
         "authorizationConsumed": true,
         "retryAuthorized": false
       }
+    },
+    {
+      "id": "LC-3D-POLYLINE-SURFACE",
+      "priority": 2,
+      "status": "Requested source feature implemented and independently reviewed; application/build/installed qualification pending",
+      "problem": "Closed coplanar 3DPOLY creation remained a wire path and EXTRUDE did not accept planar MESH surfaces.",
+      "userDecisions": [
+        "Create the surface only on closure.",
+        "The generated surfaces must be extrudable.",
+        "Preserve full-precision coordinates."
+      ],
+      "change": "Explicit Close replaces a valid simple coplanar path with one ordinary same-ID MESH; retain unsupported outlines. Planar single-boundary surface extrusion retains source/base XYZ, uses boundary-only side faces and a command-local validated plan.",
+      "implementationApproaches": 1,
+      "maximumApproaches": 2,
+      "validation": {
+        "focusedTests": 23,
+        "focusedPass": 23,
+        "portableStages": 64,
+        "portableStagesPassed": 64,
+        "portableChecks": 1668,
+        "exactInputs": 248,
+        "initialTests": 17,
+        "initialPass": 5,
+        "initialFail": 12,
+        "reference": "docs/POLY3D-SURFACES.md"
+      },
+      "limits": "Source-only; no beta16 app/raster/PDF/build/installed/native/daily-use acceptance. One simple boundary, up to4096vertices/8192triangles; no holes/overlaps/nonplanar mesh extrusion. Existing comparison tolerance does not flatten stored geometry. Drawing-wide limits retained. Prior mesh-edge repair budget stays exhausted.",
+      "next": "Use a separately authorized bounded candidate application/build/install scope for the new version. Do not rerun unchanged portable checks or reinstall beta15."
     }
   ],
   "recommendationTriage": {

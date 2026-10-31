@@ -2,7 +2,7 @@
 
 Baseline commit: f37aba5ebe19f27088847cd8f983ecf5facf8eac, version1.36.0,
 origin https://github.com/MrOweItAll/linecraft-cad.git. Local ownership branch:
-codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; current candidate1.36.1-beta.15. Exact local paths and
+codex/quality-loop-1.36.1. First candidate version1.36.1-beta.1; current candidate1.36.1-beta.16. Exact local paths and
 checkpoint/installer hashes are in the private session report, outside this tree.
 
 The opening baseline observations and dated sections below retain their historical
@@ -1230,3 +1230,20 @@ test, build, installation, product repair or source-runtime change was repeated.
 The hourly loop remains active. Historical beta6 native evidence stays separate;
 new launches, reinstallations and exhausted mesh-edge repairs are not authorized
 by resuming the loop. Future work must have a concrete authorized scope.
+
+
+## Beta16 closed-polyline surfaces - October 31, 2026 UTC
+
+The requested [surface creation and extrusion](POLY3D-SURFACES.md) is implemented
+in source. Explicit 3DPOLY Close creates one exact-coordinate editable MESH for a
+simple coplanar outline; unsupported outlines remain paths. EXTRUDE accepts planar
+single-boundary meshes, retains the source and exact base vertices, and offsets
+the top along the surface normal. Captured surface validation is reused for height
+previews. Existing saved paths, architecture footprint boundaries and shading stay
+compatible; no third mesh-edge repair was spent.
+
+Independent review and the selected portable gate pass: 64/64 stages, 1,668 checks,
+23 focused feature tests and 248 exact inputs. Original failures and corrected
+numerical/property test assumptions remain preserved. Beta16 application/raster/
+PDF/build/installed/native/daily-use qualification has not run; the separately
+verified beta15 installation and its historical 78/78 candidate gate remain intact.

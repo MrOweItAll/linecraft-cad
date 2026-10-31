@@ -1472,7 +1472,7 @@ test('EXTRUDE rejects self-intersection, touching edges, open profiles and mixed
 });
 
 test('3DPOLY accepts XYZ segments, local Undo/Close, Escape retention and grouped global history',()=>{
-  const e=core.createEditor();accepted(e,['3DPOLY','0,0,0','10,0,5','@0,10,5','U','@0,20,10','C']);const path=e.state.entities[0];assert.equal(path.type,'POLY3D');assert.equal(path.closed,true);assert.deepEqual(path.points,[{x:0,y:0,z:0},{x:10,y:0,z:5},{x:10,y:20,z:15}]);accepted(e,['U']);assert.equal(e.state.entities.length,0);accepted(e,['REDO','3DPOLY','50,0,2','60,0,4','ESC']);assert.equal(e.state.entities.length,2);accepted(e,['U']);assert.equal(e.state.entities.length,1);
+  const e=core.createEditor();accepted(e,['3DPOLY','0,0,0','10,0,5','@0,10,5','U','@0,20,10','C']);const path=e.state.entities[0];assert.equal(path.type,'MESH');assert.deepEqual(path.faces,[[0,1,2]]);assert.deepEqual(path.vertices,[{x:0,y:0,z:0},{x:10,y:0,z:5},{x:10,y:20,z:15}]);accepted(e,['U']);assert.equal(e.state.entities.length,0);accepted(e,['REDO','3DPOLY','50,0,2','60,0,4','ESC']);assert.equal(e.state.entities.length,2);accepted(e,['U']);assert.equal(e.state.entities.length,1);
 });
 
 test('3D MOVE and repeated COPY use full XYZ and original base for every relative destination',()=>{
@@ -1531,7 +1531,7 @@ test('3D camera and construction preferences reject malformed values atomically;
 });
 
 test('3D DXF emits genuine XYZ 3DFACE triangles/quads and owned 3D POLYLINE vertices without ACIS proxies',()=>{
-  const e=core.createEditor();accepted(e,['BOX','0,0,3','10,20,3','30','3DPOLY','0,0,2','10,0,5','10,10,8','C']);const dxf=e.exportDXF(),rows=dxf.trimEnd().split(/\r?\n/),records=[];let record;
+  const e=core.createEditor();accepted(e,['BOX','0,0,3','10,20,3','30','3DPOLY','0,0,2','10,0,5','10,10,8']);assert.equal(e.execute('C',{createSurface:false}).ok,true);const dxf=e.exportDXF(),rows=dxf.trimEnd().split(/\r?\n/),records=[];let record;
   for(let i=0;i<rows.length;i+=2){const code=Number(rows[i]),value=rows[i+1];if(code===0){record={type:value,pairs:[]};records.push(record);}else record?.pairs.push([code,value]);}const field=(r,code)=>r.pairs.find(p=>p[0]===code)?.[1];
   const faces=records.filter(r=>r.type==='3DFACE'),poly=records.find(r=>r.type==='POLYLINE'),vertices=records.filter(r=>r.type==='VERTEX'),end=records.find(r=>r.type==='SEQEND');assert.equal(faces.length,6);assert.equal(vertices.length,3);assert.equal(field(poly,70),'9');assert.equal(field(vertices[2],30),'8');assert.equal(field(vertices[2],70),'32');assert.ok(vertices.every(r=>field(r,330)===field(poly,5)));assert.equal(field(end,330),field(poly,5));assert.ok(faces.every(r=>r.pairs.some(([c,v])=>c===100&&v==='AcDbFace')));assert.ok(faces.some(r=>field(r,30)==='33'));assert.ok(!dxf.includes('3DSOLID'));assert.ok(!dxf.includes('AcDbModelerGeometry'));
   const handles=records.map(r=>field(r,r.type==='DIMSTYLE'?105:5)).filter(Boolean);assert.equal(new Set(handles).size,handles.length);

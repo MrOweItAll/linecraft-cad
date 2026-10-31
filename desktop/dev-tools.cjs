@@ -54,6 +54,8 @@ if(candidate)suites.push('tests/save-isolation-reference.test.cjs');
 if(candidate)suites.push('tests/renderer-isolation-reference.test.cjs');
 if(candidate)suites.push('tests/mesh-surface-renderer.test.cjs');
 if(candidate)suites.push('tests/mesh-surface-coverage-reference.test.cjs');
+if(candidate)suites.push('tests/poly3d-surface.test.mjs','tests/mesh-v14.test.mjs');
+if(candidate)auxiliaries.push('tests/mesh-reference.mjs','tests/reference-annotations.mjs','qa/CANDIDATE-SOURCE-1.36.1-beta.15.json');
 if(candidate)auxiliaries.push('qa/CANDIDATE-SOURCE-1.36.1-beta.14.json');
 if(candidate)suites.push('tests/file-diagnostics-reference.test.cjs');
 if(candidate)suites.push('tests/development-state-reference.test.cjs');

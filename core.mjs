@@ -382,21 +382,21 @@ export function makeSphereMesh(rawCenter,radius,latitudeSegments=16,longitudeSeg
   return meshResult(vertices,faces,'SPHERE');
 }
 /** Normalize locally, reject self intersections, and ear-clip a simple concave XY polygon. */
-export function triangulatePolygon(rawPoints){
+export function triangulatePolygon(rawPoints,{preserveVertices=false}={}){
   if(!Array.isArray(rawPoints)||rawPoints.length<3||rawPoints.length>MAX_EXTRUSION_VERTICES)throw new Error('EXTRUDE profiles require 3..4096 vertices.');
   const original=rawPoints.map(point),origin=original[0],scale=Math.max(...original.flatMap(p=>[Math.abs(p.x-origin.x),Math.abs(p.y-origin.y)]));
   if(!finite(scale)||scale===0)throw new Error('EXTRUDE profile span is degenerate or exceeds the numeric range.');
   let vertices=original.map((p,index)=>({x:(p.x-origin.x)/scale,y:(p.y-origin.y)/scale,index}));const tolerance=Number.EPSILON*64;
   const cross=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x),on=(a,b,p)=>Math.abs(cross(a,b,p))<=tolerance&&p.x>=Math.min(a.x,b.x)-tolerance&&p.x<=Math.max(a.x,b.x)+tolerance&&p.y>=Math.min(a.y,b.y)-tolerance&&p.y<=Math.max(a.y,b.y)+tolerance;
   for(let i=0;i<vertices.length;i++)for(let j=i+1;j<vertices.length;j++){if(j===i+1||i===0&&j===vertices.length-1)continue;const a=vertices[i],b=vertices[(i+1)%vertices.length],c=vertices[j],d=vertices[(j+1)%vertices.length],abC=cross(a,b,c),abD=cross(a,b,d),cdA=cross(c,d,a),cdB=cross(c,d,b);if(on(a,b,c)||on(a,b,d)||on(c,d,a)||on(c,d,b)||abC*abD<0&&cdA*cdB<0)throw new Error('EXTRUDE profile must be simple, without self-intersections or touching edges.');}
-  let changed=true;while(changed&&vertices.length>3){changed=false;for(let i=0;i<vertices.length;i++)if(on(vertices[(i-1+vertices.length)%vertices.length],vertices[(i+1)%vertices.length],vertices[i])){vertices.splice(i,1);changed=true;break;}}
+  let changed=!preserveVertices;while(changed&&vertices.length>3){changed=false;for(let i=0;i<vertices.length;i++)if(on(vertices[(i-1+vertices.length)%vertices.length],vertices[(i+1)%vertices.length],vertices[i])){vertices.splice(i,1);changed=true;break;}}
   let twiceArea=0;vertices.forEach((p,i)=>{const q=vertices[(i+1)%vertices.length];twiceArea+=p.x*q.y-q.x*p.y;});if(Math.abs(twiceArea)<=tolerance)throw new Error('EXTRUDE profile has zero or numerically unresolved area.');if(twiceArea<0)vertices.reverse();
   const remaining=vertices.map((_,i)=>i),triangles=[];
   while(remaining.length>3){let clipped=false;for(let i=0;i<remaining.length;i++){const ia=remaining[(i-1+remaining.length)%remaining.length],ib=remaining[i],ic=remaining[(i+1)%remaining.length],a=vertices[ia],b=vertices[ib],c=vertices[ic];if(cross(a,b,c)<=tolerance)continue;
     if(remaining.some(index=>![ia,ib,ic].includes(index)&&cross(a,b,vertices[index])>=-tolerance&&cross(b,c,vertices[index])>=-tolerance&&cross(c,a,vertices[index])>=-tolerance))continue;
     triangles.push([ia,ib,ic]);remaining.splice(i,1);clipped=true;break;}
     if(!clipped)throw new Error('EXTRUDE triangulation could not resolve this polygon.');
-  }triangles.push([...remaining]);return{points:vertices.map(vertex=>({...original[vertex.index]})),triangles};
+  }triangles.push([...remaining]);return{points:vertices.map(vertex=>({...original[vertex.index]})),triangles,...(preserveVertices?{indices:vertices.map(vertex=>vertex.index)}:{})};
 }
 export function extrudeProfile(entity,height){
   signedHeight(height);if(!['RECTANG','PLINE'].includes(entity.type)||entity.type==='PLINE'&&!entity.closed)throw new Error('EXTRUDE requires a closed planar RECTANG or PLINE.');
@@ -415,6 +415,77 @@ export function spatialProfilePlane(entity){
   triangulatePolygon(entity.points.map(p=>{const q=worldToPlane(p,ucs);return{x:q.x,y:q.y};}));return ucs;
 }
 export function extrudeSpatialProfile(entity,height){const ucs=spatialProfilePlane(entity),local={...entity,type:'PLINE',points:entity.points.map(p=>{const q=worldToPlane(p,ucs);return{x:q.x,y:q.y};}),closed:true},mesh=extrudeProfile(local,height);mesh.vertices=mesh.vertices.map(p=>planeToWorld(p,ucs));validateMesh(mesh);return mesh;}
+
+/** Project for connectivity decisions only; stored surface coordinates are exact copies. */
+export function makePlanarSurface(points){
+  validatePolyline3D(points,true);
+  if(points.length>MAX_EXTRUSION_VERTICES)throw Error('Surface creation is limited to 4096 boundary vertices.');
+  const plane=spatialProfilePlane({type:'POLY3D',points,closed:true});
+  const local=points.map(p=>{const q=worldToPlane(p,plane);return{x:q.x,y:q.y};});
+  const {triangles,indices}=triangulatePolygon(local,{preserveVertices:true});
+  return validateMesh({type:'MESH',vertices:points.map(point3),faces:triangles.map(face=>face.map(i=>indices[i]))});
+}
+
+/** A bounded, planar disk with one simple boundary; no holes or overlapping faces. */
+export function planarMeshSurface(entity){
+  if(entity.type!=='MESH')throw Error('Choose a planar mesh surface.');
+  if(entity.vertices?.length>MAX_EXTRUSION_VERTICES||entity.faces?.length>MAX_EXTRUSION_VERTICES*2)throw Error('Surface extrusion is limited to 4096 vertices and 8192 faces.');
+  validateMesh(entity);
+  const triangles=entity.faces.flatMap(f=>f.length===3?[[...f]]:[[f[0],f[1],f[2]],[f[0],f[2],f[3]]]);
+  if(triangles.length>MAX_EXTRUSION_VERTICES*2)throw Error('Surface extrusion is limited to 8192 triangles.');
+  const plane=ucsFromThreePoints(...triangles[0].map(i=>entity.vertices[i])),origin=entity.vertices[0];
+  // Use the direct face cross product for the offset, avoiding a second basis cross.
+  const normal=faceNormal(entity.vertices,triangles[0]),normalLength=Math.hypot(normal.x,normal.y,normal.z);
+  plane.zAxis={x:normal.x/normalLength,y:normal.y/normalLength,z:normal.z/normalLength};
+  const local=entity.vertices.map(p=>worldToPlane(p,plane));
+  let span=0;for(const p of entity.vertices)span=Math.max(span,Math.hypot(p.x-origin.x,p.y-origin.y,p.z-origin.z));
+  if(!finite(span)||local.some(p=>Math.abs(p.z)>Math.max(1,span)*1e-9))throw Error('EXTRUDE requires a planar surface.');
+  const scale=Math.max(...local.flatMap(p=>[Math.abs(p.x),Math.abs(p.y)]));
+  if(!finite(scale)||!scale)throw Error('Surface span is numerically unresolved.');
+  const points=local.map(p=>({x:p.x/scale,y:p.y/scale})),tolerance=Number.EPSILON*64;
+  const cross=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+  const on=(a,b,p)=>Math.abs(cross(a,b,p))<=tolerance&&p.x>=Math.min(a.x,b.x)-tolerance&&p.x<=Math.max(a.x,b.x)+tolerance&&p.y>=Math.min(a.y,b.y)-tolerance&&p.y<=Math.max(a.y,b.y)+tolerance;
+  const edges=new Map();
+  for(const face of triangles){
+    if(cross(...face.map(i=>points[i]))<=tolerance)throw Error('Surface faces must have consistent nondegenerate orientation.');
+    for(let i=0;i<3;i++){const a=face[i],b=face[(i+1)%3],key=a<b?`${a}:${b}`:`${b}:${a}`,uses=edges.get(key)||[];uses.push([a,b]);edges.set(key,uses);}
+  }
+  const boundaryEdges=[];
+  for(const uses of edges.values()){
+    if(uses.length===1)boundaryEdges.push(uses[0]);
+    else if(uses.length!==2||uses[0][0]!==uses[1][1]||uses[0][1]!==uses[1][0])throw Error('Surface must be manifold without overlapping or reversed faces.');
+  }
+  if(boundaryEdges.length<3)throw Error('Surface needs one open boundary, not a closed solid.');
+  const next=new Map(),incoming=new Set();
+  for(const [a,b]of boundaryEdges){if(next.has(a)||incoming.has(b))throw Error('Surface boundary cannot branch or touch itself.');next.set(a,b);incoming.add(b);}
+  const boundary=[],seen=new Set();let vertex=boundaryEdges[0][0];
+  while(!seen.has(vertex)){if(!next.has(vertex))throw Error('Surface boundary must close.');seen.add(vertex);boundary.push(vertex);vertex=next.get(vertex);}
+  if(vertex!==boundary[0]||boundary.length!==boundaryEdges.length||entity.vertices.length-edges.size+triangles.length!==1)throw Error('Surface must be connected with one boundary and no holes.');
+  // Validate the boundary independently from its stored triangulation.
+  triangulatePolygon(boundary.map(i=>points[i]),{preserveVertices:true});
+  const unique=[...edges.values()].map(uses=>uses[0]);
+  for(let i=0;i<unique.length;i++)for(let j=i+1;j<unique.length;j++){
+    const [ai,bi]=unique[i],[ci,di]=unique[j],a=points[ai],b=points[bi],c=points[ci],d=points[di];
+    if(Math.max(a.x,b.x)<Math.min(c.x,d.x)-tolerance||Math.max(c.x,d.x)<Math.min(a.x,b.x)-tolerance||Math.max(a.y,b.y)<Math.min(c.y,d.y)-tolerance||Math.max(c.y,d.y)<Math.min(a.y,b.y)-tolerance)continue;
+    const shared=[ai,bi].filter(v=>v===ci||v===di);
+    if(shared.length){const v=points[shared[0]],p=points[ai===shared[0]?bi:ai],q=points[ci===shared[0]?di:ci];if(on(v,p,q)||on(v,q,p))throw Error('Surface edges overlap.');continue;}
+    if(on(a,b,c)||on(a,b,d)||on(c,d,a)||on(c,d,b)||cross(a,b,c)*cross(a,b,d)<0&&cross(c,d,a)*cross(c,d,b)<0)throw Error('Surface edges intersect or overlap.');
+  }
+  return{plane,triangles,boundary};
+}
+
+export function extrudeMeshSurface(entity,height){
+  return extrudePreparedMeshSurface(entity,height,planarMeshSurface(entity));
+}
+function extrudePreparedMeshSurface(entity,height,{plane,triangles,boundary}){
+  signedHeight(height);const n=entity.vertices.length,normal=plane.zAxis;
+  const vertices=[...entity.vertices.map(point3),...entity.vertices.map(p=>point3({x:p.x+height*normal.x,y:p.y+height*normal.y,z:p.z+height*normal.z}))],faces=[];
+  for(const f of triangles)faces.push([...f].reverse(),f.map(i=>i+n));
+  for(let i=0;i<boundary.length;i++){const a=boundary[i],b=boundary[(i+1)%boundary.length];faces.push([a,b,b+n,a+n]);}
+  if(height<0)faces.forEach(f=>f.reverse());
+  const {id,vertices:discardVertices,faces:discardFaces,primitive:discardPrimitive,...properties}=entity;
+  return validateMesh({...properties,type:'MESH',vertices,faces,primitive:'EXTRUDE'});
+}
 export function extrudeCircleProfile(entity,height){const spatial=entity.type==='CIRCLE3D',plane=spatial?{origin:entity.center,xAxis:entity.xAxis,yAxis:entity.yAxis,normal:normalizeUCS({origin:entity.center,xAxis:entity.xAxis,yAxis:entity.yAxis}).zAxis}:constructionPlane(presetUCS('XY',{...entity.center,z:0})),mesh=makeCylinderMesh({x:0,y:0,z:0},entity.radius,height,32);mesh.vertices=mesh.vertices.map(p=>planeToWorld(p,plane));mesh.primitive='EXTRUDE';mesh.layer=entity.layer;if(entity.color)mesh.color=entity.color;if(entity.lineweight!==undefined)mesh.lineweight=entity.lineweight;validateMesh(mesh);return mesh;}
 export function entityEdges(entity,document={}){
   if(SPATIAL_CURVES.has(entity.type)){const points=sampleSpatialCurve(entity);return points.slice(0,-1).map((p,i)=>[p,points[i+1]]);}
@@ -1631,7 +1702,7 @@ export function createEditor(initialState = {}) {
   let modelView={viewport:clone(state.viewport),workspace:state.workspace,camera3d:clone(state.camera3d)};
   const applyActiveView=()=>{const view=state.layouts.find(layout=>layout.id===state.activeLayoutId)?.viewports.find(view=>view.id===state.activeViewportId);if(view){state.workspace=view.workspace;state.camera3d=clone(view.camera3d);}else if(state.activeSpace==='paper')state.workspace='2d';else if(!state.activeLayoutId){state.viewport=clone(modelView.viewport);state.workspace=modelView.workspace;state.camera3d=clone(modelView.camera3d);}};
   applyActiveView();
-  let nextId = 1, transactionBefore = null, transactionIds = [], transformSources = [], copyBatches = [], editingSteps = [], clipboard = null, pendingCut = null;
+  let nextId = 1, transactionBefore = null, transactionIds = [], transformSources = [], extrusionSurfacePlans = [], copyBatches = [], editingSteps = [], clipboard = null, pendingCut = null;
   const allocatedIds=new Set(document.entities.map(entity=>entity.id));
   const allocatedLayoutIds=new Set([...document.layouts.map(layout=>layout.id),...document.sheetSets.flatMap(set=>set.entries.map(entry=>entry.layoutId))]),allocatedSheetSetIds=new Set(document.sheetSets.map(set=>set.id));
   const reserveSheetIds=()=>{state.layouts.forEach(layout=>allocatedLayoutIds.add(layout.id));state.sheetSets.forEach(set=>{allocatedSheetSetIds.add(set.id);set.entries.forEach(entry=>allocatedLayoutIds.add(entry.layoutId));});};
@@ -1668,7 +1739,7 @@ export function createEditor(initialState = {}) {
     redoStack.length = 0;
     return true;
   };
-  const idle = () => { state.command = null; state.commandPhase = null; state.commandData = {}; state.commandSelectionIds = []; state.commandPoints = []; state.prompt = 'Command:'; transactionBefore = null; transactionIds = []; transformSources = []; copyBatches = []; editingSteps = []; pendingCut = null; };
+  const idle = () => { state.command = null; state.commandPhase = null; state.commandData = {}; state.commandSelectionIds = []; state.commandPoints = []; state.prompt = 'Command:'; transactionBefore = null; transactionIds = []; transformSources = []; extrusionSurfacePlans = []; copyBatches = []; editingSteps = []; pendingCut = null; };
   const finish = message => {
     const changed = transactionBefore ? record(transactionBefore) : false;
     idle();
@@ -1709,8 +1780,8 @@ export function createEditor(initialState = {}) {
       const proposed=normalizeDocument({...snapshot(),blocks:[...state.blocks,block],entities:[...state.entities.filter(entity=>!selected.has(entity.id)&&!architecturalEntity(entity)),reference],viewport:state.viewport,camera3d:state.camera3d,workspace:state.workspace});state.blocks=proposed.blocks;state.entities=proposed.entities;state.selectionIds=[reference.id];return finish(`Block ${block.name} created and source geometry converted to one INSERT.`);
     }
     if(state.command==='EXTRUDE'){
-      for(const entity of transformSources){if(entity.type==='POLY3D')spatialProfilePlane(entity);else if(entity.type==='CIRCLE3D')validateSpatialCurve(entity);else if(entity.type==='CIRCLE')validateCircle(entity.center,entity.radius);else{if(!['RECTANG','PLINE'].includes(entity.type)||entity.type==='PLINE'&&!entity.closed)throw new Error('EXTRUDE requires closed planar paths or circles.');triangulatePolygon(entity.points);}}
-      const first=transformSources[0];state.commandPhase='height';state.commandData.targetKind='point';state.commandData.heightBase=point3(first.center??first.points[0]);state.commandData.plane=first.type==='POLY3D'?constructionPlane(spatialProfilePlane(first)):first.type==='CIRCLE3D'?constructionPlane(normalizeUCS({origin:first.center,xAxis:first.xAxis,yAxis:first.yAxis})):constructionPlane(presetUCS());state.commandData.heightDirection=clone(state.commandData.plane.normal);state.prompt='EXTRUDE Specify nonzero height (source profiles retained):';return result(true,`${transformSources.length} closed profiles accepted.`);
+      const plans=[];for(const entity of transformSources){let plan=null;if(entity.type==='MESH')plan=planarMeshSurface(entity);else if(entity.type==='POLY3D')spatialProfilePlane(entity);else if(entity.type==='CIRCLE3D')validateSpatialCurve(entity);else if(entity.type==='CIRCLE')validateCircle(entity.center,entity.radius);else{if(!['RECTANG','PLINE'].includes(entity.type)||entity.type==='PLINE'&&!entity.closed)throw new Error('EXTRUDE requires a planar surface, closed planar path or circle.');triangulatePolygon(entity.points);}plans.push(plan);}extrusionSurfacePlans=plans;
+      const first=transformSources[0];state.commandPhase='height';state.commandData.targetKind='point';state.commandData.heightBase=point3(first.center??first.points?.[0]??first.vertices[0]);state.commandData.plane=first.type==='MESH'?constructionPlane(plans[0].plane):first.type==='POLY3D'?constructionPlane(spatialProfilePlane(first)):first.type==='CIRCLE3D'?constructionPlane(normalizeUCS({origin:first.center,xAxis:first.xAxis,yAxis:first.yAxis})):constructionPlane(presetUCS());state.commandData.heightDirection=clone(state.commandData.plane.normal);state.prompt='EXTRUDE Specify nonzero height (source profiles and surfaces retained):';return result(true,`${transformSources.length} planar profiles or surfaces accepted.`);
     }
     if(state.command==='ROTATE3D'){
       if(transformSources.some(entity=>!TYPES3D.has(entity.type)))throw new Error('ROTATE3D requires only MESH or POLY3D objects.');
@@ -1935,7 +2006,7 @@ export function createEditor(initialState = {}) {
     state.commandPhase = null; state.commandData = {}; state.commandSelectionIds = [];
     state.commandPoints = [];
     transactionBefore = snapshot();
-    transactionIds = []; transformSources = []; copyBatches = []; editingSteps = [];
+    transactionIds = []; transformSources = []; extrusionSurfacePlans = []; copyBatches = []; editingSteps = [];
     if(['TRIMEXTENDMODE','EDGEMODE','PROJMODE'].includes(command)){state.commandPhase='trim-system-variable';state.commandData.targetKind='none';state.prompt=`${command} Enter ${command==='PROJMODE'?'0(None), 1(UCS) or 2(View)':'0 or 1'}:`;return result(true,'Change the drawing trim/extend preference.');}
     if(['TRIM','EXTEND'].includes(command)){
       state.commandData={targetKind:'object',trimAll:state.settings.trimExtendMode==='quick',trimErase:false,threeD:state.activeSpace!=='paper'};
@@ -2064,12 +2135,22 @@ export function createEditor(initialState = {}) {
     if(state.activeSpace==='paper'&&entities.some(entity=>TYPES3D.has(entity.type)))throw new Error('Paper space accepts planar 2D entities only; activate a model viewport for 3D construction.');
     const all=[...state.entities.filter(entity=>!replaced.includes(entity.id)),...entities];validateExpandedResources({entities:all,blocks,dimStyles:state.dimStyles});if(all.reduce((sum,entity)=>sum+(entity.type==='MESH'?entity.vertices.length:entity.type==='POLY3D'?entity.points.length:0),0)>MAX_MESH_VERTICES||all.reduce((sum,entity)=>sum+(entity.type==='MESH'?entity.faces.length:0),0)>MAX_MESH_FACES)throw new Error('Drawing exceeds the 100000 3D-vertex or 200000 face resource limit.');validateHatchResources({entities:all,blocks});
   };
+  const closePolyline3D=(createSurface=true)=>{
+    if(typeof createSurface!=='boolean')throw Error('Surface creation option must be boolean.');
+    const points=clone(state.commandPoints);if(points.length>2&&samePoint3(points[0],points.at(-1)))points.pop();validatePolyline3D(points,true);
+    const path=state.entities.find(entity=>entity.id===transactionIds[0]);let completed={...path,points,closed:true},message='3DPOLY closed as a path.';
+    if(createSurface){
+      let surface;try{surface=makePlanarSurface(points);}catch(error){message=`3DPOLY closed as a path; no surface: ${error.message}`;}
+      if(surface){const {points:discardPoints,closed:discardClosed,...properties}=path;completed={...properties,...surface};message='3DPOLY closed as an editable planar surface. Use EXTRUDE for height.';}
+    }
+    check3DResources([completed],[path.id]);state.entities=state.entities.map(entity=>entity.id===path.id?completed:entity);state.lastPoint={...points[0]};return finish(message);
+  };
   const preparedPrimitive=value=>{
     const command=state.command,base=state.commandPoints[0],plane=state.commandData.plane??editor.getConstructionPlane(),lift=mesh=>{mesh.vertices=mesh.vertices.map(p=>planeToWorld(p,plane));validateMesh(mesh);return{...mesh,layer:state.currentLayer};};
     if(command==='BOX'){const a=worldToPlane(base,plane),b=worldToPlane(state.commandPoints[1],plane);b.z=a.z;return lift(makeBoxMesh(a,b,value));}
     if(command==='CYLINDER')return lift(makeCylinderMesh(worldToPlane(base,plane),state.commandData.radius,value));
     if(command==='SPHERE')return{...makeSphereMesh(base,value),layer:state.currentLayer};
-    if(command==='EXTRUDE')return transformSources.map(entity=>['CIRCLE','CIRCLE3D'].includes(entity.type)?extrudeCircleProfile(entity,value):entity.type==='POLY3D'?extrudeSpatialProfile(entity,value):extrudeProfile(entity,value));
+    if(command==='EXTRUDE')return transformSources.map((entity,index)=>entity.type==='MESH'?extrudePreparedMeshSurface(entity,value,extrusionSurfacePlans[index]):['CIRCLE','CIRCLE3D'].includes(entity.type)?extrudeCircleProfile(entity,value):entity.type==='POLY3D'?extrudeSpatialProfile(entity,value):extrudeProfile(entity,value));
     throw new Error('No 3D primitive is pending.');
   };
   const completePrimitive=value=>{
@@ -2415,7 +2496,7 @@ export function createEditor(initialState = {}) {
             if(state.commandPoints.length<2)response=result(false,'No 3DPOLY segment to undo.');
             else{state.commandPoints.pop();const path=state.entities.find(entity=>entity.id===transactionIds[0]);if(state.commandPoints.length===1){state.entities=state.entities.filter(entity=>entity.id!==transactionIds[0]);transactionIds=[];}else path.points=clone(state.commandPoints);state.lastPoint={...state.commandPoints.at(-1)};updateLinePrompt();response=result(true,'Last 3DPOLY segment removed.',true);}
           }else if(['C','CLOSE'].includes(token)){
-            const points=clone(state.commandPoints);if(points.length>2&&samePoint3(points[0],points.at(-1)))points.pop();validatePolyline3D(points,true);const path=state.entities.find(entity=>entity.id===transactionIds[0]);path.points=points;path.closed=true;state.lastPoint={...points[0]};response=finish('3DPOLY closed.');
+            response=closePolyline3D(options.createSurface===undefined?true:options.createSurface);
           }else response=editor.submitPoint(parseCoordinate(inputText,state.commandPoints.at(-1)??state.lastPoint));
         }else if(['BOX','CYLINDER','SPHERE'].includes(state.command)||state.command==='EXTRUDE'&&state.commandPhase==='height'){
           if(['radius','height'].includes(state.commandPhase)&&scalarInput(inputText)){
