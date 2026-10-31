@@ -487,3 +487,10 @@ Four synthetic definitions and582planned rows are not measured CAD performance.
 The selected profile is59/59stages/1538checks/237inputs, with unchanged beta13
 runtime and original beta5 benchmark artifacts. See
 [protocol, literals and limits](../docs/PERFORMANCE-WORKLOAD-CONTRACT.md).
+
+
+performance-plan-loader.test.cjs selects60metadata-only checks; the expanded
+source profile is60/60stages,1598checks,239inputs. Independent trusted pins are
+separate from producer claims; all returned launch/geometry/environment flags
+remain false and observed performance rows remain0. The retained stdlib25 audit
+was not rerun. See [loader contract, failures and limits](../docs/PERFORMANCE-PLAN-LOADER.md).

@@ -948,3 +948,24 @@ Next build a separate non-launching workload/plan loader and metadata rejection
 controls; actual measurements remain dependent on a justified runnable path.
 No unchanged application/converter/native retry, threshold or optimization is
 implied; prior qualification limits and LC-REL attempt caps persist.
+
+
+## Workload metadata loader - October 31, 2026 UTC
+
+[The separate loader](PERFORMANCE-PLAN-LOADER.md) binds four generation inputs,
+nine fixed payload hashes/roles and the full typed582-key plan using independent
+caller trust. It imports no product code and always denies application-launch,
+geometry and environment qualification. Read caps1MiBproducer/4MiBfile/16MiBtotal
+allow only one overflow-detection byte. Final60/60checks cover semantic corrupt
+copies, source/hash/owner/matrix rejection, authored diagnostics and416instrumented
+handles closed once. Both first-draft failures and reviewed type/aggregate-read
+challenges are preserved; these are QA findings, not product drawing-loss claims.
+The retained sealed fixture set separately loads as582planned/0observed.
+
+The selected source gate passes60/60stages,1598checks,239exactinputs. Runtime,
+manifest/package/CI, five historical benchmark artifacts and prior four workload
+code/oracle inputs are unchanged beta13; no benchmark/app/native/real converter ran.
+A queue review found no next concrete ready milestone under current prerequisites.
+Keep hourly ACTIVE; reassess changed intake/evidence/prerequisites, stay quiet when
+unchanged, and do not invent a metadata sequel or rerun passing checks. Actual
+measurements, startup cause and all broader qualification limits remain open.

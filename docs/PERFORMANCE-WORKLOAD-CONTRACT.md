@@ -1,5 +1,10 @@
 # Four synthetic workload definitions and planned measurement protocol
 
+Current status: the separate [metadata-only loader](PERFORMANCE-PLAN-LOADER.md)
+now completes the next-loader step described below. This document preserves the
+6152f1e definition/protocol qualification; actual four-workload observations remain
+zero and no application launch is authorized.
+
 LC-PERF-01/LC-QA-006 now has four reproducible schematic fixture definitions and
 a finite protocol. This is definition and headless correctness qualification;
 **zero application performance observations have been collected for these four
