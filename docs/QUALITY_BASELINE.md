@@ -1043,3 +1043,29 @@ Open/Save/PDF/build/native/installed/daily-use or performance qualification. Nex
 use the actual serialization contract or existing application/PDF workflows in a
 separately authorized scope. The single source-app authorization is consumed;
 do not automatically rerun or convert a harness failure into an app defect.
+
+
+## Focused source drawing/save/reopen/PDF workflow - October 31, 2026 UTC
+
+One separately authorized hidden source-app session at c5a6676a completed five
+startup and six workflow groups. Actual Open imported a copied synthetic mm DXF;
+the production renderer command API added a literal20mm model LINE. Actual Save
+As/New/Open preserved the complete serialized semantic drawing in the same
+process. Production plot-dialog/preload output retained the reopened document.
+Test-owned chooser replies restricted all opens/saves to the isolated test files.
+
+An independent reader measured three opaque black rulers at declared paper
+positions:40mm,20mm and10mm, within0.02mm coordinate/length tolerance. The single
+page measured420.200665x297.010661mm, within the declared0.3mm A3 tolerance.
+A PDF-hash-bound Poppler144dpi raster was visually inspected and sampled for
+visible ink. Seven deliberately incorrect observation controls were rejected;
+these were not seven actual malformed PDF files. Driver and application exited0
+without forced cleanup. Installed EXE/ASAR hashes remain exact before/after.
+
+Runtime/version/manifest/dependencies remain beta13 at9fa9b5bc. The earlier
+4pass/1incorrect-oracle-fail/5notrun smoke remains separate historical evidence.
+This focused same-process command-API/owned-chooser test does not establish
+native input, process restart, installed/upgrade/daily-use, full application/PDF
+gate or performance acceptance. Whole-profile byte preservation was not measured.
+The one-workflow launch authorization is consumed; no further application run is
+implied. Preserve prior qualification limits and repair/converter attempt caps.
