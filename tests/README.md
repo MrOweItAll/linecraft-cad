@@ -478,3 +478,12 @@ Beta13 selects import-budget36, import-cancellation22 and import-budget-compatib
 233inputs, including converter48/recovery102. Separate legacy importer21 and
 actual DXF24 are outside that total. Earlier pending results above are history.
 See [the repair and projection limits](../docs/IMPORT-WORK-CANCELLATION.md).
+
+
+The new performance-workloads-reference.test.mjs is a selected33-check headless
+fixture/protocol suite. The separate stdlib audit-performance-workloads.py passes
+25checks including15semantic corrupt copies; these are outside selected1538.
+Four synthetic definitions and582planned rows are not measured CAD performance.
+The selected profile is59/59stages/1538checks/237inputs, with unchanged beta13
+runtime and original beta5 benchmark artifacts. See
+[protocol, literals and limits](../docs/PERFORMANCE-WORKLOAD-CONTRACT.md).

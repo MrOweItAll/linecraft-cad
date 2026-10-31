@@ -893,3 +893,24 @@ application/PDF/build/unpacked/native/installed/upgrade/daily-use qualification
 remain unperformed. Beta7 cause unknown; beta6 receipts and exhaustedLC-REL-01/02
 remain intact. Next registered work is LC-PERF-01/LC-QA-006 workload/protocol
 definitions, with no unchanged application retry, actual converter or optimization.
+
+
+## Four workload definitions - October 31, 2026 UTC
+
+[LC-PERF-01/LC-QA-006 definitions](PERFORMANCE-WORKLOAD-CONTRACT.md) now pin four
+entirely synthetic survey-like,residential-like,several-viewport and10000-LINE
+workloads. Independent literals, actual headless core roundtrip/selection and
+negative controls pass33/33; a separate stdlib reader passes25/25 with15semantic
+corruptions. Exactly582 planned rows per variant include570actions+12startup,
+with zero observed timings. Multi-sheet storage is409entities/18views; initial
+paper selection is3layer0entities; the visible/locked Viewports layer excludes
+six proxies while its six active views remain eligible for rendering.
+No rendering or application benchmark ran.
+
+The expanded selected fast gate passes59/59stages,1538checks,237exactinputs.
+Runtime/manifest/package/CI remain beta13 at9fa9b5bc; all five original beta5
+benchmark artifacts remain exact. Node runner durations are not CAD latencies.
+Next build a separate non-launching workload/plan loader and metadata rejection
+controls; actual measurements remain dependent on a justified runnable path.
+No unchanged application/converter/native retry, threshold or optimization is
+implied; prior qualification limits and LC-REL attempt caps persist.

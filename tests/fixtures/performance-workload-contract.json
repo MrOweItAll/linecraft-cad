@@ -1,0 +1,273 @@
+{
+  "format": "LinecraftPerformanceWorkloadContract/1",
+  "scope": "Four synthetic schematic workloads and planned protocol only. No client content, domain approval, timing samples or application qualification. Explicit vertices mean stored point slots excluding analytic curve parameters, text anchors and tessellation. Bounds exclude rendered text ink.",
+  "workloads": {
+    "survey": {
+      "units": "ft",
+      "parcels": "10x10, each80x50, origins(100c,60r)",
+      "labels": "one per parcel at(100c+10,60r+20)",
+      "entities": 200,
+      "PLINE": 100,
+      "TEXT": 100,
+      "explicitVertices": 400,
+      "polylinePerimeter": 26000,
+      "polylineArea": 400000,
+      "geometryBounds": [
+        0,
+        0,
+        980,
+        590
+      ],
+      "polylineCoordinateSums": [
+        196000,
+        118000
+      ],
+      "labelAnchorSums": [
+        46000,
+        29000
+      ]
+    },
+    "residential": {
+      "units": "ft",
+      "rooms": "4x2, each16x12, origins(18c,14r)",
+      "furniture": "4per room, each2x3, offsets(2+5*(j%2),2+5*floor(j/2))",
+      "doors": "one ARC per room center(origin.x+16,origin.y+3),radius3,start90,sweep90",
+      "hatches": "one2x2 per room at(origin.x+10,origin.y+7)",
+      "labels": "one per room at(origin.x+2,origin.y+8)",
+      "entities": 64,
+      "PLINE": 40,
+      "ARC": 8,
+      "HATCH": 8,
+      "TEXT": 8,
+      "explicitVertices": 192,
+      "polylinePerimeter": 768,
+      "polylineArea": 1728,
+      "hatchArea": 32,
+      "geometryBounds": [
+        0,
+        0,
+        70,
+        26
+      ],
+      "polylineCoordinateSums": [
+        5280,
+        2080
+      ],
+      "hatchCoordinateSums": [
+        1216,
+        480
+      ],
+      "explicitCoordinateSums": [
+        6496,
+        2560
+      ],
+      "labelAnchorSums": [
+        232,
+        120
+      ],
+      "arcCenterSums": [
+        344,
+        80
+      ],
+      "hatchPerimeter": 64,
+      "arcLengthPiMultiple": 12
+    },
+    "multiViewport": {
+      "units": "in",
+      "model": "20x20 LINE grid, origins(20c,20r),end.x=start.x+16",
+      "modelEntities": 400,
+      "paperEntities": 9,
+      "totalEntities": 409,
+      "modelExplicitVertices": 800,
+      "paperExplicitVertices": 18,
+      "modelLength": 6400,
+      "paperLineLengthMm": 300,
+      "paperPolylinePerimeterMm": 4062,
+      "paperPolylineAreaMm2": 332400,
+      "modelBounds": [
+        0,
+        0,
+        396,
+        380
+      ],
+      "layouts": [
+        "sheet-a",
+        "sheet-b",
+        "sheet-c"
+      ],
+      "paperMm": [
+        420,
+        297
+      ],
+      "viewportsPerLayout": 6,
+      "totalViewports": 18,
+      "frameRule": "3x2; x20+130c,y60+90r,width110,height70",
+      "centers": "(80+80c,100+120r,0)",
+      "scaleDenominators": [
+        24,
+        48,
+        96
+      ],
+      "selectionInInitialPaper": [
+        "paper-ruler-a",
+        "paper-border-a",
+        "paper-label-a"
+      ],
+      "activeViewportsEligibleForRendering": 6,
+      "viewportLayer": {
+        "name": "Viewports",
+        "locked": true,
+        "visible": true
+      },
+      "paperBorder": [
+        [
+          10,
+          10
+        ],
+        [
+          410,
+          10
+        ],
+        [
+          410,
+          287
+        ],
+        [
+          10,
+          287
+        ]
+      ],
+      "paperRuler": [
+        [
+          10,
+          40
+        ],
+        [
+          110,
+          40
+        ]
+      ],
+      "paperLabelAnchor": [
+        20,
+        20
+      ],
+      "modelStartSums": [
+        76000,
+        76000
+      ],
+      "modelEndSums": [
+        82400,
+        76000
+      ],
+      "paperExplicitCoordinateSums": [
+        2880,
+        2022
+      ],
+      "paperLabelAnchorSums": [
+        60,
+        60
+      ],
+      "frameOriginSums": [
+        2700,
+        1890
+      ],
+      "modelCenterSums": [
+        2880,
+        2880
+      ],
+      "projected16InchRulerMmRatios": [
+        [
+          254,
+          15
+        ],
+        [
+          127,
+          15
+        ],
+        [
+          127,
+          30
+        ]
+      ]
+    },
+    "heavy": {
+      "units": "in",
+      "model": "100x100 LINE grid,origins(8c,8r),end.x=start.x+6",
+      "entities": 10000,
+      "explicitVertices": 20000,
+      "lineLength": 60000,
+      "geometryBounds": [
+        0,
+        0,
+        798,
+        792
+      ],
+      "startCoordinateSums": [
+        3960000,
+        3960000
+      ],
+      "endCoordinateSums": [
+        4020000,
+        3960000
+      ]
+    }
+  },
+  "protocol": {
+    "status": "definitions-only; application path pending justified prerequisites",
+    "processReplicates": 3,
+    "coldFirstOpenSamplesPerProcess": 1,
+    "warmupRounds": 1,
+    "measuredWarmRounds": 5,
+    "ordinaryOperations": [
+      "open",
+      "selectAll",
+      "clearSelection",
+      "pan",
+      "zoom",
+      "saveAs",
+      "reopen"
+    ],
+    "layoutOperations": [
+      "open",
+      "selectAll",
+      "clearSelection",
+      "switchLayoutB",
+      "switchLayoutC",
+      "returnLayoutA",
+      "pan",
+      "zoom",
+      "saveAs",
+      "reopen"
+    ],
+    "plannedActionRowsPerVariant": 570,
+    "plannedStartupRowsPerVariant": 12,
+    "plannedMeasuredWarmActionRowsPerVariant": 465,
+    "plannedWarmupActionRowsPerVariant": 93,
+    "plannedColdFirstOpenRowsPerVariant": 12,
+    "plannedTotalRowsPerVariant": 582,
+    "observedRows": 0,
+    "approvedTimingThreshold": null,
+    "panDeltaCss": [
+      24,
+      12
+    ],
+    "wheelDeltaY": -80,
+    "contentSizeCss": [
+      1280,
+      900
+    ],
+    "targetDPR": 1,
+    "operationTimeoutMs": 15000,
+    "frameDrainTimeoutMs": 5000,
+    "processWatchdogMs": 180000,
+    "maximumWorkloadVariantProcessesPerWake": 3,
+    "coldScope": "Fresh process/module/JIT state; OS/disk caches uncontrolled. Startup-to-readiness separate from first Open after readiness.",
+    "actionBoundary": "Monotonic host clock from actual action invocation through response; includes transport/owned chooser costs. Correctness validation outside timed region.",
+    "frameBoundary": "Same action start through two animation-frame callbacks; not compositor/display or native physical-input latency.",
+    "memoryBoundary": "Future per-process host/renderer RSS and heap samples with method/cadence/overhead disclosed; no memory observations collected, no whole-machine/native peak guarantee.",
+    "exchangeImport": "Not run; native Open does not substitute for a separately defined literal DXF/import counterpart. No real converter.",
+    "privacy": "Private exact source/executable/profile/output identity receipts. No client content, credentials, control descriptors, usernames, hostnames or machine paths in public diagnostics.",
+    "preservation": "Original beta5 fixture/workflow/auditor/CSV and existing receipts unchanged; all new artifacts use unique owned paths.",
+    "retry": "Preserve failures and all raw cold/warmup/measured observations; no unchanged application retry, native operation or invented threshold/optimization authority."
+  }
+}

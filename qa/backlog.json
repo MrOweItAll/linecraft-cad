@@ -493,7 +493,7 @@
       "sourceCommit": "9236c734e833a288cd91332bb249b2c990e9c115",
       "reproduction": "Frozen2000 LINE inch profile; one warmup plus five measured rounds for Open, SelectAll, ESC, pan, zoom, SaveAs and saved-file reload",
       "fixtureClass": "Existing original synthetic large fixture with fixed navigation profile; no client data",
-      "status": "bounded synthetic measurement baseline verified; usability unqualified",
+      "status": "Historical bounded measurement baseline preserved; four workload definitions verified; broader performance acceptance incomplete",
       "attempts": 1,
       "acceptance": "Each variant42 rows,6 transition rounds,7 independently recomputed summaries,43 content files and15 rejected observation controls; warmup excluded from exact min/median/max",
       "evidence": [
@@ -501,12 +501,17 @@
         "tests/performance-workflow.cjs",
         "tests/audit-performance.py",
         "tests/fixtures/performance-baseline-beta5.csv",
-        "docs/PERFORMANCE-BASELINE.md"
+        "docs/PERFORMANCE-BASELINE.md",
+        "tests/performance-workload-fixtures.mjs",
+        "tests/fixtures/performance-workload-contract.json",
+        "tests/performance-workloads-reference.test.mjs",
+        "tests/audit-performance-workloads.py",
+        "docs/PERFORMANCE-WORKLOAD-CONTRACT.md"
       ],
       "verifiedScope": "Actual hidden source and existing beta5 unpacked PASS. Content/navigation outputs match; all timing variation retained. No threshold or optimization claim. Runtime59/resources12 and source inputs unchanged during runs.",
-      "nextAction": "Isolated development reload/restart preservation; future larger/richer workloads and human usability need explicit references",
+      "nextAction": "Continue LC-PERF-01/LC-QA-006 under LC-QA-PERFORMANCE: build a separate loader that validates the four workload files and complete planned row matrix before any future measurement run; freeze missing/mismatched source/fixture, wrong ownership and duplicate-row rejection controls using metadata only. Preserve the original beta5 fixture/workflow/auditor/CSV and all receipts. No application launch, fabricated timing samples, threshold or optimization is authorized by this definition milestone. Actual measurements need a justified runnable path and exact identity; beta7 startup cause remains unknown and unchanged application retries stay prohibited. Keep hourly ACTIVE and reassess fresh intake/queue. Runtime remains qualified beta13; LC-REL-01/02 exhausted and LC-REL-03/04 each at most one approach remaining, only with new independent failure evidence.",
       "runtimeChanged": false,
-      "fullGates": "unchanged existing candidate gate preserved; not rerun",
+      "fullGates": "Current definition-only selected profile59/59stages1538checks237inputs; original beta5 application benchmark/gates preserved and not rerun.",
       "nativeCandidateAcceptance": "not run",
       "installedAcceptance": "not run",
       "dailyUseReady": false,
@@ -519,7 +524,7 @@
         "priority": 1,
         "assessment": "partially implemented",
         "problem": "The retained baseline covers one deterministic 2,000-line drawing, not the requested survey/residential/multi-viewport/heavy workload matrix or practical regression thresholds.",
-        "implemented": "Existing synthetic fixture, warm-up plus five measured rounds, hidden source/unpacked action/frame-drain timings, exact geometry/hash checks and independent audit are reusable historical evidence. They are not a current beta7 benchmark or human latency measurement.",
+        "implemented": "Existing synthetic fixture, warm-up plus five measured rounds, hidden source/unpacked action/frame-drain timings, exact geometry/hash checks and independent audit are reusable historical evidence. They are not a current beta7 benchmark or human latency measurement. Four independent literal fixture/protocol definitions now pass33headless core checks and25independent stdlib checks;582planned rows,zero observations. Original baseline and all five benchmark artifacts remain unchanged.",
         "evidence": [
           "docs/PERFORMANCE-BASELINE.md:10-59",
           "docs/PERFORMANCE-BASELINE.md:84-117",
@@ -528,14 +533,14 @@
           "tests/performance-workflow.cjs:45-65",
           "tests/audit-performance.py"
         ],
-        "gap": "Add independently authored survey plat, residential plan, several-viewport layout and heavy drawing references; entity/vertex counts, hardware/runtime, import/redraw/interaction/peak-memory observations, clearly defined cold/warm boundaries and baseline-derived thresholds are not all qualified. Do not manufacture timings or thresholds during intake.",
+        "gap": "Actual four-workload application/import/redraw/interaction/memory observations, runnable launch prerequisites, practical variability thresholds and broad domain/template fidelity remain unqualified. No new timings or optimization are claimed.",
         "acceptance": [
           "Reusable authorized/sanitized fixtures cover survey plat, residential plan, several-viewport paper layout and synthetic heavy drawing.",
           "Record entity/vertex counts, runtime/hardware, redraw/interaction latency, import time and peak memory where measurable, including explicitly defined cold and warm runs.",
           "Results are reproducible enough for comparisons; derive practical regression thresholds from measured variability.",
           "Identify the measured bottleneck before choosing an optimization and preserve existing correctness references."
         ],
-        "nextAction": "Retain the completed bounded baseline and extend its existing ID. After integrity investigations, prepare the four literal fixture/protocol definitions without launching the unchanged blocked beta7 route. Actual app measurements require a justified, runnable qualification path and exact current identity.",
+        "nextAction": "Continue LC-PERF-01/LC-QA-006 under LC-QA-PERFORMANCE: build a separate loader that validates the four workload files and complete planned row matrix before any future measurement run; freeze missing/mismatched source/fixture, wrong ownership and duplicate-row rejection controls using metadata only. Preserve the original beta5 fixture/workflow/auditor/CSV and all receipts. No application launch, fabricated timing samples, threshold or optimization is authorized by this definition milestone. Actual measurements need a justified runnable path and exact identity; beta7 startup cause remains unknown and unchanged application retries stay prohibited. Keep hourly ACTIVE and reassess fresh intake/queue. Runtime remains qualified beta13; LC-REL-01/02 exhausted and LC-REL-03/04 each at most one approach remaining, only with new independent failure evidence.",
         "dependencies": [
           "LC-REL-01/02: integrity investigations first",
           "LC-QA-BETA7-UNPACKED-STARTUP: actual hidden beta7 measurement path remains blocked until changed evidence"
@@ -550,10 +555,10 @@
         "riskConfirmed": false,
         "priorityBasis": "P1 measurement prerequisite, ahead of speculative P2 optimization but after integrity evidence. Existing bounded completion remains intact.",
         "rollback": "Preserve the original fixture/CSV/audit and add distinct workload/version results. No optimization or fabricated before/after measurement is part of intake.",
-        "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+        "reviewedSourceCommit": "9fa9b5bc6c7a02fae5d38c1dd437df57ae29838d",
         "recommendationNotVerifiedFinding": true,
         "acceptanceComplete": false,
-        "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+        "verificationScope": "Definition-only synthetic geometry/ownership and actual headless core import/serialize/selection:33pass; independent stdlib25pass including15semantic corrupt copies. Full selected59/59stages1538checks237inputs. No application/benchmark/converter/native execution; beta13 runtime and original baseline unchanged.",
         "completionRequirements": [
           "Record the verified problem and affected behavior before a product change.",
           "Record implementation and relevant executed checks; acceptance must pass before completion.",
@@ -570,7 +575,178 @@
           "previousPriority": 2,
           "reason": "Representative baseline follow-up is a P1 prerequisite for conditional performance optimizations; historical bounded baseline remains verified."
         }
-      ]
+      ],
+      "definitionPreparationHistory": [
+        {
+          "id": "LC-QA-006",
+          "priority": 1,
+          "symptom": "No comparable raw larger-drawing operation measurement baseline",
+          "expected": "Fixed synthetic input and finite repeated actual source/unpacked observations with independent correctness and honest timing boundaries",
+          "sourceVersion": "1.36.1-beta.5",
+          "sourceCommit": "9236c734e833a288cd91332bb249b2c990e9c115",
+          "reproduction": "Frozen2000 LINE inch profile; one warmup plus five measured rounds for Open, SelectAll, ESC, pan, zoom, SaveAs and saved-file reload",
+          "fixtureClass": "Existing original synthetic large fixture with fixed navigation profile; no client data",
+          "status": "bounded synthetic measurement baseline verified; usability unqualified",
+          "attempts": 1,
+          "acceptance": "Each variant42 rows,6 transition rounds,7 independently recomputed summaries,43 content files and15 rejected observation controls; warmup excluded from exact min/median/max",
+          "evidence": [
+            "tests/performance-fixture.mjs",
+            "tests/performance-workflow.cjs",
+            "tests/audit-performance.py",
+            "tests/fixtures/performance-baseline-beta5.csv",
+            "docs/PERFORMANCE-BASELINE.md"
+          ],
+          "verifiedScope": "Actual hidden source and existing beta5 unpacked PASS. Content/navigation outputs match; all timing variation retained. No threshold or optimization claim. Runtime59/resources12 and source inputs unchanged during runs.",
+          "nextAction": "Isolated development reload/restart preservation; future larger/richer workloads and human usability need explicit references",
+          "runtimeChanged": false,
+          "fullGates": "unchanged existing candidate gate preserved; not rerun",
+          "nativeCandidateAcceptance": "not run",
+          "installedAcceptance": "not run",
+          "dailyUseReady": false,
+          "recommendationReview": {
+            "requestedId": "LC-PERF-01",
+            "canonicalId": "LC-QA-006",
+            "queueId": "LC-QA-PERFORMANCE",
+            "title": "Representative performance baseline",
+            "requestedPriority": 1,
+            "priority": 1,
+            "assessment": "partially implemented",
+            "problem": "The retained baseline covers one deterministic 2,000-line drawing, not the requested survey/residential/multi-viewport/heavy workload matrix or practical regression thresholds.",
+            "implemented": "Existing synthetic fixture, warm-up plus five measured rounds, hidden source/unpacked action/frame-drain timings, exact geometry/hash checks and independent audit are reusable historical evidence. They are not a current beta7 benchmark or human latency measurement.",
+            "evidence": [
+              "docs/PERFORMANCE-BASELINE.md:10-59",
+              "docs/PERFORMANCE-BASELINE.md:84-117",
+              "tests/performance-fixture.mjs:1-8",
+              "tests/performance-workflow.cjs:16-17",
+              "tests/performance-workflow.cjs:45-65",
+              "tests/audit-performance.py"
+            ],
+            "gap": "Add independently authored survey plat, residential plan, several-viewport layout and heavy drawing references; entity/vertex counts, hardware/runtime, import/redraw/interaction/peak-memory observations, clearly defined cold/warm boundaries and baseline-derived thresholds are not all qualified. Do not manufacture timings or thresholds during intake.",
+            "acceptance": [
+              "Reusable authorized/sanitized fixtures cover survey plat, residential plan, several-viewport paper layout and synthetic heavy drawing.",
+              "Record entity/vertex counts, runtime/hardware, redraw/interaction latency, import time and peak memory where measurable, including explicitly defined cold and warm runs.",
+              "Results are reproducible enough for comparisons; derive practical regression thresholds from measured variability.",
+              "Identify the measured bottleneck before choosing an optimization and preserve existing correctness references."
+            ],
+            "nextAction": "Retain the completed bounded baseline and extend its existing ID. After integrity investigations, prepare the four literal fixture/protocol definitions without launching the unchanged blocked beta7 route. Actual app measurements require a justified, runnable qualification path and exact current identity.",
+            "dependencies": [
+              "LC-REL-01/02: integrity investigations first",
+              "LC-QA-BETA7-UNPACKED-STARTUP: actual hidden beta7 measurement path remains blocked until changed evidence"
+            ],
+            "relatedIds": [
+              "LC-QA-006",
+              "LC-QA-PERFORMANCE",
+              "LC-PERF-02",
+              "LC-PERF-03",
+              "LC-PERF-04"
+            ],
+            "riskConfirmed": false,
+            "priorityBasis": "P1 measurement prerequisite, ahead of speculative P2 optimization but after integrity evidence. Existing bounded completion remains intact.",
+            "rollback": "Preserve the original fixture/CSV/audit and add distinct workload/version results. No optimization or fabricated before/after measurement is part of intake.",
+            "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+            "recommendationNotVerifiedFinding": true,
+            "acceptanceComplete": false,
+            "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+            "completionRequirements": [
+              "Record the verified problem and affected behavior before a product change.",
+              "Record implementation and relevant executed checks; acceptance must pass before completion.",
+              "For performance work record reproducible before/after measurements.",
+              "Record remaining limitations and the exact rollback method."
+            ],
+            "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+          },
+          "recommendationAliases": [
+            "LC-PERF-01"
+          ],
+          "priorityHistory": [
+            {
+              "previousPriority": 2,
+              "reason": "Representative baseline follow-up is a P1 prerequisite for conditional performance optimizations; historical bounded baseline remains verified."
+            }
+          ]
+        }
+      ],
+      "recommendationReviewHistory": [
+        {
+          "requestedId": "LC-PERF-01",
+          "canonicalId": "LC-QA-006",
+          "queueId": "LC-QA-PERFORMANCE",
+          "title": "Representative performance baseline",
+          "requestedPriority": 1,
+          "priority": 1,
+          "assessment": "partially implemented",
+          "problem": "The retained baseline covers one deterministic 2,000-line drawing, not the requested survey/residential/multi-viewport/heavy workload matrix or practical regression thresholds.",
+          "implemented": "Existing synthetic fixture, warm-up plus five measured rounds, hidden source/unpacked action/frame-drain timings, exact geometry/hash checks and independent audit are reusable historical evidence. They are not a current beta7 benchmark or human latency measurement.",
+          "evidence": [
+            "docs/PERFORMANCE-BASELINE.md:10-59",
+            "docs/PERFORMANCE-BASELINE.md:84-117",
+            "tests/performance-fixture.mjs:1-8",
+            "tests/performance-workflow.cjs:16-17",
+            "tests/performance-workflow.cjs:45-65",
+            "tests/audit-performance.py"
+          ],
+          "gap": "Add independently authored survey plat, residential plan, several-viewport layout and heavy drawing references; entity/vertex counts, hardware/runtime, import/redraw/interaction/peak-memory observations, clearly defined cold/warm boundaries and baseline-derived thresholds are not all qualified. Do not manufacture timings or thresholds during intake.",
+          "acceptance": [
+            "Reusable authorized/sanitized fixtures cover survey plat, residential plan, several-viewport paper layout and synthetic heavy drawing.",
+            "Record entity/vertex counts, runtime/hardware, redraw/interaction latency, import time and peak memory where measurable, including explicitly defined cold and warm runs.",
+            "Results are reproducible enough for comparisons; derive practical regression thresholds from measured variability.",
+            "Identify the measured bottleneck before choosing an optimization and preserve existing correctness references."
+          ],
+          "nextAction": "Retain the completed bounded baseline and extend its existing ID. After integrity investigations, prepare the four literal fixture/protocol definitions without launching the unchanged blocked beta7 route. Actual app measurements require a justified, runnable qualification path and exact current identity.",
+          "dependencies": [
+            "LC-REL-01/02: integrity investigations first",
+            "LC-QA-BETA7-UNPACKED-STARTUP: actual hidden beta7 measurement path remains blocked until changed evidence"
+          ],
+          "relatedIds": [
+            "LC-QA-006",
+            "LC-QA-PERFORMANCE",
+            "LC-PERF-02",
+            "LC-PERF-03",
+            "LC-PERF-04"
+          ],
+          "riskConfirmed": false,
+          "priorityBasis": "P1 measurement prerequisite, ahead of speculative P2 optimization but after integrity evidence. Existing bounded completion remains intact.",
+          "rollback": "Preserve the original fixture/CSV/audit and add distinct workload/version results. No optimization or fabricated before/after measurement is part of intake.",
+          "reviewedSourceCommit": "ca51931221d0aaa2485449765a28b7bf76c7c172",
+          "recommendationNotVerifiedFinding": true,
+          "acceptanceComplete": false,
+          "verificationScope": "Current source and existing test definitions inspected; no new product test, benchmark, converter or application execution in this intake.",
+          "completionRequirements": [
+            "Record the verified problem and affected behavior before a product change.",
+            "Record implementation and relevant executed checks; acceptance must pass before completion.",
+            "For performance work record reproducible before/after measurements.",
+            "Record remaining limitations and the exact rollback method."
+          ],
+          "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
+        }
+      ],
+      "workloadDefinitionReference": {
+        "status": "headless definitions qualified; actual measurements not run",
+        "sourceVersion": "1.36.1-beta.13",
+        "runtimeCommit": "9fa9b5bc6c7a02fae5d38c1dd437df57ae29838d",
+        "workloads": 4,
+        "NodeChecks": 33,
+        "NodePass": 33,
+        "independentChecks": 25,
+        "independentPass": 25,
+        "independentSemanticCorruptions": 15,
+        "plannedActionRowsPerVariant": 570,
+        "plannedStartupRowsPerVariant": 12,
+        "plannedTotalRowsPerVariant": 582,
+        "observedPerformanceRows": 0,
+        "runtimeChanged": false,
+        "measurementBaselineUnchanged": true,
+        "existingBenchmarkAttemptsUnchanged": true,
+        "sourceFastStages": 59,
+        "portableChecks": 1538,
+        "inputs": 237,
+        "appExecuted": false,
+        "practicalThresholdChosen": false,
+        "optimizationImplemented": false,
+        "parentComplete": false,
+        "record": "docs/PERFORMANCE-WORKLOAD-CONTRACT.md",
+        "reviewedDefinitionParentCommit": "d66095f585097814570f556b5f60bfc6f99f2d8d"
+      }
     },
     {
       "id": "LC-DEV-001",
@@ -4596,6 +4772,6 @@
         "approachesUsed": 2
       }
     ],
-    "nextReadyAction": "Retain the qualified beta13 bounded LC-REL-04 source repair: one coherent approach used, at most one remains; do not spend another without new independently failing evidence. Next registered work is LC-PERF-01/LC-QA-006 under LC-QA-PERFORMANCE: prepare four literal workload/protocol definitions (survey, residential, several-viewport layout, heavy synthetic) while preserving the completed baseline and original fixtures. Actual application measurements require a justified runnable path and exact identity; no unchanged beta7/application retry, fabricated timings/thresholds or speculative optimization. LC-REL-01/02 remain partial/exhausted and LC-REL-03 partial with at most one remaining. Streaming deferred; no actual converter/native/installed/client/publication authority."
+    "nextReadyAction": "Continue LC-PERF-01/LC-QA-006 under LC-QA-PERFORMANCE: build a separate loader that validates the four workload files and complete planned row matrix before any future measurement run; freeze missing/mismatched source/fixture, wrong ownership and duplicate-row rejection controls using metadata only. Preserve the original beta5 fixture/workflow/auditor/CSV and all receipts. No application launch, fabricated timing samples, threshold or optimization is authorized by this definition milestone. Actual measurements need a justified runnable path and exact identity; beta7 startup cause remains unknown and unchanged application retries stay prohibited. Keep hourly ACTIVE and reassess fresh intake/queue. Runtime remains qualified beta13; LC-REL-01/02 exhausted and LC-REL-03/04 each at most one approach remaining, only with new independent failure evidence."
   }
 }

@@ -32,6 +32,8 @@ if(candidate)suites.push('tests/font-resources.test.mjs');
 auxiliaries.push('tests/missing-glyph-fixture.mjs','tests/missing-glyph-workflow.cjs','tests/audit-missing-glyph-pdf.py','qa/CANDIDATE-SOURCE-1.36.1-beta.5.json');
 if(candidate)suites.push('tests/missing-glyph.test.mjs');
 auxiliaries.push('tests/performance-fixture.mjs','tests/performance-workflow.cjs','tests/audit-performance.py');
+if(candidate)auxiliaries.push('tests/performance-workload-fixtures.mjs','tests/fixtures/performance-workload-contract.json','tests/audit-performance-workloads.py');
+if(candidate)suites.push('tests/performance-workloads-reference.test.mjs');
 auxiliaries.push('tests/reload-fixture.mjs','tests/reload-workflow.cjs','tests/audit-reload.py');
 auxiliaries.push('tools/local-development-relay.cjs','tests/local-development-relay.test.cjs','tests/local-development-relay-workflow.cjs','tests/audit-local-relay.py','tests/fixtures/local-relay-request.json');
 auxiliaries.push('tests/import-headline.test.cjs','tests/import-headline-workflow.cjs','qa/CANDIDATE-SOURCE-1.36.1-beta.6.json');
