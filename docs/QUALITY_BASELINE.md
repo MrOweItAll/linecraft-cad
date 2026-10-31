@@ -997,3 +997,23 @@ measurement follows. Preserve the historical failed gate and beta6 receipts.
 Next review an explicitly authorized normal-desktop minimal control or precise
 native crash evidence; do not repeat unchanged managed launches or repair a
 merely suspected cause. Broader qualification remains incomplete.
+
+
+## Outside-context minimal Electron control - October 31, 2026 UTC
+
+One explicitly authorized additional control ran outside the managed tool
+execution context using the same Electron executable and minimal bootstrap bytes
+as the previous direct control. It reached the first entry marker, Electron
+readiness, its exact owned profile and a hidden synthetic data-URL renderer, then
+quit cleanly with exit0. No forced cleanup was needed; no relevant owned process
+was found afterward. Earlier managed exit0x80000003 and native logs are retained.
+
+This is an observed execution-context difference, not identification of a specific
+sandbox policy, token, environment value or OS cause, nor proof of manual
+interactive login. No administrator elevation was requested; actual token
+elevation was not measured. The renderer sandbox remained enabled. No Linecraft
+code, Playwright, drawing operation, PDF/build/native/installed acceptance or
+performance workload ran. Runtime/version/manifest/dependencies remain unchanged.
+The one-control authorization is consumed; next evaluate a separately authorized
+isolated source/application run in the working context. No further launch or
+broader qualification is implied by this minimal control.
