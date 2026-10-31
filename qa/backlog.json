@@ -5230,7 +5230,7 @@
     {
       "id": "LC-3D-POLYLINE-SURFACE",
       "priority": 2,
-      "status": "Source implemented; separately approved beta16 candidate80/80 passed; installation waits for user to close beta15",
+      "status": "Implemented, candidate 80/80 passed, beta16 per-user installation verified; native feature/daily-use acceptance separate",
       "problem": "Closed coplanar 3DPOLY creation remained a wire path and EXTRUDE did not accept planar MESH surfaces.",
       "userDecisions": [
         "Create the surface only on closure.",
@@ -5252,13 +5252,18 @@
         "initialFail": 12,
         "reference": "docs/POLY3D-SURFACES.md"
       },
-      "limits": "Bounded existing source/unpacked application and PDF workflows plus new portable geometry tests; no dedicated native feature appearance, installed/native/client/daily-use qualification. One simple boundary, up to4096vertices/8192triangles; no holes/overlaps/nonplanar extrusion. Original full-precision base coordinates retained. Prior mesh-edge repair budget remains exhausted.",
-      "next": "After the user saves and closes installedbeta15, reverify no desktop Linecraft processes, back up current installation/profile and complete the already approved one-time beta16 installation. Candidate approval consumed; do not rerun. Preserve open work.",
+      "limits": "One simple boundary, up to4096vertices/8192triangles; no holes/overlaps/nonplanar extrusion. Exact base coordinates retained. Installed bytes/version and observed profile views verified; dedicated native feature appearance and daily-use acceptance remain separate. Prior mesh-edge repair budget exhausted.",
+      "next": "User may try 3DPOLY Close and EXTRUDE in installed beta16. Reassess new feedback or genuinely actionable authorized work; no unchanged candidate rerun or reinstall.",
       "history": [
         {
           "status": "Requested source feature implemented and independently reviewed; application/build/installed qualification pending",
           "limits": "Source-only; no beta16 app/raster/PDF/build/installed/native/daily-use acceptance. One simple boundary, up to4096vertices/8192triangles; no holes/overlaps/nonplanar mesh extrusion. Existing comparison tolerance does not flatten stored geometry. Drawing-wide limits retained. Prior mesh-edge repair budget stays exhausted.",
           "next": "Use a separately authorized bounded candidate application/build/install scope for the new version. Do not rerun unchanged portable checks or reinstall beta15."
+        },
+        {
+          "status": "Source implemented; separately approved beta16 candidate80/80 passed; installation waits for user to close beta15",
+          "limits": "Bounded existing source/unpacked application and PDF workflows plus new portable geometry tests; no dedicated native feature appearance, installed/native/client/daily-use qualification. One simple boundary, up to4096vertices/8192triangles; no holes/overlaps/nonplanar extrusion. Original full-precision base coordinates retained. Prior mesh-edge repair budget remains exhausted.",
+          "next": "After the user saves and closes installedbeta15, reverify no desktop Linecraft processes, back up current installation/profile and complete the already approved one-time beta16 installation. Candidate approval consumed; do not rerun. Preserve open work."
         }
       ],
       "candidateQualification": {
@@ -5273,8 +5278,22 @@
         "buildInputs": 6,
         "workflowReportHashes": 14,
         "installerBuilt": true,
-        "installerExecuted": false,
+        "installerExecuted": true,
         "dedicatedNewFeatureNativeVisualAcceptance": false
+      },
+      "installation": {
+        "exitCode": 0,
+        "payloadFilesVerified": 87,
+        "runtimeArchiveFiles": 59,
+        "externalResources": 12,
+        "profilePathnameFilesUnchanged": 75,
+        "profileAliasFilesUnchanged": 46,
+        "overlappingProfileViews": true,
+        "unredirectedPhysicalProfileCompleteness": false,
+        "associationsUnchanged": true,
+        "normalProfileLaunches": 0,
+        "nativeFeatureAcceptance": false,
+        "dailyUseReady": false
       }
     }
   ],
@@ -5298,12 +5317,17 @@
       {
         "id": "LC-QA-BETA7-UNPACKED-STARTUP",
         "priority": 1,
-        "state": "Historical beta7 and managed-context launch failures retain an unresolved exact cause. The current beta15 candidate passed all78source/portable/unpacked/build stages outside that context and the separately authorized local trial installation is verified. Preserve historical failures and unchanged-retry prohibition; normal-profile startup, installed native input and broader daily-use acceptance remain separate.",
+        "state": "Historical beta7 and managed-context launch failures retain an unresolved exact cause. Current beta16 passed all80 portable/source/unpacked/build stages outside that context and its separately authorized local trial installation is verified. Preserve historical failures and unchanged-retry prohibition; normal-profile startup, dedicated native feature input and broader daily-use acceptance remain separate.",
         "stateHistory": [
           {
             "at": "2026-10-31T19:19:01.138025+00:00",
             "previous": "Existing generic launch failure remains blocked; no cause established and no unchanged retry authorized.",
             "reason": "Current beta15 candidate and installation evidence reconciliation"
+          },
+          {
+            "at": "2026-10-31T20:18:03.929230+00:00",
+            "previous": "Historical beta7 and managed-context launch failures retain an unresolved exact cause. The current beta15 candidate passed all78source/portable/unpacked/build stages outside that context and the separately authorized local trial installation is verified. Preserve historical failures and unchanged-retry prohibition; normal-profile startup, installed native input and broader daily-use acceptance remain separate.",
+            "reason": "Verified beta16 candidate and installed-file reconciliation"
           }
         ]
       },

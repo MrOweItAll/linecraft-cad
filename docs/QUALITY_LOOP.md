@@ -1210,9 +1210,10 @@ compatible; no third mesh-edge repair was spent.
 
 Independent review and the selected portable gate pass: 64/64 stages, 1,668 checks,
 23 focused feature tests and 248 exact inputs. Original failures and corrected
-numerical/property test assumptions remain preserved. Beta16 application/raster/
-PDF/build/installed/native/daily-use qualification has not run; the separately
-verified beta15 installation and its historical 78/78 candidate gate remain intact.
+numerical/property test assumptions remain preserved. At this earlier source-only checkpoint, beta16 application/raster/
+PDF/build/installed/native/daily-use qualification had not run. Later candidate
+and installation evidence below supersedes that pending status; beta15 receipts
+remain historical.
 
 
 ## Beta16 candidate qualification - October 31, 2026 UTC
@@ -1225,9 +1226,31 @@ unpacked packaging and NSIS compilation. Independent artifact review verified
 inputs and 14 workflow-report hashes. These existing application workflows are
 not dedicated native visual acceptance of the new surface-creation feature.
 
-The beta16 installer is ready but has not been run: the installed beta15
-application is open. Installation waits for the user to save and close it,
-followed by fresh process checks and a verified installation/profile backup.
-The approved conditional installation remains pending; the candidate-run
-authorization is consumed. No repeat candidate run, forced application closure,
-normal-profile startup, client or daily-use acceptance follows.
+At the candidate checkpoint, installation waited for the user to save and close
+the installed application. That condition was subsequently satisfied; the completed
+installation record below supersedes the pending status. The candidate route was
+not repeated, and no open application was forcibly closed.
+
+
+## Beta16 local trial installation - October 31, 2026 UTC
+
+After the user confirmed saved and closed work, the approved per-user installer
+completed once with exit 0. All 87 packaged payload files match the installed
+copy, including 59 runtime archive files and 12 external resources. Installed
+package/registry version and desktop/Start-menu targets are correct. The prior
+88-file installation was backed up; the 75-file profile pathname view and its
+separately observed 46-file package-local alias were also backed up and remained
+byte-identical, with no added/deleted files. These overlapping profile views are
+not 121 unique files or proof of unredirected physical-profile completeness.
+
+Two preliminary backups stopped at a path-resolution guard before profile copying.
+Their failures and partial copies remain preserved. Independent review accepted
+an exact observed-path mapping with ordinary-file/directory and reparse checks;
+the successful backup retained source/copy/source hash comparisons. Installation
+then used a fresh no-application-process guard. File associations remained exact.
+
+The candidate and installation approvals are consumed. No normal-profile launch,
+native input, dedicated new-feature visual review, client drawing or daily-use
+acceptance occurred. The existing 80/80 candidate result remains the bounded
+source/unpacked application/PDF/build evidence; no gate or application was rerun.
+The installer remains unsigned.
