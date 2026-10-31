@@ -4869,7 +4869,7 @@
     {
       "id": "LC-3D-SURFACE-EDGES",
       "priority": 1,
-      "status": "beta14 source outline correction verified; application/raster and performance qualification open",
+      "status": "beta14 source outline correction verified; application test prepared awaiting separate execution authorization",
       "problem": "Ordinary shaded meshes outlined every triangle, displaying artificial coplanar diagonals; interactive3Dperformance separately reported slow",
       "expected": "Retain real outlines and sharp corners while suppressing internal coplanar triangulation edges; preserve geometry, roof rendering, wireframe, picking and painter order",
       "reproduction": "Exact production drawModel in recordedCanvashost:10by10planarquad yields artificialdiagonal twice; independent expectedfourboundaryedges and fillarea100",
@@ -4882,10 +4882,52 @@
       "evidence": [
         "docs/MESH-SURFACE-EDGES.md",
         "tests/mesh-surface-renderer.test.cjs",
-        "qa/CANDIDATE-SOURCE-1.36.1-beta.14.json"
+        "qa/CANDIDATE-SOURCE-1.36.1-beta.14.json",
+        "docs/MESH-3D-VALIDATION-PLAN.md"
       ],
       "limits": "RecordedCanvashost only; no beta14application/browserraster/picking/PDF/build/native/installed/upgrade/dailyuse orGPU/performance qualification. Additional adjacency work may costCPU/heap. No coordinatewelding across indices/entities. Actualdrawingnotread. Earlierbeta13workflowdoesnotqualifybeta14.",
-      "next": "Separately scope synthetic3Dapplication/raster profiling, measure projection/sort/draw/occlusion work before performance repair; preserve one-remainingapproach cap and installed/client/native/external restrictions"
+      "next": "Authorize one bounded hidden synthetic 3D visual and CPU observation session in the working outside-managed context after reviewing the prepared scope; no automatic launch, speculative optimization or additional repair attempt",
+      "preparationHistory": [
+        {
+          "prior": {
+            "id": "LC-3D-SURFACE-EDGES",
+            "priority": 1,
+            "status": "beta14 source outline correction verified; application/raster and performance qualification open",
+            "problem": "Ordinary shaded meshes outlined every triangle, displaying artificial coplanar diagonals; interactive3Dperformance separately reported slow",
+            "expected": "Retain real outlines and sharp corners while suppressing internal coplanar triangulation edges; preserve geometry, roof rendering, wireframe, picking and painter order",
+            "reproduction": "Exact production drawModel in recordedCanvashost:10by10planarquad yields artificialdiagonal twice; independent expectedfourboundaryedges and fillarea100",
+            "fixtureClass": "Literal public-safe synthetic indexed meshes; actual reported drawing not accessed",
+            "sourceVersion": "1.36.1-beta.14",
+            "implementationAttempts": 1,
+            "repairApproachesRemainingAtMost": 1,
+            "validation": "13focused source tests pass within61/61selected faststages,1611portablechecks,241exactworkinginputs; initial8checks3pass5fail included3actualdiagonalregressions and2missinghelperprerequisitefailures; original failures preserved",
+            "change": "Linear indexed adjacency and reused normals; suppress only two-sided coplanar seams, preserve uncertain boundaries; pertriangle masked outlines keep painter order",
+            "evidence": [
+              "docs/MESH-SURFACE-EDGES.md",
+              "tests/mesh-surface-renderer.test.cjs",
+              "qa/CANDIDATE-SOURCE-1.36.1-beta.14.json"
+            ],
+            "limits": "RecordedCanvashost only; no beta14application/browserraster/picking/PDF/build/native/installed/upgrade/dailyuse orGPU/performance qualification. Additional adjacency work may costCPU/heap. No coordinatewelding across indices/entities. Actualdrawingnotread. Earlierbeta13workflowdoesnotqualifybeta14.",
+            "next": "Separately scope synthetic3Dapplication/raster profiling, measure projection/sort/draw/occlusion work before performance repair; preserve one-remainingapproach cap and installed/client/native/external restrictions"
+          },
+          "scope": "Source-only synthetic application test preparation; no launch"
+        }
+      ],
+      "applicationValidationPreparation": {
+        "status": "prepared and independently reviewed; not executed",
+        "document": "docs/MESH-3D-VALIDATION-PLAN.md",
+        "syntheticNativeFixtures": 6,
+        "plannedCanvasCaptures": 4,
+        "plannedUnprofiledActions": 42,
+        "plannedTimingWarmups": 7,
+        "plannedTimingObservations": 35,
+        "plannedSeparateProfiledActions": 42,
+        "actualAppLaunches": 0,
+        "actualPerformanceObservations": 0,
+        "applicationLaunchAuthorized": false,
+        "productRepairApproachesAdded": 0,
+        "selfChecks": "6 literal fixture inspections;4 analytic raster positives/13 negative pixel-metadata controls;4 encoded PNG role/hash positives/2 negative identity controls;1 positive-half rounding check;3 literal profile attribution checks/6 malformed profile controls; syntax and no-authorization guards"
+      }
     }
   ],
   "recommendationTriage": {

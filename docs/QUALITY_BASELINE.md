@@ -1088,3 +1088,14 @@ occurred. Added per-redraw adjacency work is not a demonstrated speedup; GPU
 load/VRAM cause remains unknown. Profile a bounded synthetic3Dworkload before
 performance changes. Separate-entity/duplicate-index boundaries are not welded;
 the user's other drawing was not read or qualified.
+
+
+## Prepared synthetic 3D visual/profile session - October 31, 2026 UTC
+
+A bounded six-fixture application/raster/CPU harness is prepared without any
+application launch. [The plan and limits](MESH-3D-VALIDATION-PLAN.md) distinguish
+independent analytic reader controls from future actual canvas observations.
+The proposed single hidden run uses fresh owned profile/output paths and needs
+separate authorization. Runtime and all241 retained fast-gate input hashes remain
+unchanged; no unchanged passing gate was rerun. Performance, beta14 application,
+PDF/build/native/installed/upgrade and daily-use qualification remain open.
