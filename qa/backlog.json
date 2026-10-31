@@ -4869,7 +4869,7 @@
     {
       "id": "LC-3D-SURFACE-EDGES",
       "priority": 1,
-      "status": "beta15 source-qualified; visual-only confirmation prepared, awaiting new execution approval",
+      "status": "Bounded beta15 application raster probes pass; faint flat diagonal remains visible",
       "problem": "The source stroke-mask correction retains a dark diagonal in actual flat quad and coplanar-triangle rasters. Fold/crease and wireframe pass frozen probes. Reported real-drawing performance remains unqualified.",
       "expected": "Retain real outlines and sharp corners while suppressing internal coplanar triangulation edges; preserve geometry, roof rendering, wireframe, picking and painter order",
       "reproduction": "Original recorded-Canvas production drawModel regression exposed explicit extra diagonal strokes; after their beta14 suppression, actual640x480 DPR1 quad and stored-triangle captures still show a dark diagonal. Frozen RGB tolerance8 rejects the first probe240,320, observing94/96/98 versus121/121/121.",
@@ -4877,7 +4877,7 @@
       "sourceVersion": "1.36.1-beta.15",
       "implementationAttempts": 2,
       "repairApproachesRemainingAtMost": 0,
-      "validation": "Final32/32focused(17renderer+15analytic), selected62/62stages1630portablechecks243exactinputs; first30tests26pass4genuinefail preserved; no new actual application raster",
+      "validation": "Prior32/32focused and62/62selected fast stages retained; actual quad/triangles/fold/wireframe all pass unchanged RGB tolerance8, residual sampled patch contrast7; stress checks limited",
       "change": "User-directed exact shaded-fill color on classified internal coplanar edges, solid .7px butt strokes within each opaque ordinary triangle callback before its real outlines; no roof/translucent/wireframe/geometry changes",
       "evidence": [
         "docs/MESH-SURFACE-EDGES.md",
@@ -4889,10 +4889,11 @@
         "tests/mesh-surface-coverage-reference.test.cjs",
         "qa/CANDIDATE-SOURCE-1.36.1-beta.15.json",
         "docs/MESH-BETA15-VISUAL-PLAN.md",
-        "docs/TEAPOT-NUMERICAL-LIGHTING-REVIEW.md"
+        "docs/TEAPOT-NUMERICAL-LIGHTING-REVIEW.md",
+        "docs/TEAPOT-APPLICATION-OBSERVATIONS.md"
       ],
-      "limits": "Source/analytic only for beta15: no application/raster/PDF/build/native/installed/upgrade/daily-use/performance qualification. Butt strokes have lateral corner/sliver overdraw and may repaint a prior outline corner; geometric bounds do not establish final boundary pixels. No geometry welding. Historical beta14 actual flat raster still failed; no new app run. No speedup/GPU/VRAM diagnosis.",
-      "next": "New combined one-run proposal retains original frozen six visual roles and adds three teapot roles plus finite response/CPU observations. It replaces, rather than adds to, the prior unexecuted proposal. Await specific approval; no third mesh-edge repair.",
+      "limits": "Bounded synthetic actual canvas evidence only. No complete seam disappearance, general corner/sliver appearance, full application/PDF/build/native/installed/upgrade/daily-use or client qualification. No speedup/GPU/VRAM claim. Two repair approaches consumed; none remain.",
+      "next": "Preserve actual result and user teapot appearance acceptance. No third mesh-edge repair or automatic app rerun; continue only genuinely new authorized work.",
       "preparationHistory": [
         {
           "prior": {
@@ -5086,7 +5087,38 @@
           "at": "2026-10-31T18:25:58.534185+00:00",
           "previousNext": "Request approval for the concrete one hidden beta15 visual-only run: five synthetic Opens, six canvas and six window captures, original frozen tolerance8, extra corner/sliver observations. No launch until approval; no third repair or automatic geometry snapping."
         }
-      ]
+      ],
+      "beta15ActualObservationHistory": [
+        {
+          "at": "2026-10-31T18:54:08.001470+00:00",
+          "prior": {
+            "status": "beta15 source-qualified; visual-only confirmation prepared, awaiting new execution approval",
+            "validation": "Final32/32focused(17renderer+15analytic), selected62/62stages1630portablechecks243exactinputs; first30tests26pass4genuinefail preserved; no new actual application raster",
+            "limits": "Source/analytic only for beta15: no application/raster/PDF/build/native/installed/upgrade/daily-use/performance qualification. Butt strokes have lateral corner/sliver overdraw and may repaint a prior outline corner; geometric bounds do not establish final boundary pixels. No geometry welding. Historical beta14 actual flat raster still failed; no new app run. No speedup/GPU/VRAM diagnosis.",
+            "next": "New combined one-run proposal retains original frozen six visual roles and adds three teapot roles plus finite response/CPU observations. It replaces, rather than adds to, the prior unexecuted proposal. Await specific approval; no third mesh-edge repair."
+          }
+        }
+      ],
+      "actualBeta15Observation": {
+        "document": "docs/TEAPOT-APPLICATION-OBSERVATIONS.md",
+        "applicationLaunches": 1,
+        "startupGroupsPassed": 5,
+        "workflowGroupsPassed": 5,
+        "canvasCaptures": 9,
+        "windowCaptures": 9,
+        "originalRasterRolesPassed": 4,
+        "rgbTolerance": 8,
+        "flatDiagonalMaxSampledPatchDeviation": 7,
+        "faintDiagonalStillVisible": true,
+        "measuredResponseObservations": 10,
+        "separateProfiledActions": 12,
+        "cpuProfiles": 1,
+        "presentedShadedTeapotHumanAppearanceAccepted": true,
+        "generalSurfaceAppearanceAccepted": false,
+        "runtimeChanged": false,
+        "authorizationConsumed": true,
+        "retryAuthorized": false
+      }
     },
     {
       "id": "LC-3D-PLANARITY-TRIAL",
@@ -5123,19 +5155,53 @@
     {
       "id": "LC-3D-TEAPOT-LIGHTING",
       "priority": 1,
-      "status": "Synthetic fixture and combined application proposal prepared; source lighting/options review complete; actual rendering pending",
+      "status": "Actual teapot views and response/CPU baseline complete; presented shaded appearance accepted by user",
       "problem": "User requests a teapot surface/performance demonstration and brighter professional-quality shading without unnecessary engine complexity",
       "expected": "Keep full-precision geometry; inspect actual surface/lighting quality and measured response before choosing a focused correction or rendering-library integration",
-      "validation": "Native teapot3600 vertices3704faces7096triangles, exact core roundtrip and independent topology review; three authored image bindings, one observation positive and29 corrupt controls; syntax/execution-refusal guards pass",
+      "validation": "One hidden source-app session;3bound teapot canvas/window pairs;10response observations;1separate12actionCPUprofile; frozen readers pass; exact geometry retained and human shaded-appearance acceptance recorded",
       "evidence": [
-        "docs/TEAPOT-NUMERICAL-LIGHTING-REVIEW.md"
+        "docs/TEAPOT-NUMERICAL-LIGHTING-REVIEW.md",
+        "docs/TEAPOT-APPLICATION-OBSERVATIONS.md"
       ],
       "runtimeChanged": false,
-      "applicationLaunches": 0,
+      "applicationLaunches": 1,
       "dependenciesAdded": 0,
       "implementationAttempts": 0,
-      "limits": "No actual teapot image/profile, shader-engine installation or application speedup. Dark white-channel46..133 range is a source finding, not measured display brightness. Separate overlapping meshes and open rims, not standard Utah or watertight solid.",
-      "next": "Seek one explicit combined hidden source-app run approval; inspect actual images and CPU samples. Prefer a focused existing lighting correction if supported; no automatic engine migration."
+      "limits": "Synthetic separate overlapping meshes/open rims, not Utah dataset or watertight solid. Sampled control/frame times and JavaScript CPU/heap are not FPS/GPU/VRAM/physical latency/peak memory or speedup. Human acceptance is limited to presented shaded teapot views; broader qualification remains open.",
+      "next": "Retain current lighting, full-precision geometry and comparison threshold. Observation scope complete; no engine migration, product repair or additional launch authorized.",
+      "beta15ActualObservationHistory": [
+        {
+          "at": "2026-10-31T18:54:08.001470+00:00",
+          "prior": {
+            "status": "Synthetic fixture and combined application proposal prepared; source lighting/options review complete; actual rendering pending",
+            "validation": "Native teapot3600 vertices3704faces7096triangles, exact core roundtrip and independent topology review; three authored image bindings, one observation positive and29 corrupt controls; syntax/execution-refusal guards pass",
+            "limits": "No actual teapot image/profile, shader-engine installation or application speedup. Dark white-channel46..133 range is a source finding, not measured display brightness. Separate overlapping meshes and open rims, not standard Utah or watertight solid.",
+            "next": "Seek one explicit combined hidden source-app run approval; inspect actual images and CPU samples. Prefer a focused existing lighting correction if supported; no automatic engine migration.",
+            "applicationLaunches": 0
+          }
+        }
+      ],
+      "applicationLaunchAuthorized": false,
+      "actualBeta15Observation": {
+        "document": "docs/TEAPOT-APPLICATION-OBSERVATIONS.md",
+        "applicationLaunches": 1,
+        "startupGroupsPassed": 5,
+        "workflowGroupsPassed": 5,
+        "canvasCaptures": 9,
+        "windowCaptures": 9,
+        "originalRasterRolesPassed": 4,
+        "rgbTolerance": 8,
+        "flatDiagonalMaxSampledPatchDeviation": 7,
+        "faintDiagonalStillVisible": true,
+        "measuredResponseObservations": 10,
+        "separateProfiledActions": 12,
+        "cpuProfiles": 1,
+        "presentedShadedTeapotHumanAppearanceAccepted": true,
+        "generalSurfaceAppearanceAccepted": false,
+        "runtimeChanged": false,
+        "authorizationConsumed": true,
+        "retryAuthorized": false
+      }
     }
   ],
   "recommendationTriage": {

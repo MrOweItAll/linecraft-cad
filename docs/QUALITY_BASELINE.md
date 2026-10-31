@@ -1188,3 +1188,17 @@ open-source renderer options were researched without adding a dependency.
 Runtime beta15, production tolerance and source-gate inputs are unchanged.
 Actual teapot images, lighting judgment and application performance await the
 new concrete run approval. Broader qualification and repair limits remain open.
+
+
+## Actual beta15 surface and teapot observations - October 31, 2026 UTC
+
+The [single combined source-app session](TEAPOT-APPLICATION-OBSERVATIONS.md)
+completed with five startup and five workflow groups passing, nine actual
+canvas/window pairs and four preserved raster roles passing unchanged tolerance8.
+The flat diagonal still has sampled patch contrast7; numerical acceptance does
+not imply complete visual disappearance. The user accepted the presented shaded
+teapot appearance. Ten control-response observations and one separate JavaScript
+profile provide a bounded baseline, not a speedup/FPS/GPU claim. All346 launch pins
+and85 preparation files remain exact; no runtime change, unchanged gate rerun or
+second application launch occurred. The one-run approval is consumed, the mesh-edge
+repair budget remains0, and broader/native/installed/daily-use limits remain open.

@@ -1,5 +1,11 @@
 # Full-precision tolerance, teapot and lighting review
 
+The preparation statements below preserve the pre-launch findings. The subsequent
+[single actual application observation](TEAPOT-APPLICATION-OBSERVATIONS.md)
+completed successfully, with frozen raster probes passing and the presented
+shaded teapot appearance accepted by the user. The faint flat diagonal and wider
+qualification limits remain explicit. No production setting changed.
+
 No production tolerance was changed. The user clarified that the desired test
 varies numerical comparison thresholds while retaining full-precision coordinates.
 That is separate from the earlier requested 1 mm geometric cleanup. Neither
