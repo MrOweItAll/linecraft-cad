@@ -60,7 +60,26 @@ compatibility and candidate identity. Beta15 manifests and receipts remain intac
 Beta16 changes only core geometry/commands and command help/footprint integration;
 there is no dependency, rendering engine, saved-format or security-setting change.
 
-These are source/portable results. Beta16 application, raster, PDF, packaging,
-installed native input and daily-use qualification have not run. The separately
-verified installed beta15 remains the current personal-trial copy until a new
-candidate application/build/install scope is authorized and completed.
+At the earlier source-only checkpoint, beta16 application, raster, PDF, packaging,
+installed native input and daily-use qualification had not run. Beta15 remained
+installed while the new application/build/install scope awaited separate approval.
+The completed candidate scope below supersedes that earlier pending-run status;
+installed/native and daily-use limits remain explicit.
+
+
+## Beta16 candidate qualification - October 31, 2026 UTC
+
+The separately approved candidate route completed once at source
+`f995c04e54f8c20c0aeaf3d3f4d9030ea5fa1c2f`: all 80 stages passed, including
+64 portable stages, seven source and seven unpacked application/PDF workflows,
+unpacked packaging and NSIS compilation. Independent artifact review verified
+59 archive runtime files, 12 external resources, 248 source inputs, six build
+inputs and 14 workflow-report hashes. These existing application workflows are
+not dedicated native visual acceptance of the new surface-creation feature.
+
+The beta16 installer is ready but has not been run: the installed beta15
+application is open. Installation waits for the user to save and close it,
+followed by fresh process checks and a verified installation/profile backup.
+The approved conditional installation remains pending; the candidate-run
+authorization is consumed. No repeat candidate run, forced application closure,
+normal-profile startup, client or daily-use acceptance follows.

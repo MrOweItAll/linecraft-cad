@@ -1247,3 +1247,21 @@ Independent review and the selected portable gate pass: 64/64 stages, 1,668 chec
 numerical/property test assumptions remain preserved. Beta16 application/raster/
 PDF/build/installed/native/daily-use qualification has not run; the separately
 verified beta15 installation and its historical 78/78 candidate gate remain intact.
+
+
+## Beta16 candidate qualification - October 31, 2026 UTC
+
+The separately approved candidate route completed once at source
+`f995c04e54f8c20c0aeaf3d3f4d9030ea5fa1c2f`: all 80 stages passed, including
+64 portable stages, seven source and seven unpacked application/PDF workflows,
+unpacked packaging and NSIS compilation. Independent artifact review verified
+59 archive runtime files, 12 external resources, 248 source inputs, six build
+inputs and 14 workflow-report hashes. These existing application workflows are
+not dedicated native visual acceptance of the new surface-creation feature.
+
+The beta16 installer is ready but has not been run: the installed beta15
+application is open. Installation waits for the user to save and close it,
+followed by fresh process checks and a verified installation/profile backup.
+The approved conditional installation remains pending; the candidate-run
+authorization is consumed. No repeat candidate run, forced application closure,
+normal-profile startup, client or daily-use acceptance follows.

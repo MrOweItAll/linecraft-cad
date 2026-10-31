@@ -5230,7 +5230,7 @@
     {
       "id": "LC-3D-POLYLINE-SURFACE",
       "priority": 2,
-      "status": "Requested source feature implemented and independently reviewed; application/build/installed qualification pending",
+      "status": "Source implemented; separately approved beta16 candidate80/80 passed; installation waits for user to close beta15",
       "problem": "Closed coplanar 3DPOLY creation remained a wire path and EXTRUDE did not accept planar MESH surfaces.",
       "userDecisions": [
         "Create the surface only on closure.",
@@ -5252,8 +5252,30 @@
         "initialFail": 12,
         "reference": "docs/POLY3D-SURFACES.md"
       },
-      "limits": "Source-only; no beta16 app/raster/PDF/build/installed/native/daily-use acceptance. One simple boundary, up to4096vertices/8192triangles; no holes/overlaps/nonplanar mesh extrusion. Existing comparison tolerance does not flatten stored geometry. Drawing-wide limits retained. Prior mesh-edge repair budget stays exhausted.",
-      "next": "Use a separately authorized bounded candidate application/build/install scope for the new version. Do not rerun unchanged portable checks or reinstall beta15."
+      "limits": "Bounded existing source/unpacked application and PDF workflows plus new portable geometry tests; no dedicated native feature appearance, installed/native/client/daily-use qualification. One simple boundary, up to4096vertices/8192triangles; no holes/overlaps/nonplanar extrusion. Original full-precision base coordinates retained. Prior mesh-edge repair budget remains exhausted.",
+      "next": "After the user saves and closes installedbeta15, reverify no desktop Linecraft processes, back up current installation/profile and complete the already approved one-time beta16 installation. Candidate approval consumed; do not rerun. Preserve open work.",
+      "history": [
+        {
+          "status": "Requested source feature implemented and independently reviewed; application/build/installed qualification pending",
+          "limits": "Source-only; no beta16 app/raster/PDF/build/installed/native/daily-use acceptance. One simple boundary, up to4096vertices/8192triangles; no holes/overlaps/nonplanar mesh extrusion. Existing comparison tolerance does not flatten stored geometry. Drawing-wide limits retained. Prior mesh-edge repair budget stays exhausted.",
+          "next": "Use a separately authorized bounded candidate application/build/install scope for the new version. Do not rerun unchanged portable checks or reinstall beta15."
+        }
+      ],
+      "candidateQualification": {
+        "sourceCommit": "f995c04e54f8c20c0aeaf3d3f4d9030ea5fa1c2f",
+        "passedStages": 80,
+        "totalStages": 80,
+        "sourceApplicationPdfWorkflows": 7,
+        "unpackedApplicationPdfWorkflows": 7,
+        "runtimeArchiveFiles": 59,
+        "externalResources": 12,
+        "sourceInputs": 248,
+        "buildInputs": 6,
+        "workflowReportHashes": 14,
+        "installerBuilt": true,
+        "installerExecuted": false,
+        "dedicatedNewFeatureNativeVisualAcceptance": false
+      }
     }
   ],
   "recommendationTriage": {
