@@ -52,6 +52,7 @@ if(candidate)suites.push('tests/viewport-navigation-independent.test.mjs','tests
 if(candidate)suites.push('tests/transform-atomicity-reference.test.mjs','tests/transform-differential-reference.test.mjs','tests/transform-checkpoint-preparation.test.mjs');
 if(candidate)suites.push('tests/save-isolation-reference.test.cjs');
 if(candidate)suites.push('tests/renderer-isolation-reference.test.cjs');
+if(candidate)suites.push('tests/mesh-surface-renderer.test.cjs');
 if(candidate)suites.push('tests/file-diagnostics-reference.test.cjs');
 if(candidate)suites.push('tests/development-state-reference.test.cjs');
 if(candidate)auxiliaries.push('tests/development-state-host.cjs');
@@ -66,6 +67,7 @@ if(candidate)auxiliaries.push('tests/import-budget-reference.test.mjs');
 if(candidate)auxiliaries.push('tests/import-cancellation-reference.test.cjs');
 if(candidate)suites.push('tests/import-budget-reference.test.mjs','tests/import-cancellation-reference.test.cjs','tests/import-budget-compatibility.test.mjs');
 if(candidate)auxiliaries.push('qa/CANDIDATE-SOURCE-1.36.1-beta.12.json');
+if(candidate)auxiliaries.push('qa/CANDIDATE-SOURCE-1.36.1-beta.13.json');
 if(candidate)auxiliaries.push('qa/CANDIDATE-SOURCE-1.36.1-beta.11.json');
 if(candidate)suites.push('tests/paired-recovery-reference.test.cjs','tests/development-identity-contract.test.cjs','tests/recovery-protocol-reference.test.cjs','tests/recovery-negotiation-reference.test.cjs','tests/recovery-ownership-reference.test.cjs');
 if(candidate)auxiliaries.push('qa/CANDIDATE-SOURCE-1.36.1-beta.10.json');

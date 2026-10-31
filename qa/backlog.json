@@ -4865,6 +4865,27 @@
         ],
         "reviewRecord": "docs/BACKLOG-RECOMMENDATIONS.md"
       }
+    },
+    {
+      "id": "LC-3D-SURFACE-EDGES",
+      "priority": 1,
+      "status": "beta14 source outline correction verified; application/raster and performance qualification open",
+      "problem": "Ordinary shaded meshes outlined every triangle, displaying artificial coplanar diagonals; interactive3Dperformance separately reported slow",
+      "expected": "Retain real outlines and sharp corners while suppressing internal coplanar triangulation edges; preserve geometry, roof rendering, wireframe, picking and painter order",
+      "reproduction": "Exact production drawModel in recordedCanvashost:10by10planarquad yields artificialdiagonal twice; independent expectedfourboundaryedges and fillarea100",
+      "fixtureClass": "Literal public-safe synthetic indexed meshes; actual reported drawing not accessed",
+      "sourceVersion": "1.36.1-beta.14",
+      "implementationAttempts": 1,
+      "repairApproachesRemainingAtMost": 1,
+      "validation": "13focused source tests pass within61/61selected faststages,1611portablechecks,241exactworkinginputs; initial8checks3pass5fail included3actualdiagonalregressions and2missinghelperprerequisitefailures; original failures preserved",
+      "change": "Linear indexed adjacency and reused normals; suppress only two-sided coplanar seams, preserve uncertain boundaries; pertriangle masked outlines keep painter order",
+      "evidence": [
+        "docs/MESH-SURFACE-EDGES.md",
+        "tests/mesh-surface-renderer.test.cjs",
+        "qa/CANDIDATE-SOURCE-1.36.1-beta.14.json"
+      ],
+      "limits": "RecordedCanvashost only; no beta14application/browserraster/picking/PDF/build/native/installed/upgrade/dailyuse orGPU/performance qualification. Additional adjacency work may costCPU/heap. No coordinatewelding across indices/entities. Actualdrawingnotread. Earlierbeta13workflowdoesnotqualifybeta14.",
+      "next": "Separately scope synthetic3Dapplication/raster profiling, measure projection/sort/draw/occlusion work before performance repair; preserve one-remainingapproach cap and installed/client/native/external restrictions"
     }
   ],
   "recommendationTriage": {

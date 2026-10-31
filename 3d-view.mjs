@@ -138,6 +138,38 @@ export function intersectTriangle(ray,rawA,rawB,rawC){
 export function meshTriangles(entity){
   const triangles=[];for(let faceIndex=0;faceIndex<(entity.faces?.length??0);faceIndex++){const face=entity.faces[faceIndex];for(let i=1;i<face.length-1;i++)triangles.push({points:[entity.vertices[face[0]],entity.vertices[face[i]],entity.vertices[face[i+1]]],faceIndex});}return triangles;
 }
+/** Shaded outlines follow indexed surface boundaries, not coplanar triangulation seams.
+ * Preserve uncertain/nonmanifold/overlapping edges and never weld vertices or entities.
+ * Normals are reused by the renderer; adjacency is bounded to three entries per triangle.
+ */
+export function meshShadedTriangles(entity){
+  const triangles=[],edges=new Map();
+  for(let faceIndex=0;faceIndex<(entity.faces?.length??0);faceIndex++){
+    const face=entity.faces[faceIndex];
+    for(let i=1;i<face.length-1;i++){
+      const indices=[face[0],face[i],face[i+1]],points=indices.map(index=>entity.vertices[index]),triangle={points,faceIndex,normal:triangleNormal(...points),outlineEdges:[true,true,true]};
+      triangles.push(triangle);
+      for(let edge=0;edge<3;edge++){
+        const a=indices[edge],b=indices[(edge+1)%3],key=a<b?`${a}:${b}`:`${b}:${a}`;
+        if(!edges.has(key))edges.set(key,[]);
+        edges.get(key).push({triangle,edge,a,b,third:indices[(edge+2)%3]});
+      }
+    }
+  }
+  for(const adjacent of edges.values()){
+    if(adjacent.length!==2)continue;
+    const [first,second]=adjacent,n=first.triangle.normal,m=second.triangle.normal;
+    if(!n||!m)continue;
+    const cross=cross3(n,m);if(Math.hypot(cross.x,cross.y,cross.z)>1e-12)continue;
+    const raw=[entity.vertices[first.a],entity.vertices[first.b],entity.vertices[first.third],entity.vertices[second.third]],scale=Math.max(...raw.flatMap(point=>[Math.abs(point.x),Math.abs(point.y),Math.abs(point.z??0)]));
+    if(!scale||!Number.isFinite(scale))continue;
+    const [a,b,c,d]=raw.map(point=>({x:point.x/scale,y:point.y/scale,z:(point.z??0)/scale})),edge=subtract(b,a);
+    const side=point=>dot3(cross3(edge,subtract(point,a)),n);
+    // Opposite sides establish adjacency rather than coincident/overlapping faces.
+    if(side(c)*side(d)<0){first.triangle.outlineEdges[first.edge]=false;second.triangle.outlineEdges[second.edge]=false;}
+  }
+  return triangles;
+}
 export function meshEdges(entity){
   const unique=new Map();for(const face of entity.faces||[])for(let i=0;i<face.length;i++){const a=face[i],b=face[(i+1)%face.length],key=a<b?`${a}:${b}`:`${b}:${a}`;if(!unique.has(key))unique.set(key,[entity.vertices[a],entity.vertices[b]]);}return [...unique.values()];
 }

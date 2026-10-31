@@ -1035,3 +1035,22 @@ native input, process restart, installed/upgrade/daily-use, full application/PDF
 gate or performance acceptance. Whole-profile byte preservation was not measured.
 The one-workflow launch authorization is consumed; no further application run is
 implied. Preserve prior qualification limits and repair/converter attempt caps.
+
+
+## Indexed shaded mesh outlines - October 31, 2026 UTC
+
+Beta14 source removes internal coplanar triangle outline segments from ordinary
+indexed shaded meshes while retaining boundaries and sharp corners. Geometry,
+entity boundaries, roof-owned rendering, picking and wireframe paths remain
+unchanged. [The source regression and limits](MESH-SURFACE-EDGES.md) describe
+the literal quad failure, conservative adjacency rules and painter-order checks.
+
+The new13checks pass in a61/61-stage selected fast gate:1611portable checks and
+241exact working inputs. The59-runtime/12-resource cumulative manifest retains
+all prior changes plus the two-file visual correction. Historical beta13
+application/PDF evidence remains bound to its earlier runtime. No beta14 app,
+browser raster, build, native, installed/upgrade/daily-use or performance run
+occurred. Added per-redraw adjacency work is not a demonstrated speedup; GPU
+load/VRAM cause remains unknown. Profile a bounded synthetic3Dworkload before
+performance changes. Separate-entity/duplicate-index boundaries are not welded;
+the user's other drawing was not read or qualified.
