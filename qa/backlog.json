@@ -4869,7 +4869,7 @@
     {
       "id": "LC-3D-SURFACE-EDGES",
       "priority": 1,
-      "status": "beta15 surface-colored internal edges source-qualified; actual repaired raster not run",
+      "status": "beta15 source-qualified; visual-only confirmation prepared, awaiting new execution approval",
       "problem": "The source stroke-mask correction retains a dark diagonal in actual flat quad and coplanar-triangle rasters. Fold/crease and wireframe pass frozen probes. Reported real-drawing performance remains unqualified.",
       "expected": "Retain real outlines and sharp corners while suppressing internal coplanar triangulation edges; preserve geometry, roof rendering, wireframe, picking and painter order",
       "reproduction": "Original recorded-Canvas production drawModel regression exposed explicit extra diagonal strokes; after their beta14 suppression, actual640x480 DPR1 quad and stored-triangle captures still show a dark diagonal. Frozen RGB tolerance8 rejects the first probe240,320, observing94/96/98 versus121/121/121.",
@@ -4887,10 +4887,11 @@
         "docs/MESH-3D-OBSERVATIONS.md",
         "docs/MESH-SURFACE-COVERAGE-REFERENCE.md",
         "tests/mesh-surface-coverage-reference.test.cjs",
-        "qa/CANDIDATE-SOURCE-1.36.1-beta.15.json"
+        "qa/CANDIDATE-SOURCE-1.36.1-beta.15.json",
+        "docs/MESH-BETA15-VISUAL-PLAN.md"
       ],
       "limits": "Source/analytic only for beta15: no application/raster/PDF/build/native/installed/upgrade/daily-use/performance qualification. Butt strokes have lateral corner/sliver overdraw and may repaint a prior outline corner; geometric bounds do not establish final boundary pixels. No geometry welding. Historical beta14 actual flat raster still failed; no new app run. No speedup/GPU/VRAM diagnosis.",
-      "next": "Prepare a bounded beta15 visual confirmation from the preserved synthetic fixture/frozen-probe harness, including explicit corner/sliver observations. Do not launch without a new scoped authorization, relax tolerance8 or spend another product repair approach; current two-approach budget exhausted.",
+      "next": "Request approval for the concrete one hidden beta15 visual-only run: five synthetic Opens, six canvas and six window captures, original frozen tolerance8, extra corner/sliver observations. No launch until approval; no third repair or automatic geometry snapping.",
       "preparationHistory": [
         {
           "prior": {
@@ -5053,6 +5054,31 @@
         "totalRepairApproaches": 2,
         "atMostRemaining": 0,
         "document": "docs/MESH-SURFACE-COVERAGE-REFERENCE.md"
+      },
+      "beta15PreparationHistory": [
+        {
+          "at": "2026-10-31T17:08:10.179970+00:00",
+          "previous": {
+            "status": "beta15 surface-colored internal edges source-qualified; actual repaired raster not run",
+            "next": "Prepare a bounded beta15 visual confirmation from the preserved synthetic fixture/frozen-probe harness, including explicit corner/sliver observations. Do not launch without a new scoped authorization, relax tolerance8 or spend another product repair approach; current two-approach budget exhausted."
+          }
+        }
+      ],
+      "beta15VisualPreparation": {
+        "document": "docs/MESH-BETA15-VISUAL-PLAN.md",
+        "status": "prepared; not executed",
+        "applicationLaunchAuthorized": false,
+        "applicationLaunches": 0,
+        "allowedSyntheticOpens": 5,
+        "plannedCanvasCaptures": 6,
+        "plannedWindowCaptures": 6,
+        "requiredDPR": 1,
+        "preservedOriginalFixtureFiles": 6,
+        "addedStressFixtures": 2,
+        "originalRasterAuditorUnchanged": true,
+        "performanceObservationsPlanned": 0,
+        "repairApproachesAdded": 0,
+        "stressAppearanceAccepted": false
       }
     },
     {

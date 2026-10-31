@@ -46,3 +46,16 @@ The one approved session has now run. [The actual observations](MESH-3D-OBSERVAT
 record two failing flat rasters, passing fold/wireframe cases, and three audited
 performance captures. The preparation record above remains historical. Its
 launch approval is consumed; do not repeat the session automatically.
+
+
+## Prepared beta15 visual confirmation - October 31, 2026 UTC
+
+The [visual-only proposal](MESH-BETA15-VISUAL-PLAN.md) refreshes the existing
+synthetic harness for beta15 without a launch. It preserves the original four
+raster checks/tolerance and adds acute-corner and half-pixel sliver observations
+for human review. Five synthetic Opens would produce six canvas and six bound
+hidden-window images at DPR1. No performance workload is included. New fixture,
+reader, syntax and refusal controls pass; original fixtures/auditor and all 243
+source-gate inputs remain exact without an unchanged gate rerun. The proposed
+one-run scope needs new approval; prior authorizations are consumed, and no
+product repair attempt remains under the current mesh-edge budget.

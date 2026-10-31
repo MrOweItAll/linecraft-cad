@@ -1161,3 +1161,16 @@ intended shallow crease, so no universal auto-snap tolerance was adopted.
 Production files, the beta15 manifest and all 243 prior gate inputs remain
 unchanged; no unchanged gate or application run was repeated. User visual
 confirmation and any geometry-changing cleanup decision remain separate.
+
+
+## Prepared beta15 visual confirmation - October 31, 2026 UTC
+
+The [visual-only proposal](MESH-BETA15-VISUAL-PLAN.md) refreshes the existing
+synthetic harness for beta15 without a launch. It preserves the original four
+raster checks/tolerance and adds acute-corner and half-pixel sliver observations
+for human review. Five synthetic Opens would produce six canvas and six bound
+hidden-window images at DPR1. No performance workload is included. New fixture,
+reader, syntax and refusal controls pass; original fixtures/auditor and all 243
+source-gate inputs remain exact without an unchanged gate rerun. The proposed
+one-run scope needs new approval; prior authorizations are consumed, and no
+product repair attempt remains under the current mesh-edge budget.
