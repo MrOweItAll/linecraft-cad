@@ -7,6 +7,35 @@ const file=(entities,tables=[],blocks=[],ending='\n')=>[0,'SECTION',2,'TABLES',.
 const load=source=>{const r=importDXF(source);return{...r,document:JSON.parse(r.text)};};
 const line=(a,b,layer='0')=>record('LINE',[8,layer],[10,a[0]],[20,a[1]],[30,a[2]??0],[11,b[0]],[21,b[1]],[31,b[2]??0]);
 
+test('ordinary standalone negative-Z MTEXT preserves its world insertion and selected baseline', () => {
+ const warning = warnings => warnings.find(row => row.message.includes('text-up direction reversed'))?.count ?? 0;
+ for (const normal of [1,-1]) {
+  const direction = [[11,0.6],[21,0.8],[31,0]];
+  const angle = [50,Math.PI / 6];
+  for (const [orientation, baseline] of [
+   [[], [1,0]],
+   [[angle], [normal * Math.cos(angle[1]),0.5]],
+   [[angle,...direction], [0.6,0.8]],
+   [[...direction,angle], [normal * Math.cos(angle[1]),0.5]],
+  ]) {
+   const raw = file(record('MTEXT',[10,12],[20,7],[40,2],[41,28],[71,5],[1,'PLANAR MTEXT'],[230,normal],...orientation));
+   const imported = load(raw);
+   const reopened = createEditor(JSON.parse(createEditor(imported.document).serialize()));
+   const exported = load(reopened.exportDXF());
+   for (const entities of [reopened.getModelEntities(),exported.document.entities]) {
+    assert.equal(entities.length,1);
+    const [text] = entities;
+    assert.deepEqual([text.type,text.text,text.position,text.richText.attachment],['MTEXT','PLANAR MTEXT',{x:12,y:7},5]);
+    const radians = text.rotation * Math.PI / 180;
+    assert.ok(Math.abs(Math.cos(radians)-baseline[0]) < 1e-9 && Math.abs(Math.sin(radians)-baseline[1]) < 1e-9);
+   }
+   assert.equal(imported.report.unsupportedEntities,0);
+   assert.equal(warning(imported.report.warnings),normal < 0 ? 1 : 0);
+   assert.equal(warning(exported.report.warnings),0);
+  }
+ }
+});
+
 test('tilted OCS circles remain exact editable curves with world-space center and extrema',()=>{
  const a=load(file(record('CIRCLE',[10,150],[20,350],[30,-200],[40,10],[210,0],[220,-1],[230,0]))),e=a.document.entities[0];
  assert.equal(a.document.workspace,'3d');assert.equal(e.type,'CIRCLE3D');assert.deepEqual(e.center,{x:150,y:200,z:350});assert.equal(e.radius,10);

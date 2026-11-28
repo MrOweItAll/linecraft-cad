@@ -251,9 +251,19 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
           warn('block-expanded','Ordinary blocks are expanded into editable primitives; block identities and attributes are not retained.');continue;
         }
         if(record.type==='TEXT'||record.type==='MTEXT'){
-          const embedded=record.groups.findIndex(([code])=>code===101),main={...record,groups:embedded<0?record.groups:record.groups.slice(0,embedded)},basis=ocs(main),apply=p=>transform(basis.point(p)),horizontal=num(main,72,0),vertical=num(main,73,0),anchor=record.type==='TEXT'&&first(main,11)!==undefined&&(![0,3,5].includes(horizontal)||vertical!==0)?xyz(main,11):xyz(main),position=apply(anchor);
+          const embedded=record.groups.findIndex(([code])=>code===101),main={...record,groups:embedded<0?record.groups:record.groups.slice(0,embedded)},basis=ocs(main),horizontal=num(main,72,0),vertical=num(main,73,0),anchor=record.type==='TEXT'&&first(main,11)!==undefined&&(![0,3,5].includes(horizontal)||vertical!==0)?xyz(main,11):xyz(main);
           const directionIndex=main.groups.findLastIndex(([code])=>code===11),rotationIndex=main.groups.findLastIndex(([code])=>code===50),rotation=record.type==='MTEXT'?num(main,50,0):radians(num(main,50,0));
-          const direction=record.type==='MTEXT'&&directionIndex>rotationIndex?unit(xyz(main,11)):{x:Math.cos(rotation),y:Math.sin(rotation),z:0},tip=apply(add(anchor,direction)),up=apply(add(anchor,{x:-direction.y,y:direction.x,z:0}));
+          const explicitMtextDirection = record.type === 'MTEXT' && directionIndex > rotationIndex;
+          // Standalone MTEXT stores its insertion and explicit baseline in WCS.
+          const negativeZFrame = record.type === 'MTEXT' && depth === 0 && !currentPaperLayout && dwgMetadata === null
+            && basis.n.x === 0 && basis.n.y === 0 && basis.n.z < 0;
+          const apply = negativeZFrame ? transform : point => transform(basis.point(point));
+          const inputDirection = explicitMtextDirection ? unit(xyz(main,11)) : {x:Math.cos(rotation),y:Math.sin(rotation),z:0};
+          // Convert a rotation-only baseline through the OCS. The omitted direction defaults to world +X.
+          const direction = negativeZFrame && !explicitMtextDirection && rotationIndex >= 0
+            ? basis.point(inputDirection) : inputDirection;
+          const sourceUp = negativeZFrame ? cross(basis.n,direction) : {x:-direction.y,y:direction.x,z:0};
+          const position = apply(anchor), tip = apply(add(anchor,direction)), up = apply(add(anchor,sourceUp));
           if(position.z!==0||tip.z!==0||up.z!==0)throw Error('Non-XY text is unsupported.');const hScale=Math.hypot(up.x-position.x,up.y-position.y),widthScale=Math.hypot(tip.x-position.x,tip.y-position.y);
           let style=safeName(first(main,7));if(!styles.has(style)){style='Standard';warn('missing-style','Missing annotation styles use Standard.');}
           const sourceStyle=styles.get(style),factor=(record.type==='TEXT'?num(main,41,sourceStyle.widthFactor):sourceStyle.widthFactor)*widthScale/hScale;
@@ -266,7 +276,9 @@ export function importDXF(source,{sourceName='Imported DXF',createEditor=default
             entity.width=num(main,41)>0?num(main,41)*widthScale:Math.max(entity.height,decoded.text.length*entity.height*.6);
             // Relative controls scale naturally with base height. Absolute height
             // controls must follow a paper-unit/block scale exactly once.
-            const scaledRaw=rawContent.replace(/\\H([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)\s*;/g,(_,n)=>`\\H${Number(n)*hScale};`),parsed=parseRichText(scaledRaw,{...styles.get(style),height:entity.height});entity.text=parsed.text;entity.richText={version:1,source:scaledRaw,attachment:num(main,71,1),lineSpacingStyle:num(main,73,1),lineSpacingFactor:num(main,44,1)};parsed.warnings.forEach(w=>warn(`rich-${w}`,`MTEXT retains unsupported formatting source: ${w}.`));publish(entity);continue;
+            const scaledRaw=rawContent.replace(/\\H([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)\s*;/g,(_,n)=>`\\H${Number(n)*hScale};`),parsed=parseRichText(scaledRaw,{...styles.get(style),height:entity.height});entity.text=parsed.text;entity.richText={version:1,source:scaledRaw,attachment:num(main,71,1),lineSpacingStyle:num(main,73,1),lineSpacingFactor:num(main,44,1)};
+            if (negativeZFrame) warn('negative-z-mtext', 'Negative-Z MTEXT is imported as editable text with its text-up direction reversed.');
+            parsed.warnings.forEach(w=>warn(`rich-${w}`,`MTEXT retains unsupported formatting source: ${w}.`));publish(entity);continue;
           }
           const layout=textLayout(entity,{textStyles:[...styles.values()]}),c=Math.cos(radians(entity.rotation)),s=Math.sin(radians(entity.rotation));let dx=0,dy=0;
           if(record.type==='TEXT'){dx=horizontal===1||horizontal===4?-layout.width/2:horizontal===2?-layout.width:0;dy=horizontal===4||vertical===2?-.325*entity.height:vertical===3?-entity.height:vertical===1?.35*entity.height:0;}
